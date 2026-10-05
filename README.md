@@ -1,36 +1,70 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Grass Pass: your ticket to get outside
 
-## Getting Started
+> Pick a park. Print a pass. Phone away.
 
-First, run the development server:
+**Status: in development** for the DEV Hacktoberfest 2026 Open-Source AI Challenge, Week 1 "Touch Grass"
+(entry period Oct 5 to Oct 12, 2026). This README grows with the build; sections marked *coming* are not built yet.
 
+Grass Pass makes a printable scavenger "pass" for a real park and a child's age. Every item on it is backed by
+real, dated data about **that** park: OpenStreetMap features (courts, shelters, playgrounds), species people
+actually photographed there in the last 14 days (iNaturalist), and visitor-review counts. An open-weight model
+(Gemma 4, Apache-2.0) picks a fair mix for each park and writes kid-level clues; code checks every clue against its
+source and decides what is safe. If a source has nothing, the pass says **"No data available"** and why. It never
+pads with generic items.
+
+## Live demo
+*Coming* (deploy planned for Oct 9, 2026). No login needed.
+
+## Quick start
 ```bash
-npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
+pnpm install
+cp .env.example .env.local   # add DO_INFERENCE_API_KEY (or point MODEL_BASE_URL at a local Ollama)
+pnpm dev                     # http://localhost:3000
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+| Script | What it does |
+|---|---|
+| `pnpm lint` | ESLint, zero warnings allowed |
+| `pnpm typecheck` | `next typegen && tsc --noEmit` |
+| `pnpm test` | Vitest unit tests |
+| `pnpm build` / `pnpm start` | production build / server |
+| `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`) |
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+## Environment variables
+All are listed and explained in [`.env.example`](.env.example). Keys are server-only.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## How it works
+*Coming.* Architecture diagram, model, data sources and safety rules are added as each part is built.
 
-## Learn More
+Built so far (slice S0):
+- `src/lib/model.ts`: plain `fetch` client for any OpenAI-compatible server. Strict JSON schema + zod, 30 s timeout,
+  one retry on network/5xx, one log line per call, distinct error codes, the shown model name comes from the model
+  that answered, the DigitalOcean key is only ever sent to `inference.do-ai.run`, and redirects are never followed.
+- `src/lib/limits/*`: per-IP rate limits, daily/monthly caps with "charge every started call" tickets, circuit
+  breakers, polite queues for free public APIs.
+- `src/lib/cache/*`: typed caches with a "stored at" time, a separate negative cache, in-flight de-duplication;
+  Upstash Redis in production, memory locally.
+- `src/lib/http/guard.ts`: same-origin check, JSON content type, streamed body size cap.
+- Security headers (CSP, no framing, nosniff, referrer policy) on every route.
 
-To learn more about Next.js, take a look at the following resources:
+## Why open
+*Coming*, with measured numbers from our evals (open models vs. a no-AI baseline on 20 real parks).
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## Privacy
+*Coming.* Short version of the plan: no accounts, nothing about the child leaves the device, location is rounded
+in the browser to about 1 km, no analytics.
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+## Limitations
+*Coming.*
 
-## Deploy on Vercel
+## Contest note
+Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+## Credits
+- Scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (Next.js, MIT).
+- The model client, limits, request guards and in-flight de-duplication are adapted from the author's earlier
+  practice project (same author, MIT).
+- Data credits (OpenStreetMap ODbL, iNaturalist, SerpApi) and model/font licences are added as those parts land.
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+## Licence
+[MIT](LICENSE)

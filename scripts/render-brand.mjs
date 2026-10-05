@@ -1,100 +1,75 @@
 #!/usr/bin/env node
-// Renders every Grass Pass brand asset from the SVG sources in scripts/brand/art.mjs.
+// Renders every Grass Pass brand asset (logo variant B, Kevin's pick) from the SVG sources in scripts/brand/art.mjs.
 //   node scripts/render-brand.mjs          -> writes brand/*.svg and public/* (SVG, PNG, ICO)
-// Text is outlined with opentype.js (Fredoka 700 / Nunito 700, OFL) and PNGs are rasterised with
-// @resvg/resvg-js, so no output depends on fonts installed on the machine. Both are dev-only.
+// Text is outlined with opentype.js (M PLUS Rounded 1c ExtraBold / Varela Round, OFL) and PNGs are rasterised with
+// @resvg/resvg-js, so no output depends on fonts installed on the machine. All three are dev-only.
 import { mkdirSync, realpathSync, writeFileSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { Resvg } from "@resvg/resvg-js";
 import {
-  LOGO_TEXT,
-  MARK,
-  SCENE_BOX,
-  TOKENS,
+  ART,
+  ICON_VIEW,
+  LOGO_VIEW,
+  MARK_VIEW,
+  SCENE_STANDALONE_VIEW,
+  SCENE_VIEW,
+  SMALL_VIEW,
+  WORDMARK_VIEW,
   explorerScene,
   logoHorizontal,
+  logoText,
   svgDoc,
   ticketMark,
+  viewBox,
 } from "./brand/art.mjs";
-import { capHeightRatio, loadBrandFonts, textPath, textWidth, xHeightRatio } from "./brand/fonts.mjs";
+import { f, loadBrandFonts, taglinePath, wordmarkPath } from "./brand/fonts.mjs";
 
 const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NAME = "Grass Pass";
 const TAGLINE = "your ticket to get outside";
+const FULL = `${NAME}: ${TAGLINE}`;
 
-/** Outlined wordmark + tagline in mark units, placed right of the ticket like the banner. */
+/** Outlined wordmark + tagline in banner px, on the letter boxes measured in Kevin's banner. */
 export function layoutLogoText(fonts = loadBrandFonts()) {
-  const size = LOGO_TEXT.capHeight / capHeightRatio(fonts.fredoka);
-  const baseline = LOGO_TEXT.capTop + LOGO_TEXT.capHeight;
-  const probe = textPath(fonts.fredoka, "GRASS PASS", 0, baseline, size);
-  const word = textPath(fonts.fredoka, "GRASS PASS", LOGO_TEXT.x - probe.x1, baseline, size);
-  const targetWidth = word.width * LOGO_TEXT.taglineToWordmarkWidth;
-  // Size the tagline by the banner's x-height, then track it out to the banner's width
-  // (the banner's tagline face is a little wider than Nunito).
-  const tagSize = LOGO_TEXT.taglineXHeight / xHeightRatio(fonts.nunito);
-  const spacing = (targetWidth - textWidth(fonts.nunito, TAGLINE, tagSize)) / (TAGLINE.length - 1) / tagSize;
-  const tagProbe = textPath(fonts.nunito, TAGLINE, 0, LOGO_TEXT.taglineBaseline, tagSize, spacing);
-  const tag = textPath(fonts.nunito, TAGLINE, LOGO_TEXT.x - tagProbe.x1, LOGO_TEXT.taglineBaseline, tagSize, spacing);
-  return {
-    wordmark: word.d,
-    tagline: tag.d,
-    width: Math.ceil(Math.max(word.x2, tag.x2) + 4),
-    wordmarkSize: size,
-    taglineSize: tagSize,
-    taglineSpacing: spacing,
-  };
+  return { wordmark: wordmarkPath(fonts.word), tagline: taglinePath(fonts.tag) };
 }
 
 function place(inner, x, y, scale) {
-  return `<g transform="translate(${x} ${y}) scale(${scale})">${inner}</g>`;
+  return `<g transform="translate(${f(x)} ${f(y)}) scale(${f(scale)})">${inner}</g>`;
 }
 
-// Banner geometry (px in the 484x162 reference): ticket top-left at (22, 62), 76 px wide; the scene
-// canvas from scripts/brand/art.mjs covers the banner's right side from x = 280 at 4 canvas units per px.
-const BANNER = { ticketX: 22, ticketY: 62, ticketW: 76, logoCenterY: 74, sceneX: 280, sceneUnitsPerPx: 4, height: 162 };
-
 /**
- * Banner-style composition: logo + tagline left, explorer scene right, cream paper.
- * logoK / sceneK = output px per banner px for the logo block and the scene; the scene sits on the bottom edge.
+ * Banner-style composition on cream: logo left (logoScale px per banner px, its top-left at logoX/logoY),
+ * explorer scene anchored to the bottom-right corner (sceneScale), like Kevin's banner.
  */
-function bannerSvg(text, W, H, { logoK, sceneK, logoCenterY }) {
-  const logo = logoHorizontal(text, { idPrefix: `b${W}` });
-  const unitsPerPx = 112 / BANNER.ticketW; // ticket body is 112 mark units wide
-  const ls = logoK / unitsPerPx;
-  const logoX = BANNER.ticketX * logoK - 4 * ls;
-  const logoY = logoCenterY - (BANNER.logoCenterY - BANNER.ticketY) * logoK - 28 * ls;
-  const cs = sceneK / BANNER.sceneUnitsPerPx;
-  const sceneX = W - (484 - BANNER.sceneX) * sceneK;
-  const sceneY = H - BANNER.height * sceneK;
+function bannerSvg(text, W, H, { logoScale, logoX, logoY, sceneScale, hillX }) {
+  const sx = W - (SCENE_VIEW.x + SCENE_VIEW.width) * sceneScale;
+  const sy = H - (SCENE_VIEW.y + SCENE_VIEW.height) * sceneScale;
   return svgDoc({
     viewBox: `0 0 ${W} ${H}`,
     width: W,
     height: H,
-    title: `${NAME}: ${TAGLINE}`,
+    title: FULL,
     inner:
-      `<rect width="${W}" height="${H}" fill="${TOKENS.paper}"/>` +
-      `<svg x="0" y="0" width="${W}" height="${H}" overflow="hidden">` +
-      place(explorerScene(), sceneX, sceneY, cs) +
-      `</svg>` +
-      place(logo.inner, logoX, logoY, ls),
+      `<rect width="${W}" height="${H}" fill="${ART.paper}"/>` +
+      place(logoHorizontal(text, { idPrefix: `b${W}` }), logoX - LOGO_VIEW.x * logoScale, logoY - LOGO_VIEW.y * logoScale, logoScale) +
+      place(explorerScene({ hillX }), sx, sy, sceneScale),
   });
 }
 
-/** Square app icon: the full mark centred on cream. */
-function appIconSvg(size, { simple = false, rounded = false } = {}) {
-  const pad = simple ? 0.04 : 0.12;
-  const s = (size * (1 - 2 * pad)) / MARK.width;
-  const y = (size - MARK.height * s) / 2;
-  const bg = rounded
-    ? `<rect width="${size}" height="${size}" rx="${size * 0.2}" fill="${TOKENS.paper}"/>`
-    : `<rect width="${size}" height="${size}" fill="${TOKENS.paper}"/>`;
+/** Square app icon on cream. Small sizes (16-48 px) use the simple mark on a rounded tile. */
+function appIconSvg(size, { simple = false } = {}) {
+  const v = simple ? SMALL_VIEW : ICON_VIEW;
+  const bg = simple
+    ? `<rect x="${f(v.x)}" y="${f(v.y)}" width="${f(v.width)}" height="${f(v.height)}" rx="${f(v.width * 0.2)}" fill="${ART.paper}"/>`
+    : `<rect x="${f(v.x)}" y="${f(v.y)}" width="${f(v.width)}" height="${f(v.height)}" fill="${ART.paper}"/>`;
   return svgDoc({
-    viewBox: `0 0 ${size} ${size}`,
+    viewBox: viewBox(v),
     width: size,
     height: size,
     title: NAME,
-    inner: bg + place(ticketMark({ simple, idPrefix: `i${size}` }), size * pad, y, s),
+    inner: bg + ticketMark({ simple, idPrefix: `i${size}` }),
   });
 }
 
@@ -102,29 +77,28 @@ function appIconSvg(size, { simple = false, rounded = false } = {}) {
 export function buildSvgs(fonts = loadBrandFonts()) {
   const text = layoutLogoText(fonts);
   const markDoc = (variant, simple = false) =>
-    svgDoc({
-      viewBox: `0 0 ${MARK.width} ${MARK.height}`,
-      title: NAME,
-      inner: ticketMark({ variant, simple }),
-    });
-  const logoDoc = (variant, title = `${NAME}: ${TAGLINE}`) => {
-    const logo = logoHorizontal(text, { variant });
-    return svgDoc({ viewBox: `0 0 ${logo.width} ${logo.height}`, title, inner: logo.inner });
-  };
-  const sceneDoc = svgDoc({
-    viewBox: `${SCENE_BOX.x} ${SCENE_BOX.y} ${SCENE_BOX.width} ${SCENE_BOX.height}`,
+    svgDoc({ viewBox: viewBox(simple ? SMALL_VIEW : MARK_VIEW), title: NAME, inner: ticketMark({ variant, simple }) });
+  const logoDoc = (variant) => svgDoc({ viewBox: viewBox(LOGO_VIEW), title: FULL, inner: logoHorizontal(text, { variant }) });
+  const V = SCENE_STANDALONE_VIEW;
+  const scene = explorerScene({ hillX: 262, standalone: true });
+  const sceneDoc = svgDoc({ viewBox: viewBox(V), decorative: true, inner: scene });
+  // Dark mode: the kid's dark green shorts and the bush vanish on the dark page, so the scene sits on a cream
+  // picture card (Kevin's paper colour), clipped to rounded corners. The art itself is unchanged.
+  const card = `x="${f(V.x)}" y="${f(V.y)}" width="${f(V.width)}" height="${f(V.height)}" rx="10"`;
+  const sceneDarkDoc = svgDoc({
+    viewBox: viewBox(V),
     decorative: true,
-    inner: explorerScene(),
+    inner:
+      `<defs><clipPath id="scene-card"><rect ${card}/></clipPath></defs>` +
+      `<g clip-path="url(#scene-card)"><rect ${card} fill="${ART.paper}"/>` +
+      `${explorerScene({ hillX: 236, standalone: true, hill: "edge" })}</g>`,
   });
-  const wordmarkDoc = svgDoc({
-    viewBox: `${LOGO_TEXT.x - 2} 0 ${text.width - LOGO_TEXT.x + 2} ${MARK.height}`,
-    title: `${NAME}: ${TAGLINE}`,
-    inner: `<path fill="${TOKENS.forest}" d="${text.wordmark}"/><path fill="${TOKENS.ink}" d="${text.tagline}"/>`,
-  });
+  const wordmarkDoc = svgDoc({ viewBox: viewBox(WORDMARK_VIEW), title: FULL, inner: logoText(text) });
 
-  // DEV cover = Kevin's banner scaled to 1000 px wide; the extra height becomes sky above the scene.
-  const cover = bannerSvg(text, 1000, 420, { logoK: 1000 / 484, sceneK: 1000 / 484, logoCenterY: 205 });
-  const og = bannerSvg(text, 1200, 630, { logoK: 1200 / 484, sceneK: 3.2, logoCenterY: 300 });
+  // DEV cover: the banner's layout at 1000x420 (logo 2.06x, scene 2.5x with a wider hill).
+  const cover = bannerSvg(text, 1000, 420, { logoScale: 2.06, logoX: 40, logoY: 104, sceneScale: 2.5, hillX: 236 });
+  // Share card: same layout at 1200x630.
+  const og = bannerSvg(text, 1200, 630, { logoScale: 2.4, logoX: 48, logoY: 151, sceneScale: 3.6, hillX: 220 });
 
   return {
     brand: {
@@ -143,17 +117,18 @@ export function buildSvgs(fonts = loadBrandFonts()) {
       "logo-header-dark.svg": logoDoc("reversed"),
       "logo-print-1c.svg": logoDoc("mono"),
       "brand/explorer-scene.svg": sceneDoc,
+      "brand/explorer-scene-dark.svg": sceneDarkDoc,
       "brand/ticket-mark.svg": markDoc("color"),
     },
     raster: {
-      "icon-32.png": { svg: appIconSvg(32, { simple: true, rounded: true }), size: 32 },
+      "icon-32.png": { svg: appIconSvg(32, { simple: true }), size: 32 },
       "apple-touch-icon.png": { svg: appIconSvg(180), size: 180 },
       "icon-192.png": { svg: appIconSvg(192), size: 192 },
       "icon-512.png": { svg: appIconSvg(512), size: 512 },
       "og-1200x630.png": { svg: og, size: 1200 },
       "dev-cover-1000x420.png": { svg: cover, size: 1000 },
     },
-    favicon: [16, 32, 48].map((size) => ({ svg: appIconSvg(size, { simple: true, rounded: true }), size })),
+    favicon: [16, 32, 48].map((size) => ({ svg: appIconSvg(size, { simple: true }), size })),
   };
 }
 

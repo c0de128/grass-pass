@@ -24,10 +24,10 @@ importers:
         specifier: ^4.6.5
         version: 4.6.5
     devDependencies:
-      '@fontsource/fredoka':
+      '@fontsource/m-plus-rounded-1c':
         specifier: ^5.3.0
         version: 5.3.0
-      '@fontsource/nunito':
+      '@fontsource/varela-round':
         specifier: ^5.3.0
         version: 5.3.0
       '@playwright/test':
@@ -196,11 +196,11 @@ packages:
     resolution: {integrity: sha512-43/qtrDUokr7LJqoF2c3+RInu/t4zfrpYdoSDfYyhg52rwLV6TnOvdG4fXm7IkSB3wErkcmJS9iEhjVtOSEjjA==}
     engines: {node: ^18.18.0 || ^20.9.0 || >=21.1.0}
 
-  '@fontsource/fredoka@5.3.0':
-    resolution: {integrity: sha512-s2IhjQ50wDnKkkaKmjhtL0rxQg6ITsVusiipM3m7zUwVZZbbCKsscNDkngwp28xVzfIt7neWrkgU1qKqyTycQg==}
+  '@fontsource/m-plus-rounded-1c@5.3.0':
+    resolution: {integrity: sha512-eB/JxJBRXLdfTsBDElsAZDMtHXM58Hf1tKkHoDVZAaUN7a+qYfwNKh4Q2f7Fk9YNg4xPFjTwooVlQyqbhi8CWQ==}
 
-  '@fontsource/nunito@5.3.0':
-    resolution: {integrity: sha512-vw9TaTQJ/zpEpKrsODuPmOvaVjXgdda6B+xXA4YqjrdeJ62MLgVoDerdRXFQHyBnSCt2yQ2nHKCHPP/Pv7Xq4Q==}
+  '@fontsource/varela-round@5.3.0':
+    resolution: {integrity: sha512-g+A+D+L4jFceYaD7NsejZNLDejU4sKdhqsKo6BqLO5X+YriSmPJtUe9RnP2o5kGo1/nSnrGUHvVL8N3t8Djatw==}
 
   '@humanfs/core@0.19.2':
     resolution: {integrity: sha512-UhXNm+CFMWcbChXywFwkmhqjs3PRCmcSa/hfBgLIb7oQ5HNb1wS0icWsGtSAUNgefHeI+eBrA8I1fxmbHsGdvA==}
@@ -2647,9 +2647,9 @@ snapshots:
       '@eslint/core': 0.17.0
       levn: 0.4.1
 
-  '@fontsource/fredoka@5.3.0': {}
+  '@fontsource/m-plus-rounded-1c@5.3.0': {}
 
-  '@fontsource/nunito@5.3.0': {}
+  '@fontsource/varela-round@5.3.0': {}
 
   '@humanfs/core@0.19.2':
     dependencies:

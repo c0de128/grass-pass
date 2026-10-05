@@ -15,6 +15,7 @@ test("brand assets are served with the right types", async ({ request }) => {
     ["/logo-header-dark.svg", /image\/svg\+xml/],
     ["/logo-print-1c.svg", /image\/svg\+xml/],
     ["/brand/explorer-scene.svg", /image\/svg\+xml/],
+    ["/brand/explorer-scene-dark.svg", /image\/svg\+xml/],
     ["/manifest.webmanifest", /application\/manifest\+json/],
   ];
   for (const [path, type] of assets) {

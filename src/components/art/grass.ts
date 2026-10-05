@@ -1,4 +1,4 @@
-// Short straight lawn-grass blades (tapered, rounded tips). Mirrors bladePath() in scripts/brand/art.mjs.
+// Short straight lawn-grass blades (tapered, rounded tips). Used by GrassDivider only (the logo grass is drawn in scripts/brand/art.mjs).
 // Never pointed multi-leaf shapes (BRAND.md "Avoid": nothing that looks like cannabis).
 
 const r2 = (n: number) => Math.round(n * 100) / 100;

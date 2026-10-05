@@ -2,7 +2,8 @@ import { readdirSync, readFileSync, statSync } from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { TOKENS, bladePath } from "../../scripts/brand/art.mjs";
+import { ART, ART_DARK, GRASS, TOKENS } from "../../scripts/brand/art.mjs";
+import { bladePath } from "../../src/components/art/grass";
 import { buildSvgs } from "../../scripts/render-brand.mjs";
 
 const APP = fileURLToPath(new URL("../..", import.meta.url));
@@ -60,6 +61,42 @@ describe("design tokens", () => {
     for (const [fg, bg, min, what] of pairs) expect(contrast(fg, bg), what).toBeGreaterThanOrEqual(min);
   });
 
+  it("the logo art palette (sampled from Kevin's banner) stays within a few steps of the UI tokens", () => {
+    const A = ART as Record<string, string>;
+    const T = TOKENS as Record<string, string>;
+    const rgb = (hex: string) => [1, 3, 5].map((i) => parseInt(hex.slice(i, i + 2), 16));
+    const pairs: Array<[string, string]> = [
+      ["paper", "paper"],
+      ["ticket", "ticket"],
+      ["word", "forest"],
+      ["ink", "ink"],
+      ["gMid", "lawn"],
+      ["sun", "sun"],
+    ];
+    for (const [art, token] of pairs) {
+      const diff = Math.max(...rgb(A[art]).map((v, i) => Math.abs(v - rgb(T[token])[i])));
+      expect(diff, `${art} vs ${token}`).toBeLessThanOrEqual(16);
+    }
+  });
+
+  it("logo lettering and ticket details are readable in light and dark mode", () => {
+    const A = ART as Record<string, string>;
+    const D = ART_DARK as Record<string, string>;
+    const T = TOKENS as Record<string, string>;
+    const pairs: Array<[string, string, number, string]> = [
+      [A.word, T.paper, 4.5, "wordmark on paper"],
+      [A.ink, T.paper, 4.5, "tagline on paper"],
+      [D.word, T.ticket, 4.5, "wordmark on the dark page"],
+      [D.ink, T.ticket, 4.5, "tagline on the dark page"],
+      [D.ticket, T.ticket, 3, "cream ticket shape on the dark page"],
+      [A.ticket, T.paper, 3, "ticket shape on paper"],
+      [A.line, A.ticket, 3, "ticket stripes"],
+      [A.sun, A.ticket, 3, "sun on the ticket"],
+      [D.line, D.ticket, 3, "ticket stripes (dark)"],
+    ];
+    for (const [fg, bg, min, what] of pairs) expect(contrast(fg, bg), what).toBeGreaterThanOrEqual(min);
+  });
+
   it("lawn, sage and sun are too light for text on cream, and no component uses them as text", () => {
     const T = TOKENS as Record<string, string>;
     expect(contrast(T.lawn, T.paper)).toBeLessThan(3);
@@ -113,14 +150,37 @@ describe("brand assets", () => {
     }
   });
 
-  it("brand text is outlined paths in Fredoka/Nunito, with the tagline next to the name", () => {
-    const logo = (out.public as Record<string, string>)["logo-header.svg"];
-    expect(logo).toContain("Grass Pass: your ticket to get outside");
-    expect((logo.match(/<path /g) ?? []).length).toBeGreaterThanOrEqual(5);
+  it("brand text is outlined paths on the banner's letter boxes, with the tagline next to the name", () => {
+    const logos = out.public as Record<string, string>;
+    for (const name of ["logo-header.svg", "logo-header-dark.svg", "logo-print-1c.svg"]) {
+      expect(logos[name], name).toContain("Grass Pass: your ticket to get outside");
+    }
+    const paths = [...logos["logo-header.svg"].matchAll(/<path [^>]*d="([^"]+)"/g)].map((m) => m[1]);
+    // The last two paths are the wordmark and the tagline (outlined M PLUS Rounded 1c / Varela Round).
+    const xs = (d: string) => [...d.matchAll(/(-?[\d.]+),(-?[\d.]+)/g)].map((m) => Number(m[1]));
+    const [word, tag] = paths.slice(-2).map(xs);
+    // Ink spans measured in Kevin's banner: wordmark x 105..286, tagline x 111..278 (banner px).
+    expect(Math.min(...word)).toBeCloseTo(105, 0);
+    expect(Math.max(...word)).toBeCloseTo(286, 0);
+    expect(Math.min(...tag)).toBeCloseTo(111, 0);
+    expect(Math.max(...tag)).toBeCloseTo(278, 0);
   });
 
-  it("grass blades have rounded tips (an arc at the top), never a sharp point", () => {
-    const d = bladePath(10, 20, 12, 1, 2, 0.9) as string;
+  it("logo grass is separate single lawn blades (no leaf fanning out of one point)", () => {
+    const bases = (GRASS as Array<[number, number, number, number]>).map(([bx, by]) => [bx, by]);
+    for (const [i, [x, y]] of bases.entries()) {
+      const shared = bases.filter(([x2, y2], j) => j !== i && Math.hypot(x2 - x, y2 - y) < 1);
+      // A cannabis-style leaf fans 5-9 pointed leaflets out of one point; Kevin's grass grows in tufts of at most 3.
+      expect(shared.length, `blade ${i}`).toBeLessThanOrEqual(2);
+    }
+    for (const [bx, by, tx, ty] of GRASS as Array<[number, number, number, number]>) {
+      expect(by - ty).toBeGreaterThan(0); // grows up
+      expect(Math.abs(tx - bx)).toBeLessThan(by - ty); // leans less than 45 degrees
+    }
+  });
+
+  it("divider grass blades have rounded tips (an arc at the top), never a sharp point", () => {
+    const d = bladePath(10, 20, 12, 1, 2, 0.9);
     expect(d).toMatch(/^M[\d.]+ 20 L[\d.]+ 8 A0\.9 0\.9 0 0 1 [\d.]+ 8 L[\d.]+ 20 Z$/);
   });
 

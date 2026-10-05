@@ -97,9 +97,13 @@ Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will
 - Scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (Next.js, MIT).
 - The model client, limits, request guards and in-flight de-duplication are adapted from the author's earlier
   practice project (same author, MIT).
-- Brand: logo and explorer scene are redrawn as SVG from the author's own banner design (`brand/`, `scripts/brand/art.mjs`).
-- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito),
-  both SIL Open Font License 1.1 (served by `next/font`; the logo text is outlined from the `@fontsource` copies).
+- Brand: logo and explorer scene are redrawn as SVG from the author's own banner design (`brand/`, `scripts/brand/art.mjs`;
+  the kid's clothes and hair are cleaned traces of that drawing in `scripts/brand/kid-trace.json`).
+- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito)
+  for the site text (served by `next/font`). The logo lettering is outlined to SVG paths from
+  [M PLUS Rounded 1c](https://fonts.google.com/specimen/M+PLUS+Rounded+1c) ExtraBold ("GRASS PASS") and
+  [Varela Round](https://fonts.google.com/specimen/Varela+Round) (tagline), via their `@fontsource` copies (dev only).
+  All four are SIL Open Font License 1.1.
 - Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
   [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
 - Park names and locations: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,

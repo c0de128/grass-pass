@@ -48,6 +48,15 @@ Built so far (slice S0):
 - `src/lib/http/guard.ts`: same-origin check, JSON content type, streamed body size cap.
 - Security headers (CSP, no framing, nosniff, referrer policy) on every route.
 
+Slice S2, find a park:
+- `GET /api/parks?q=` or `?lat=&lng=`: up to 10 named OpenStreetMap parks and nature reserves within 5 km,
+  nearest first. Place text goes to Nominatim on submit only (no autocomplete) through one 1 request/second queue
+  and is cached 30 days. Parks come from Overpass (two servers, one failover, a circuit breaker per server, at most
+  2 queries at once) and are cached 7 days. Empty answers have their own 15-minute cache. Same-origin only,
+  10 searches per minute per IP, plus a daily budget of uncached searches per IP and for everyone.
+- "Use my location" is rounded to 2 decimals (about 1 km) in the browser, and again on the server.
+- Every request to OpenStreetMap services sends `User-Agent: GrassPass/0.1 (+https://github.com/c0de128/grass-pass)`.
+
 ## Why open
 *Coming*, with measured numbers from our evals (open models vs. a no-AI baseline on 20 real parks).
 
@@ -70,7 +79,10 @@ Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will
   both SIL Open Font License 1.1 (served by `next/font`; the logo text is outlined from the `@fontsource` copies).
 - Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
   [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
-- Data credits (OpenStreetMap ODbL, iNaturalist, SerpApi) and model licences are added as those parts land.
+- Park names and locations: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,
+  via [Nominatim](https://nominatim.org/) and the [Overpass API](https://overpass-api.de/) (public instances, used under
+  their usage policies).
+- Data credits for iNaturalist and SerpApi and the model licences are added as those parts land.
 
 ## Licence
 [MIT](LICENSE)

@@ -4,6 +4,7 @@
  */
 import "@/lib/zod-config";
 import { z } from "zod";
+import { OctoberBoxSchema } from "@/lib/october";
 
 // ---------- age bands (SPEC F2) ----------
 
@@ -91,6 +92,8 @@ export const PassSchema = z.object({
   dataCheckedAt: z.object({ osm: z.string(), inat: z.string().nullable() }),
   /** First day of the iNaturalist window ("2026-09-21"), when iNat answered. */
   wildSince: z.string().nullable(),
+  /** October special (S7): monarch counts, checked when the pass was made. Absent outside October and on older passes. */
+  october: OctoberBoxSchema.optional(),
 });
 export type Pass = z.infer<typeof PassSchema>;
 

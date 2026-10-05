@@ -64,6 +64,7 @@ afterEach(() => {
 });
 
 const modelCalls = (calls: Call[]) => calls.filter((c) => c.host === "inference.do-ai.run");
+const isOctoberCall = (c: Call) => /^\/v1\/observations(\/histogram)?$/.test(new URL(c.url).pathname);
 
 describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
   it("exports only the handler plus runtime/maxDuration", () => {
@@ -120,8 +121,9 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
-    // One Overpass query, two iNaturalist calls, one model call.
-    expect(replay.calls.map((c) => c.host)).toEqual(["overpass-api.de", "api.inaturalist.org", "api.inaturalist.org", "inference.do-ai.run"]);
+    // One Overpass query, two iNaturalist calls, one model call. (In October the S7 monarch box adds two
+    // free iNaturalist counts; they are tested with a fixed clock in october.test.ts.)
+    expect(replay.calls.filter((c) => !isOctoberCall(c)).map((c) => c.host)).toEqual(["overpass-api.de", "api.inaturalist.org", "api.inaturalist.org", "inference.do-ai.run"]);
     // Key-to-host: the DO key goes only to DO.
     for (const c of replay.calls) {
       const auth = new Headers(c.init?.headers).get("authorization");
@@ -320,7 +322,7 @@ describe("a client that leaves does not cancel the paid model call", () => {
     await expect(first).rejects.toBeInstanceOf(WaiterAbortedError);
     release();
     // Let the pinned build finish and fill the cache.
-    for (let i = 0; i < 50 && !(await loadPass(passId(PARKS.connemara.id, "6-10", new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" }), 1))); i++) {
+    for (let i = 0; i < 400 && !(await loadPass(passId(PARKS.connemara.id, "6-10", new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" }), 1))); i++) {
       await new Promise((r) => setTimeout(r, 10));
     }
     expect(modelSignalAborted).toBe(false);
@@ -328,7 +330,7 @@ describe("a client that leaves does not cancel the paid model call", () => {
     expect(again).toMatchObject({ kind: "pass", cached: true });
     expect(modelCalls(replay.calls)).toHaveLength(1);
     expect(steps).toContain("clues");
-  });
+  }, 15_000);
 
   it("pass key is park | age band | Chicago day", () => {
     expect(passKey("way/1", "6-10", Date.UTC(2026, 9, 6, 4, 30))).toBe("way/1|6-10|2026-10-05");

@@ -1,5 +1,6 @@
 import { Chip, SECTION_LABELS } from "@/components/ui/Chip";
 import { TicketCard } from "@/components/ui/TicketCard";
+import { OctoberBox } from "./OctoberBox";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { formatDay, formatTime, modelLicence } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
@@ -82,6 +83,8 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
             checks, so we left them off instead of guessing.
           </p>
         ) : null}
+
+        <OctoberBox pass={pass} />
 
         <p className="text-sm">
           Made {madeAt}

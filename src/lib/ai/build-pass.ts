@@ -90,6 +90,8 @@ export type BuildDeps = {
   /** When the request started (deadline). */
   startedAt: number;
   modelLogger?: ModelLogger;
+  /** Called once the pools are ready and a model call will follow (S7 starts the October box here, in parallel). */
+  onPoolsReady?: (park: { id: string; lat: number; lng: number }) => void;
 };
 
 export type ApiError = { code: string; message: string; retryAfter?: number };
@@ -290,6 +292,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   }
 
   const parkData = parkDataOf(f.park.name, pool);
+  deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
   const messages = buildMessages(f.park.name, pool, band, mix);
   const jsonSchema = passJsonSchema({

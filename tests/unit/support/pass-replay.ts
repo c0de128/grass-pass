@@ -71,6 +71,15 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
       }
       throw new Error(`no species_counts recording for ${u.search}`);
     }
+    if (u.host === "api.inaturalist.org" && (u.pathname === "/v1/observations/histogram" || u.pathname === "/v1/observations")) {
+      // S7 October box: only the exact recorded URL (same park, same 14-day window) is answered.
+      const kind = u.pathname.endsWith("/histogram") ? "monarch-histogram" : "milkweed-count";
+      for (const p of Object.values(PARKS)) {
+        const r = rec(`inat-${kind}-${p.slug}`);
+        if (r._recording.url === url) return json(r.body);
+      }
+      throw new Error(`no ${kind} recording for ${u.search}`);
+    }
     if (u.host === "api.inaturalist.org" && u.pathname.startsWith("/v1/taxa/")) {
       return json(rec(`inat-taxa-${PARKS.connemara.slug}`).body);
     }

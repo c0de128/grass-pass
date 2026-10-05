@@ -21,7 +21,9 @@ import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
 import { localDay } from "@/lib/time";
-import { buildPass, type BuildOutcome } from "@/lib/ai/build-pass";
+import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
+import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
+import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import type { FetchLike } from "@/lib/sources/common";
 import {
@@ -39,6 +41,12 @@ import {
 const DAY = 24 * 3600;
 /** Saved passes stay readable (and printable) for 30 days. */
 export const PASS_TTL_SEC = 30 * DAY;
+/**
+ * Longest we wait for the October box after the pass is ready. It starts in parallel with the model
+ * call, so it is normally done long before; if not, the box says iNaturalist was too slow.
+ */
+export const OCTOBER_WAIT_MS = 6_000;
+
 /** Every request, cached or not, per IP per minute. */
 export const PASS_BURST_PER_MIN = 20;
 
@@ -205,8 +213,20 @@ async function build(ctx: {
   }
   const ticket: QuotaTicket = share.ticket;
 
+  // October special (S7): free iNaturalist counts, fetched while the model writes clues.
+  let october: Promise<OctoberBoxData> | null = null;
+  const startOctober = (park: OctoberPark) => {
+    if (october || !isOctoberDay(ctx.day)) return;
+    october = octoberBox(park, { store, fetchImpl: ctx.deps.fetchImpl, env: ctx.env, now, onStart: () => ticket.commit() }).catch(
+      (err: unknown): OctoberBoxData => {
+        log("october_box_failed", { error: err instanceof Error ? err.name : "unknown" }, "error");
+        return { status: "unavailable", reason: OCTOBER_REASONS.down };
+      },
+    );
+  };
+
   try {
-    const out = await buildPass(
+    let out = await buildPass(
       { ref: ctx.ref, band: ctx.req.ageBand, day: ctx.day, variant: ctx.variant, id: ctx.id },
       {
         store,
@@ -233,9 +253,15 @@ async function build(ctx: {
         },
         startedAt: ctx.startedAt,
         modelLogger: ctx.deps.modelLogger,
+        onPoolsReady: startOctober,
       },
     );
     if (out.kind === "pass") {
+      startOctober(out.pass.park);
+      if (october) {
+        const cap = Math.max(0, Math.min(OCTOBER_WAIT_MS, ctx.startedAt + PASS_DEADLINE_MS - now()));
+        out = { ...out, pass: { ...out.pass, october: await within(october, cap) } };
+      }
       await passCache.set(ctx.id, out.pass, { now: now() });
       await latestCache.set(ctx.key, ctx.variant, { now: now() });
       log("pass_made", { id: ctx.id, items: out.pass.items.length, model: out.pass.model.answered, ms: now() - ctx.startedAt });
@@ -245,5 +271,18 @@ async function build(ctx: {
     return out;
   } finally {
     if (!ticket.committed) await ticket.release();
+  }
+}
+
+/** The box, or "too slow" after `ms` (the fetch keeps going and fills the cache for the next pass). */
+async function within(box: Promise<OctoberBoxData>, ms: number): Promise<OctoberBoxData> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const slow = new Promise<OctoberBoxData>((resolve) => {
+    timer = setTimeout(() => resolve({ status: "unavailable", reason: OCTOBER_REASONS.slow }), ms);
+  });
+  try {
+    return await Promise.race([box, slow]);
+  } finally {
+    clearTimeout(timer);
   }
 }

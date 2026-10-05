@@ -1,0 +1,127 @@
+{
+ "_recording": {
+  "what": "Eval case 10: Frisco Commons (Frisco TX), way/126703593. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 10,
+  "parkId": "way/126703593",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:52:38.048Z",
+  "fetchedAtMs": 1791244358048,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Frisco Commons",
+   "featureKinds": 9,
+   "trees": 0,
+   "totalSpecies": 13,
+   "totalObservations": 14,
+   "taxaRequested": 12
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://overpass-api.de/api/interpreter",
+   "query": "[out:json][timeout:25];way(126703593)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:52:38.049Z",
+   "latencyMs": 11192,
+   "failedAttempts": [],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.11 87bfad18",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:51:15Z",
+     "timestamp_areas_base": "2026-10-04T19:59:06Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":126703593,"center":{"lat":33.1562834,"lon":-96.8138178},"tags":{"name":"Frisco Commons","leisure":"park"}},
+     {"type":"node","id":483410897,"tags":{"tourism":"viewpoint"}},
+     {"type":"node","id":483539663,"tags":{"tourism":"picnic_site"}},
+     {"type":"node","id":1403869957,"tags":{"tourism":"picnic_site"}},
+     {"type":"node","id":3720197710,"tags":{"amenity":"fountain"}},
+     {"type":"node","id":3720197711,"tags":{"amenity":"fountain"}},
+     {"type":"node","id":3720207567,"tags":{"name":"Veterans Memorial","historic":"monument"}},
+     {"type":"node","id":12965009090,"tags":{"name":"WW2 Flyboy","tourism":"artwork"}},
+     {"type":"node","id":12985084029,"tags":{"name":"Gold Star Families Memorial Monument","historic":"monument"}},
+     {"type":"way","id":126701648,"tags":{"name":"Frisco Commons Pond","natural":"water"}},
+     {"type":"way","id":368162884,"tags":{"playground":"splash_pad","amenity":"splash_pad"}},
+     {"type":"way","id":368163345,"tags":{"name":"Shelter 1","amenity":"shelter"}},
+     {"type":"way","id":368163605,"tags":{"name":"Hope Park","leisure":"playground"}},
+     {"type":"way","id":1410988254,"tags":{"name":"The Harvest at Frisco Commons","leisure":"garden"}},
+     {"type":"way","id":1410988255,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1410988256,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1410988257,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1410988258,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1410988259,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1410988260,"tags":{"amenity":"shelter"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:52:49.243Z",
+   "latencyMs": 221,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 13,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":2,"taxon":{"id":8229,"name":"Cyanocitta cristata","rank":"species","preferred_common_name":"Blue Jay","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,7251,7823,8228,8229]}},
+     {"count":1,"taxon":{"id":36202,"name":"Sceloporus olivaceus","rank":"species","preferred_common_name":"Texas Spiny Lizard","iconic_taxon_name":"Reptilia","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141,36202]}},
+     {"count":1,"taxon":{"id":43794,"name":"Castor canadensis","rank":"species","preferred_common_name":"American Beaver","iconic_taxon_name":"Mammalia","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,870764,43791,43792,43794]}},
+     {"count":1,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}},
+     {"count":1,"taxon":{"id":55483,"name":"Fuligo septica","rank":"species","preferred_common_name":"Dog Vomit Slime Mold","iconic_taxon_name":"Protozoa","ancestor_ids":[48460,47686,47685,47684,1443220,1443223,55484,55485,55486,55483]}},
+     {"count":1,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":1,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}},
+     {"count":1,"taxon":{"id":79136,"name":"Solanum dimidiatum","rank":"species","preferred_common_name":"western horsenettle","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634950,50641,79136]}},
+     {"count":1,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":1,"taxon":{"id":118538,"name":"Cotinis nitida","rank":"species","preferred_common_name":"Common Green June Beetle","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,702480,48202,48201,127588,244822,1583205,57666,118538]}},
+     {"count":1,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":1,"taxon":{"id":200074,"name":"Gonolobus suberosus","rank":"species","preferred_common_name":"Anglepod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448,200074]}},
+     {"count":1,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/8229,53478,58205,67593,83435,143792,200074,1555999,36202,43794,55483,118538?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:52:50.248Z",
+   "latencyMs": 419,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":8229,"name":"Cyanocitta cristata","preferred_common_name":"Blue Jay","wikipedia_summary":"The <b>blue jay</b> (<i>Cyanocitta cristata</i>) is a passerine bird in the family Corvidae, native to North America. It is resident through most of eastern and central United States, although western populations may be migratory. Resident populations are also found in Newfoundland, Canada, while breeding populations can be found in southern Canada. It breeds in both deciduous and coniferous forests, and is common near and in residential areas. It is predominantly blue with a white chest and...","ancestor_ids":[48460,1,2,355675,3,7251,7823,8228]},
+     {"id":53478,"name":"Commelina erecta","preferred_common_name":"whitemouth dayflower","wikipedia_summary":"<i><b>Commelina erecta</b></i>, commonly known as the <b>white mouth dayflower</b>, <b>slender dayflower</b>, or <b>widow's tears</b>, is a perennial herb native throughout the Americas, Africa and western Asia. It is considered to be the most variable species of <i>Commelina</i> in North America.","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893]},
+     {"id":58205,"name":"Maclura pomifera","preferred_common_name":"Osage-orange","wikipedia_summary":"<i><b>Maclura pomifera</b></i>, commonly known as the <b>Osage orange</b>, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall. The distinctive fruit, from a multiple fruit family, is roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green in the fall. The fruits secrete a sticky white latex when cut or damaged. Despite the name \"Osage orange\", it is only distantly related to the orange, but rather...","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206]},
+     {"id":67593,"name":"Carya illinoinensis","preferred_common_name":"pecan","wikipedia_summary":"The <b>pecan</b> (<i>Carya illinoinensis</i>) is a species of hickory native to Mexico and the southcentral and southeastern regions of the United States.","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788]},
+     {"id":83435,"name":"Diospyros virginiana","preferred_common_name":"American persimmon","wikipedia_summary":"<i><b>Diospyros virginiana</b></i> is a persimmon species commonly called the <b>American persimmon</b>, <b>common persimmon</b>, <b>eastern persimmon</b>, <b>\"simmon\"</b>, <b>\"possumwood\"</b>, <b>\"possum apples\"</b>, or <b>\"sugar-plum\"</b>. It ranges from southern Connecticut/Long Island to Florida, and west to Texas, Louisiana, Oklahoma, Kansas, and Iowa. The tree grows wild but has been cultivated for its fruit and wood since prehistoric times by Native Americans.","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434]},
+     {"id":143792,"name":"Pistacia chinensis","preferred_common_name":"Chinese pistache","wikipedia_summary":"<i><b>Pistacia chinensis</b></i> (English: <b>Chinese pistache</b>; Chinese: 黄连木; pinyin: <i>huángliánmù</i>) is a small to medium-sized tree in the genus <i>Pistacia</i> in the cashew family, Anacardiaceae, native to central and western China. It is hardy, can withstand harsh conditions and poor quality soils, and grows up to 20 m. The leaves are deciduous, alternate, pinnate, 20–25 cm long, with 10 or 12 leaflets, the terminal leaflet usually absent. The flowers are produced in panicles 15–20 cm long at the ends...","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301]},
+     {"id":200074,"name":"Gonolobus suberosus","preferred_common_name":"Anglepod","wikipedia_summary":"<i><b>Gonolobus suberosus</b></i> is a species of plant in the Apocynaceae family. It is native to eastern North America, where it is primarily found in the southeastern United States. Its natural habitat is mesic to wet forests and thickets.","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448]},
+     {"id":1555999,"name":"Nephroia carolina","preferred_common_name":"Carolina snailseed","wikipedia_summary":"<i><b>Nephroia carolina</b></i>, commonly called the <b>Carolina coralbead</b>, <b>snailseed</b>, <b>Carolina Moonseed</b>, or <b>Margil's Vine</b>, is a perennial vine of the moonseed family (Menispermaceae). It is native to North America, where it is found in northeastern Mexico and in several states in the United States from the Southeast to the Midwest.","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996]},
+     {"id":36202,"name":"Sceloporus olivaceus","preferred_common_name":"Texas Spiny Lizard","wikipedia_summary":"The <b>Texas spiny lizard</b> (<i><b>Sceloporus olivaceus</b></i>) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas, and San Luis Potosí. They are quite common throughout their range, where they can be found in trees or on fences.","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141]},
+     {"id":43794,"name":"Castor canadensis","preferred_common_name":"American Beaver","wikipedia_summary":"The <b>North American beaver</b> (<i>Castor canadensis</i>) is one of two extant beaver species. It is native to North America and introduced to Patagonia in South America and some European countries (e.g. Finland). In the United States and Canada, the species is often referred to simply as \"beaver\", though this causes some confusion because another distantly related rodent, <i>Aplodontia rufa</i>, is often called the \"mountain beaver\". Other vernacular names, including <b>American beaver</b> and <b>Canadian beaver</b>, distinguish this...","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,870764,43791,43792]},
+     {"id":55483,"name":"Fuligo septica","preferred_common_name":"Dog Vomit Slime Mold","wikipedia_summary":"<i><b>Fuligo septica</b></i> is a species of plasmodial slime mold, and a member of the Myxomycetes class. It is commonly known as the <b>scrambled egg slime</b>, or <b>flowers of tan</b> because of its peculiar yellowish, bile-colored appearance. Also known as the <b>dog vomit slime mold</b>, it is common with a worldwide distribution, and it is often found on bark mulch in urban areas after heavy rain or excessive watering. Their spores are produced on or in aerial...","ancestor_ids":[48460,47686,47685,47684,1443220,1443223,55484,55485,55486]},
+     {"id":118538,"name":"Cotinis nitida","preferred_common_name":"Common Green June Beetle","wikipedia_summary":"<i><b>Cotinis nitida</b></i>, commonly known as the <b>green June beetle</b>, <b>June bug</b> or <b>June beetle</b>, is a beetle of the family Scarabaeidae. It is found in the eastern United States, where it is most abundant in the south. It is sometimes confused with the related southwestern species figeater beetle <i>Cotinis mutabilis</i>, which is less destructive.","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,702480,48202,48201,127588,244822,1583205,57666]}
+    ]
+   }
+  }
+ ]
+}

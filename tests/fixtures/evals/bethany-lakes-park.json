@@ -1,0 +1,134 @@
+{
+ "_recording": {
+  "what": "Eval case 6: Bethany Lakes Park (Allen TX), way/366756040. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 6,
+  "parkId": "way/366756040",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:48:36.441Z",
+  "fetchedAtMs": 1791244116441,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Bethany Lakes Park",
+   "featureKinds": 10,
+   "trees": 0,
+   "totalSpecies": 5,
+   "totalObservations": 5,
+   "taxaRequested": 5
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+   "query": "[out:json][timeout:25];way(366756040)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:48:47.463Z",
+   "latencyMs": 16702,
+   "failedAttempts": [
+    {
+     "url": "https://overpass-api.de/api/interpreter",
+     "status": 504,
+     "error": null,
+     "latencyMs": 11022,
+     "at": "2026-10-05T23:48:36.441Z"
+    }
+   ],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.4 2390de5a",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:47:02Z",
+     "timestamp_areas_base": "2026-10-05T22:24:30Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":366756040,"center":{"lat":33.0875958,"lon":-96.6430001},"tags":{"name":"Bethany Lakes Park","leisure":"park","natural":"grass"}},
+     {"type":"node","id":4685567390,"tags":{"name":"Southeast Lake Fountain","amenity":"fountain"}},
+     {"type":"node","id":4790559012,"tags":{"name":"Northwest Lake Fountain","amenity":"fountain"}},
+     {"type":"node","id":5194939893,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939894,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939895,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939896,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939897,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939898,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939899,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939900,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5194939901,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5202746882,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":5202746883,"tags":{"amenity":"bench"}},
+     {"type":"node","id":5202746884,"tags":{"amenity":"bench"}},
+     {"type":"node","id":5202746885,"tags":{"amenity":"bench"}},
+     {"type":"node","id":5202746886,"tags":{"amenity":"bench"}},
+     {"type":"way","id":374570894,"tags":{"name":"Muddy Creek","waterway":"stream"}},
+     {"type":"way","id":374570897,"tags":{"waterway":"stream"}},
+     {"type":"way","id":288955874,"tags":{"name":"Bethany Lakes (Southeast)","natural":"water"}},
+     {"type":"way","id":288955875,"tags":{"name":"Bethany Lakes (Southwest)","natural":"water"}},
+     {"type":"way","id":288955876,"tags":{"name":"Bethany Lakes (Northwest)","natural":"water"}},
+     {"type":"way","id":288955877,"tags":{"name":"Bethany Lakes (Northeast)","natural":"water"}},
+     {"type":"way","id":374570893,"tags":{"name":"Muddy Creek","waterway":"stream"}},
+     {"type":"way","id":474649149,"tags":{"bridge":"yes","highway":"footway"}},
+     {"type":"way","id":474649150,"tags":{"bridge":"yes","highway":"footway"}},
+     {"type":"way","id":474649151,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":474649152,"tags":{"leisure":"playground"}},
+     {"type":"way","id":476381897,"tags":{"bridge":"yes","highway":"cycleway"}},
+     {"type":"way","id":476381899,"tags":{"leisure":"pitch","sport":"baseball"}},
+     {"type":"way","id":486439920,"tags":{"name":"Muddy Creek","waterway":"stream"}},
+     {"type":"way","id":536196591,"tags":{"name":"Allen Veteran's Memorial","historic":"monument"}},
+     {"type":"way","id":582021268,"tags":{"name":"Muddy Creek","waterway":"stream"}},
+     {"type":"way","id":582021269,"tags":{"name":"Muddy Creek","waterway":"stream"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:49:04.168Z",
+   "latencyMs": 278,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 5,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":1,"taxon":{"id":49399,"name":"Juniperus virginiana","rank":"species","preferred_common_name":"eastern redcedar","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,136329,47375,47374,1150915,47574,701533,49399]}},
+     {"count":1,"taxon":{"id":58530,"name":"Eurema lisa","rank":"species","preferred_common_name":"Little Yellow","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,48508,119556,1609467,1609472,51615,58530]}},
+     {"count":1,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}},
+     {"count":1,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":1,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/49399,75995,119145,120151,58530?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:49:05.170Z",
+   "latencyMs": 246,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 5,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":49399,"name":"Juniperus virginiana","preferred_common_name":"eastern redcedar","wikipedia_summary":"<i><b>Juniperus virginiana</b></i> — its common names include <b>red cedar</b>, <b>eastern redcedar</b>, <b>Virginian juniper</b>, <b>eastern juniper</b>, <b>red juniper</b>, <b>pencil cedar</b>, and <b>aromatic cedar</b> — is a species of juniper native to eastern North America from southeastern Canada to the Gulf of Mexico and east of the Great Plains. Further west it is replaced by the related <i>Juniperus scopulorum</i> (Rocky Mountain juniper) and to the southwest by <i>Juniperus ashei</i> (Ashe juniper).","ancestor_ids":[48460,47126,211194,136329,47375,47374,1150915,47574,701533]},
+     {"id":75995,"name":"Campsis radicans","preferred_common_name":"American trumpet vine","wikipedia_summary":"<i><b>Campsis radicans</b></i> (<b>trumpet vine</b> or <b>trumpet creeper</b>, also known in North America as <b>cow itch vine</b> or <b>hummingbird vine</b>), is a species of flowering plant of the family Bignoniaceae, native to the eastern United States and naturalized in parts of the western United States as well as in Ontario, parts of Europe, and scattered locations in Latin America. Growing to 10 m (33 ft), it is a vigorous, deciduous woody vine, notable for its showy trumpet-shaped flowers. It...","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030]},
+     {"id":119145,"name":"Mikania scandens","preferred_common_name":"climbing hempvine","wikipedia_summary":"<i><b>Mikania scandens</b></i> is a species of flowering plant in the aster family, Asteraceae. Its common names include <b>climbing hempvine</b>, <b>climbing hempweed</b>, and <b>louse-plaster</b>. It is native to the eastern and central United States, its distribution extending into Tamaulipas in Mexico. Reports of its presence in Ontario in Canada are erroneous. It is an introduced and invasive species on many Pacific Islands and in parts of southern Asia.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588]},
+     {"id":120151,"name":"Frangula caroliniana","preferred_common_name":"Carolina buckthorn","wikipedia_summary":"<i><b>Frangula caroliniana</b></i>, commonly called the <b>Carolina buckthorn</b>, is a deciduous upright shrub or small tree native to the southeastern, south-central, and mid-western parts of the United States, from Texas east to Florida and north as far as Maryland, Ohio, Missouri, and Oklahoma. There is also an isolated population in the State of Nuevo León in northeastern Mexico. It is found in a wide variety of habitats, including barrens, forests, and limestone bluffs.","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424]},
+     {"id":58530,"name":"Eurema lisa","preferred_common_name":"Little Yellow","wikipedia_summary":"<i><b>Eurema lisa</b></i>, commonly known as the <b>little yellow</b>, <b>little sulphur</b> or <b>little sulfur</b>, is a species of Coliadinae that occurs in Central America and the southern part of North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,48508,119556,1609467,1609472,51615]}
+    ]
+   }
+  }
+ ]
+}

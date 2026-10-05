@@ -1,0 +1,170 @@
+{
+ "_recording": {
+  "what": "Eval case 11: Breckinridge Park (Richardson TX), way/290091068. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 11,
+  "parkId": "way/290091068",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:52:56.690Z",
+  "fetchedAtMs": 1791244376690,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Breckinridge Park",
+   "featureKinds": 11,
+   "trees": 0,
+   "totalSpecies": 10,
+   "totalObservations": 10,
+   "taxaRequested": 10
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+   "query": "[out:json][timeout:25];way(290091068)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:53:05.886Z",
+   "latencyMs": 17892,
+   "failedAttempts": [
+    {
+     "url": "https://overpass-api.de/api/interpreter",
+     "status": 504,
+     "error": null,
+     "latencyMs": 9196,
+     "at": "2026-10-05T23:52:56.690Z"
+    }
+   ],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.4 2390de5a",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:52:20Z",
+     "timestamp_areas_base": "2026-10-05T22:15:18Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":290091068,"center":{"lat":32.991734,"lon":-96.6317758},"tags":{"name":"Breckinridge Park","leisure":"park"}},
+     {"type":"node","id":9763374159,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374160,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374161,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374162,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374163,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374164,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374165,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374181,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374182,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374184,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374195,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374196,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374156,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374157,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374158,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374183,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374185,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374186,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374187,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374192,"tags":{"amenity":"bench"}},
+     {"type":"node","id":9763374193,"tags":{"amenity":"drinking_water"}},
+     {"type":"node","id":9763374194,"tags":{"amenity":"drinking_water"}},
+     {"type":"node","id":9762873772,"tags":{"amenity":"drinking_water"}},
+     {"type":"node","id":9763374188,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374189,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374190,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9763374191,"tags":{"leisure":"picnic_table"}},
+     {"type":"node","id":9762873775,"tags":{"amenity":"drinking_water"}},
+     {"type":"way","id":441825733,"tags":{"name":"Rowlett Creek","waterway":"river"}},
+     {"type":"way","id":441825752,"tags":{"name":"Beck Branch","waterway":"stream"}},
+     {"type":"way","id":290182859,"tags":{"natural":"water"}},
+     {"type":"way","id":441825725,"tags":{"name":"Murphy Branch","waterway":"stream"}},
+     {"type":"way","id":441825759,"tags":{"waterway":"stream"}},
+     {"type":"way","id":667310403,"tags":{"name":"Breckinridge Park Nature Trail","bridge":"yes","highway":"path"}},
+     {"type":"way","id":1062732026,"tags":{"bridge":"yes","highway":"path"}},
+     {"type":"way","id":1062732029,"tags":{"bridge":"yes","highway":"path"}},
+     {"type":"way","id":441825755,"tags":{"waterway":"stream"}},
+     {"type":"way","id":441825754,"tags":{"waterway":"stream"}},
+     {"type":"way","id":598201573,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":598201574,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1062732013,"tags":{"leisure":"playground"}},
+     {"type":"way","id":598201576,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1062732019,"tags":{"leisure":"playground"}},
+     {"type":"way","id":1062798779,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798780,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798781,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798782,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798783,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798784,"tags":{"leisure":"bleachers"}},
+     {"type":"way","id":1062798785,"tags":{"leisure":"pitch","sport":"soccer"}},
+     {"type":"way","id":441825739,"tags":{"name":"Satellite Branch","waterway":"stream"}},
+     {"type":"way","id":667301654,"tags":{"bridge":"yes","highway":"cycleway"}},
+     {"type":"way","id":1044372287,"tags":{"bridge":"yes","highway":"cycleway"}},
+     {"type":"way","id":290181458,"tags":{"natural":"water"}},
+     {"type":"way","id":290182277,"tags":{"natural":"water"}},
+     {"type":"way","id":667301990,"tags":{"leisure":"pitch","sport":"baseball"}},
+     {"type":"way","id":667301992,"tags":{"leisure":"pitch","sport":"baseball"}},
+     {"type":"way","id":667301995,"tags":{"leisure":"pitch","sport":"baseball"}},
+     {"type":"way","id":667301998,"tags":{"leisure":"pitch","sport":"baseball"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.99173&lng=-96.63178&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:53:23.781Z",
+   "latencyMs": 287,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":1,"taxon":{"id":49591,"name":"Lepomis macrochirus","rank":"species","preferred_common_name":"Bluegill","iconic_taxon_name":"Actinopterygii","ancestor_ids":[48460,1,2,355675,47178,1632273,1303731,1303755,49588,1303639,49592,49591]}},
+     {"count":1,"taxon":{"id":50071,"name":"Erynnis horatius","rank":"species","preferred_common_name":"Horace's Duskywing","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47653,51312,320551,47652,50071]}},
+     {"count":1,"taxon":{"id":50931,"name":"Strymon melinus","rank":"species","preferred_common_name":"Gray Hairstreak","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47923,125830,125836,1456505,50940,50931]}},
+     {"count":1,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}},
+     {"count":1,"taxon":{"id":65979,"name":"Lithobates catesbeianus","rank":"species","preferred_common_name":"American Bullfrog","iconic_taxon_name":"Amphibia","ancestor_ids":[48460,1,2,355675,20978,20979,25473,60340,65979]}},
+     {"count":1,"taxon":{"id":67731,"name":"Anax junius","rank":"species","preferred_common_name":"Common Green Darner","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317180,51469,51468,67731]}},
+     {"count":1,"taxon":{"id":69736,"name":"Schistocerca americana","rank":"species","preferred_common_name":"American Bird Grasshopper","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47651,67688,700600,47650,47649,337688,523283,52159,1373635,69736]}},
+     {"count":1,"taxon":{"id":94577,"name":"Argia translata","rank":"species","preferred_common_name":"Dusky Dancer","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47928,426081,47925,47977,94577]}},
+     {"count":1,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":1,"taxon":{"id":1364008,"name":"Lepomis aquilensis","rank":"species","preferred_common_name":"Plains Longear Sunfish","iconic_taxon_name":"Actinopterygii","ancestor_ids":[48460,1,2,355675,47178,1632273,1303731,1303755,49588,1303639,49592,1553125,1364008]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/53478,554401,49591,50071,50931,65979,67731,69736,94577,1364008?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:53:24.785Z",
+   "latencyMs": 339,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":53478,"name":"Commelina erecta","preferred_common_name":"whitemouth dayflower","wikipedia_summary":"<i><b>Commelina erecta</b></i>, commonly known as the <b>white mouth dayflower</b>, <b>slender dayflower</b>, or <b>widow's tears</b>, is a perennial herb native throughout the Americas, Africa and western Asia. It is considered to be the most variable species of <i>Commelina</i> in North America.","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893]},
+     {"id":554401,"name":"Zephyranthes chlorosolen","preferred_common_name":"Brazos rain-lily","wikipedia_summary":"<i><b>Zephyranthes chlorosolen</b></i>, known by a number of common names including <b>Drummond's rain‑lily</b>, <b>evening rain‑lily</b>, <b>evening star rain lily</b> (names it shares with <i>Zephyranthes drummondii</i>), <b>Brazos rain‑lily</b>, <b>Texas rainlily</b>, and <b>cebolleta</b>, is a species of flowering plant in the family Amaryllidaceae. It is found from Kansas to Mexico, and has been introduced to southern Brazil. A geophytic perennial typically 18 to 35 cm (7 to 14 in) tall, its lone flower opens in the evening and lasts only a few...","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027]},
+     {"id":49591,"name":"Lepomis macrochirus","preferred_common_name":"Bluegill","wikipedia_summary":"The <b>bluegill</b> (<i>Lepomis macrochirus</i>) is a species of freshwater fish sometimes referred to as bream, brim, or copper nose. It is a member of the sunfish family Centrarchidae of the order Perciformes. It is native to North America and lives in streams, rivers, lakes, and ponds. It is commonly found east of the Rockies. It usually hides around, and inside, old tree stumps and other underwater structures. It can live in either deep or very shallow...","ancestor_ids":[48460,1,2,355675,47178,1632273,1303731,1303755,49588,1303639,49592]},
+     {"id":50071,"name":"Erynnis horatius","preferred_common_name":"Horace's Duskywing","wikipedia_summary":"<i><b>Erynnis horatius</b></i>, the <b>Horace's duskywing</b>, is a butterfly of the family Hesperiidae. It is found from Massachusetts, west to eastern South Dakota, south through most of the eastern United States to Florida, the Gulf Coast, and southern Texas, south in the west through south-eastern Utah, Colorado, north-eastern Arizona, and New Mexico.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47653,51312,320551,47652]},
+     {"id":50931,"name":"Strymon melinus","preferred_common_name":"Gray Hairstreak","wikipedia_summary":null,"ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47923,125830,125836,1456505,50940]},
+     {"id":65979,"name":"Lithobates catesbeianus","preferred_common_name":"American Bullfrog","wikipedia_summary":"The <b>American bullfrog</b> (<i>Lithobates catesbeianus</i> or <i>Rana catesbeiana</i>), often simply known as the <b>bullfrog</b> in Canada and the United States, is an amphibious frog, a member of the family Ranidae, or “true frogs”. This frog has an olive green back and sides blotched with brownish markings and a whitish belly spotted with yellow or grey. The upper lip is often bright green and males have yellow throats. It inhabits large, permanent water bodies, such as swamps,...","ancestor_ids":[48460,1,2,355675,20978,20979,25473,60340]},
+     {"id":67731,"name":"Anax junius","preferred_common_name":"Common Green Darner","wikipedia_summary":"The green darner or <b>common green darner</b> (<i>Anax junius</i>), after its resemblance to a darning-needle, is a species of dragonfly in the family Aeshnidae. One of the most common and abundant species throughout North America, it also ranges south to Panama. It is well known for its great migration distance from the northern United States south into Texas and Mexico. It also occurs in the Caribbean, Tahiti, and Asia from Japan to mainland China. It is...","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317180,51469,51468]},
+     {"id":69736,"name":"Schistocerca americana","preferred_common_name":"American Bird Grasshopper","wikipedia_summary":"<i><b>Schistocerca americana</b></i> is a species of grasshopper in the family Acrididae known commonly as the <b>American grasshopper</b> and <b>American bird grasshopper</b>. It is native to North America, where it occurs in the eastern United States, Mexico, and the Bahamas. Occasional, localized outbreaks of this grasshopper occur, and it is often referred to as a locust, though it lacks the true swarming form of its congener, the desert locust (<i>S. gregaria</i>).","ancestor_ids":[48460,1,47120,372739,47158,184884,47651,67688,700600,47650,47649,337688,523283,52159,1373635]},
+     {"id":94577,"name":"Argia translata","preferred_common_name":"Dusky Dancer","wikipedia_summary":"The <b>dusky dancer</b> (<i>Argia translata</i>) is a damselfly of the family Coenagrionidae, native to eastern and southern North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47928,426081,47925,47977]},
+     {"id":1364008,"name":"Lepomis aquilensis","preferred_common_name":"Plains Longear Sunfish","wikipedia_summary":"The <b>longear sunfish</b> (<i><b>Lepomis megalotis</b></i>) is a freshwater fish in the sunfish family, Centrarchidae, of order Perciformes. It is native to the area of eastern North America stretching from the Great Lakes down to northeastern Mexico. The longear sunfish reaches a maximum recorded length of about 24 cm (9.4 in), with a maximum recorded weight of 790 g (1.74 lb). Most do not live beyond six years. The longear sunfish is quite colorful, with an olive to rusty-brown back, bright...","ancestor_ids":[48460,1,2,355675,47178,1632273,1303731,1303755,49588,1303639,49592,1553125]}
+    ]
+   }
+  }
+ ]
+}

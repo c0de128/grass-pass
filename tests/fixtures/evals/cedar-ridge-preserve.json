@@ -1,0 +1,143 @@
+{
+ "_recording": {
+  "what": "Eval case 15: Cedar Ridge Preserve (Dallas TX), way/310790501. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 15,
+  "parkId": "way/310790501",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:54:30.847Z",
+  "fetchedAtMs": 1791244470847,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Cedar Ridge Preserve",
+   "featureKinds": 8,
+   "trees": 0,
+   "totalSpecies": 24,
+   "totalObservations": 25,
+   "taxaRequested": 23
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://overpass-api.de/api/interpreter",
+   "query": "[out:json][timeout:25];way(310790501)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:54:30.847Z",
+   "latencyMs": 2838,
+   "failedAttempts": [],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.11 87bfad18",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:53:19Z",
+     "timestamp_areas_base": "2026-10-04T19:59:06Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":310790501,"center":{"lat":32.6341187,"lon":-96.9647607},"tags":{"name":"Cedar Ridge Preserve","leisure":"nature_reserve"}},
+     {"type":"node","id":11250098368,"tags":{"tourism":"information","information":"guidepost"}},
+     {"type":"node","id":11250098369,"tags":{"tourism":"information","information":"guidepost"}},
+     {"type":"node","id":11250098370,"tags":{"man_made":"tower"}},
+     {"type":"node","id":11250098371,"tags":{"tourism":"viewpoint"}},
+     {"type":"node","id":11250098372,"tags":{"amenity":"bench"}},
+     {"type":"node","id":11250098471,"tags":{"amenity":"drinking_water"}},
+     {"type":"node","id":14236107225,"tags":{"man_made":"tower"}},
+     {"type":"way","id":1214444957,"tags":{"natural":"water"}},
+     {"type":"way","id":1214222210,"tags":{"waterway":"stream"}},
+     {"type":"way","id":417117037,"tags":{"name":"Cattail Pond","natural":"water"}},
+     {"type":"way","id":1214222205,"tags":{"amenity":"shelter"}},
+     {"type":"way","id":1214222208,"tags":{"name":"Escarpment Trail","bridge":"yes","highway":"footway"}},
+     {"type":"way","id":1323488946,"tags":{"name":"Cattail Pond Trail","bridge":"yes","highway":"footway"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.63412&lng=-96.96476&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:54:33.686Z",
+   "latencyMs": 368,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 24,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":2,"taxon":{"id":69816,"name":"Sagittaria platyphylla","rank":"species","preferred_common_name":"Delta Arrowhead","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,48073,48072,48071,1423416,1504195,69816]}},
+     {"count":1,"taxon":{"id":36202,"name":"Sceloporus olivaceus","rank":"species","preferred_common_name":"Texas Spiny Lizard","iconic_taxon_name":"Reptilia","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141,36202]}},
+     {"count":1,"taxon":{"id":46020,"name":"Sciurus niger","rank":"species","preferred_common_name":"Eastern Fox Squirrel","iconic_taxon_name":"Mammalia","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,129411,45933,332614,339575,45994,1431496,46020]}},
+     {"count":1,"taxon":{"id":57920,"name":"Xanthium strumarium","rank":"species","preferred_common_name":"rough cocklebur","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,57921,57920]}},
+     {"count":1,"taxon":{"id":58732,"name":"Toxicodendron radicans","rank":"species","preferred_common_name":"eastern poison ivy","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,51079,58732]}},
+     {"count":1,"taxon":{"id":59774,"name":"Pachydiplax longipennis","rank":"species","preferred_common_name":"Blue Dasher","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,59775,59774]}},
+     {"count":1,"taxon":{"id":61495,"name":"Erythemis simplicicollis","rank":"species","preferred_common_name":"Eastern Pondhawk","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,53868,61495]}},
+     {"count":1,"taxon":{"id":70421,"name":"Acris blanchardi","rank":"species","preferred_common_name":"Blanchard's Cricket Frog","iconic_taxon_name":"Amphibia","ancestor_ids":[48460,1,2,355675,20978,20979,1658175,24229,70421]}},
+     {"count":1,"taxon":{"id":75833,"name":"Boerhavia coccinea","rank":"species","preferred_common_name":"scarlet spiderling","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,72014,75833]}},
+     {"count":1,"taxon":{"id":78664,"name":"Polanisia dodecandra","rank":"species","preferred_common_name":"redwhisker clammyweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,71409,72310,78664]}},
+     {"count":1,"taxon":{"id":104574,"name":"Libellula croceipennis","rank":"species","preferred_common_name":"Neon Skimmer","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,47818,104574]}},
+     {"count":1,"taxon":{"id":120585,"name":"Euphorbia bicolor","rank":"species","preferred_common_name":"snow-on-the-prairie","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,779191,1244656,1244731,51822,792275,792271,120585]}},
+     {"count":1,"taxon":{"id":126257,"name":"Helicina orbiculata","rank":"species","preferred_common_name":"Globular Drop Snail","iconic_taxon_name":"Mollusca","ancestor_ids":[48460,1,47115,47114,437702,775835,245601,85811,524933,88762,126257]}},
+     {"count":1,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}},
+     {"count":1,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":1,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":1,"taxon":{"id":153540,"name":"Acacesia hamata","rank":"species","preferred_common_name":"Difoliate Orbweaver","iconic_taxon_name":"Arachnida","ancestor_ids":[48460,1,47120,245097,47119,47118,120474,342614,319384,47535,417879,153566,153540]}},
+     {"count":1,"taxon":{"id":155299,"name":"Croton monanthogynus","rank":"species","preferred_common_name":"Prairie Tea","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,1244599,1259430,53165,155299]}},
+     {"count":1,"taxon":{"id":162705,"name":"Eryngium leavenworthii","rank":"species","preferred_common_name":"Leavenworth's eryngo","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48700,48699,525432,790556,57628,1679645,162705]}},
+     {"count":1,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":1,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":1,"taxon":{"id":218004,"name":"Cymatodera undulata","rank":"species","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,372852,55050,55051,366994,174061,218004]}},
+     {"count":1,"taxon":{"id":914092,"name":"Oenothera glaucifolia","rank":"species","preferred_common_name":"False Gaura","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,48626,914075,1654961,914092]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/69816,57920,75833,78664,120585,130379,135263,142653,143792,155299,162705,203827,204420,914092,36202,46020,59774,61495,70421,104574,126257,153540,218004?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:54:34.696Z",
+   "latencyMs": 706,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 23,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":69816,"name":"Sagittaria platyphylla","preferred_common_name":"Delta Arrowhead","wikipedia_summary":"<i><b>Sagittaria platyphylla</b></i>, the <b>delta arrowhead</b>, <b>broad-leaf arrowhead</b> or <b>delta duck-potato</b>, is a plant species native to the eastern United States. The core of its range extends from central Texas to the Florida Panhandle north to southern Illinois. Isolated populations have been reported from Washington State, Missouri, Kansas, Ohio, Kentucky, Pennsylvania, West Virginia, eastern Virginia, North and South Carolina and eastern Georgia, Nuevo León, Michoacán and Panamá. It has also become a noxious weed in Australia. The...","ancestor_ids":[48460,47126,211194,47125,47163,48073,48072,48071,1423416,1504195]},
+     {"id":57920,"name":"Xanthium strumarium","preferred_common_name":"rough cocklebur","wikipedia_summary":"<i><b>Xanthium strumarium</b></i> (<b>rough cocklebur</b>, <b>clotbur</b>, <b>common cocklebur</b>, <b>large cocklebur</b>, <b>woolgarie bur</b>) is a species of annual plants belonging to the Asteraceae family. It probably originates in North America and has been extensively naturalized elsewhere.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,57921]},
+     {"id":75833,"name":"Boerhavia coccinea","preferred_common_name":"scarlet spiderling","wikipedia_summary":"<i><b>Boerhavia coccinea</b></i> is a species of flowering plant in the four o'clock family which is known by many common names, including <b>scarlet spiderling</b>, <b>red boerhavia</b>, <b>hogweed</b>, and in Spanish, <i><b>hierba del cancer</b></i> and <i><b>hierba de la hormiga</b></i>.","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,72014]},
+     {"id":78664,"name":"Polanisia dodecandra","preferred_common_name":"redwhisker clammyweed","wikipedia_summary":"<i><b>Polanisia dodecandra</b></i> is a species of flowering plant in the <i>Cleome</i> family, Cleomaceae, known by the common name <b>redwhisker clammyweed</b>, or <b>western clammyweed</b>, although there are other <i>Polanisia</i> species called clammyweed. It is an annual plant that is found in many types of habitat throughout much of Canada and the United States. It can be found elsewhere as an introduced species.","ancestor_ids":[48460,47126,211194,47125,47124,71275,71409,72310]},
+     {"id":120585,"name":"Euphorbia bicolor","preferred_common_name":"snow-on-the-prairie","wikipedia_summary":"<i><b>Euphorbia bicolor</b></i>, commonly known as <b>snow on the prairie</b>, is a species of flowering plant in the genus <i>Euphorbia</i>, native to the southern United States. It grows 1-4 feet tall, has green and white alternate leaves, and is monoecious with unisexual flowers. It grows in hard clay soils of prairies, rangelands, and edges of forests.","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,779191,1244656,1244731,51822,792275,792271]},
+     {"id":130379,"name":"Liatris punctata","preferred_common_name":"dotted gayfeather","wikipedia_summary":"<i><b>Liatris punctata</b></i> is a species of flowering plant in the aster family known by the common names <b>dotted gayfeather</b>, <b>dotted blazingstar</b>, and <b>narrow-leaved blazingstar</b>. It is native to North America, where it occurs throughout the plains of central Canada, the central United States, and northern Mexico.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690]},
+     {"id":135263,"name":"Ipomoea cordatotriloba","preferred_common_name":"Tievine","wikipedia_summary":"<i><b>Ipomoea cordatotriloba</b></i> is a species of morning glory native to the southeastern United States, Mexico, and South America. Its common names include <b>tievine</b> and <b>cotton morning glory</b>.","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346]},
+     {"id":142653,"name":"Agalinis heterophylla","preferred_common_name":"Prairie False Foxglove","wikipedia_summary":"<i><b>Agalinis heterophylla</b></i> is a species of flowering plant in the broomrape family known as <b>prairie false foxglove</b>. It is found in northern Mexico (Tamaulipas) and the south-eastern and central United States.","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403]},
+     {"id":143792,"name":"Pistacia chinensis","preferred_common_name":"Chinese pistache","wikipedia_summary":"<i><b>Pistacia chinensis</b></i> (English: <b>Chinese pistache</b>; Chinese: 黄连木; pinyin: <i>huángliánmù</i>) is a small to medium-sized tree in the genus <i>Pistacia</i> in the cashew family, Anacardiaceae, native to central and western China. It is hardy, can withstand harsh conditions and poor quality soils, and grows up to 20 m. The leaves are deciduous, alternate, pinnate, 20–25 cm long, with 10 or 12 leaflets, the terminal leaflet usually absent. The flowers are produced in panicles 15–20 cm long at the ends...","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301]},
+     {"id":155299,"name":"Croton monanthogynus","preferred_common_name":"Prairie Tea","wikipedia_summary":"<i><b>Croton monanthogynus</b></i>, commonly called <b>prairie tea</b>, is a species of flowering plant in the spurge family. It is a summer annual that producer small, inconspicuous flowers. It is native to the southeastern United States and the southern Great Plains. It is considered adventive in more northern states.","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,1244599,1259430,53165]},
+     {"id":162705,"name":"Eryngium leavenworthii","preferred_common_name":"Leavenworth's eryngo","wikipedia_summary":"<i><b>Eryngium leavenworthii</b></i>, also known as <b>Leavenworth's eryngo</b>, is an annual plant in the parsley family that is native to the central United States. It can reach heights up to 3 feet. It inhabits dry rocky prairies, roadside fields, open woodlands and waste areas. The plant is mostly found in areas with limestone or chalk soils. Its flowers appear between July to September, although in some areas the flowers may bloom as late as November. The flower...","ancestor_ids":[48460,47126,211194,47125,47124,48700,48699,525432,790556,57628,1679645]},
+     {"id":203827,"name":"Ligustrum quihoui","preferred_common_name":"Quihoui privet","wikipedia_summary":"<i><b>Ligustrum quihoui</b></i> (waxyleaf privet, 小叶女贞 <i>xiao ye nu zhen</i>) is a shrub native to Korea and China (Anhui, Guizhou, Henan, Hubei, Jiangsu, Jiangxi, Shaanxi, Shandong, Sichuan, Xizang (Tibet), Yunnan, Zhejiang). As with some other members of the genus, <i>L. quihoui</i> is cultivated as an ornamental in many places and has become naturalized and invasive in urban areas and scattered forested locales of the southeastern United States (Texas, Oklahoma, Alabama, Mississippi, Alabama, Florida, North Carolina, Virginia, Maryland).","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819]},
+     {"id":204420,"name":"Strophostyles helvola","preferred_common_name":"trailing fuzzy-bean","wikipedia_summary":"<i><b>Strophostyles helvola</b></i> (sometimes spelled <i>S. helvula</i>) is a species of flowering plant in the legume family known by the common names <b>amberique-bean</b>, <b>trailing wild bean</b>, and <b>trailing fuzzy-bean</b>. It is native to eastern Canada and the eastern United States.","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996]},
+     {"id":914092,"name":"Oenothera glaucifolia","preferred_common_name":"False Gaura","wikipedia_summary":"<i><b>Oenothera glaucifolia</b></i>, the <b>false gaura</b>, is a species of flowering plant in the family Onagraceae. It is native to the west-central United States, and to Coahuila in Mexico. A probable biennial, it can reach 3 m (10 ft).","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,48626,914075,1654961]},
+     {"id":36202,"name":"Sceloporus olivaceus","preferred_common_name":"Texas Spiny Lizard","wikipedia_summary":"The <b>Texas spiny lizard</b> (<i><b>Sceloporus olivaceus</b></i>) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas, and San Luis Potosí. They are quite common throughout their range, where they can be found in trees or on fences.","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141]},
+     {"id":46020,"name":"Sciurus niger","preferred_common_name":"Eastern Fox Squirrel","wikipedia_summary":"The <b>fox squirrel</b> (<i>Sciurus niger</i>), also known as the <b>eastern fox squirrel</b> or <b>Bryant's fox squirrel</b>, is the largest species of tree squirrel native to North America. Despite the differences in size and coloration, they are sometimes mistaken for American red squirrels or eastern gray squirrels in areas where the species co-exist.","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,129411,45933,332614,339575,45994,1431496]},
+     {"id":59774,"name":"Pachydiplax longipennis","preferred_common_name":"Blue Dasher","wikipedia_summary":"The <b>blue dasher</b> (<i>Pachydiplax longipennis</i>) is a dragonfly of the skimmer family. It is the only species in the genus <i><b>Pachydiplax</b></i>. It is very common and widely distributed through North America and into the Bahamas.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,59775]},
+     {"id":61495,"name":"Erythemis simplicicollis","preferred_common_name":"Eastern Pondhawk","wikipedia_summary":"<i><b>Erythemis simplicicollis</b></i>, the <b>eastern pondhawk</b>, also known as the <b>common pondhawk</b>, is a dragonfly of the family Libellulidae, native to the eastern two-thirds of the United States and southern Ontario and Quebec, Canada. It is a dragonfly of ponds and still waters. The species is distinguished in that the female is bright green with a banded abdomen and the mature male has a blue abdomen with a green face and green and blue thorax.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,53868]},
+     {"id":70421,"name":"Acris blanchardi","preferred_common_name":"Blanchard's Cricket Frog","wikipedia_summary":"<b>Blanchard's cricket frog</b> (<i><b>Acris blanchardi</b></i>) is a species of frog in the family Hylidae. It is a small, dark colored frog that is threatened or endangered in Michigan, Wisconsin, and Minnesota. Studies have been done to see why the population of the frog is beginning to decrease in those states. Blanchard's cricket frogs are commonly found in wetlands, ponds, and/or near row crop agriculture. The average life span for this frog is about one year, which...","ancestor_ids":[48460,1,2,355675,20978,20979,1658175,24229]},
+     {"id":104574,"name":"Libellula croceipennis","preferred_common_name":"Neon Skimmer","wikipedia_summary":"The <b>neon skimmer</b> (<i>Libellula croceipennis</i>) is a dragonfly of the skimmer family. It can be found near ponds, lakes and slow moving streams in the southwest United States, Central America, and northern South America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,47818]},
+     {"id":126257,"name":"Helicina orbiculata","preferred_common_name":"Globular Drop Snail","wikipedia_summary":"<i><b>Helicina orbiculata</b></i>, also known as <i>Helicina (Oligyra) orbiculata</i> and as <i><b>Oligyra orbiculata</b></i>, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","ancestor_ids":[48460,1,47115,47114,437702,775835,245601,85811,524933,88762]},
+     {"id":153540,"name":"Acacesia hamata","preferred_common_name":"Difoliate Orbweaver","wikipedia_summary":"<i><b>Acacesia hamata</b></i> is a species of spider in the orb weaver family, <i>Araneidae</i>. It is typically found in summer months of the eastern half of the United States, south to Argentina. <i>Acacesia hamata</i> is the only species of <i>Acacesia</i> normally found in the United States.","ancestor_ids":[48460,1,47120,245097,47119,47118,120474,342614,319384,47535,417879,153566]},
+     {"id":218004,"name":"Cymatodera undulata","wikipedia_summary":"<i><b>Cymatodera undulata</b></i>, the <b>undulate checkered beetle</b>, is a species of checkered beetle in the family Cleridae. It is found in North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,372852,55050,55051,366994,174061]}
+    ]
+   }
+  }
+ ]
+}

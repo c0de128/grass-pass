@@ -1,0 +1,137 @@
+{
+ "_recording": {
+  "what": "Eval case 12: Spring Creek Forest Preserve Park (Garland TX), way/280159375. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 12,
+  "parkId": "way/280159375",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:53:31.141Z",
+  "fetchedAtMs": 1791244411141,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Spring Creek Forest Preserve Park",
+   "featureKinds": 2,
+   "trees": 0,
+   "totalSpecies": 28,
+   "totalObservations": 38,
+   "taxaRequested": 24
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://overpass-api.de/api/interpreter",
+   "query": "[out:json][timeout:25];way(280159375)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:53:31.141Z",
+   "latencyMs": 5458,
+   "failedAttempts": [],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.11 87bfad18",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:52:20Z",
+     "timestamp_areas_base": "2026-10-04T19:59:06Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":280159375,"center":{"lat":32.9660911,"lon":-96.6588691},"tags":{"name":"Spring Creek Forest Preserve Park","leisure":"park"}},
+     {"type":"way","id":829940268,"tags":{"name":"Spring Creek","waterway":"river"}},
+     {"type":"way","id":1300247866,"tags":{"natural":"water"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:53:36.600Z",
+   "latencyMs": 366,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 28,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":2,"taxon":{"id":1986,"name":"Geococcyx californianus","rank":"species","preferred_common_name":"Greater Roadrunner","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,1623,1627,1541351,1985,1986]}},
+     {"count":2,"taxon":{"id":4665,"name":"Falco sparverius","rank":"species","preferred_common_name":"American Kestrel","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,67570,4637,4638,4665]}},
+     {"count":2,"taxon":{"id":9346,"name":"Icterus galbula","rank":"species","preferred_common_name":"Baltimore Oriole","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,7251,11989,9315,9346]}},
+     {"count":2,"taxon":{"id":17008,"name":"Sayornis phoebe","rank":"species","preferred_common_name":"Eastern Phoebe","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,7251,980017,17007,17008]}},
+     {"count":2,"taxon":{"id":36202,"name":"Sceloporus olivaceus","rank":"species","preferred_common_name":"Texas Spiny Lizard","iconic_taxon_name":"Reptilia","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141,36202]}},
+     {"count":2,"taxon":{"id":67707,"name":"Argiope aurantia","rank":"species","preferred_common_name":"Yellow Garden Spider","iconic_taxon_name":"Arachnida","ancestor_ids":[48460,1,47120,245097,47119,47118,120474,342614,319384,47535,1004912,47552,67707]}},
+     {"count":2,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":2,"taxon":{"id":202438,"name":"Hexagonia hydnoides","rank":"species","preferred_common_name":"Hairy Hexagonia","iconic_taxon_name":"Fungi","ancestor_ids":[48460,47170,47169,492000,50814,47380,47379,202454,202438]}},
+     {"count":2,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":2,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":1,"taxon":{"id":4756,"name":"Cathartes aura","rank":"species","preferred_common_name":"Turkey Vulture","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,559244,71306,4755,4756]}},
+     {"count":1,"taxon":{"id":4956,"name":"Ardea herodias","rank":"species","preferred_common_name":"Great Blue Heron","iconic_taxon_name":"Aves","ancestor_ids":[48460,1,2,355675,3,67566,4929,597395,4950,4956]}},
+     {"count":1,"taxon":{"id":47219,"name":"Apis mellifera","rank":"species","preferred_common_name":"Western Honey Bee","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47201,124417,326777,47222,630955,47221,199939,538904,47220,578086,47219]}},
+     {"count":1,"taxon":{"id":49399,"name":"Juniperus virginiana","rank":"species","preferred_common_name":"eastern redcedar","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,136329,47375,47374,1150915,47574,701533,49399]}},
+     {"count":1,"taxon":{"id":50340,"name":"Hylephila phyleus","rank":"species","preferred_common_name":"Fiery Skipper","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47653,122493,320552,1363159,50341,50340]}},
+     {"count":1,"taxon":{"id":52119,"name":"Populus deltoides","rank":"species","preferred_common_name":"Eastern Cottonwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,47566,1430520,52119]}},
+     {"count":1,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":1,"taxon":{"id":58387,"name":"Sorghum halepense","rank":"species","preferred_common_name":"Johnson grass","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388,58387]}},
+     {"count":1,"taxon":{"id":58579,"name":"Polygonia interrogationis","rank":"species","preferred_common_name":"Question Mark","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47922,202067,202066,50392,58579]}},
+     {"count":1,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}},
+     {"count":1,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}},
+     {"count":1,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":1,"taxon":{"id":99647,"name":"Dythemis velox","rank":"species","preferred_common_name":"Swift Setwing","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,88069,99647]}},
+     {"count":1,"taxon":{"id":126257,"name":"Helicina orbiculata","rank":"species","preferred_common_name":"Globular Drop Snail","iconic_taxon_name":"Mollusca","ancestor_ids":[48460,1,47115,47114,437702,775835,245601,85811,524933,88762,126257]}},
+     {"count":1,"taxon":{"id":133953,"name":"Mesodon thyroidus","rank":"species","preferred_common_name":"White-lip Globe Snail","iconic_taxon_name":"Mollusca","ancestor_ids":[48460,1,47115,47114,551391,775797,775800,775812,47485,781349,781352,68625,49372,899814,899818,89872,133953]}},
+     {"count":1,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":1,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":498016,"name":"Delicatula integrella","rank":"species","iconic_taxon_name":"Fungi","ancestor_ids":[48460,47170,47169,492000,50814,1094814,47167,785516,416511,373940,498016]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/84364,202438,203827,554401,1986,4665,9346,17008,36202,67707,49399,52119,54781,58387,75842,79064,81792,135263,142653,498016,4756,4956,47219,50340?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:53:37.607Z",
+   "latencyMs": 1064,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 24,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":84364,"name":"Chasmanthium latifolium","preferred_common_name":"river oats","wikipedia_summary":"<i><b>Chasmanthium latifolium</b></i>, known as <b>woodoats</b>, <b>inland sea oats</b>, <b>northern sea oats</b>, and <b>river oats</b> is a grass native to the central and eastern United States, Manitoba, and northeastern Mexico; it grows as far north as Pennsylvania and Michigan, where it is a threatened species. The species was previously classified as <i>Uniola latifolia</i> (André Michaux).","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365]},
+     {"id":202438,"name":"Hexagonia hydnoides","preferred_common_name":"Hairy Hexagonia","wikipedia_summary":"<i><b>Hexagonia hydnoides</b></i> is a species of fungus in the Polyporaceae family. It is a plant pathogen. This fungus is largely saprophytic, decaying dead wood tissues.","ancestor_ids":[48460,47170,47169,492000,50814,47380,47379,202454]},
+     {"id":203827,"name":"Ligustrum quihoui","preferred_common_name":"Quihoui privet","wikipedia_summary":"<i><b>Ligustrum quihoui</b></i> (waxyleaf privet, 小叶女贞 <i>xiao ye nu zhen</i>) is a shrub native to Korea and China (Anhui, Guizhou, Henan, Hubei, Jiangsu, Jiangxi, Shaanxi, Shandong, Sichuan, Xizang (Tibet), Yunnan, Zhejiang). As with some other members of the genus, <i>L. quihoui</i> is cultivated as an ornamental in many places and has become naturalized and invasive in urban areas and scattered forested locales of the southeastern United States (Texas, Oklahoma, Alabama, Mississippi, Alabama, Florida, North Carolina, Virginia, Maryland).","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819]},
+     {"id":554401,"name":"Zephyranthes chlorosolen","preferred_common_name":"Brazos rain-lily","wikipedia_summary":"<i><b>Zephyranthes chlorosolen</b></i>, known by a number of common names including <b>Drummond's rain‑lily</b>, <b>evening rain‑lily</b>, <b>evening star rain lily</b> (names it shares with <i>Zephyranthes drummondii</i>), <b>Brazos rain‑lily</b>, <b>Texas rainlily</b>, and <b>cebolleta</b>, is a species of flowering plant in the family Amaryllidaceae. It is found from Kansas to Mexico, and has been introduced to southern Brazil. A geophytic perennial typically 18 to 35 cm (7 to 14 in) tall, its lone flower opens in the evening and lasts only a few...","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027]},
+     {"id":1986,"name":"Geococcyx californianus","preferred_common_name":"Greater Roadrunner","wikipedia_summary":"The <b>greater roadrunner</b> (<i>Geococcyx californianus</i>) is a long-legged bird in the cuckoo family, Cuculidae, from Southwestern United States and Mexico. The Latin name means \"Californian earth-cuckoo\". Along with the lesser roadrunner, it is one of two species in the roadrunner genus <i>Geococcyx</i>. This roadrunner is also known as the chaparral cock, ground cuckoo, and snake killer.","ancestor_ids":[48460,1,2,355675,3,1623,1627,1541351,1985]},
+     {"id":4665,"name":"Falco sparverius","preferred_common_name":"American Kestrel","wikipedia_summary":"The <b>American kestrel</b> (<i><b>Falco sparverius</b></i>), is the smallest and most common falcon in North America. Formerly called \"sparrowhawk\", a misnomer as it is a true falcon and is unrelated genetically to the Eurasian sparrowhawk, <i>Accipiter nisus</i>. It has a roughly two-to-one range in size over subspecies and sex, varying in size from about the weight of a blue jay to a mourning dove. It also ranges to South America and is a well-established species that has","ancestor_ids":[48460,1,2,355675,3,67570,4637,4638]},
+     {"id":9346,"name":"Icterus galbula","preferred_common_name":"Baltimore Oriole","wikipedia_summary":"The <b>Baltimore oriole</b> (<i>Icterus galbula</i>) is a small icterid blackbird common in eastern North America as a migratory breeding bird. It received its name from the resemblance of the male's colors to those on the coat-of-arms of Lord Baltimore. Observations of interbreeding between the Baltimore oriole and the western Bullock's oriole, <i>Icterus bullockii</i>, led to both being classified as a single species, called the <b>northern oriole,</b> from 1973 to 1995. Research by James Rising, a professor...","ancestor_ids":[48460,1,2,355675,3,7251,11989,9315]},
+     {"id":17008,"name":"Sayornis phoebe","preferred_common_name":"Eastern Phoebe","wikipedia_summary":"The <b>eastern phoebe</b> (<i>Sayornis phoebe</i>) is a small passerine bird. The genus name <i>Sayornis</i> is constructed from the specific part of Charles Lucien Bonaparte's name for Say's phoebe, <i>Muscicapa saya</i>, and Ancient Greek <i>ornis</i>, \"bird\". <i>Phoebe</i> is an alternative name for the Roman moon-goddess Diana, but it may also have been chosen to imitate the bird's call.","ancestor_ids":[48460,1,2,355675,3,7251,980017,17007]},
+     {"id":36202,"name":"Sceloporus olivaceus","preferred_common_name":"Texas Spiny Lizard","wikipedia_summary":"The <b>Texas spiny lizard</b> (<i><b>Sceloporus olivaceus</b></i>) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas, and San Luis Potosí. They are quite common throughout their range, where they can be found in trees or on fences.","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563907,1567779,36074,797562,36141]},
+     {"id":67707,"name":"Argiope aurantia","preferred_common_name":"Yellow Garden Spider","wikipedia_summary":"The spider species <i><b>Argiope aurantia</b></i> is commonly known as the <b>yellow garden spider</b>, <b>black and yellow garden spider</b>, <b>golden garden spider</b>, <b>writing spider</b>, <b>corn spider</b>, or <b>McKinley spider</b>. It is common to the contiguous United States, Hawaii, southern Canada, Mexico, and Central America. It has distinctive yellow and black markings on the abdomen and a mostly white cephalothorax. Its scientific Latin name translates to \"gilded silver-face\" (the genus name <i>Argiope</i> meaning \"silver-face\", while the specific epithet...","ancestor_ids":[48460,1,47120,245097,47119,47118,120474,342614,319384,47535,1004912,47552]},
+     {"id":49399,"name":"Juniperus virginiana","preferred_common_name":"eastern redcedar","wikipedia_summary":"<i><b>Juniperus virginiana</b></i> — its common names include <b>red cedar</b>, <b>eastern redcedar</b>, <b>Virginian juniper</b>, <b>eastern juniper</b>, <b>red juniper</b>, <b>pencil cedar</b>, and <b>aromatic cedar</b> — is a species of juniper native to eastern North America from southeastern Canada to the Gulf of Mexico and east of the Great Plains. Further west it is replaced by the related <i>Juniperus scopulorum</i> (Rocky Mountain juniper) and to the southwest by <i>Juniperus ashei</i> (Ashe juniper).","ancestor_ids":[48460,47126,211194,136329,47375,47374,1150915,47574,701533]},
+     {"id":52119,"name":"Populus deltoides","preferred_common_name":"Eastern Cottonwood","wikipedia_summary":"<i><b>Populus deltoides</b></i>, the <b>eastern cottonwood</b> or <b>necklace poplar</b>, is a cottonwood poplar native to North America, growing throughout the eastern, central, and southwestern United States, the southernmost part of eastern Canada, and northeastern Mexico. It is a eudicot.","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,47566,1430520]},
+     {"id":54781,"name":"Quercus macrocarpa","preferred_common_name":"bur oak","wikipedia_summary":"<i><b>Quercus macrocarpa</b></i>, the <b>bur oak</b>, sometimes spelled <b>burr oak</b>, is a species of oak in the white oak section <i>Quercus</i> sect. <i>Quercus</i>, native to North America in the eastern and central United States and eastern and central Canada. This plant is also called <b>mossycup oak</b> and <b>mossycup white oak</b>.","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799]},
+     {"id":58387,"name":"Sorghum halepense","preferred_common_name":"Johnson grass","wikipedia_summary":"<b>Johnson grass</b> or <b>Johnsongrass</b>, <i>Sorghum halepense</i>, is a plant in the grass family, Poaceae, native to the Mediterranean region, but grows throughout Europe and the Middle East. The plant has been introduced to all continents except Antarctica, and most larger islands and archipelagos. It reproduces by rhizomes and seeds.","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388]},
+     {"id":75842,"name":"Bothriochloa ischaemum","preferred_common_name":"King Ranch bluestem","wikipedia_summary":"<i><b>Bothriochloa ischaemum</b></i> is a species of perennial grass in the family Poaceae, found throughout much of the world. It is commonly known as <b>yellow bluestem</b>. Two varieties are recognized, of which <i>Bothriochloa ischaemum</i> var. <i>ischaemum</i> is native to Europe, Asia, and Africa and naturalized elsewhere, and var. <i>songarica</i> is native to Asia and naturalized elsewhere. Var. <i>songarica</i> is an invasive weed in Texas, where it is known as \"King Ranch bluestem\"; it has displaced native grasses","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016]},
+     {"id":79064,"name":"Sesbania herbacea","preferred_common_name":"bigpod sesbania","wikipedia_summary":"<i><b>Sesbania herbacea</b></i> (syn. <i>Sesbania exaltata</i>) is a species of flowering plant in the legume family known by the common names <b>bigpod sesbania</b>, <b>Colorado River-hemp</b>, and <b>coffeeweed</b>. It is native to the United States, particularly the southeastern states, where it grows in moist habitat. It can be found elsewhere as an introduced species. It is a woody herb growing to 3 meters or more in height. The leaves are made up of many pairs of oblong leaflets....","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358]},
+     {"id":81792,"name":"Celtis laevigata","preferred_common_name":"sugar hackberry","wikipedia_summary":"<i><b>Celtis laevigata</b></i> is a medium-sized tree native to North America. Common names include <b>sugarberry</b>, <b>Southern hackberry</b>, or in the southern U.S. <b>sugar hackberry</b> or just <b>hackberry</b>.","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858]},
+     {"id":135263,"name":"Ipomoea cordatotriloba","preferred_common_name":"Tievine","wikipedia_summary":"<i><b>Ipomoea cordatotriloba</b></i> is a species of morning glory native to the southeastern United States, Mexico, and South America. Its common names include <b>tievine</b> and <b>cotton morning glory</b>.","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346]},
+     {"id":142653,"name":"Agalinis heterophylla","preferred_common_name":"Prairie False Foxglove","wikipedia_summary":"<i><b>Agalinis heterophylla</b></i> is a species of flowering plant in the broomrape family known as <b>prairie false foxglove</b>. It is found in northern Mexico (Tamaulipas) and the south-eastern and central United States.","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403]},
+     {"id":498016,"name":"Delicatula integrella","wikipedia_summary":null,"ancestor_ids":[48460,47170,47169,492000,50814,1094814,47167,785516,416511,373940]},
+     {"id":4756,"name":"Cathartes aura","preferred_common_name":"Turkey Vulture","wikipedia_summary":"The <b>turkey vulture</b> (<i>Cathartes aura</i>), also known in some North American regions as the <b>turkey buzzard</b> (or just <b>buzzard</b>), and in some areas of the Caribbean as the <b>John crow</b> or <b>carrion crow</b>, is the most widespread of the New World vultures. One of three species in the genus <i>Cathartes</i> of the family Cathartidae, the turkey vulture ranges from southern Canada to the southernmost tip of South America. It inhabits a variety of open and semi-open...","ancestor_ids":[48460,1,2,355675,3,559244,71306,4755]},
+     {"id":4956,"name":"Ardea herodias","preferred_common_name":"Great Blue Heron","wikipedia_summary":"The <b>great blue heron</b> (<i>Ardea herodias</i>) is a large wading bird in the heron family Ardeidae, common near the shores of open water and in wetlands over most of North America and Central America, as well as the Caribbean and the Galápagos Islands. It is a rare vagrant to coastal Spain, the Azores, and areas of far southern Europe. An all-white population found only in the Caribbean and Florida was once treated as a separate species...","ancestor_ids":[48460,1,2,355675,3,67566,4929,597395,4950]},
+     {"id":47219,"name":"Apis mellifera","preferred_common_name":"Western Honey Bee","wikipedia_summary":"The <b>western honey bee</b> or <b>European honey bee</b> (<i>Apis mellifera</i>) is the most common of the 7–12 species of honey bee worldwide. The genus name <i>Apis</i> is Latin for \"bee\", and <i>mellifera</i> is the Latin for \"honey-bearing\", referring to the species' production of honey for the winter.","ancestor_ids":[48460,1,47120,372739,47158,184884,47201,124417,326777,47222,630955,47221,199939,538904,47220,578086]},
+     {"id":50340,"name":"Hylephila phyleus","preferred_common_name":"Fiery Skipper","wikipedia_summary":"The <b>fiery skipper</b> (<i>Hylephila phyleus</i>) is a butterfly of the family Hesperiidae and is approximately 1 inch (2.5 cm) long. The males are orange or yellow with black spots while the females are dark brown with orange or yellow spots. The caterpillars are greenish pink with a black head. The caterpillars are often considered pests and can feed on Bermudagrass, creeping bentgrass, and St. Augustine grass.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47653,122493,320552,1363159,50341]}
+    ]
+   }
+  }
+ ]
+}

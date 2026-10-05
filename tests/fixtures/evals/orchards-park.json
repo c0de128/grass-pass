@@ -1,0 +1,94 @@
+{
+ "_recording": {
+  "what": "Eval case 20: Orchards Park (Allen TX), way/517747125. Live Overpass park features + iNaturalist species (1.5 km, since 2026-09-21, research grade) + taxa summaries, requested by the app's own code (src/lib/sources/*).",
+  "live": true,
+  "case": 20,
+  "parkId": "way/517747125",
+  "recordedBy": "pnpm eval:record (evals/record.ts) running src/lib/sources/{overpass-features,inat}.ts against the live APIs",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "fetchedAt": "2026-10-05T23:45:56.318Z",
+  "fetchedAtMs": 1791243956318,
+  "trimmed": "Real answers. Fields the app never reads were removed to keep the repo small: Overpass elements keep type, id, the park's own position and only the tags in OSM_TAGS_READ (evals/fixture.ts); iNaturalist keeps total_results/page/per_page, each count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids, wikipedia_summary). Every kept value is exactly as received. The recorder checked that the app parses the trimmed and the full answer to the same result.",
+  "summary": {
+   "parkName": "Orchards Park",
+   "featureKinds": 1,
+   "trees": 0,
+   "totalSpecies": 1,
+   "totalObservations": 1,
+   "taxaRequested": 1
+  }
+ },
+ "exchanges": [
+  {
+   "source": "overpass",
+   "what": "features",
+   "method": "POST",
+   "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+   "query": "[out:json][timeout:25];way(517747125)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+   "status": 200,
+   "contentType": "application/json",
+   "fetchedAt": "2026-10-05T23:46:07.606Z",
+   "latencyMs": 19338,
+   "failedAttempts": [
+    {
+     "url": "https://overpass-api.de/api/interpreter",
+     "status": 504,
+     "error": null,
+     "latencyMs": 11285,
+     "at": "2026-10-05T23:45:56.319Z"
+    }
+   ],
+   "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.4 2390de5a",
+    "osm3s": {
+     "timestamp_osm_base": "2026-10-05T23:45:06Z",
+     "timestamp_areas_base": "2026-10-05T22:15:18Z",
+     "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": [
+     {"type":"way","id":517747125,"center":{"lat":33.0925387,"lon":-96.6245686},"tags":{"name":"Orchards Park","leisure":"park"}},
+     {"type":"way","id":581349710,"tags":{"name":"Orchards Park","leisure":"playground"}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "species_counts",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.09254&lng=-96.62457&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:46:26.949Z",
+   "latencyMs": 301,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 200,
+    "results": [
+     {"count":1,"taxon":{"id":61495,"name":"Erythemis simplicicollis","rank":"species","preferred_common_name":"Eastern Pondhawk","iconic_taxon_name":"Insecta","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,53868,61495]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/61495?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-05T23:46:27.953Z",
+   "latencyMs": 139,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":61495,"name":"Erythemis simplicicollis","preferred_common_name":"Eastern Pondhawk","wikipedia_summary":"<i><b>Erythemis simplicicollis</b></i>, the <b>eastern pondhawk</b>, also known as the <b>common pondhawk</b>, is a dragonfly of the family Libellulidae, native to the eastern two-thirds of the United States and southern Ontario and Quebec, Canada. It is a dragonfly of ponds and still waters. The species is distinguished in that the female is bright green with a banded abdomen and the mature male has a blue abdomen with a green face and green and blue thorax.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,53868]}
+    ]
+   }
+  }
+ ]
+}

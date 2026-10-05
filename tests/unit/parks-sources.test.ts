@@ -310,20 +310,44 @@ describe("runOverpass failover and breakers", () => {
     expect(calls).toHaveLength(2);
   });
 
-  it("both endpoints down -> SourceError started:true; then breakers open -> not_called with no request", async () => {
+  it("every endpoint down -> SourceError started:true; then breakers open -> not_called with no request", async () => {
     const store = new MemoryStore({ now: () => T0 });
     const { fetchImpl, calls } = osmReplay({ overpass: () => recordedResponse("overpass-504-too-busy") });
     const err = await runOverpass(parksQuery(center), { store, fetchImpl, env: {}, now: () => T0 }).catch((e) => e);
     expect(err).toBeInstanceOf(SourceError);
     expect(err.code).toBe("busy");
     expect(err.started).toBe(true);
-    expect(calls).toHaveLength(2);
+    expect(calls.map((c) => c.url)).toEqual(OVERPASS_DEFAULT_URLS);
 
     const err2 = await runOverpass(parksQuery(center), { store, fetchImpl, env: {}, now: () => T0 }).catch((e) => e);
     expect(err2.code).toBe("not_called");
     expect(err2.started).toBe(false);
     expect(err2.retryAfter).toBe(60);
+    expect(calls).toHaveLength(OVERPASS_DEFAULT_URLS.length);
+  });
+
+  it("the total wait is bounded: a hung first server uses the budget and no new attempt starts with < 8 s left", async () => {
+    const { fetchImpl, calls } = osmReplay({
+      overpass: (c) =>
+        new Promise<Response>((_, reject) => c.init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")))),
+    });
+    const t0 = Date.now();
+    // Budget 600 ms, 250 ms per attempt (the minimum attempt is then 250 ms instead of 8 s):
+    // attempts 1 and 2 hang 250 ms each; ~100 ms left is too little to start the third server.
+    const err = await runOverpass(parksQuery(center), { store: new MemoryStore(), fetchImpl, env: {}, timeoutMs: 250, totalBudgetMs: 600 }).catch((e) => e);
+    expect(err.code).toBe("timeout");
     expect(calls).toHaveLength(2);
+    expect(Date.now() - t0).toBeLessThan(1_000);
+  });
+
+  it("the third endpoint (live-verified mail.ru mirror) is used when the first two fail", async () => {
+    const [, , third] = OVERPASS_DEFAULT_URLS;
+    const { fetchImpl, calls } = osmReplay({
+      overpass: (c) => (c.url === third ? undefined : recordedResponse("overpass-504-too-busy")),
+    });
+    const r = await parksNear(center, { store: new MemoryStore(), fetchImpl, env: {} });
+    expect(r.parks).toHaveLength(10);
+    expect(calls.map((c) => c.url)).toEqual(OVERPASS_DEFAULT_URLS);
   });
 
   it("a 400 (our query is wrong) does not fail over", async () => {

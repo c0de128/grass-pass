@@ -10,7 +10,7 @@ import { clientIp } from "@/lib/limits";
 import { parseSearchParams, searchParks } from "@/lib/parks/search";
 
 export const runtime = "nodejs";
-/** Worst case: Nominatim queue (8 s) + answer (10 s) + Overpass 2 x 30 s attempts = 78 s. */
+/** Worst case: Nominatim queue (8 s) + answer (10 s) + Overpass total budget (50 s, all attempts) = 68 s. */
 export const maxDuration = 90;
 
 export async function GET(req: Request): Promise<Response> {

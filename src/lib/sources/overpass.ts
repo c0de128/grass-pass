@@ -2,8 +2,11 @@
  * Overpass API runner shared by every OpenStreetMap query (parks near a point now; park
  * features and geometry in S3/S5). ADR 0002 D2.
  *
- * Public Overpass is flaky (measured 2026-10-05: 504s, 4-90 s answers, one mirror hung 40 s), so:
- * - endpoints from OVERPASS_URLS (https only), tried in order, with ONE failover;
+ * Public Overpass is flaky (measured 2026-10-05: 504s, 4-90 s answers, overpass.private.coffee hung
+ * 30-40 s on every try, maps.mail.ru answered a park-features query in 21 s while overpass-api.de 504'd), so:
+ * - endpoints from OVERPASS_URLS (https only, up to 4), tried in order, each at most once;
+ * - a TOTAL wait budget per query (default 50 s): each attempt gets min(30 s, what is left), and no
+ *   new attempt starts with less than 8 s left, so a dead mirror can't stretch the wait;
  * - a circuit breaker per endpoint: a 429/5xx/timeout/error-remark sends traffic to the
  *   next endpoint until the breaker closes (429 honours Retry-After);
  * - at most 2 concurrent queries per process (politeness, ADR 0002);
@@ -17,8 +20,14 @@ import { log } from "@/lib/log";
 import { fetchText, parseRetryAfter, SourceError, userAgent, type FetchLike, type SourceErrorCode } from "./common";
 
 export const OVERPASS_SOURCE = "overpass";
+/**
+ * Tried in this order. maps.mail.ru (VK Maps' public mirror) was verified live on 2026-10-05 with the
+ * real Celebration Park features query (200, 21 s, same counts as the architect's check);
+ * private.coffee stays last because it hung 30-40 s on every try that day.
+ */
 export const OVERPASS_DEFAULT_URLS = [
   "https://overpass-api.de/api/interpreter",
+  "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
   "https://overpass.private.coffee/api/interpreter",
 ];
 /** Server-side query timeout we put in every query. */
@@ -30,8 +39,12 @@ export const OVERPASS_SLOT_MAX_WAIT_MS = 15_000;
 export const OVERPASS_MAX_CONCURRENT = 2;
 /** Breaker opening for an endpoint after a failure without Retry-After. */
 export const OVERPASS_ERROR_OPEN_SEC = 60;
-/** Attempts per query: the first healthy endpoint plus one failover. */
-export const OVERPASS_MAX_ATTEMPTS = 2;
+/** Attempts per query: each healthy endpoint at most once, up to this many. */
+export const OVERPASS_MAX_ATTEMPTS = 3;
+/** Total time one query may take across all attempts (keeps routes well under maxDuration = 90 s). */
+export const OVERPASS_TOTAL_BUDGET_MS = 50_000;
+/** Don't start another attempt with less than this left: a real answer takes 2-20 s. */
+export const OVERPASS_MIN_ATTEMPT_MS = 8_000;
 
 type Env = Record<string, string | undefined>;
 
@@ -79,6 +92,8 @@ export type OverpassDeps = {
   now?: () => number;
   /** Tests: per-attempt timeout. */
   timeoutMs?: number;
+  /** Total budget across attempts (default OVERPASS_TOTAL_BUDGET_MS). */
+  totalBudgetMs?: number;
 };
 
 export type OverpassResult = { json: Record<string, unknown>; endpoint: string; latencyMs: number };
@@ -107,8 +122,18 @@ export async function runOverpass(query: string, deps: OverpassDeps): Promise<Ov
   const sem = processSemaphore();
   const attempts: Attempt[] = [];
   let started = false;
+  const perAttempt = deps.timeoutMs ?? OVERPASS_CLIENT_TIMEOUT_MS;
+  const budget = deps.totalBudgetMs ?? OVERPASS_TOTAL_BUDGET_MS;
+  const minAttempt = Math.min(OVERPASS_MIN_ATTEMPT_MS, perAttempt);
+  const t0 = Date.now();
   for (const endpoint of healthy.slice(0, OVERPASS_MAX_ATTEMPTS)) {
     if (deps.signal?.aborted) break;
+    const left = budget - (Date.now() - t0);
+    if (attempts.length > 0 && left < minAttempt) {
+      log("upstream_call", { source: OVERPASS_SOURCE, endpoint: new URL(endpoint).host, outcome: "skipped_budget", leftMs: left }, "warn");
+      break;
+    }
+    const attemptTimeout = Math.max(1, Math.min(perAttempt, left));
     // A fresh wait budget per attempt: a slow first attempt must not cancel the failover.
     const slotSignal = deps.signal
       ? AbortSignal.any([deps.signal, AbortSignal.timeout(OVERPASS_SLOT_MAX_WAIT_MS)])
@@ -130,7 +155,7 @@ export async function runOverpass(query: string, deps: OverpassDeps): Promise<Ov
             },
             body: new URLSearchParams({ data: query }).toString(),
           },
-          { timeoutMs: deps.timeoutMs ?? OVERPASS_CLIENT_TIMEOUT_MS, fetchImpl: deps.fetchImpl, signal: deps.signal },
+          { timeoutMs: attemptTimeout, fetchImpl: deps.fetchImpl, signal: deps.signal },
         );
       }, slotSignal);
     } catch (err) {

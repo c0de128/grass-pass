@@ -28,7 +28,7 @@ const COPY = {
   geoFailed: "We couldn't get your location. Try again, or type a town or ZIP.",
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the park list. Please try again.",
-  slow: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer within 30 seconds we try a second server.",
+  slow: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer within 30 seconds we try another server.",
 } as const;
 
 /** Client-side wait for /api/parks: a bit over the route's maxDuration (90 s). */

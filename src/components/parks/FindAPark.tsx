@@ -7,6 +7,8 @@
  * field, aria-invalid, aria-describedby, role=alert, re-announced on every failed submit.
  */
 import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from "react";
+import { Button, buttonClassName } from "@/components/ui/Button";
+import { TicketCard } from "@/components/ui/TicketCard";
 import { distanceLabel, roundCoord } from "@/lib/geo";
 import {
   ApiErrorSchema,
@@ -226,7 +228,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
 
   return (
     <section aria-labelledby={`${ids}-heading`} className="flex flex-col gap-4">
-      <h2 id={`${ids}-heading`} className="text-2xl font-bold text-accent">
+      <h2 id={`${ids}-heading`} className="text-2xl">
         Where?
       </h2>
 
@@ -234,7 +236,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
         <label htmlFor={inputId} className="text-lg font-semibold">
           Town, ZIP or park name
         </label>
-        <p id={hintId} className="text-base">
+        <p id={hintId} className="text-base text-muted">
           For example: Allen TX, 75013 or Connemara Meadow Preserve.
         </p>
         <div className="flex flex-col gap-2 sm:flex-row">
@@ -253,15 +255,11 @@ export function FindAPark({ onPick }: FindAParkProps) {
             }}
             aria-invalid={fieldError ? true : undefined}
             aria-describedby={fieldError ? `${hintId} ${errorId}` : hintId}
-            className="min-h-11 flex-1 rounded-xl border-2 border-accent bg-background px-3 text-lg"
+            className="min-h-11 min-w-0 flex-1 rounded-control border-2 border-line bg-surface px-3 text-lg text-fg"
           />
-          <button
-            type="submit"
-            aria-disabled={busy || undefined}
-            className="min-h-11 rounded-xl bg-accent px-5 text-lg font-semibold text-background aria-disabled:opacity-70"
-          >
+          <Button type="submit" aria-disabled={busy || undefined}>
             {phase.kind === "searching" ? "Searching…" : "Find parks"}
-          </button>
+          </Button>
         </div>
         {fieldError ? (
           <p key={`q-${attempt}`} id={errorId} role="alert" className="font-semibold">
@@ -280,11 +278,11 @@ export function FindAPark({ onPick }: FindAParkProps) {
           onClick={onUseLocation}
           aria-disabled={busy || undefined}
           aria-describedby={locError ? `${locNoteId} ${locErrorId}` : locNoteId}
-          className="min-h-11 self-start rounded-xl border-2 border-accent px-5 text-lg font-semibold text-accent aria-disabled:opacity-70"
+          className={buttonClassName("secondary", "self-start")}
         >
           Use my location
         </button>
-        <p id={locNoteId} className="text-base">
+        <p id={locNoteId} className="text-base text-muted">
           Your location is rounded to about 1 km on this device before it is sent.
         </p>
         {locError ? (
@@ -299,7 +297,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
       </p>
 
       {phase.kind === "failed" ? (
-        <div role="alert" className="rounded-xl border-2 border-accent p-4">
+        <div role="alert" className="rounded-ticket border-2 border-line bg-surface p-4">
           <p className="font-semibold">{phase.message}</p>
         </div>
       ) : null}
@@ -325,12 +323,13 @@ function ParkList({
   const where = result.query.kind === "text" ? (result.query.matched ?? result.query.text) : "your location";
   const checked = formatChecked(result.checkedAt);
   return (
-    <section aria-labelledby="park-results-heading" className="flex flex-col gap-3">
-      <h2 id="park-results-heading" ref={headingRef} tabIndex={-1} className="text-xl font-bold text-accent">
+    <TicketCard as="section" aria-labelledby="park-results-heading">
+      <div className="flex flex-col gap-3">
+      <h2 id="park-results-heading" ref={headingRef} tabIndex={-1} className="text-xl">
         Parks near {where}
       </h2>
       {result.parks.length === 0 ? (
-        <p className="rounded-xl border-2 border-accent p-4 font-semibold">{result.empty?.message}</p>
+        <p className="rounded-ticket border-2 border-line bg-surface p-4 font-semibold">{result.empty?.message}</p>
       ) : (
         <>
           <p className="text-base">
@@ -346,9 +345,9 @@ function ParkList({
                   type="button"
                   onClick={() => onPick(p)}
                   aria-pressed={picked?.id === p.id}
-                  className="flex min-h-11 w-full flex-col items-start rounded-xl border-2 border-accent bg-background px-4 py-2 text-left aria-pressed:bg-accent aria-pressed:text-background"
+                  className="flex min-h-11 w-full flex-col items-start rounded-control border-2 border-line bg-surface px-4 py-2 text-left text-fg hover:bg-secondary-hover aria-pressed:bg-primary aria-pressed:text-on-primary"
                 >
-                  <span className="text-lg font-semibold">{p.name}</span>
+                  <span className="font-display text-lg font-semibold">{p.name}</span>
                   <span className="text-base">
                     {kindLabel(p.kind)} · {distanceLabel(p.distanceM)} away
                   </span>
@@ -359,7 +358,7 @@ function ParkList({
         </>
       )}
       {picked && !hasNextStep ? (
-        <p role="status" className="rounded-xl border-2 border-accent p-4">
+        <p role="status" className="rounded-ticket border-2 border-line bg-surface p-4">
           You picked <strong>{picked.name}</strong>. Making a pass for a park isn&apos;t switched on in this build yet.
         </p>
       ) : null}
@@ -372,6 +371,7 @@ function ParkList({
         {checked ? `, checked ${checked}` : ""}
         {result.cached ? " (saved copy; park maps change slowly)" : ""}.
       </p>
-    </section>
+      </div>
+    </TicketCard>
   );
 }

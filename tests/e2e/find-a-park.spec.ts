@@ -1,4 +1,4 @@
-import { expect, test } from "@playwright/test";
+import { expect, test, type Locator, type Page } from "@playwright/test";
 
 // F1 against the real server and the LIVE OpenStreetMap services (Nominatim + Overpass).
 // Overpass can take 10-30 s when busy, so result waits are long. Each test makes at most two
@@ -6,6 +6,22 @@ import { expect, test } from "@playwright/test";
 const RESULT_TIMEOUT = 95_000;
 
 test.describe.configure({ mode: "serial" });
+
+const OSM_BUSY = "No data available: the OpenStreetMap server is busy. Try again in a minute, or pick an example park.";
+
+/**
+ * Wait for the park list, or for the honest "OpenStreetMap is busy" state (public Overpass really
+ * does fail: 504s and 30 s hangs were seen while writing this). If OSM is busy, the exact SPEC 5.4
+ * copy is checked and the test is reported as SKIPPED with the reason, never as passed.
+ */
+async function parksOrBusy(page: Page, list: Locator): Promise<void> {
+  const busy = page.getByRole("alert").filter({ hasText: "OpenStreetMap server is busy" });
+  await expect(list.or(busy)).toBeVisible({ timeout: RESULT_TIMEOUT });
+  if (await busy.isVisible()) {
+    await expect(busy).toHaveText(OSM_BUSY);
+    test.skip(true, "Live Overpass was busy; the page showed the exact SPEC 5.4 busy copy instead of parks.");
+  }
+}
 
 test("empty submit: field error is focused, linked, announced, and clears on typing", async ({ page }) => {
   await page.goto("/");
@@ -39,11 +55,11 @@ test("keyboard only: 'Allen TX' lists real parks nearest first", async ({ page }
   await page.keyboard.press("Enter");
 
   await expect(page.getByRole("status").filter({ hasText: "Searching OpenStreetMap" })).toBeVisible();
+  const list = page.getByRole("list", { name: /^Parks near Allen/ });
+  await parksOrBusy(page, list);
   const heading = page.getByRole("heading", { name: /^Parks near Allen, Collin County, Texas/ });
-  await expect(heading).toBeVisible({ timeout: RESULT_TIMEOUT });
   await expect(heading).toBeFocused();
 
-  const list = page.getByRole("list", { name: /^Parks near Allen/ });
   const items = list.getByRole("button");
   await expect(items).toHaveCount(10);
   await expect(items.first()).toContainText(/ mi \(\d+(\.\d)? km\) away/);
@@ -62,7 +78,8 @@ test("a park name puts that park first (Celebration Park, Allen TX)", async ({ p
   await page.getByLabel("Town, ZIP or park name").fill("Celebration Park Allen TX");
   await page.getByRole("button", { name: "Find parks" }).click();
   const list = page.getByRole("list", { name: /^Parks near Celebration Park/ });
-  await expect(list.getByRole("button").first()).toContainText("Celebration Park", { timeout: RESULT_TIMEOUT });
+  await parksOrBusy(page, list);
+  await expect(list.getByRole("button").first()).toContainText("Celebration Park");
 });
 
 test("a place that doesn't exist shows the exact no-match copy on the field", async ({ page }) => {
@@ -89,8 +106,10 @@ test.describe("Use my location", () => {
     expect(url.searchParams.get("lat")).toBe("33.09");
     expect(url.searchParams.get("lng")).toBe("-96.70");
     expect(url.searchParams.get("q")).toBeNull();
-    await expect(page.getByRole("heading", { name: "Parks near your location" })).toBeVisible({ timeout: RESULT_TIMEOUT });
-    await expect(page.getByRole("list", { name: "Parks near your location" }).getByRole("button").first()).toBeVisible();
+    const list = page.getByRole("list", { name: "Parks near your location" });
+    await parksOrBusy(page, list);
+    await expect(page.getByRole("heading", { name: "Parks near your location" })).toBeVisible();
+    await expect(list.getByRole("button").first()).toBeVisible();
   });
 });
 

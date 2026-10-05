@@ -1,0 +1,129 @@
+/*
+ * Grass Pass design tokens (SPEC §8.1, binding: BRAND.md "APPROVED DESIGN", sampled from Kevin's banner).
+ * Raw brand colours first, then semantic roles that flip for dark mode.
+ * Contrast rules: --lawn, --sage and --sun are never text on cream; borders and focus rings use --forest.
+ * Keep the raw hex values in sync with scripts/brand/art.mjs TOKENS (a unit test checks this).
+ */
+:root {
+  --paper: #faf3e1;
+  --paper-light: #fefcf6;
+  --forest: #2f5233;
+  --ticket: #295031;
+  --ink: #14240f;
+  --lawn: #70b364;
+  --sage: #84a56a;
+  --mint: #c1d5ad;
+  --sun: #fbbd4a;
+  --sunflower: #ffd96c;
+  --forest-deep: #22402a; /* primary button hover (paper on it: 10.6:1) */
+
+  /* Semantic roles: light (default). */
+  color-scheme: light;
+  --bg: var(--paper);
+  --surface: var(--paper-light);
+  --fg: var(--ink); /* 14.72:1 on paper */
+  --heading: var(--forest); /* 7.99:1 on paper */
+  --muted: var(--forest);
+  --line: var(--forest); /* input borders, card borders (>= 3:1) */
+  --focus: var(--forest);
+  --halo: var(--mint);
+  --primary: var(--forest);
+  --primary-hover: var(--forest-deep);
+  --on-primary: var(--paper);
+  --secondary-hover: var(--mint);
+  --chip: var(--mint);
+  --on-chip: var(--ink); /* 10.39:1 */
+  --notch-bg: var(--bg);
+}
+
+/* Dark mode: system preference unless the user picked light; or an explicit dark pick. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    color-scheme: dark;
+    --bg: var(--ticket);
+    --surface: var(--forest);
+    --fg: var(--paper); /* 8.30:1 on ticket */
+    --heading: var(--paper);
+    --muted: var(--mint); /* 5.86:1 on ticket */
+    --line: var(--mint);
+    --focus: var(--sun); /* 5.46:1 on ticket */
+    --halo: var(--forest-deep);
+    --primary: var(--sun);
+    --primary-hover: var(--sunflower);
+    --on-primary: var(--ink); /* 9.68:1 on sun */
+    --secondary-hover: var(--forest-deep);
+    --chip: var(--mint);
+    --on-chip: var(--ink);
+  }
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --bg: var(--ticket);
+  --surface: var(--forest);
+  --fg: var(--paper);
+  --heading: var(--paper);
+  --muted: var(--mint);
+  --line: var(--mint);
+  --focus: var(--sun);
+  --halo: var(--forest-deep);
+  --primary: var(--sun);
+  --primary-hover: var(--sunflower);
+  --on-primary: var(--ink);
+  --secondary-hover: var(--forest-deep);
+  --chip: var(--mint);
+  --on-chip: var(--ink);
+}
+
+/* Show the right logo for the active theme (the dark logo is the reversed, cream version). */
+.only-dark {
+  display: none;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .only-light {
+    display: none;
+  }
+  :root:not([data-theme="light"]) .only-dark {
+    display: revert;
+  }
+}
+:root[data-theme="dark"] .only-light {
+  display: none;
+}
+:root[data-theme="dark"] .only-dark {
+  display: revert;
+}
+
+/* Print is always black on white (the pass layout itself lives in print.css, S4). */
+@media print {
+  :root,
+  :root[data-theme="dark"] {
+    color-scheme: light;
+    --bg: #fff;
+    --surface: #fff;
+    --fg: #000;
+    --heading: #000;
+    --muted: #000;
+    --line: #000;
+    --chip: #fff;
+    --on-chip: #000;
+    --notch-bg: #fff;
+  }
+  .only-dark {
+    display: none !important;
+  }
+  .only-light {
+    display: revert !important;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

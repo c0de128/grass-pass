@@ -1,0 +1,37 @@
+{
+ "_recording": {
+  "what": "Nominatim search for \"Celebration Park Allen TX\" (https://nominatim.openstreetmap.org/search?format=jsonv2&q=Celebration+Park+Allen+TX&limit=1&addressdetails=0&accept-language=en)",
+  "live": true,
+  "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Celebration+Park+Allen+TX&limit=1&addressdetails=0&accept-language=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T22:36:54.897Z",
+  "latencyMs": 109,
+  "recordedBy": "builder S2: scratch Vitest config running src/lib/sources/* against the live API"
+ },
+ "body": [
+  {
+   "place_id": 334042961,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "way",
+   "osm_id": 188145317,
+   "lat": "33.1082003",
+   "lon": "-96.6252568",
+   "category": "leisure",
+   "type": "park",
+   "place_rank": 24,
+   "importance": 0.08005675364309145,
+   "addresstype": "park",
+   "name": "Celebration Park",
+   "display_name": "Celebration Park, Allen, Collin County, Texas, United States",
+   "boundingbox": [
+    "33.1048817",
+    "33.1116021",
+    "-96.6286974",
+    "-96.6206580"
+   ]
+  }
+ ]
+}

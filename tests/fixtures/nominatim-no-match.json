@@ -1,0 +1,15 @@
+{
+ "_recording": {
+  "what": "Nominatim search for a made-up place \"zzqxjv nowhere plorf\" (no match)",
+  "live": true,
+  "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=zzqxjv+nowhere+plorf&limit=1&addressdetails=0&accept-language=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T22:37:06.640Z",
+  "latencyMs": 511,
+  "recordedBy": "builder S2: scratch Vitest config running src/lib/sources/* against the live API"
+ },
+ "body": []
+}

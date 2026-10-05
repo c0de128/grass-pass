@@ -1,0 +1,719 @@
+{
+ "_recording": {
+  "what": "Overpass named parks/nature reserves within 5 km of the Nominatim point for \"Allen TX\"",
+  "live": true,
+  "url": "https://overpass-api.de/api/interpreter",
+  "method": "POST",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json",
+  "fetchedAt": "2026-10-05T22:35:42.547Z",
+  "latencyMs": 6444,
+  "recordedBy": "builder S2: scratch Vitest config running src/lib/sources/* against the live API",
+  "center": {
+   "lat": 33.1031744,
+   "lng": -96.6705503
+  },
+  "overpassQuery": "[out:json][timeout:25];nwr[\"leisure\"~\"^(park|nature_reserve)$\"][\"name\"](around:5000,33.10317,-96.67055);out center tags;",
+  "attempts": [
+   {
+    "url": "https://overpass-api.de/api/interpreter",
+    "status": 200,
+    "latencyMs": 6444
+   }
+  ]
+ },
+ "body": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+   "timestamp_osm_base": "2026-10-05T22:34:45Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "node",
+    "id": 14111661641,
+    "lat": 33.0747779,
+    "lon": -96.6965315,
+    "tags": {
+     "leisure": "park",
+     "name": "watters creek golf course"
+    }
+   },
+   {
+    "type": "way",
+    "id": 188145317,
+    "center": {
+     "lat": 33.1082419,
+     "lon": -96.6246777
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Celebration Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 197183583,
+    "center": {
+     "lat": 33.0635094,
+     "lon": -96.6665701
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Timber Brook Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 197183608,
+    "center": {
+     "lat": 33.0749701,
+     "lon": -96.6675804
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Cottenwood Bend Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 197183609,
+    "center": {
+     "lat": 33.0757779,
+     "lon": -96.6744142
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Collin Square Greenbelt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 197186313,
+    "center": {
+     "lat": 33.0916523,
+     "lon": -96.6537547
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Ford Park East",
+     "natural": "grass"
+    }
+   },
+   {
+    "type": "way",
+    "id": 218777202,
+    "center": {
+     "lat": 33.1248683,
+     "lon": -96.6319107
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Lost Creek Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 218904099,
+    "center": {
+     "lat": 33.1258063,
+     "lon": -96.6396094
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Greenville Hights"
+    }
+   },
+   {
+    "type": "way",
+    "id": 218904523,
+    "center": {
+     "lat": 33.126756,
+     "lon": -96.6359092
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "The Bluffs at Lost Creek"
+    }
+   },
+   {
+    "type": "way",
+    "id": 218906480,
+    "center": {
+     "lat": 33.1181086,
+     "lon": -96.6350379
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Bradford Crossing Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 242823844,
+    "center": {
+     "lat": 33.110757,
+     "lon": -96.6910182
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Dayspring Nature Preserve"
+    }
+   },
+   {
+    "type": "way",
+    "id": 306191107,
+    "center": {
+     "lat": 33.0943462,
+     "lon": -96.6302237
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Story Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 306191453,
+    "center": {
+     "lat": 33.0848505,
+     "lon": -96.7015488
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Connemara Meadow Preserve",
+     "operator": "Connemara Conservancy",
+     "website": "https://connemaraconservancy.org/"
+    }
+   },
+   {
+    "type": "way",
+    "id": 366756040,
+    "center": {
+     "lat": 33.0875958,
+     "lon": -96.6430001
+    },
+    "tags": {
+     "landuse": "recreation_ground",
+     "leisure": "park",
+     "name": "Bethany Lakes Park",
+     "natural": "grass"
+    }
+   },
+   {
+    "type": "way",
+    "id": 372374992,
+    "center": {
+     "lat": 33.1178866,
+     "lon": -96.7035189
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Glendover Park",
+     "website": "https://www.cityofallen.org/Facilities/Facility/Details/23"
+    }
+   },
+   {
+    "type": "way",
+    "id": 372402104,
+    "center": {
+     "lat": 33.1197424,
+     "lon": -96.6573894
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Spring Meadow Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 372702232,
+    "center": {
+     "lat": 33.111176,
+     "lon": -96.6339019
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Country Meadows Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 373085597,
+    "center": {
+     "lat": 33.0901482,
+     "lon": -96.7143602
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "The Trail at the Woods"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374101681,
+    "center": {
+     "lat": 33.0958198,
+     "lon": -96.6951438
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Watters Crossing Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374101690,
+    "center": {
+     "lat": 33.1070334,
+     "lon": -96.6995051
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Green Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374103206,
+    "center": {
+     "lat": 33.124225,
+     "lon": -96.6758244
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Quail Run Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374104416,
+    "center": {
+     "lat": 33.1074332,
+     "lon": -96.6447208
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Reed Park West"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374104417,
+    "center": {
+     "lat": 33.1076649,
+     "lon": -96.6415313
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Reed Park East"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374105970,
+    "center": {
+     "lat": 33.0995724,
+     "lon": -96.647827
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Hillside Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374105973,
+    "center": {
+     "lat": 33.0849304,
+     "lon": -96.6446037
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Bethany Ridge Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374119903,
+    "center": {
+     "lat": 33.0896682,
+     "lon": -96.6573705
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Ford Park West"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374159842,
+    "center": {
+     "lat": 33.0903104,
+     "lon": -96.7075744
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Suncreek Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374166545,
+    "center": {
+     "lat": 33.0968452,
+     "lon": -96.670668
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Allenwood Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374442160,
+    "center": {
+     "lat": 33.1020725,
+     "lon": -96.7105591
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Bolin Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374568967,
+    "center": {
+     "lat": 33.0921637,
+     "lon": -96.6452301
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Shadow Lakes Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374599581,
+    "center": {
+     "lat": 33.0882539,
+     "lon": -96.7070522
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Suncreek Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374608003,
+    "center": {
+     "lat": 33.1352959,
+     "lon": -96.6483462
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "The Village Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 375242690,
+    "center": {
+     "lat": 33.0756949,
+     "lon": -96.682155
+    },
+    "tags": {
+     "landuse": "farmland",
+     "leisure": "park",
+     "name": "Molsen Farm"
+    }
+   },
+   {
+    "type": "way",
+    "id": 375242691,
+    "center": {
+     "lat": 33.0787489,
+     "lon": -96.7213971
+    },
+    "tags": {
+     "addr:city": "Plano",
+     "addr:housenumber": "7500",
+     "addr:postcode": "75025",
+     "addr:state": "TX",
+     "addr:street": "Red River Drive",
+     "leisure": "park",
+     "name": "Hoblitzelle Park",
+     "website": "https://www.plano.gov/hoblitzelle-park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 375998259,
+    "center": {
+     "lat": 33.1110731,
+     "lon": -96.6629517
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Allen Station Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 405173074,
+    "center": {
+     "lat": 33.1227423,
+     "lon": -96.6189417
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Stacy Ridge Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 411157997,
+    "center": {
+     "lat": 33.1134451,
+     "lon": -96.671445
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Rolling Hills Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 449759755,
+    "center": {
+     "lat": 33.1418258,
+     "lon": -96.6995871
+    },
+    "tags": {
+     "addr:city": "McKinney",
+     "addr:housenumber": "6375",
+     "addr:postcode": "75070",
+     "addr:state": "TX",
+     "addr:street": "Collin McKinney Parkway",
+     "leisure": "park",
+     "name": "McKinney Soccer Complex at Craig Ranch",
+     "operator": "City of McKinney/McKinney Soccer Association"
+    }
+   },
+   {
+    "type": "way",
+    "id": 469266072,
+    "center": {
+     "lat": 33.1171987,
+     "lon": -96.6912032
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Waterford Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 469284612,
+    "center": {
+     "lat": 33.1218949,
+     "lon": -96.6876056
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Cheatham Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 470419206,
+    "center": {
+     "lat": 33.0671302,
+     "lon": -96.7058908
+    },
+    "tags": {
+     "ele": "199",
+     "gnis:feature_id": "2028368",
+     "landuse": "recreation_ground",
+     "leisure": "park",
+     "name": "Enfield Park",
+     "source": "http://plano.gov/DocumentCenter/View/18612",
+     "website": "https://parks.planotx.org/econnect/Facilities/FacilitiesDetail.asp?FacilityId=415"
+    }
+   },
+   {
+    "type": "way",
+    "id": 474703800,
+    "center": {
+     "lat": 33.0889721,
+     "lon": -96.684256
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Village Green",
+     "natural": "grass"
+    }
+   },
+   {
+    "type": "way",
+    "id": 479583834,
+    "center": {
+     "lat": 33.1162453,
+     "lon": -96.6877698
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Twin Creeks Crossing Doggie Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 511119331,
+    "center": {
+     "lat": 33.0813627,
+     "lon": -96.708503
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Tejas Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 517724244,
+    "center": {
+     "lat": 33.1359705,
+     "lon": -96.6424832
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "The Meadows Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 517747125,
+    "center": {
+     "lat": 33.0925387,
+     "lon": -96.6245686
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Orchards Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 518614229,
+    "center": {
+     "lat": 33.105381,
+     "lon": -96.6649228
+    },
+    "tags": {
+     "historic": "heritage",
+     "leisure": "park",
+     "name": "Heritage Village"
+    }
+   },
+   {
+    "type": "way",
+    "id": 537768157,
+    "center": {
+     "lat": 33.1295467,
+     "lon": -96.6933061
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Spirit Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 545569348,
+    "center": {
+     "lat": 33.0758814,
+     "lon": -96.6553717
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Heritage Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 556800335,
+    "center": {
+     "lat": 33.0581881,
+     "lon": -96.6703641
+    },
+    "tags": {
+     "addr:city": "Plano",
+     "addr:housenumber": "5901",
+     "addr:postcode": "75086",
+     "addr:state": "TX",
+     "addr:street": "Los Rios Boulevard",
+     "leisure": "park",
+     "name": "Oak Point Park and Nature Preserve"
+    }
+   },
+   {
+    "type": "way",
+    "id": 570328285,
+    "center": {
+     "lat": 33.0614796,
+     "lon": -96.6567613
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Cottonwood Creek Greenbelt"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1105960118,
+    "center": {
+     "lat": 33.0862524,
+     "lon": -96.683845
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "South Green"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1413951769,
+    "center": {
+     "lat": 33.131366,
+     "lon": -96.7048824
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "West Lake Park"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1557495987,
+    "center": {
+     "lat": 33.0757549,
+     "lon": -96.7084008
+    },
+    "tags": {
+     "addr:city": "Plano",
+     "addr:housenumber": "1010",
+     "addr:postcode": "75025",
+     "addr:state": "TX",
+     "addr:street": "Spicewood Drive",
+     "leisure": "park",
+     "name": "Hoblitzelle Park East",
+     "website": "https://www.plano.gov/hoblitzelle-park-east"
+    }
+   }
+  ]
+ }
+}

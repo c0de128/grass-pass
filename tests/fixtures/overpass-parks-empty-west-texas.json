@@ -1,0 +1,27 @@
+{
+ "_recording": {
+  "what": "Overpass named parks within 5 km of 31.00,-103.00 (open desert in Pecos County, TX): a real empty answer",
+  "live": true,
+  "url": "https://overpass-api.de/api/interpreter",
+  "method": "POST",
+  "overpassQuery": "[out:json][timeout:25];nwr[\"leisure\"~\"^(park|nature_reserve)$\"][\"name\"](around:5000,31.00000,-103.00000);out center tags;",
+  "center": {
+   "lat": 31,
+   "lng": -103
+  },
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "fetchedAt": "2026-10-05T22:37:51.000Z",
+  "latencyMs": 8424,
+  "recordedBy": "builder S2 with curl"
+ },
+ "body": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+   "timestamp_osm_base": "2026-10-05T22:36:50Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": []
+ }
+}

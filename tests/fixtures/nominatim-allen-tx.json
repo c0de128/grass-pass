@@ -1,0 +1,37 @@
+{
+ "_recording": {
+  "what": "Nominatim search for \"Allen TX\" (https://nominatim.openstreetmap.org/search?format=jsonv2&q=Allen+TX&limit=1&addressdetails=0&accept-language=en)",
+  "live": true,
+  "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Allen+TX&limit=1&addressdetails=0&accept-language=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T22:35:41.687Z",
+  "latencyMs": 851,
+  "recordedBy": "builder S2: scratch Vitest config running src/lib/sources/* against the live API"
+ },
+ "body": [
+  {
+   "place_id": 330967018,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 6579686,
+   "lat": "33.1031744",
+   "lon": "-96.6705503",
+   "category": "boundary",
+   "type": "administrative",
+   "place_rank": 16,
+   "importance": 0.5239251961629158,
+   "addresstype": "city",
+   "name": "Allen",
+   "display_name": "Allen, Collin County, Texas, United States",
+   "boundingbox": [
+    "33.0708371",
+    "33.1580078",
+    "-96.7366668",
+    "-96.6088090"
+   ]
+  }
+ ]
+}

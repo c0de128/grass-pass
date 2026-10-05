@@ -1,0 +1,80 @@
+/**
+ * Replays the LIVE S3 recordings (Overpass park features, iNaturalist species + taxa, and the real
+ * gemma-4-31B-it answers from DigitalOcean, all recorded 2026-10-05 ~23:13-23:16 UTC). Requests with
+ * no recording throw, so a test can never pass on invented data. Failure shapes that can't be recorded
+ * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
+ */
+import { fixture } from "./osm-replay";
+
+export const PARKS = {
+  connemara: { id: "way/306191453", slug: "connemara-meadow-preserve", name: "Connemara Meadow Preserve" },
+  celebration: { id: "way/188145317", slug: "celebration-park", name: "Celebration Park" },
+} as const;
+
+type Rec = { _recording: Record<string, unknown> & { status?: number; recordedAtMs?: number }; body: unknown };
+type ModelRec = { _recording: { recordedAtMs: number }; request: { messages: { role: string; content: string }[]; response_format: { json_schema: { schema: unknown } } }; response: unknown };
+
+export const rec = (name: string) => fixture(name) as unknown as Rec;
+export const modelRec = (slug: string) => fixture(`do-gemma-4-31b-it-${slug}-pass`) as unknown as ModelRec;
+
+/** When the Connemara pass was recorded (the 14-day window and "today" in tests). */
+export const RECORDED_AT = modelRec(PARKS.connemara.slug)._recording.recordedAtMs;
+
+/** The recorded model answer's content (the JSON the model wrote). */
+export function recordedDraft(slug: string): unknown {
+  const r = modelRec(slug).response as { choices: { message: { content: string } }[] };
+  return JSON.parse(r.choices[0].message.content);
+}
+
+export type Call = { url: string; host: string; init?: RequestInit; body?: string };
+
+const json = (body: unknown, status = 200) =>
+  new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
+
+/**
+ * One fetch for everything the pass touches. `model` overrides the model answer (e.g. a delay or a
+ * 5xx built in a test); by default the recorded answer for the park named in the prompt is returned.
+ */
+export function passReplay(opts: { model?: (call: Call) => Response | undefined | Promise<Response | undefined> } = {}) {
+  const calls: Call[] = [];
+  const fetchImpl = async (url: string, init?: RequestInit): Promise<Response> => {
+    const u = new URL(url);
+    const body = typeof init?.body === "string" ? init.body : undefined;
+    const call: Call = { url, host: u.host, init, body };
+    calls.push(call);
+
+    if (u.host === "inference.do-ai.run") {
+      const o = await opts.model?.(call);
+      if (o) return o;
+      const sent = JSON.parse(body ?? "{}") as { messages?: { content: string }[] };
+      const user = sent.messages?.[1]?.content ?? "";
+      for (const p of Object.values(PARKS)) {
+        if (user.includes(`kind="park name">${p.name}</source>`)) return json(modelRec(p.slug).response);
+      }
+      throw new Error("no model recording for this prompt");
+    }
+    if (u.pathname.endsWith("/interpreter")) {
+      const q = new URLSearchParams(body ?? "").get("data") ?? "";
+      for (const p of Object.values(PARKS)) {
+        const [type, id] = p.id.split("/");
+        if (q.includes(`${type}(${id})`)) return json(rec(`overpass-features-${p.slug}`).body);
+      }
+      throw new Error(`no Overpass recording for ${q.slice(0, 80)}`);
+    }
+    if (u.host === "api.inaturalist.org" && u.pathname === "/v1/observations/species_counts") {
+      for (const p of Object.values(PARKS)) {
+        const r = rec(`inat-species-${p.slug}`);
+        const ru = new URL(String(r._recording.url));
+        if (ru.searchParams.get("lat") === u.searchParams.get("lat") && ru.searchParams.get("lng") === u.searchParams.get("lng")) {
+          return json(r.body);
+        }
+      }
+      throw new Error(`no species_counts recording for ${u.search}`);
+    }
+    if (u.host === "api.inaturalist.org" && u.pathname.startsWith("/v1/taxa/")) {
+      return json(rec(`inat-taxa-${PARKS.connemara.slug}`).body);
+    }
+    throw new Error(`no recording for ${url}`);
+  };
+  return { fetchImpl, calls };
+}

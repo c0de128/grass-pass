@@ -1,0 +1,127 @@
+{
+ "_recording": {
+  "what": "Real iNaturalist taxa for the SPEC 6.4 planted danger cases: Eastern Copperhead, Brown Recluse, eastern poison ivy, Red Imported Fire Ant, American pokeweed. Used to prove the danger filter blocks them by real ancestor_ids.",
+  "live": true,
+  "url": "https://api.inaturalist.org/v1/taxa/912622,50181,58732,67598,48599?per_page=30&locale=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "fetchedAt": "2026-10-05T23:16:59Z",
+  "trimmed": "Fields the app never reads (photos, listed_taxa...) were removed; ids, names, ancestor_ids and summaries are exactly as received."
+ },
+ "body": {
+  "total_results": 5,
+  "results": [
+   {
+    "id": 912622,
+    "name": "Agkistrodon contortrix",
+    "rank": "species",
+    "preferred_common_name": "Eastern Copperhead",
+    "iconic_taxon_name": "Reptilia",
+    "ancestor_ids": [
+     48460,
+     1,
+     2,
+     355675,
+     26036,
+     26172,
+     85553,
+     30667,
+     797576,
+     30668
+    ],
+    "wikipedia_summary": "<i><b>Agkistrodon contortrix</b></i> is a species of venomous snake endemic to Eastern North America, a member of the subfamily Crotalinae (pit vipers). The common name for this species is the <b>copperhead</b>. Its behavior may lead to accidental encounters with humans. Five subspecies are currently recognized, including the nominate subspecies described here.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Agkistrodon contortrix"
+   },
+   {
+    "id": 50181,
+    "name": "Loxosceles reclusa",
+    "rank": "species",
+    "preferred_common_name": "Brown Recluse",
+    "iconic_taxon_name": "Arachnida",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     245097,
+     47119,
+     47118,
+     120474,
+     367158,
+     1528408,
+     367166,
+     48140,
+     1472965,
+     48137
+    ],
+    "wikipedia_summary": "The <b>brown recluse</b>, <i><b>Loxosceles reclusa</b></i>, Sicariidae (formerly placed in a family \"Loxoscelidae\") is a recluse spider with a necrotic venom. Similar to other recluse spider bites, their bite sometimes requires medical attention. The brown recluse is one of three spiders (the others being black widow and <i>Loxosceles laeta</i>, the Chilean recluse) with medically significant venom in North America.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Loxosceles reclusa"
+   },
+   {
+    "id": 58732,
+    "name": "Toxicodendron radicans",
+    "rank": "species",
+    "preferred_common_name": "eastern poison ivy",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47729,
+     48874,
+     707807,
+     51079
+    ],
+    "wikipedia_summary": "<i><b>Toxicodendron radicans</b></i>, commonly known as <b>eastern poison ivy</b> or <b>poison ivy</b>, is a poisonous Asian and Eastern North American flowering plant that is well-known for causing Urushiol-induced contact dermatitis, an itchy, irritating, and sometimes painful rash in most people who touch it. It is caused by urushiol, a clear liquid compound in the plant's sap. The species is variable in its appearance and habit, and despite its common name it is not a true ivy (<i>Hedera</i>),...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Toxicodendron radicans"
+   },
+   {
+    "id": 67598,
+    "name": "Solenopsis invicta",
+    "rank": "species",
+    "preferred_common_name": "Red Imported Fire Ant",
+    "iconic_taxon_name": "Insecta",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     372739,
+     47158,
+     184884,
+     47201,
+     124417,
+     326777,
+     1269340,
+     47336,
+     69143,
+     469106,
+     67597,
+     1373022
+    ],
+    "wikipedia_summary": "The <b>red imported fire ant</b> (<i>Solenopsis invicta</i>), also known as the <b>fire ant</b> or <b>RIFA</b>, is a species of ant native to South America. A member of the genus <i>Solenopsis</i> in the subfamily Myrmicinae, it was described by Swiss entomologist Felix Santschi as a variant in 1916. Its current name <i>invicta</i> was given to the ant in 1972 as a separate species. However, the variant and species were the same ant, and the name was preserved...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Solenopsis invicta"
+   },
+   {
+    "id": 48599,
+    "name": "Phytolacca americana",
+    "rank": "species",
+    "preferred_common_name": "American pokeweed",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47366,
+     48600,
+     48601
+    ],
+    "wikipedia_summary": "<i><b>Phytolacca americana</b></i>, the <b>American pokeweed</b> or simply <b>pokeweed</b>, is a herbaceous perennial plant in the pokeweed family Phytolaccaceae growing up to 8 feet (2 meters) in height. It is native to the eastern United States and has significant toxicity.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Phytolacca americana"
+   }
+  ]
+ }
+}

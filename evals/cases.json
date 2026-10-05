@@ -1,0 +1,26 @@
+{
+  "_about": "SPEC 6.4 eval cases: 20 real parks. OSM ids confirmed live on 2026-10-05 (Nominatim search + Overpass name search, GrassPass User-Agent). 'note' records every swap or surprise. Age band 6-10 for every case (the M5 band).",
+  "ageBand": "6-10",
+  "cases": [
+    { "n": 1, "slug": "connemara-meadow-preserve", "name": "Connemara Meadow Preserve", "city": "Plano/Allen TX", "parkId": "way/306191453", "profile": "wildlife-rich, little play", "note": "" },
+    { "n": 2, "slug": "celebration-park", "name": "Celebration Park", "city": "Allen TX", "parkId": "way/188145317", "profile": "play-rich, 0 research-grade species", "note": "" },
+    { "n": 3, "slug": "arbor-hills-nature-preserve", "name": "Arbor Hills Nature Preserve", "city": "Plano TX", "parkId": "way/38113837", "profile": "nature preserve", "note": "" },
+    { "n": 4, "slug": "oak-point-park", "name": "Oak Point Park and Nature Preserve", "city": "Plano TX", "parkId": "way/556800335", "profile": "big park + preserve", "note": "" },
+    { "n": 5, "slug": "bob-woodruff-park", "name": "Bob Woodruff Park (North)", "city": "Plano TX", "parkId": "way/556800332", "profile": "creek park", "note": "OSM maps Bob Woodruff Park as two parks, (North) way/556800332 and (South) way/197183588. We use (North), Nominatim's first hit." },
+    { "n": 6, "slug": "bethany-lakes-park", "name": "Bethany Lakes Park", "city": "Allen TX", "parkId": "way/366756040", "profile": "lake park", "note": "" },
+    { "n": 7, "slug": "allen-station-park", "name": "Allen Station Park", "city": "Allen TX", "parkId": "way/375998259", "profile": "sports park", "note": "" },
+    { "n": 8, "slug": "erwin-park", "name": "Erwin Park", "city": "McKinney TX", "parkId": "way/595562583", "profile": "large wooded park", "note": "" },
+    { "n": 9, "slug": "towne-lake-park", "name": "Towne Lake Park", "city": "McKinney TX", "parkId": "way/595562022", "profile": "lake park", "note": "" },
+    { "n": 10, "slug": "frisco-commons", "name": "Frisco Commons", "city": "Frisco TX", "parkId": "way/126703593", "profile": "city park", "note": "" },
+    { "n": 11, "slug": "breckinridge-park", "name": "Breckinridge Park", "city": "Richardson TX", "parkId": "way/290091068", "profile": "large park", "note": "" },
+    { "n": 12, "slug": "spring-creek-forest-preserve", "name": "Spring Creek Forest Preserve Park", "city": "Garland TX", "parkId": "way/280159375", "profile": "forest preserve", "note": "Nominatim found no 'Spring Creek Forest Preserve'; Overpass has it as 'Spring Creek Forest Preserve Park' (way/280159375)." },
+    { "n": 13, "slug": "white-rock-lake-park", "name": "White Rock Lake Park", "city": "Dallas TX", "parkId": "way/460905359", "profile": "big lake park", "note": "" },
+    { "n": 14, "slug": "klyde-warren-park", "name": "Klyde Warren Park", "city": "Dallas TX", "parkId": "way/419524736", "profile": "urban deck park, few species", "note": "" },
+    { "n": 15, "slug": "cedar-ridge-preserve", "name": "Cedar Ridge Preserve", "city": "Dallas TX", "parkId": "way/310790501", "profile": "nature preserve", "note": "" },
+    { "n": 16, "slug": "trinity-river-audubon-center", "name": "Trinity River Audubon Center", "city": "Dallas TX", "parkId": "way/1255375776", "profile": "nature reserve", "note": "" },
+    { "n": 17, "slug": "zilker-metropolitan-park", "name": "Zilker Metropolitan Park", "city": "Austin TX", "parkId": "relation/13307353", "profile": "big city park", "note": "" },
+    { "n": 18, "slug": "central-park", "name": "Central Park", "city": "New York NY", "parkId": "way/427818536", "profile": "very big, very mapped", "note": "" },
+    { "n": 19, "slug": "golden-gate-park", "name": "Golden Gate Park", "city": "San Francisco CA", "parkId": "way/158602261", "profile": "very big, very mapped", "note": "" },
+    { "n": 20, "slug": "orchards-park", "name": "Orchards Park", "city": "Allen TX", "parkId": "way/517747125", "profile": "tiny pocket park (no-data path)", "note": "SPEC asked for < 3 OSM features and 0 iNat. Checked live 2026-10-05: Country Meadows Park (0 species, but a playground and picnic tables mapped), Greenville Hights (0 species, 3 feature kinds), Monarch Park (0 features, 3 species), Reed Park West (4 feature kinds). Orchards Park has 1 mapped kind (playground) and 1 research-grade species within 1.5 km, which is the closest real match and still takes the no-data path (too little for a pass, no model call)." }
+  ]
+}

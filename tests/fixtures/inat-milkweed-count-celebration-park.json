@@ -1,0 +1,21 @@
+{
+ "_recording": {
+  "what": "iNaturalist verifiable milkweed (Asclepias, taxon 47906) observation total within 1.5 km of Celebration Park, all years (milkweedCountUrl())",
+  "live": true,
+  "url": "https://api.inaturalist.org/v1/observations?taxon_id=47906&lat=33.10824&lng=-96.62468&radius=1.5&verifiable=true&per_page=0",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T23:39:10.079Z",
+  "latencyMs": 100,
+  "recordedAtMs": 1791243548191,
+  "trimmed": "No: the full body as received."
+ },
+ "body": {
+  "total_results": 7,
+  "page": 1,
+  "per_page": 0,
+  "results": []
+ }
+}

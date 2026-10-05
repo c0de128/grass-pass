@@ -211,7 +211,8 @@ export function inatDailyCap(env: Env = process.env): number {
   return intFromEnv(env.INAT_DAILY_CAP, INAT_DAILY_CAP_DEFAULT);
 }
 
-async function getJson(url: string, what: string, deps: InatDeps): Promise<unknown> {
+/** One polite iNat GET (breaker, daily budget, 1 req/s queue + shared slot, timeout). Shared by the monarch box. */
+export async function getJson(url: string, what: string, deps: InatDeps): Promise<unknown> {
   const now = deps.now ?? (() => Date.now());
   const wait = await breakerRetryAfter(deps.store, INAT_SOURCE, now());
   if (wait > 0) throw new SourceError(INAT_SOURCE, "not_called", { started: false, retryAfter: wait });

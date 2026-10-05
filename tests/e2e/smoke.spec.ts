@@ -1,6 +1,6 @@
 import { expect, test } from "@playwright/test";
 
-// S0 skeleton: the landing page loads cleanly with the security headers and an honest empty state.
+// The landing page loads cleanly with the security headers and the park search form.
 // The main-journey e2e (example park -> pass -> print) is added with S3/S4/S8.
 
 test("landing page loads with headers, no console errors and no CSP issues", async ({ page }) => {
@@ -24,7 +24,7 @@ test("landing page loads with headers, no console errors and no CSP issues", asy
 
   await expect(page.getByRole("heading", { level: 1, name: "Grass Pass" })).toBeVisible();
   await expect(page.getByText("Your ticket to get outside.")).toBeVisible();
-  await expect(page.getByRole("status")).toContainText("No data available");
+  await expect(page.getByRole("form", { name: "Find a park" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   expect(errors).toEqual([]);
   expect(issues.filter((i) => /ContentSecurityPolicy|csp/i.test(i))).toEqual([]);

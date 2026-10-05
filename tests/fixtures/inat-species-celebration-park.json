@@ -1,0 +1,21 @@
+{
+ "_recording": {
+  "what": "iNaturalist research-grade species_counts within 1.5 km of Celebration Park, last 14 days (speciesCountsUrl())",
+  "live": true,
+  "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.10824&lng=-96.62468&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T23:14:13.420Z",
+  "latencyMs": 1016,
+  "recordedAtMs": 1791242039178,
+  "trimmed": "Real answer; per-taxon fields the app never reads (photos, counts, flags...) were removed to keep the repo small. total_results, page, per_page, count and the kept taxon fields are exactly as received."
+ },
+ "body": {
+  "total_results": 0,
+  "page": 1,
+  "per_page": 200,
+  "results": []
+ }
+}

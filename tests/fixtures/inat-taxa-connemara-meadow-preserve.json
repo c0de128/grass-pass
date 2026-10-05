@@ -1,0 +1,530 @@
+{
+ "_recording": {
+  "what": "iNaturalist taxa (Wikipedia summaries) for the Connemara Meadow Preserve Wild Finds candidates (taxaUrl())",
+  "live": true,
+  "url": "https://api.inaturalist.org/v1/taxa/135263,126257,51450,55553,58205,62944,119793,119986,126424,128755,130192,130379,135262,202438,286324,5206,56887,94551,143484,326137,50278,53034,53547,54504?per_page=30&locale=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T23:19:20.449Z",
+  "latencyMs": 654,
+  "recordedAtMs": 1791242352694,
+  "trimmed": "Real answer; fields the app never reads (photos, listed_taxa, conservation statuses...) were removed to keep the repo small. id, name, rank, common name, ancestor_ids, wikipedia_summary and wikipedia_url are exactly as received."
+ },
+ "body": {
+  "total_results": 24,
+  "page": 1,
+  "per_page": 30,
+  "results": [
+   {
+    "id": 135263,
+    "name": "Ipomoea cordatotriloba",
+    "rank": "species",
+    "preferred_common_name": "Tievine",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     48515,
+     52345,
+     1395312,
+     993824,
+     52346
+    ],
+    "wikipedia_summary": "<i><b>Ipomoea cordatotriloba</b></i> is a species of morning glory native to the southeastern United States, Mexico, and South America. Its common names include <b>tievine</b> and <b>cotton morning glory</b>.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Ipomoea cordatotriloba"
+   },
+   {
+    "id": 126257,
+    "name": "Helicina orbiculata",
+    "rank": "species",
+    "preferred_common_name": "Globular Drop Snail",
+    "iconic_taxon_name": "Mollusca",
+    "ancestor_ids": [
+     48460,
+     1,
+     47115,
+     47114,
+     437702,
+     775835,
+     245601,
+     85811,
+     524933,
+     88762
+    ],
+    "wikipedia_summary": "<i><b>Helicina orbiculata</b></i>, also known as <i>Helicina (Oligyra) orbiculata</i> and as <i><b>Oligyra orbiculata</b></i>, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Helicina orbiculata"
+   },
+   {
+    "id": 51450,
+    "name": "Passiflora lutea",
+    "rank": "species",
+    "preferred_common_name": "yellow passionflower",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     51820,
+     51451,
+     853017,
+     853019,
+     51452,
+     878746,
+     1234460
+    ],
+    "wikipedia_summary": "<i><b>Passiflora lutea</b></i>, the <b>yellow passionflower</b>, is a flowering plant in the family Passifloraceae, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and Texas. It is the northernmost species of <i>Passiflora</i>, occurring slightly further north than <i>P. incarnata</i>, and tolerant of winter temperatures down to −15 °C, and even −30 °C for short periods.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Passiflora lutea"
+   },
+   {
+    "id": 55553,
+    "name": "Teloschistes chrysophthalmus",
+    "rank": "species",
+    "preferred_common_name": "Golden-eye Lichen",
+    "iconic_taxon_name": "Fungi",
+    "ancestor_ids": [
+     48460,
+     47170,
+     48250,
+     372740,
+     54743,
+     952186,
+     54755,
+     54756,
+     1232043,
+     55554
+    ],
+    "wikipedia_summary": "<i><b>Teloschistes chrysophthalmus</b></i>, often referred to as the <b>gold-eye lichen</b> or <b>golden-eye</b>, is a fruticose lichen with branching lobes. Their sexual structures, apothecia, are bright-orange with spiny projections (cilia) situated around the rim. It has a global distribution, but is often localized and rare in many parts of its range. Colonies most often form along coastal areas.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Teloschistes chrysophthalmus"
+   },
+   {
+    "id": 58205,
+    "name": "Maclura pomifera",
+    "rank": "species",
+    "preferred_common_name": "Osage-orange",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47132,
+     50998,
+     1529475,
+     58206
+    ],
+    "wikipedia_summary": "<i><b>Maclura pomifera</b></i>, commonly known as the <b>Osage orange</b>, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall. The distinctive fruit, from a multiple fruit family, is roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green in the fall. The fruits secrete a sticky white latex when cut or damaged. Despite the name \"Osage orange\", it is only distantly related to the orange, but rather...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Maclura pomifera"
+   },
+   {
+    "id": 62944,
+    "name": "Cardiospermum halicacabum",
+    "rank": "species",
+    "preferred_common_name": "Lesser Balloon Vine",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47729,
+     58321,
+     62946
+    ],
+    "wikipedia_summary": "<i><b>Cardiospermum halicacabum</b></i>, known as the <b>balloon plant</b> or <b>love in a puff</b>, is a climbing plant widely distributed in tropical and subtropical Africa and Asia. Often found as a weed along roads and rivers, it has been examined for antidiarrhoeal as well as homoeopathic medicinal properties.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Cardiospermum halicacabum"
+   },
+   {
+    "id": 119793,
+    "name": "Pyrus calleryana",
+    "rank": "species",
+    "preferred_common_name": "Callery pear",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47132,
+     47148,
+     922110,
+     723302,
+     58736
+    ],
+    "wikipedia_summary": "<i><b>Pyrus calleryana</b></i>, the <b>Callery pear</b>, is a species of pear native to China and Vietnam, in the family Rosaceae. It is a deciduous tree growing to 5 to 8 m (16 to 26 ft) tall, often with a conic to rounded crown. The leaves are oval, 4 to 8 cm (1.6 to 3.1 in) long, glossy dark green above, and slightly paler below. The white, five-petaled flowers are about 2 to 2.5 cm (0.79 to 0.98 in) in diameter. They are produced...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Pyrus calleryana"
+   },
+   {
+    "id": 119986,
+    "name": "Zanthoxylum clava-herculis",
+    "rank": "species",
+    "preferred_common_name": "Hercules' club",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47729,
+     50623,
+     1363294,
+     54837
+    ],
+    "wikipedia_summary": "<i><b>Zanthoxylum clava-herculis</b></i> (<b>Hercules' club</b>, <b>Hercules-club</b>, <b>pepperwood</b>, or <b>southern prickly ash</b>) is a spiny tree or shrub native to the southeastern United States. It grows to 10–17 m tall and has distinctive spined thick, corky lumps 2–3 cm long on the bark. The leaves are glabrous and leathery, pinnately compound, 20–30 cm long with 7-19 leaflets, each leaflet 4–5 cm long. The flowers are dioecious, in panicles up to 20 cm long, each flower small, 6–8 mm diameter, with 3-5 white petals....",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Zanthoxylum clava-herculis"
+   },
+   {
+    "id": 126424,
+    "name": "Parthenium hysterophorus",
+    "rank": "species",
+    "preferred_common_name": "Santa Maria feverfew",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47605,
+     47604,
+     632790,
+     605446,
+     639449,
+     83894
+    ],
+    "wikipedia_summary": "<i><b>Parthenium hysterophorus</b></i> is a species of flowering plant in the aster family, Asteraceae. It is native to the American tropics. Common names include <b>Santa-Maria</b>, <b>Santa Maria feverfew</b>, <b>whitetop weed</b>, <b>famine weed</b>, and <b>congress weed</b>. In India, it is locally known as <b>carrot grass, congress grass</b> or <i><b>Gajar Ghans</b></i>. It is a common invasive species in India, Australia, and parts of Africa.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Parthenium hysterophorus"
+   },
+   {
+    "id": 128755,
+    "name": "Prunus mexicana",
+    "rank": "species",
+    "preferred_common_name": "Mexican Plum",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47132,
+     47148,
+     922110,
+     922113,
+     47351
+    ],
+    "wikipedia_summary": "<i><b>Prunus mexicana</b></i>, commonly known as the <b>Mexican plum</b>, is a North American species of plum tree that can be found in the central United States and Northern Mexico. Its native range stretches from Coahuila and San Luis Potosí north as far as Wisconsin and South Dakota, east to Georgia, Kentucky, and Ohio. Mexican plum is widely cultivated, such as on the west coast of the United States.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Prunus mexicana"
+   },
+   {
+    "id": 130192,
+    "name": "Helianthus maximiliani",
+    "rank": "species",
+    "preferred_common_name": "Maximilian sunflower",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47605,
+     47604,
+     632790,
+     605446,
+     901801,
+     56955
+    ],
+    "wikipedia_summary": "<i><b>Helianthus maximiliani</b></i> is a North American species of sunflower known by the common name <b>Maximilian sunflower</b>.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Helianthus maximiliani"
+   },
+   {
+    "id": 130379,
+    "name": "Liatris punctata",
+    "rank": "species",
+    "preferred_common_name": "dotted gayfeather",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47605,
+     47604,
+     632790,
+     153419,
+     901059,
+     48690
+    ],
+    "wikipedia_summary": "<i><b>Liatris punctata</b></i> is a species of flowering plant in the aster family known by the common names <b>dotted gayfeather</b>, <b>dotted blazingstar</b>, and <b>narrow-leaved blazingstar</b>. It is native to North America, where it occurs throughout the plains of central Canada, the central United States, and northern Mexico.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Liatris punctata"
+   },
+   {
+    "id": 135262,
+    "name": "Ipomoea lacunosa",
+    "rank": "species",
+    "preferred_common_name": "White Morning-glory",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     48515,
+     52345,
+     1395312,
+     993824,
+     52346
+    ],
+    "wikipedia_summary": "<i><b>Ipomoea lacunosa</b></i>, the <b>whitestar</b>, <b>white morning-glory</b> or <b>pitted morningglory</b>, is a species that belongs to the <i>Ipomoea</i> genus. In this genus most members are commonly referred to as \"morning glories\". The name for the genus, <i>Ipomoea</i>, has root in the Greek words <i>ips</i> and <i>homoios</i>, which translates to worm-like. This is a reference to the plant's vine-like growth. <i>Lacunosa</i> comes from a Latin word meaning air spaces, correlating with the veination of the leaves. <i>Ipomoea lacunosa</i>...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Ipomoea lacunosa"
+   },
+   {
+    "id": 202438,
+    "name": "Hexagonia hydnoides",
+    "rank": "species",
+    "preferred_common_name": "Hairy Hexagonia",
+    "iconic_taxon_name": "Fungi",
+    "ancestor_ids": [
+     48460,
+     47170,
+     47169,
+     492000,
+     50814,
+     47380,
+     47379,
+     202454
+    ],
+    "wikipedia_summary": "<i><b>Hexagonia hydnoides</b></i> is a species of fungus in the Polyporaceae family. It is a plant pathogen. This fungus is largely saprophytic, decaying dead wood tissues.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Hexagonia hydnoides"
+   },
+   {
+    "id": 286324,
+    "name": "Sapindus drummondii",
+    "rank": "species",
+    "preferred_common_name": "Western Soapberry",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47729,
+     58321,
+     62832
+    ],
+    "wikipedia_summary": "<i><b>Sapindus saponaria</b></i> is a small to medium-sized deciduous tree native to the Americas. Common names include <b>wingleaf soapberry</b>, <b>western soapberry</b>, <b>jaboncillo</b>, <b>sulluku</b> and <i><b>manele</b></i> and <i><b>a'e</b></i> (Hawaiian). Its genus name, \"<i>Sapindus</i>\", comes from the Latin, meaning Indian soap, and its specific epithet means \"soapy.\"",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Sapindus drummondii"
+   },
+   {
+    "id": 5206,
+    "name": "Buteo lineatus",
+    "rank": "species",
+    "preferred_common_name": "Red-shouldered Hawk",
+    "iconic_taxon_name": "Aves",
+    "ancestor_ids": [
+     48460,
+     1,
+     2,
+     355675,
+     3,
+     71261,
+     5067,
+     1542783,
+     5179
+    ],
+    "wikipedia_summary": "The <b>red-shouldered hawk</b> (<i>Buteo lineatus</i>) is a medium-sized hawk. Its breeding range spans eastern North America and along the coast of California and northern to northeastern-central Mexico. Red-shouldered hawks are permanent residents throughout most of their range, though northern birds do migrate, mostly to central Mexico. The main conservation threat to the widespread species is deforestation.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Buteo lineatus"
+   },
+   {
+    "id": 56887,
+    "name": "Bombus pensylvanicus",
+    "rank": "species",
+    "preferred_common_name": "American Bumble Bee",
+    "iconic_taxon_name": "Insecta",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     372739,
+     47158,
+     184884,
+     47201,
+     124417,
+     326777,
+     47222,
+     630955,
+     47221,
+     199939,
+     538883,
+     52775,
+     538902
+    ],
+    "wikipedia_summary": "<i><b>Bombus pensylvanicus</b></i>, the <b>American bumblebee</b> or <b>Sonoran bumblebee</b>, is a threatened species of bumblebee native to North America. It occurs in eastern Canada, throughout much of the United States, and much of Mexico.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Bombus pensylvanicus"
+   },
+   {
+    "id": 94551,
+    "name": "Argia immunda",
+    "rank": "species",
+    "preferred_common_name": "Kiowa Dancer",
+    "iconic_taxon_name": "Insecta",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     372739,
+     47158,
+     184884,
+     47792,
+     47928,
+     426081,
+     47925,
+     47977
+    ],
+    "wikipedia_summary": "<i><b>Argia immunda</b></i>, the <b>Kiowa dancer</b>, is a species of narrow-winged damselfly in the family Coenagrionidae. It is found in Central America and North America.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Argia immunda"
+   },
+   {
+    "id": 143484,
+    "name": "Blepharomastix ranalis",
+    "rank": "species",
+    "preferred_common_name": "Hollow-spotted Blepharomastix Moth",
+    "iconic_taxon_name": "Insecta",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     372739,
+     47158,
+     184884,
+     47157,
+     49682,
+     52002,
+     122486,
+     892485,
+     143482
+    ],
+    "wikipedia_summary": "<i><b>Blepharomastix ranalis</b></i>, the <b>hollow-spotted blepharomastix moth</b>, is a species of grass moth of the Crambidae family found in the eastern and southern United States and Mexico.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Blepharomastix ranalis"
+   },
+   {
+    "id": 326137,
+    "name": "Pachypsylla venusta",
+    "rank": "species",
+    "preferred_common_name": "Hackberry Petiole Gall Psyllid",
+    "iconic_taxon_name": "Insecta",
+    "ancestor_ids": [
+     48460,
+     1,
+     47120,
+     372739,
+     47158,
+     184884,
+     47744,
+     334037,
+     48195,
+     446767,
+     481462,
+     322304
+    ],
+    "wikipedia_summary": null,
+    "wikipedia_url": null
+   },
+   {
+    "id": 50278,
+    "name": "Parthenocissus quinquefolia",
+    "rank": "species",
+    "preferred_common_name": "Virginia creeper",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     71291,
+     50279,
+     50280
+    ],
+    "wikipedia_summary": "<i><b>Parthenocissus quinquefolia</b></i>, known as <b>Virginia creeper</b>, <b>Victoria creeper</b>, <b>five-leaved ivy</b>, or <b>five-finger</b>, is a species of flowering plant in the grape family, Vitaceae. It is native to eastern and central North America, from southeastern Canada and the eastern United States west to Manitoba and Utah, and south to eastern Mexico and Guatemala.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Parthenocissus quinquefolia"
+   },
+   {
+    "id": 53034,
+    "name": "Ambrosia trifida",
+    "rank": "species",
+    "preferred_common_name": "giant ragweed",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47605,
+     47604,
+     632790,
+     605446,
+     639449,
+     53036
+    ],
+    "wikipedia_summary": "<i><b>Ambrosia trifida</b></i>, the <b>giant ragweed</b>, is a species of flowering plant in the sunflower family. It is native to North America, where it is widespread in Canada, the United States, and northern Mexico. It is present in Europe and Asia as an introduced species, and it is known as a common weed in many regions. Its common names include <b>great ragweed</b>, <b>Texan great ragweed</b>, <b>giant ragweed</b>, <b>tall ragweed</b>, <b>blood ragweed</b>, <b>perennial ragweed</b>, <b>horseweed</b>, <b>buffaloweed</b>, and <b>kinghead</b>.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Ambrosia trifida"
+   },
+   {
+    "id": 53547,
+    "name": "Ulmus americana",
+    "rank": "species",
+    "preferred_common_name": "American elm",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47132,
+     53548,
+     53549,
+     1664435,
+     1664437
+    ],
+    "wikipedia_summary": "<i><b>Ulmus americana</b></i>, generally known as the <b>American elm</b> or, less commonly, as the <b>white elm</b> or <b>water elm</b>, is a species native to eastern North America, naturally occurring from Nova Scotia west to Alberta and Montana, and south to Florida and central Texas. The American elm is an extremely hardy tree that can withstand winter temperatures as low as −42 °C (−44 °F). Trees in areas unaffected by Dutch elm disease can live for several hundred...",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Ulmus americana"
+   },
+   {
+    "id": 54504,
+    "name": "Juglans nigra",
+    "rank": "species",
+    "preferred_common_name": "eastern black walnut",
+    "iconic_taxon_name": "Plantae",
+    "ancestor_ids": [
+     48460,
+     47126,
+     211194,
+     47125,
+     47124,
+     47853,
+     54497,
+     54495
+    ],
+    "wikipedia_summary": "<i><b>Juglans nigra</b></i>, the <b>eastern black walnut</b>, is a species of deciduous tree in the walnut family, Juglandaceae, native to eastern North America. It grows mostly in riparian zones, from southern Ontario, west to southeast South Dakota, south to Georgia, northern Florida and southwest to central Texas. Wild trees in the upper Ottawa Valley may be an isolated native population or may have derived from planted trees.",
+    "wikipedia_url": "https://en.wikipedia.org/wiki/Juglans nigra"
+   }
+  ]
+ }
+}

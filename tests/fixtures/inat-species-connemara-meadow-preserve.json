@@ -1,0 +1,1896 @@
+{
+ "_recording": {
+  "what": "iNaturalist research-grade species_counts within 1.5 km of Connemara Meadow Preserve, last 14 days (speciesCountsUrl())",
+  "live": true,
+  "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=1.5&quality_grade=research&d1=2026-09-21&per_page=200&locale=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-05T23:19:19.442Z",
+  "latencyMs": 515,
+  "recordedAtMs": 1791242352694,
+  "trimmed": "Real answer; per-taxon fields the app never reads (photos, counts, flags...) were removed to keep the repo small. total_results, page, per_page, count and the kept taxon fields are exactly as received."
+ },
+ "body": {
+  "total_results": 79,
+  "page": 1,
+  "per_page": 200,
+  "results": [
+   {
+    "count": 4,
+    "taxon": {
+     "id": 126257,
+     "name": "Helicina orbiculata",
+     "rank": "species",
+     "preferred_common_name": "Globular Drop Snail",
+     "iconic_taxon_name": "Mollusca",
+     "ancestor_ids": [
+      48460,
+      1,
+      47115,
+      47114,
+      437702,
+      775835,
+      245601,
+      85811,
+      524933,
+      88762,
+      126257
+     ]
+    }
+   },
+   {
+    "count": 4,
+    "taxon": {
+     "id": 135263,
+     "name": "Ipomoea cordatotriloba",
+     "rank": "species",
+     "preferred_common_name": "Tievine",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48515,
+      52345,
+      1395312,
+      993824,
+      52346,
+      135263
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 5206,
+     "name": "Buteo lineatus",
+     "rank": "species",
+     "preferred_common_name": "Red-shouldered Hawk",
+     "iconic_taxon_name": "Aves",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      3,
+      71261,
+      5067,
+      1542783,
+      5179,
+      5206
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 50181,
+     "name": "Loxosceles reclusa",
+     "rank": "species",
+     "preferred_common_name": "Brown Recluse",
+     "iconic_taxon_name": "Arachnida",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      245097,
+      47119,
+      47118,
+      120474,
+      367158,
+      1528408,
+      367166,
+      48140,
+      1472965,
+      48137,
+      50181
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 51450,
+     "name": "Passiflora lutea",
+     "rank": "species",
+     "preferred_common_name": "yellow passionflower",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      51820,
+      51451,
+      853017,
+      853019,
+      51452,
+      878746,
+      1234460,
+      51450
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 55553,
+     "name": "Teloschistes chrysophthalmus",
+     "rank": "species",
+     "preferred_common_name": "Golden-eye Lichen",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      48250,
+      372740,
+      54743,
+      952186,
+      54755,
+      54756,
+      1232043,
+      55554,
+      55553
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 56887,
+     "name": "Bombus pensylvanicus",
+     "rank": "species",
+     "preferred_common_name": "American Bumble Bee",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47201,
+      124417,
+      326777,
+      47222,
+      630955,
+      47221,
+      199939,
+      538883,
+      52775,
+      538902,
+      56887
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 58205,
+     "name": "Maclura pomifera",
+     "rank": "species",
+     "preferred_common_name": "Osage-orange",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47132,
+      50998,
+      1529475,
+      58206,
+      58205
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 62944,
+     "name": "Cardiospermum halicacabum",
+     "rank": "species",
+     "preferred_common_name": "Lesser Balloon Vine",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47729,
+      58321,
+      62946,
+      62944
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 94551,
+     "name": "Argia immunda",
+     "rank": "species",
+     "preferred_common_name": "Kiowa Dancer",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47792,
+      47928,
+      426081,
+      47925,
+      47977,
+      94551
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 119793,
+     "name": "Pyrus calleryana",
+     "rank": "species",
+     "preferred_common_name": "Callery pear",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47132,
+      47148,
+      922110,
+      723302,
+      58736,
+      119793
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 119986,
+     "name": "Zanthoxylum clava-herculis",
+     "rank": "species",
+     "preferred_common_name": "Hercules' club",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47729,
+      50623,
+      1363294,
+      54837,
+      119986
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 126424,
+     "name": "Parthenium hysterophorus",
+     "rank": "species",
+     "preferred_common_name": "Santa Maria feverfew",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      605446,
+      639449,
+      83894,
+      126424
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 128755,
+     "name": "Prunus mexicana",
+     "rank": "species",
+     "preferred_common_name": "Mexican Plum",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47132,
+      47148,
+      922110,
+      922113,
+      47351,
+      128755
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 130192,
+     "name": "Helianthus maximiliani",
+     "rank": "species",
+     "preferred_common_name": "Maximilian sunflower",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      605446,
+      901801,
+      56955,
+      130192
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 130379,
+     "name": "Liatris punctata",
+     "rank": "species",
+     "preferred_common_name": "dotted gayfeather",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      153419,
+      901059,
+      48690,
+      130379
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 135262,
+     "name": "Ipomoea lacunosa",
+     "rank": "species",
+     "preferred_common_name": "White Morning-glory",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48515,
+      52345,
+      1395312,
+      993824,
+      52346,
+      135262
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 143484,
+     "name": "Blepharomastix ranalis",
+     "rank": "species",
+     "preferred_common_name": "Hollow-spotted Blepharomastix Moth",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49682,
+      52002,
+      122486,
+      892485,
+      143482,
+      143484
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 202438,
+     "name": "Hexagonia hydnoides",
+     "rank": "species",
+     "preferred_common_name": "Hairy Hexagonia",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      47169,
+      492000,
+      50814,
+      47380,
+      47379,
+      202454,
+      202438
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 286324,
+     "name": "Sapindus drummondii",
+     "rank": "species",
+     "preferred_common_name": "Western Soapberry",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47729,
+      58321,
+      62832,
+      286324
+     ]
+    }
+   },
+   {
+    "count": 2,
+    "taxon": {
+     "id": 326137,
+     "name": "Pachypsylla venusta",
+     "rank": "species",
+     "preferred_common_name": "Hackberry Petiole Gall Psyllid",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47744,
+      334037,
+      48195,
+      446767,
+      481462,
+      322304,
+      326137
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 12727,
+     "name": "Turdus migratorius",
+     "rank": "species",
+     "preferred_common_name": "American Robin",
+     "iconic_taxon_name": "Aves",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      3,
+      7251,
+      15977,
+      12705,
+      12727
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 34435,
+     "name": "Hemidactylus turcicus",
+     "rank": "species",
+     "preferred_common_name": "Mediterranean House Gecko",
+     "iconic_taxon_name": "Reptilia",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      26036,
+      26172,
+      85552,
+      371057,
+      33177,
+      34434,
+      34435
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 43997,
+     "name": "Myocastor coypus",
+     "rank": "species",
+     "preferred_common_name": "Coypu",
+     "iconic_taxon_name": "Mammalia",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      40151,
+      848317,
+      848320,
+      848323,
+      43698,
+      870765,
+      870767,
+      870775,
+      43909,
+      846206,
+      846326,
+      43996,
+      43997
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 46020,
+     "name": "Sciurus niger",
+     "rank": "species",
+     "preferred_common_name": "Eastern Fox Squirrel",
+     "iconic_taxon_name": "Mammalia",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      40151,
+      848317,
+      848320,
+      848323,
+      43698,
+      129411,
+      45933,
+      332614,
+      339575,
+      45994,
+      1431496,
+      46020
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 47219,
+     "name": "Apis mellifera",
+     "rank": "species",
+     "preferred_common_name": "Western Honey Bee",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47201,
+      124417,
+      326777,
+      47222,
+      630955,
+      47221,
+      199939,
+      538904,
+      47220,
+      578086,
+      47219
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 48599,
+     "name": "Phytolacca americana",
+     "rank": "species",
+     "preferred_common_name": "American pokeweed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47366,
+      48600,
+      48601,
+      48599
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 50278,
+     "name": "Parthenocissus quinquefolia",
+     "rank": "species",
+     "preferred_common_name": "Virginia creeper",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      71291,
+      50279,
+      50280,
+      50278
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 52925,
+     "name": "Phyciodes tharos",
+     "rank": "species",
+     "preferred_common_name": "Pearl Crescent",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      47224,
+      47922,
+      202067,
+      130316,
+      52924,
+      52925
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 53034,
+     "name": "Ambrosia trifida",
+     "rank": "species",
+     "preferred_common_name": "giant ragweed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      605446,
+      639449,
+      53036,
+      53034
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 53547,
+     "name": "Ulmus americana",
+     "rank": "species",
+     "preferred_common_name": "American elm",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47132,
+      53548,
+      53549,
+      1664435,
+      1664437,
+      53547
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 54504,
+     "name": "Juglans nigra",
+     "rank": "species",
+     "preferred_common_name": "eastern black walnut",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47853,
+      54497,
+      54495,
+      54504
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 60946,
+     "name": "Asclepias viridis",
+     "rank": "species",
+     "preferred_common_name": "green antelopehorns",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47363,
+      47362,
+      373579,
+      632307,
+      632069,
+      47906,
+      60946
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 62642,
+     "name": "Solanum rostratum",
+     "rank": "species",
+     "preferred_common_name": "buffalo-bur",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48515,
+      48516,
+      634936,
+      634950,
+      50641,
+      1435339,
+      1643080,
+      62642
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 63518,
+     "name": "Melanoplus differentialis",
+     "rank": "species",
+     "preferred_common_name": "Differential Grasshopper",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47651,
+      67688,
+      700600,
+      47650,
+      47649,
+      328102,
+      523474,
+      63523,
+      63518
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 64221,
+     "name": "Bipalium kewense",
+     "rank": "species",
+     "preferred_common_name": "Shovel-headed Garden Worm",
+     "iconic_taxon_name": "Animalia",
+     "ancestor_ids": [
+      48460,
+      1,
+      52319,
+      152105,
+      64222,
+      475824,
+      475828,
+      84642,
+      475765,
+      64224,
+      64221
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 67593,
+     "name": "Carya illinoinensis",
+     "rank": "species",
+     "preferred_common_name": "pecan",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47853,
+      54497,
+      54788,
+      67593
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 76907,
+     "name": "Erigeron canadensis",
+     "rank": "species",
+     "preferred_common_name": "horseweed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      461542,
+      972882,
+      50879,
+      1607990,
+      76907
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 78835,
+     "name": "Rapistrum rugosum",
+     "rank": "species",
+     "preferred_common_name": "annual bastard cabbage",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      71275,
+      47204,
+      1473853,
+      1473856,
+      574731,
+      72330,
+      78835
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 79136,
+     "name": "Solanum dimidiatum",
+     "rank": "species",
+     "preferred_common_name": "western horsenettle",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48515,
+      48516,
+      634936,
+      634950,
+      50641,
+      79136
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 81752,
+     "name": "Pyrausta tyralis",
+     "rank": "species",
+     "preferred_common_name": "Coffee-loving Pyrausta Moth",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49682,
+      52002,
+      122491,
+      892833,
+      55659,
+      1305352,
+      81752
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 81792,
+     "name": "Celtis laevigata",
+     "rank": "species",
+     "preferred_common_name": "sugar hackberry",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47132,
+      53781,
+      54858,
+      81792
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 84364,
+     "name": "Chasmanthium latifolium",
+     "rank": "species",
+     "preferred_common_name": "river oats",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47163,
+      47162,
+      47434,
+      326013,
+      956879,
+      84365,
+      84364
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 94577,
+     "name": "Argia translata",
+     "rank": "species",
+     "preferred_common_name": "Dusky Dancer",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47792,
+      47928,
+      426081,
+      47925,
+      47977,
+      94577
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 116681,
+     "name": "Atteva aurea",
+     "rank": "species",
+     "preferred_common_name": "Ailanthus Webworm Moth",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      53552,
+      124078,
+      53554,
+      116681
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 119955,
+     "name": "Ilex vomitoria",
+     "rank": "species",
+     "preferred_common_name": "Yaupon Holly",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      71272,
+      53855,
+      53854,
+      1674202,
+      119955
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 120942,
+     "name": "Malvaviscus arboreus",
+     "rank": "species",
+     "preferred_common_name": "Turk's cap",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48796,
+      48797,
+      860115,
+      860846,
+      120943,
+      120942
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 125675,
+     "name": "Glandularia bipinnatifida",
+     "rank": "species",
+     "preferred_common_name": "Dakota mock vervain",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48151,
+      49194,
+      936160,
+      81794,
+      125675
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 126633,
+     "name": "Ruellia simplex",
+     "rank": "species",
+     "preferred_common_name": "Mexican Ruellia",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48151,
+      50151,
+      851875,
+      1369796,
+      1369799,
+      83892,
+      1653716,
+      126633
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 128701,
+     "name": "Desmanthus illinoensis",
+     "rank": "species",
+     "preferred_common_name": "Illinois bundleflower",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47123,
+      47122,
+      373578,
+      479698,
+      128700,
+      128701
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 133291,
+     "name": "Rivina humilis",
+     "rank": "species",
+     "preferred_common_name": "pigeonberry",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47366,
+      576365,
+      133292,
+      133291
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 142653,
+     "name": "Agalinis heterophylla",
+     "rank": "species",
+     "preferred_common_name": "Prairie False Foxglove",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48151,
+      47322,
+      902069,
+      62403,
+      142653
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 143005,
+     "name": "Costaconvexa centrostrigaria",
+     "rank": "species",
+     "preferred_common_name": "Bent-lined Carpet",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49531,
+      49530,
+      123032,
+      1378168,
+      143986,
+      143005
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 143615,
+     "name": "Udea rubigalis",
+     "rank": "species",
+     "preferred_common_name": "Celery Leaftier Moth",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49682,
+      52002,
+      122486,
+      928024,
+      126764,
+      143615
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 146632,
+     "name": "Toxomerus politus",
+     "rank": "species",
+     "preferred_common_name": "Maize Calligrapher",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47822,
+      48091,
+      372853,
+      414448,
+      49995,
+      186841,
+      121991,
+      58753,
+      146632
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 161826,
+     "name": "Dicliptera brachiata",
+     "rank": "species",
+     "preferred_common_name": "Branched Foldwing",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48151,
+      50151,
+      851875,
+      940801,
+      1371949,
+      133212,
+      161826
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 164190,
+     "name": "Iva annua",
+     "rank": "species",
+     "preferred_common_name": "Sumpweed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      632790,
+      605446,
+      639449,
+      53037,
+      164190
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 200026,
+     "name": "Persicaria glabra",
+     "rank": "species",
+     "preferred_common_name": "Dense-flowered smartweed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47366,
+      48382,
+      922206,
+      922225,
+      922227,
+      61787,
+      200026
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 200074,
+     "name": "Gonolobus suberosus",
+     "rank": "species",
+     "preferred_common_name": "Anglepod",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47363,
+      47362,
+      373579,
+      632307,
+      632315,
+      185448,
+      200074
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 204420,
+     "name": "Strophostyles helvola",
+     "rank": "species",
+     "preferred_common_name": "trailing fuzzy-bean",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47123,
+      47122,
+      507502,
+      507503,
+      533399,
+      130996,
+      204420
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 227235,
+     "name": "Parmotrema austrosinense",
+     "rank": "species",
+     "preferred_common_name": "Pretty Ruffle",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      48250,
+      372740,
+      54743,
+      952186,
+      48327,
+      54321,
+      1094690,
+      117867,
+      227235
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 228899,
+     "name": "Psamatodes abydata",
+     "rank": "species",
+     "preferred_common_name": "Dot-lined Angle",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49531,
+      49530,
+      123033,
+      124041,
+      211968,
+      1293586,
+      228899
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 261572,
+     "name": "Blissus leucopterus",
+     "rank": "species",
+     "preferred_common_name": "Hairy Chinch Bug",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47744,
+      61267,
+      372868,
+      466233,
+      489050,
+      249052,
+      261572
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 264367,
+     "name": "Habronattus coecatus",
+     "rank": "species",
+     "iconic_taxon_name": "Arachnida",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      245097,
+      47119,
+      47118,
+      120474,
+      342614,
+      367200,
+      48139,
+      606933,
+      712091,
+      1109241,
+      61881,
+      1363898,
+      264367
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 271316,
+     "name": "Zelus cervicalis",
+     "rank": "species",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47744,
+      61267,
+      372850,
+      133754,
+      48959,
+      320199,
+      482431,
+      129424,
+      1318470,
+      271316
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 289854,
+     "name": "Styphnolobium affine",
+     "rank": "species",
+     "preferred_common_name": "Eve's Necklacepod",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47123,
+      47122,
+      507502,
+      746869,
+      53946,
+      289854
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 330498,
+     "name": "Samea castellalis",
+     "rank": "species",
+     "preferred_common_name": "Stained-glass Moth",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      49682,
+      52002,
+      122486,
+      928021,
+      318988,
+      330498
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 473390,
+     "name": "Polystepha pilulae",
+     "rank": "species",
+     "preferred_common_name": "Oak Leaf Gall Midge",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47822,
+      154259,
+      489328,
+      493389,
+      55699,
+      322033,
+      153959,
+      480349,
+      602148,
+      470018,
+      473390
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 554401,
+     "name": "Zephyranthes chlorosolen",
+     "rank": "species",
+     "preferred_common_name": "Brazos rain-lily",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47163,
+      47218,
+      55849,
+      924654,
+      924785,
+      924787,
+      120027,
+      554401
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 624862,
+     "name": "Misumessus lappi",
+     "rank": "species",
+     "iconic_taxon_name": "Arachnida",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      245097,
+      47119,
+      47118,
+      120474,
+      342614,
+      367176,
+      47866,
+      1472437,
+      1472438,
+      172624,
+      624862
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 636177,
+     "name": "Fraxinus albicans",
+     "rank": "species",
+     "preferred_common_name": "Texas ash",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48151,
+      47733,
+      54806,
+      1324541,
+      636177
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 699778,
+     "name": "Plectocephalus americanus",
+     "rank": "species",
+     "preferred_common_name": "American basketflower",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      47605,
+      47604,
+      201654,
+      632883,
+      632887,
+      362324,
+      699778
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 714685,
+     "name": "Tubakia suttoniana",
+     "rank": "species",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      48250,
+      372740,
+      53539,
+      977794,
+      49189,
+      714683,
+      714684,
+      714685
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 896124,
+     "name": "Fuscoporia gilva",
+     "rank": "species",
+     "preferred_common_name": "Mustard Yellow Polypore",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      47169,
+      492000,
+      50814,
+      57519,
+      57518,
+      328266,
+      1640309,
+      896124
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 907052,
+     "name": "Agkistrodon laticinctus",
+     "rank": "species",
+     "preferred_common_name": "Broad-banded Copperhead",
+     "iconic_taxon_name": "Reptilia",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      26036,
+      26172,
+      85553,
+      30667,
+      797576,
+      30668,
+      907052
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 1105028,
+     "name": "Steccherinum nitidum",
+     "rank": "species",
+     "iconic_taxon_name": "Fungi",
+     "ancestor_ids": [
+      48460,
+      47170,
+      47169,
+      492000,
+      50814,
+      47380,
+      974717,
+      118097,
+      1105028
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 1119245,
+     "name": "Parectopa bumeliella",
+     "rank": "species",
+     "iconic_taxon_name": "Insecta",
+     "ancestor_ids": [
+      48460,
+      1,
+      47120,
+      372739,
+      47158,
+      184884,
+      47157,
+      61352,
+      61353,
+      511507,
+      178298,
+      1119245
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 1555999,
+     "name": "Nephroia carolina",
+     "rank": "species",
+     "preferred_common_name": "Carolina snailseed",
+     "iconic_taxon_name": "Plantae",
+     "ancestor_ids": [
+      48460,
+      47126,
+      211194,
+      47125,
+      47124,
+      48232,
+      62992,
+      1555996,
+      1555999
+     ]
+    }
+   },
+   {
+    "count": 1,
+    "taxon": {
+     "id": 1579017,
+     "name": "Astur cooperii",
+     "rank": "species",
+     "preferred_common_name": "Cooper's Hawk",
+     "iconic_taxon_name": "Aves",
+     "ancestor_ids": [
+      48460,
+      1,
+      2,
+      355675,
+      3,
+      71261,
+      5067,
+      1541538,
+      1577581,
+      1579017
+     ]
+    }
+   }
+  ]
+ }
+}

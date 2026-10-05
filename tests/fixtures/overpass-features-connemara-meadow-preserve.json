@@ -1,0 +1,74 @@
+{
+ "_recording": {
+  "what": "Overpass park features for Connemara Meadow Preserve (way/306191453), made by featuresQuery() in src/lib/sources/overpass-features.ts",
+  "live": true,
+  "url": "https://overpass-api.de/api/interpreter",
+  "method": "POST",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json",
+  "fetchedAt": "2026-10-05T23:19:12.697Z",
+  "latencyMs": 6741,
+  "recordedBy": "builder S3: scratch Vitest config running makePass() against the live APIs",
+  "recordedAtMs": 1791242352694,
+  "parkId": "way/306191453",
+  "overpassQuery": "[out:json][timeout:25];way(306191453)->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+  "attempts": [
+   {
+    "url": "https://overpass-api.de/api/interpreter",
+    "status": 200,
+    "latencyMs": 6741,
+    "at": "2026-10-05T23:19:12.697Z"
+   }
+  ]
+ },
+ "body": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.11 87bfad18",
+  "osm3s": {
+   "timestamp_osm_base": "2026-10-05T23:17:28Z",
+   "timestamp_areas_base": "2026-10-04T21:27:58Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "way",
+    "id": 306191453,
+    "center": {
+     "lat": 33.0848505,
+     "lon": -96.7015488
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Connemara Meadow Preserve",
+     "operator": "Connemara Conservancy",
+     "website": "https://connemaraconservancy.org/"
+    }
+   },
+   {
+    "type": "way",
+    "id": 441713627,
+    "center": {
+     "lat": 33.0801746,
+     "lon": -96.6965242
+    },
+    "tags": {
+     "name": "Rowlett Creek",
+     "waterway": "river"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1361253436,
+    "center": {
+     "lat": 33.0902148,
+     "lon": -96.702098
+    },
+    "tags": {
+     "intermittent": "yes",
+     "waterway": "stream"
+    }
+   }
+  ]
+ }
+}

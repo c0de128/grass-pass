@@ -29,6 +29,7 @@ pnpm dev                     # http://localhost:3000
 | `pnpm test` | Vitest unit tests |
 | `pnpm build` / `pnpm start` | production build / server |
 | `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`) |
+| `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` |
 
 ## Environment variables
 All are listed and explained in [`.env.example`](.env.example). Keys are server-only.
@@ -64,7 +65,12 @@ Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will
 - Scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (Next.js, MIT).
 - The model client, limits, request guards and in-flight de-duplication are adapted from the author's earlier
   practice project (same author, MIT).
-- Data credits (OpenStreetMap ODbL, iNaturalist, SerpApi) and model/font licences are added as those parts land.
+- Brand: logo and explorer scene are redrawn as SVG from the author's own banner design (`brand/`, `scripts/brand/art.mjs`).
+- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito),
+  both SIL Open Font License 1.1 (served by `next/font`; the logo text is outlined from the `@fontsource` copies).
+- Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
+  [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
+- Data credits (OpenStreetMap ODbL, iNaturalist, SerpApi) and model licences are added as those parts land.
 
 ## Licence
 [MIT](LICENSE)

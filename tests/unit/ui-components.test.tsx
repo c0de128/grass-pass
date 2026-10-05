@@ -1,7 +1,7 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ExplorerScene, Logo, TicketMark } from "@/components/art/BrandArt";
-import { DIVIDER_TILE, dividerPath } from "@/components/art/grass";
+import { DIVIDER_TILE_WIDTH, DIVIDER_TUFTS, GRASS_BACK, dividerPath } from "@/components/art/grass";
 import { Hero } from "@/components/Hero";
 import { SiteHeader } from "@/components/SiteHeader";
 import { parseTheme } from "@/components/theme";
@@ -80,23 +80,51 @@ describe("TicketCard", () => {
 });
 
 describe("GrassDivider", () => {
-  it("is decorative and uses short blades with rounded tips", () => {
+  it("is decorative: hidden from screen readers, two greens in one repeating pattern", () => {
     const out = html(<GrassDivider />);
     expect(out).toMatch(/^<svg aria-hidden="true" focusable="false"/);
     const id = out.match(/<pattern id="([^"]+)"/)?.[1];
     expect(id).toMatch(/^grass-[a-zA-Z0-9_-]+$/);
+    expect(out).toContain(`width="${DIVIDER_TILE_WIDTH}"`);
     expect(out).toContain(`fill="url(#${id})"`);
-    const d = dividerPath(1);
-    expect(d.match(/A0\.7 0\.7/g)).toHaveLength(DIVIDER_TILE.length);
+    expect(out).toContain(`fill="${GRASS_BACK}"`);
+    expect(out).toContain('fill="currentColor"');
+    expect(out).toContain("text-lawn");
   });
 
-  it("has 5-9 blades per 40 px with heights 6-14 px (SPEC §8.3)", () => {
-    expect(DIVIDER_TILE.length).toBeGreaterThanOrEqual(5);
-    expect(DIVIDER_TILE.length).toBeLessThanOrEqual(9);
-    for (const [, h] of DIVIDER_TILE) {
-      expect(h).toBeGreaterThanOrEqual(6);
-      expect(h).toBeLessThanOrEqual(14);
+  it("grows in soft tufts of 2-3 blades per root, heights 6-14 px (SPEC §8.3), never a fan", () => {
+    expect(DIVIDER_TUFTS.length).toBeGreaterThanOrEqual(6);
+    const roots = DIVIDER_TUFTS.map((t) => t.blades.reduce((s, [x]) => s + x, 0) / t.blades.length);
+    for (const [i, t] of DIVIDER_TUFTS.entries()) {
+      // A cannabis-style leaf fans 5-9 pointed leaflets out of one point; the logo grass has at most 3 per tuft.
+      expect(t.blades.length, `tuft ${i}`).toBeGreaterThanOrEqual(2);
+      expect(t.blades.length, `tuft ${i}`).toBeLessThanOrEqual(3);
+      for (const [, h, lean] of t.blades) {
+        expect(h).toBeGreaterThanOrEqual(6);
+        expect(h).toBeLessThanOrEqual(14);
+        expect(Math.abs(lean)).toBeLessThan(h / 2); // leans well under 45 degrees
+      }
+      // Each root has its own spot (tufts of the same layer never share a root).
+      for (const [j, r] of roots.entries()) {
+        if (j !== i && DIVIDER_TUFTS[j].layer === t.layer) expect(Math.abs(r - roots[i]), `tufts ${i}/${j}`).toBeGreaterThan(4);
+      }
     }
+  });
+
+  it("repeats seamlessly: blades poking past a tile edge are also drawn on the other side", () => {
+    let wrapped = 0;
+    for (const layer of ["back", "front"] as const) {
+      const starts = [...dividerPath(layer).matchAll(/M(-?[\d.]+) /g)].map((m) => Number(m[1]));
+      const blades = DIVIDER_TUFTS.filter((t) => t.layer === layer).flatMap((t) => t.blades);
+      for (const [x, , dx] of blades) {
+        const left = Math.min(x - 1.45, x + dx - 0.3);
+        const right = Math.max(x + 1.45, x + dx + 0.3);
+        if (left < 0 || right > DIVIDER_TILE_WIDTH) wrapped++;
+        if (left < 0) expect(starts.some((s) => Math.abs(s - (x + DIVIDER_TILE_WIDTH - 1.45)) < 0.01)).toBe(true);
+        if (right > DIVIDER_TILE_WIDTH) expect(starts.some((s) => Math.abs(s - (x - DIVIDER_TILE_WIDTH - 1.45)) < 0.01)).toBe(true);
+      }
+    }
+    expect(wrapped).toBeGreaterThan(0); // the tile really has edge-crossing blades, so this test checks something
   });
 });
 

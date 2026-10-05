@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ART, ART_DARK, GRASS, TOKENS } from "../../scripts/brand/art.mjs";
-import { bladePath } from "../../src/components/art/grass";
+import { GRASS_BACK, bladePath } from "../../src/components/art/grass";
 import { buildSvgs } from "../../scripts/render-brand.mjs";
 
 const APP = fileURLToPath(new URL("../..", import.meta.url));
@@ -179,9 +179,15 @@ describe("brand assets", () => {
     }
   });
 
-  it("divider grass blades have rounded tips (an arc at the top), never a sharp point", () => {
-    const d = bladePath(10, 20, 12, 1, 2, 0.9);
-    expect(d).toMatch(/^M[\d.]+ 20 L[\d.]+ 8 A0\.9 0\.9 0 0 1 [\d.]+ 8 L[\d.]+ 20 Z$/);
+  it("divider grass blades are soft curved single blades like the logo's (no straight comb teeth)", () => {
+    const d = bladePath(10, 16, 12, 2, 3);
+    // Base on the ground line, two curved edges and a small round over the tip: only Q curves, no straight L sides.
+    expect(d).toMatch(/^M8\.5 16 Q[^QLA]+Q[^QLA]+Q[^QLA]+ 11\.5 16 Z$/);
+    const nums = d.match(/-?[\d.]+/g)!.map(Number);
+    const ys = nums.filter((_, i) => i % 2 === 1);
+    expect(Math.min(...ys)).toBeGreaterThan(16 - 12 - 0.5); // tip stays at the asked height
+    // The divider's back green is the logo's darker grass green.
+    expect(GRASS_BACK).toBe((ART as Record<string, string>).gDark);
   });
 
   it("PNG files have the sizes the spec asks for", () => {

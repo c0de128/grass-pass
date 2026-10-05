@@ -1,0 +1,125 @@
+/**
+ * Model output schemas (SPEC §6.2). OWNER: S3 (Builder A). Other slices change this file only via
+ * the owner (S5 adds the Find This Spot target through `spotTargetId`).
+ *
+ * Three layers:
+ * 1. `PassItemDraft` / `SpotDraft` / `PassDraft`: the spec's zod schemas, applied PER ITEM in
+ *    validate.ts so one bad item is dropped instead of sinking the whole pass.
+ * 2. `passRequestSchema()`: the strict schema for ONE request, built by code from the pool and the
+ *    mix: `items` has exactly n entries (`minItems` = `maxItems` = n), `itemId` is an enum of the real
+ *    pool ids, `section` an enum of the sections present. Its JSON Schema (`passJsonSchema()`) is
+ *    generated from the same zod source and sent with `strict: true`. Measured 2026-10-05: without
+ *    minItems, Gemma 4 31B on DO returned `{"cards":[]}` in 3 of 7 runs.
+ * 3. `PassDraftEnvelope`: the lenient shape the answer is first parsed with (so a 121-character clue
+ *    costs one item, not a retry).
+ */
+import "@/lib/zod-config";
+import { z } from "zod";
+
+export const Difficulty = z.enum(["easy", "medium", "hard"]);
+export const SectionEnum = z.enum(["park", "wild", "lucky"]);
+
+export const CLUE_MIN = 8;
+export const CLUE_MAX = 120;
+export const LOOK_WHERE_MAX = 60;
+export const QUOTE_MIN = 4;
+export const QUOTE_MAX = 240;
+export const RIDDLE_MAX = 140;
+export const PARENT_NOTE_MAX = 200;
+/** Smallest pass we print (a tiny park with 3 real finds is still honest; fewer is "all empty"). */
+export const MIN_PASS_ITEMS = 3;
+export const MAX_PASS_ITEMS = 8;
+
+export const PassItemDraft = z.object({
+  itemId: z.string().min(1).max(64), // must exist in the pool
+  section: SectionEnum, // must match the pool item
+  clue: z.string().min(CLUE_MIN).max(CLUE_MAX),
+  lookWhere: z.string().max(LOOK_WHERE_MAX), // "near the water", "on tree bark"
+  sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX), // substring of the pool item's sourceText
+  difficulty: Difficulty,
+});
+export type PassItemDraft = z.infer<typeof PassItemDraft>;
+
+export const SpotDraft = z.object({
+  targetId: z.string(), // must equal the code-picked target
+  riddle: z.string().min(CLUE_MIN).max(RIDDLE_MAX),
+  sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX),
+});
+export type SpotDraft = z.infer<typeof SpotDraft>;
+
+export const PassDraft = z.object({
+  items: z.array(PassItemDraft).min(MIN_PASS_ITEMS).max(MAX_PASS_ITEMS),
+  spot: SpotDraft.nullable(),
+  parentNote: z.string().max(PARENT_NOTE_MAX), // no digits allowed (code check)
+});
+export type PassDraft = z.infer<typeof PassDraft>;
+
+/** P1 vision check (not used in S3). */
+export const PhotoCheck = z.object({
+  labels: z.array(z.string().max(40)).max(10),
+  peoplePresent: z.boolean(),
+  targetVisible: z.boolean(),
+});
+
+/** First parse of the model's JSON: right overall shape, items checked one by one later. */
+export const PassDraftEnvelope = z.object({
+  items: z.array(z.unknown()).max(20),
+  spot: z.unknown().optional(),
+  parentNote: z.unknown().optional(),
+});
+export type PassDraftEnvelope = z.infer<typeof PassDraftEnvelope>;
+
+type NonEmpty<T> = [T, ...T[]];
+
+export type RequestSchemaOptions = {
+  /** Exactly this many items (the mix computed by code). */
+  n: number;
+  /** Real pool ids; the model can only answer with these. */
+  itemIds: NonEmpty<string>;
+  /** Sections present in the pool. */
+  sections: NonEmpty<z.infer<typeof SectionEnum>>;
+  /** S5: the code-picked Find This Spot target, or null (no `spot` asked for). */
+  spotTargetId: string | null;
+};
+
+/** The strict zod schema for one request (source of the JSON Schema sent to the model). */
+export function passRequestSchema(o: RequestSchemaOptions) {
+  if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS) throw new RangeError("n out of range");
+  const item = z.object({
+    itemId: z.enum(o.itemIds),
+    section: z.enum(o.sections),
+    clue: z.string().min(CLUE_MIN).max(CLUE_MAX),
+    lookWhere: z.string().max(LOOK_WHERE_MAX),
+    sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX),
+    difficulty: Difficulty,
+  });
+  const base = {
+    items: z.array(item).length(o.n),
+    parentNote: z.string().max(PARENT_NOTE_MAX),
+  };
+  if (o.spotTargetId === null) return z.object(base);
+  return z.object({
+    ...base,
+    spot: z.object({
+      targetId: z.enum([o.spotTargetId]),
+      riddle: z.string().min(CLUE_MIN).max(RIDDLE_MAX),
+      sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX),
+    }),
+  });
+}
+
+/**
+ * JSON Schema for `response_format.json_schema.schema` (strict). Generated from the zod schema
+ * above; `$schema` is removed (some OpenAI-compatible servers reject unknown top-level keys).
+ * Throws if the generated schema ever loses minItems/maxItems on `items`.
+ */
+export function passJsonSchema(o: RequestSchemaOptions): Record<string, unknown> {
+  const generated = z.toJSONSchema(passRequestSchema(o), { target: "draft-7" }) as Record<string, unknown>;
+  const { $schema: _drop, ...schema } = generated;
+  void _drop;
+  const items = (schema.properties as Record<string, Record<string, unknown>> | undefined)?.items;
+  if (!items || items.minItems !== o.n || items.maxItems !== o.n) {
+    throw new Error("pass JSON schema lost minItems/maxItems");
+  }
+  return schema;
+}

@@ -33,7 +33,15 @@ function cssTokens(): Record<string, string> {
 }
 
 /** v3 files where text-sun sits on the dark band (or is the decorative underline under "outside."). */
-const V3_SUN_ON_DARK = new Set(["src/components/home/TwoParks.tsx", "src/components/home/PassAnatomy.tsx", "src/components/home/HomeHero.tsx"]);
+// /about and /how-it-works (v3 redesign): sunflower numbers, eyebrows and icons only inside gp-band dark bands/cards
+// (axe colour-contrast checks both themes in tests/e2e/about-v3.spec.ts).
+const V3_SUN_ON_DARK = new Set([
+  "src/components/home/TwoParks.tsx",
+  "src/components/home/PassAnatomy.tsx",
+  "src/components/home/HomeHero.tsx",
+  "src/app/about/page.tsx",
+  "src/app/how-it-works/page.tsx",
+]);
 
 describe("design tokens", () => {
   const css = cssTokens();

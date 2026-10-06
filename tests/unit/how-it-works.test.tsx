@@ -3,6 +3,7 @@ import { join, resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import HowItWorksPage from "@/app/how-it-works/page";
+import { howLimits } from "@/lib/about/content";
 import { EVAL_THRESHOLDS, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
@@ -89,8 +90,25 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_10_13.costPerPass);
   });
 
+  it("v3: every step shows a short summary and folds its detail into a closed disclosure; visible copy stays short", () => {
+    const list = html.match(/<ol aria-label="How a pass is made, step by step"[\s\S]*?<\/ol>/)?.[0] ?? "";
+    expect((list.match(/<details/g) ?? []).length).toBe(9);
+    for (const d of html.match(/<details[^>]*>/g) ?? []) expect(d).not.toMatch(/\sopen[\s=>]/);
+    const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
+    expect(visible.split(" ").length).toBeLessThanOrEqual(1250);
+    // Honest limits stay visible as titles, and every one comes from the shared data.
+    for (const l of howLimits()) expect(text(visible)).toContain(l.title);
+    const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
+    levels.forEach((l, i) => i > 0 && expect(l - levels[i - 1], `heading ${i}`).toBeLessThanOrEqual(1));
+  });
+
   it("links to the privacy table, the About page and the source code", () => {
-    expect(html).toContain('href="/about#privacy"');
+    expect(html).toContain('href="/about#privacy-table"');
+    // SEC-3-01: every <Link> to / in the page source opts out of prefetch (the rendered <a> cannot show it).
+    const src = readFileSync(join(ROOT, "src/app/how-it-works/page.tsx"), "utf8");
+    const homeLinks = src.match(/<Link[^>]*href="\/"[^>]*>/g) ?? [];
+    expect(homeLinks.length).toBeGreaterThan(0);
+    for (const l of homeLinks) expect(l).toContain("prefetch={false}");
     expect(html).toContain(`href="${REPO_URL}"`);
     expect(t).toContain("Claude Code");
   });

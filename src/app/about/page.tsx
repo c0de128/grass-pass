@@ -1,589 +1,512 @@
+import {
+  ArrowRight,
+  BadgeCheck,
+  Check,
+  CircleAlert,
+  Cpu,
+  Database,
+  FileText,
+  Code2,
+  Lock,
+  Scale,
+  ShieldCheck,
+  Table2,
+  TriangleAlert,
+  UserRound,
+  X,
+} from "lucide-react";
 import type { Metadata } from "next";
+import Image from "next/image";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { EvalTable } from "@/components/about/EvalTable";
+import { PhotoCreditLine } from "@/components/home/PhotoCredits";
 import { buttonClassName } from "@/components/ui/Button";
-import { TicketCard } from "@/components/ui/TicketCard";
+import { Disclosure } from "@/components/ui/Disclosure";
+import { OpenOnHash } from "@/components/ui/OpenOnHash";
+import { PARK_PHOTOS } from "@/data/photo-credits";
 import {
-  EVAL_AGE_BAND,
-  EVAL_COLUMNS,
-  CLOSED_MODELS_403_DAY,
-  EVAL_DAY,
-  EVAL_PARKS,
-  EVAL_SUMMARY_FILE,
-  EVAL_THRESHOLDS,
-  EVAL_TOTAL_USD,
-  evalColumn,
-  type EvalColumn,
-} from "@/lib/about/eval-summary";
+  EVAL_RUN_ID,
+  PRIVACY_NOTES,
+  accountNotes,
+  PRIVACY_POINTS,
+  PRIVACY_ROWS,
+  WHY_OPEN_POINTS,
+  aboutLimitPoints,
+  aboutLimits,
+  aboutStatTiles,
+  dataSources,
+  pct,
+} from "@/lib/about/content";
+import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, evalColumn } from "@/lib/about/eval-summary";
+import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { configuredModelId } from "@/lib/model";
-import { OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
-import { PhotoCreditLine } from "@/components/home/PhotoCredits";
-import { PARK_PHOTOS } from "@/data/photo-credits";
-import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { REPO_URL } from "@/lib/site-url";
-import { serpapiCaps } from "@/lib/limits/serpapi";
-import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
-import { REPORT_COPY } from "@/lib/reports/kinds";
 
 export const metadata: Metadata = {
-  title: "About Grass Pass: how a pass is made, why open, privacy",
+  title: "About Grass Pass: the open model, the real data, what we measured, privacy",
   description:
-    "How Grass Pass builds a printable park pass from OpenStreetMap, iNaturalist and Google review counts (SerpApi) with the open Gemma 4 model, what we measured, and what leaves your device.",
+    "Grass Pass builds a printable park pass from OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi) with the open Gemma 4 model. What we measured, what leaves your device, and every credit.",
 };
 
-const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
-const secs = (n: number | null) => (n === null ? "no model call" : `${n.toFixed(1)} s`);
-const usd = (n: number) => (n === 0 ? "$0" : `$${n.toFixed(5)}`);
-
 const gemma = evalColumn("gemma-4-31B-it");
-const llama = evalColumn("llama-4-maverick");
 const template = evalColumn("no-AI template");
 const resultsUrl = `${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}`;
+const ext = "font-semibold text-primary underline underline-offset-2";
+const bandLink = "font-semibold text-band-foreground underline underline-offset-2";
 
-function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
-  return (
-    <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="scroll-mt-28 sm:scroll-mt-20 text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
-        {title}
-      </h2>
-      {children}
-    </section>
-  );
+function Eyebrow({ children, onBand = false }: { children: ReactNode; onBand?: boolean }) {
+  return <p className={`text-xs font-bold tracking-widest uppercase ${onBand ? "text-sun" : "text-primary"}`}>{children}</p>;
 }
 
-const ext = "underline underline-offset-2";
-/** S6: the SerpApi caps in force (env, clamped under the free plan). */
-const serp = serpapiCaps();
-
-function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
-  const rows: { label: string; plain: string; cell: (c: EvalColumn) => string; target?: string }[] = [
-    {
-      label: "Blocked (dangerous) species printed",
-      plain: "Did a pass ever show something risky, like a snake or poison ivy? It must be zero.",
-      cell: (c) => String(c.blockedPrinted),
-      target: "0, always",
-    },
-    {
-      label: "Clues quoting their source word for word, before any filter",
-      plain: "How often the model copied its fact exactly from the real data, so it didn't make things up.",
-      cell: (c) => `${pct(c.groundedPct)} (${c.grounded}/${c.returned})`,
-      target: `${EVAL_THRESHOLDS.groundedPct}% or more`,
-    },
-    {
-      label: "Complete passes (kept at least n-1 items)",
-      plain: "How often a pass came out full: at most one find missing.",
-      cell: (c) => `${pct(c.completePct)} (${c.complete}/${c.dataRichRuns})`,
-      target: `${EVAL_THRESHOLDS.completePct}% or more`,
-    },
-    {
-      label: "Honest empty sections",
-      plain: "When there was no data, did the pass say so instead of filling the gap?",
-      cell: (c) => pct(c.honestEmptiesPct),
-      target: "100%",
-    },
-    {
-      label: "Reading level (Flesch-Kincaid grade, median)",
-      plain: "How hard the words are. 3 means a 3rd grader can read them.",
-      cell: (c) => c.fkGrade.toFixed(1),
-      target: `${EVAL_THRESHOLDS.fkGrade} or lower`,
-    },
-    {
-      label: "Clues or hints naming their own answer, before the filter",
-      plain: "How often a clue gave away the answer (code removes those before printing).",
-      cell: (c) => `${pct(c.nameLeakPct)} (clue only ${pct(c.clueLeakPct)})`,
-      target: `${EVAL_THRESHOLDS.nameLeakPct}% or lower`,
-    },
-    {
-      label: "Model time per call, p50 / p95",
-      plain: "How long the model took: a usual wait / a slow wait (1 in 20 is slower).",
-      cell: (c) => (c.p50s === null ? "no model call" : `${secs(c.p50s)} / ${secs(c.p95s)}`),
-      target: `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`,
-    },
-    {
-      label: "Cost per pass",
-      plain: "What one pass costs us at the provider's list price.",
-      cell: (c) => usd(c.costPerPass),
-      target: `${EVAL_THRESHOLDS.costPerPass} or less`,
-    },
-    {
-      label: "Printed clues repeated across parks",
-      plain: "How often a clue shares 5 words in a row with clues printed for at least 2 other parks. Lower means each park reads more like itself.",
-      cell: (c) => `${pct(c.repeatPct)} (${c.repeated}/${c.printedClues})`,
-      target: `${EVAL_THRESHOLDS.repeatPct}% or lower`,
-    },
-    {
-      label: "Printed clues with a wrong count",
-      plain: "A clue like \"Can you find 4 benches?\" must use the map's real number. The second number is how many wrong counts code removed before printing.",
-      cell: (c) => `${c.wrongCounts} of ${c.countClues} count clues (${c.wrongCountsRemoved} removed)`,
-      target: String(EVAL_THRESHOLDS.wrongCounts),
-    },
-    { label: "Licence", plain: "The rules for using the model's weights.", cell: (c) => c.licence },
-  ];
-  return (
-    <div className="overflow-x-auto rounded-3xl bg-card ring-1 ring-border" role="region" aria-labelledby="eval-caption" tabIndex={0}>
-      <table className="w-full min-w-[640px] border-collapse text-left text-base">
-        <caption id="eval-caption" className="px-4 pt-3 pb-2 text-left font-bold">
-          Measured on {EVAL_PARKS} real parks, age band {EVAL_AGE_BAND}, {EVAL_DAY} (same park data, same safety and grounding
-          checks for every column)
-        </caption>
-        <thead>
-          <tr className="border-b-2 border-line">
-            <th scope="col" className="px-4 py-2">
-              What we measured
-            </th>
-            {columns.map((c) => (
-              <th key={c.model} scope="col" className="px-4 py-2">
-                {c.label}
-                <span className="block text-sm font-normal">
-                  {c.runs} {c.runs === 1 ? "run" : "runs"}
-                </span>
-              </th>
-            ))}
-            <th scope="col" className="px-4 py-2">
-              Target
-            </th>
-          </tr>
-        </thead>
-        <tbody>
-          {rows.map((r) => (
-            <tr key={r.label} className="border-b border-line last:border-b-0">
-              <th scope="row" className="px-4 py-2 font-semibold">
-                {r.label}
-                <span className="block text-sm font-normal">{r.plain}</span>
-              </th>
-              {columns.map((c) => (
-                <td key={c.model} className="px-4 py-2">
-                  {r.cell(c)}
-                </td>
-              ))}
-              <td className="px-4 py-2">{r.target ?? ""}</td>
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
-  );
+function Pill({ children, className = "bg-muted text-ink" }: { children: ReactNode; className?: string }) {
+  return <span className={`inline-flex items-center rounded-full px-3 py-1 text-xs font-bold ${className}`}>{children}</span>;
 }
-
-const PRIVACY: { what: string; where: string; why: string }[] = [
-  {
-    what: "The place you type (for example \"Allen TX\")",
-    where:
-      "Our server (inside the request, never in the web address), then OpenStreetMap's Nominatim search. Answers are cached for 30 days in our storage (Upstash Redis) by the text typed, not by who typed it.",
-    why: "To find the town or park.",
-  },
-  {
-    what: "\"Use my location\"",
-    where: "Rounded in your browser to 2 decimals (about 1 km), then our server, then OpenStreetMap's Overpass servers.",
-    why: "To list parks near you.",
-  },
-  {
-    what: "The park you pick (a public place and its map position)",
-    where:
-      "Our server, then OpenStreetMap (Overpass), iNaturalist and SerpApi (its name and map position, to find the same park on Google Maps and count its reviews).",
-    why: "To read the park map, recent wildlife sightings, monarch counts and how often visitors' reviews mention dogs or bikes.",
-  },
-  {
-    what: "The age band (for example 6-10)",
-    where: "Our server, then the model on DigitalOcean, inside the prompt with the park facts.",
-    why: "To set how many items and how easy the words are.",
-  },
-  {
-    what: "Your IP address",
-    where:
-      "Our server. Our storage (Upstash Redis) gets only a scrambled code made from it (a keyed hash), never the address itself, inside rate-limit counters that delete themselves within about a day (IPv6 by its /64 and /48 network).",
-    why: "To stop abuse and keep the free model budget fair.",
-  },
-  {
-    what: "Every page or search request (your IP address, the web address, the time)",
-    where:
-      "Our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on our plan). Park searches are sent inside the request, so these logs never show the place you typed or your location.",
-    why: "Running the website.",
-  },
-  {
-    what: "Signing in with GitHub or Google (grown-ups, only to make a new pass or send a report)",
-    where:
-      "GitHub or Google tell our server an account number (and a name, which only goes into your own encrypted sign-in cookie for the \"Hi, name\" in the header). Our storage keeps ONLY a scrambled ID made from the account number with a secret key (no email, no name, no picture). The sign-in cookie lasts 30 days (the judge demo: 1 day); Sign out removes it.",
-    why: "To count your 2 new passes a day and your found-it reports.",
-  },
-  {
-    what: "Your item reports (Found it, Didn't find it, Not safe)",
-    where:
-      "Our storage (Upstash Redis): per park and item, how many of each kind per day, plus for \"Not safe\" the scrambled IDs of who said so (so 2 different people are needed). Deleted after 90 days.",
-    why: "To learn what is really findable, leave out finds nobody can spot, and catch anything unsafe.",
-  },
-  {
-    what: "The finished pass (park, age band, items, clues, times)",
-    where: "Saved in our storage (Upstash Redis) for 30 days, so the pass link and the print page work.",
-    why: "Nothing in it is about you or your child.",
-  },
-];
 
 export default function AboutPage() {
   // Llama 4 Community Licence: show "Built with Llama" whenever the server is set to answer with a Llama model.
   const servingLlama = isLlamaModel(configuredModelId());
+  const tiles = aboutStatTiles();
+  const sources = dataSources();
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-5 py-10 focus:outline-none sm:py-14">
-      <TicketCard as="section" aria-labelledby="about-title">
-        <div className="flex flex-col gap-3">
-          <p className="text-xs font-bold tracking-widest text-primary uppercase">About</p>
-          <h1 id="about-title" className="text-5xl leading-[0.95] font-extrabold tracking-tighter text-ink">
+    <main id="main" tabIndex={-1} className="flex w-full flex-1 flex-col focus:outline-none">
+      <OpenOnHash />
+
+      {/* 1. Hero: one promise, two ways in. */}
+      <section aria-labelledby="about-title" className="grain">
+        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 pt-14 pb-16 md:px-8 lg:pt-20 lg:pb-20">
+          <Eyebrow>About</Eyebrow>
+          <h1 id="about-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
             About Grass Pass
           </h1>
-          <p className="text-lg font-semibold">Your ticket to get outside.</p>
-          <p>
-            Grass Pass makes a one-page, printable scavenger pass for a real park and a child&apos;s age. Every item on it is
-            backed by real, dated data about <em>that</em> park. The goal: about half a minute on a screen, then you
-            print, and the phone goes away. The child ticks boxes with a pencil; the grown-up keeps the stub with the answers, safety notes
-            and sources.
+          <p className="max-w-[60ch] text-xl leading-relaxed text-pretty">
+            A printable scavenger hunt for a <em>real</em> park: written by an open AI model from real, dated data, and
+            checked line by line by code. Half a minute on a screen, then the phone goes away.
           </p>
-          <p>
-            If a source has nothing for a park, the pass says <strong>&quot;No data available&quot;</strong> and why. It never
-            pads the pass with generic items.
-          </p>
-          <p>
-            The whole process, step by step (the data, the one model call, every check), is on{" "}
-            <Link className={ext} href="/how-it-works">
-              How Grass Pass works
+          <ul aria-label="Grass Pass in four facts" className="flex flex-wrap gap-2">
+            <li>
+              <Pill className="bg-ink text-on-ink">Gemma 4 · Apache-2.0</Pill>
+            </li>
+            <li>
+              <Pill>4 real data sources</Pill>
+            </li>
+            <li>
+              <Pill>No accounts, no tracking</Pill>
+            </li>
+            <li>
+              <Pill className="bg-sun text-sun-foreground">MIT open source</Pill>
+            </li>
+          </ul>
+          <div className="flex flex-wrap gap-3 pt-2">
+            <Link className={buttonClassName("primary", "group")} href="/how-it-works">
+              See how a pass is made, step by step
+              <ArrowRight aria-hidden="true" className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
             </Link>
-            .
-          </p>
+            <Link className={buttonClassName("secondary")} href="/" prefetch={false}>
+              Make a pass
+            </Link>
+          </div>
         </div>
-      </TicketCard>
+      </section>
 
-      <Section id="how" title="How a pass is made">
-        <p>
-          The short version is below; the detailed one, with a diagram and every check in plain words, is on{" "}
-          <Link className={ext} href="/how-it-works">
-            How Grass Pass works
-          </Link>
-          .
-        </p>
-        <ol className="flex list-decimal flex-col gap-3 pl-6">
-          <li>
-            <strong>You pick a park.</strong> Parks come from{" "}
-            <a className={ext} href="https://www.openstreetmap.org/">
-              OpenStreetMap
-            </a>
-            : named parks and nature reserves within 5 km, found with the Nominatim search and the Overpass API.
-          </li>
-          <li>
-            <strong>Code collects real facts.</strong> <em>Park Finds</em> are what is mapped inside the park on OpenStreetMap
-            (courts, playgrounds, shelters, bridges, ponds...). <em>Wild Finds</em> are species people photographed within
-            1.5 km in the last 14 days, research grade only, from{" "}
-            <a className={ext} href="https://www.inaturalist.org/">
-              iNaturalist
-            </a>
-            , each with its Wikipedia summary (through the iNaturalist API). From {OCTOBER_WINDOW_LABEL} the{" "}
-            <em>October special</em> box adds real monarch butterfly counts from iNaturalist (within 25 km, the last 14 days,
-            next to the same days last year) and whether milkweed has been seen near the park. <em>Lucky Finds</em> are
-            &quot;maybe&quot; finds (a dog out for a walk, someone on a bike): code finds the same park on Google Maps and
-            counts how many of its visitor reviews from the last 2 years mention dogs, bikes, and ducks or skateboards,
-            through{" "}
-            <a className={ext} href="https://serpapi.com/">
-              SerpApi
-            </a>
-            . A Lucky Find needs at least 3 such reviews. We count mentions in Google Maps reviews via SerpApi; review text
-            is never shown or sent to the AI, only the word, the count and the newest month.
-          </li>
-          <li>
-            <strong>Code draws a Find This Spot map.</strong> Code picks one real place inside the park from OpenStreetMap: a
-            landmark the park has only one of (a picnic shelter, a playground, a bridge), or else the middle of one sports
-            field. It marks that place with an X on a simple black-and-white map of the park&apos;s paths, with a START at
-            the nearest mapped parking lot or entrance, a north arrow and a scale. The walking distance and direction on
-            the parent stub are measured by code. A park with nothing to point at gets &quot;No Find This Spot today&quot;
-            instead of a guess.
-          </li>
-          <li>
-            <strong>Code decides what is safe.</strong> Dangerous species are removed by their iNaturalist taxon before the
-            model sees the list, and checked again after. Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot;
-            line written by code, not by the model.
-            <details className="mt-2">
-              <summary className="cursor-pointer font-semibold">Never on a pass ({BLOCKED_TAXA.length} groups)</summary>
-              <ul className="mt-2 list-disc pl-6">
-                {BLOCKED_TAXA.map((t) => (
-                  <li key={t.id}>
-                    {t.common} ({t.why})
+      {/* 2. Stat tiles: real measured numbers, misses marked. */}
+      <section id="measured" aria-labelledby="measured-title" className="gp-band scroll-mt-28 bg-band text-band-foreground sm:scroll-mt-16">
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-20 md:px-8 lg:py-24">
+          <div className="grid gap-5 lg:grid-cols-2 lg:items-end">
+            <div className="flex flex-col gap-4">
+              <Eyebrow onBand>What we measured</Eyebrow>
+              <h2 id="measured-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl">
+                Measured, not promised.
+              </h2>
+            </div>
+            <p className="max-w-[55ch] text-band-muted">
+              Gemma 4 on {EVAL_PARKS} real parks, {gemma.runs} passes, run <code>{EVAL_RUN_ID}</code> ({EVAL_DAY}). Misses
+              stay on the page.{" "}
+              <a className={bandLink} href={resultsUrl}>
+                Full results
+              </a>
+            </p>
+          </div>
+          <ul aria-label="Measured results" className="grid grid-cols-2 gap-3 sm:gap-4 lg:grid-cols-4">
+            {tiles.map((t) => (
+              <li key={t.label} className="flex min-w-0 flex-col gap-3 rounded-3xl bg-band-foreground/[0.06] p-4 ring-1 ring-band-foreground/10 sm:p-6">
+                <p className="flex flex-col gap-1">
+                  <span className="font-heading text-[1.6rem] leading-none font-extrabold tracking-tight break-words text-sun min-[400px]:text-3xl sm:text-5xl">{t.value}</span>
+                  <span className="text-sm text-band-muted">{t.label}</span>
+                </p>
+                <p className="mt-auto flex flex-wrap items-center gap-2 text-xs">
+                  {t.met === null ? (
+                    <Pill className="bg-band-foreground/10 text-band-foreground">
+                      <BadgeCheck aria-hidden="true" className="mr-1 size-3.5" />
+                      Counted
+                    </Pill>
+                  ) : t.met ? (
+                    <Pill className="bg-primary text-primary-foreground">
+                      <Check aria-hidden="true" className="mr-1 size-3.5" />
+                      Met
+                    </Pill>
+                  ) : (
+                    <Pill className="bg-sun text-sun-foreground">
+                      <X aria-hidden="true" className="mr-1 size-3.5" />
+                      Missed
+                    </Pill>
+                  )}
+                  <span className="text-band-muted">
+                    {t.met === null ? t.target : `target ${t.target}`}
+                  </span>
+                </p>
+              </li>
+            ))}
+          </ul>
+        </div>
+      </section>
+
+      {/* 3. The five cards. */}
+      <section aria-labelledby="inside-title" className="scroll-mt-28 sm:scroll-mt-16">
+        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-20 md:px-8 lg:py-24">
+          <div className="flex max-w-2xl flex-col gap-4">
+            <Eyebrow>In one look</Eyebrow>
+            <h2 id="inside-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
+              Open model. Real data. Rules in code.
+            </h2>
+          </div>
+
+          <div className="grid gap-5 md:grid-cols-6">
+            <article id="why-open" aria-labelledby="card-model" className="flex scroll-mt-28 flex-col gap-5 rounded-3xl bg-primary p-7 text-primary-foreground sm:scroll-mt-20 md:col-span-3 lg:p-9">
+              <div className="flex items-center justify-between gap-3">
+                <Cpu className="size-8" aria-hidden="true" />
+                <Pill className="bg-black/20 text-primary-foreground">Open model</Pill>
+              </div>
+              <h3 id="card-model" className="text-3xl leading-tight font-extrabold">
+                Gemma 4 writes the clues
+              </h3>
+              <p className="leading-relaxed">
+                <code>gemma-4-31B-it</code> on DigitalOcean serverless inference (US). One call per pass.
+              </p>
+              <ul aria-label="Model facts" className="flex flex-wrap gap-2">
+                <li>
+                  <Pill className="bg-paper text-ink">Apache-2.0</Pill>
+                </li>
+                <li>
+                  <Pill className="bg-paper text-ink">Open weights</Pill>
+                </li>
+                <li>
+                  <Pill className="bg-paper text-ink">Runs on DigitalOcean</Pill>
+                </li>
+              </ul>
+              <ul className="mt-auto flex flex-col gap-2">
+                {WHY_OPEN_POINTS.map((p) => (
+                  <li key={p} className="flex gap-2">
+                    <Check aria-hidden="true" className="mt-1 size-4 shrink-0" />
+                    <span>{p}</span>
                   </li>
                 ))}
               </ul>
-            </details>
-          </li>
-          <li>
-            <strong>One call to an open model writes the clues.</strong> By default that is <code>gemma-4-31B-it</code>{" "}
-            (Google&apos;s Gemma 4, open weights, Apache-2.0) on DigitalOcean serverless inference. It picks items from the
-            list by id, writes a short clue for each and a riddle for the X on the map. Code then checks every clue: its
-            quote must appear word for word in that item&apos;s source, it must not name the answer, it must not add numbers
-            or links, a &quot;how many&quot; question must not give its own number, and only something its source says makes
-            a sound may get a &quot;listen&quot; clue. Clues that fail are dropped (a &quot;look where&quot; hint that names the
-            answer is left off). The only edits code makes: it takes a filler opener (&quot;Quick!&quot;, &quot;Psst,&quot;) off the
-            front of a clue, and turns the question mark after a command into a full stop. Every
-            number and date on a pass is written by code. Each pass names the model that actually answered.
-          </li>
-          <li>
-            <strong>You print it.</strong> Kid pass on top, a dashed tear line, and a parent stub below with the answers,
-            evidence, safety lines and sources. Black and white, one page.
-          </li>
-        </ol>
-      </Section>
+              {servingLlama ? (
+                <p className="rounded-2xl bg-paper p-3 text-ink">
+                  <strong data-testid="built-with-llama">{BUILT_WITH_LLAMA}</strong>: this site is set to use a Llama model right now.
+                </p>
+              ) : null}
+            </article>
 
-      <Section id="why-open" title="Why open">
-        <p>
-          The clue writer is an open-weight model, and that matters for this app in ways we can show with numbers. We ran
-          the real pass builder on {EVAL_PARKS} real parks and wrote down every result, including the ones that failed (
-          <a className={ext} href={resultsUrl}>
-            full results
-          </a>
-          ; the whole run cost ${EVAL_TOTAL_USD.toFixed(2)}).
-        </p>
-        <ul className="flex list-disc flex-col gap-2 pl-6">
-          <li>
-            <strong>It makes the words kid-sized.</strong> Gemma&apos;s clues read at a grade {gemma.fkGrade.toFixed(1)}{" "}
-            level (median). A no-AI template on the same data reads at grade {template.fkGrade.toFixed(1)}.
-          </li>
-          <li>
-            <strong>It sticks to the facts.</strong> {pct(gemma.groundedPct)} of Gemma&apos;s clues quoted their source word
-            for word before any filter, and {gemma.blockedPrinted} dangerous species were printed in {gemma.runs} runs.
-          </li>
-          <li>
-            <strong>It is cheap enough for a classroom.</strong> About {usd(gemma.costPerPass)} per pass at DigitalOcean list
-            prices.
-          </li>
-          <li>
-            <strong>The safety rules live in our code, not in a vendor&apos;s.</strong> The same checks run on any model.
-            Switching models is one setting (<code>MODEL_ID</code>); Llama 4 Maverick ran through the same code in this test.
-          </li>
-          <li>
-            <strong>You can run it yourself.</strong> Gemma 4&apos;s weights are downloadable under Apache-2.0, and the app talks
-            to any OpenAI-compatible server (for example Ollama). We have <em>not</em> measured a self-hosted run for this app
-            yet.
-          </li>
-        </ul>
-        <p>
-          No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
-          answered &quot;403 Forbidden&quot; when we tried them on {CLOSED_MODELS_403_DAY}.
-        </p>
-        <p>
-          <strong>In short:</strong> we made passes for {EVAL_PARKS} real parks with each model and counted how often the
-          clues were safe, true to the data, complete, easy to read, quick and cheap. Each row says in plain words what
-          it counts; the last column is the goal we set before the test.
-        </p>
-        <EvalTable columns={EVAL_COLUMNS} />
+            <article aria-labelledby="card-data" className="flex flex-col gap-5 rounded-3xl bg-card p-7 ring-1 ring-border md:col-span-3 lg:p-9">
+              <div className="flex items-center justify-between gap-3">
+                <Database className="size-8 text-primary" aria-hidden="true" />
+                <Pill>Real data</Pill>
+              </div>
+              <h3 id="card-data" className="text-3xl leading-tight font-extrabold text-ink">
+                Four real sources, dated
+              </h3>
+              <ul className="flex flex-col divide-y divide-border">
+                {sources.map((s) => (
+                  <li key={s.name} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
+                    <span className="flex flex-col">
+                      <a className={ext} href={s.url}>
+                        {s.name}
+                      </a>
+                      <span className="text-sm text-muted-foreground">{s.gives}</span>
+                    </span>
+                    <Pill>{s.licence}</Pill>
+                  </li>
+                ))}
+              </ul>
+              <p className="text-sm text-muted-foreground">
+                No data for a park? The pass says <strong className="text-ink">&quot;No data available&quot;</strong> and why.
+                It is never padded.
+              </p>
+            </article>
 
-        <h3 className="mt-2 text-xl font-extrabold text-ink">What did not pass yet (current limitations)</h3>
-        <ul className="flex list-disc flex-col gap-2 pl-6">
-          <li>
-            <strong>Complete passes: Gemma just passes ({pct(gemma.completePct)}, {gemma.complete} of {gemma.dataRichRuns};
-            target {EVAL_THRESHOLDS.completePct}% or more).</strong> 4 of the 5 short or missing passes were the AI service,
-            not the clues: {gemma.timeouts} model calls ran past the 30 s limit in the last of the three runs, and one call was
-            refused at once. The fifth (Klyde Warren Park, a park with little data) ended 2 finds short even after its second
-            try. A short pass says how many finds are missing; it is never padded.
-          </li>
-          <li>
-            <strong>Clues still repeat across parks a little: Gemma {pct(gemma.repeatPct)}</strong> of printed clues share 5
-            words in a row with clues on at least 2 other parks (target {EVAL_THRESHOLDS.repeatPct}% or lower). That is down
-            from 29.2% in the run before, but it does not pass yet. Wrong counts pass: {gemma.wrongCounts} of {gemma.countClues}{" "}
-            printed count clues ({gemma.wrongCountsRemoved} wrong ones were removed by code before printing).
-          </li>
-          <li>
-            <strong>Answers that name themselves:</strong> Gemma passes ({pct(gemma.nameLeakPct)} of its clues or
-            &quot;look where&quot; hints used a word of their own answer before the filter; target{" "}
-            {EVAL_THRESHOLDS.nameLeakPct}% or lower), but Llama 4 Maverick does not ({pct(llama.nameLeakPct)}). Code catches
-            every one: a clue that names its answer is dropped, and a hint that does is left off. So nothing is given away
-            on the pass, but those clues are lost.
-          </li>
-          <li>
-            <strong>Speed: neither model passes.</strong> Gemma took {secs(gemma.p50s)} typical and {secs(gemma.p95s)}{" "}
-            slow-case per model call (target {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s): just over both marks (the
-            typical wait was 10.04 s), and the slow case includes the {gemma.timeouts} calls that hit the 30 s limit. Most of
-            the wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: {secs(llama.p50s)}{" "}
-            typical, with {pct(llama.completePct)} complete passes ({llama.timeouts} of its calls hit its 60 s limit).
-          </li>
-          <li>
-            <strong>A model glitch we saw in an earlier run:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park,
-            the next part of the answer was stuck onto the end of every quote. Code now cuts that stuck-on text off and keeps
-            the quote only if what is left is really, word for word, in the source. It did not happen in the run above.
-          </li>
-          <li>
-            <strong>Not in this test:</strong> the Find This Spot map and riddle (the map data was not recorded for the 20
-            test parks).
-          </li>
-          <li>
-            <strong>Kid check not done yet.</strong> A grown-up reading 10 clues as a 7-year-old would is planned; it is not
-            automated.
-          </li>
-          <li>
-            <strong>Lucky Finds run on a free plan.</strong> SerpApi&apos;s free plan allows {SERPAPI_FREE_MONTHLY} searches a
-            month, and a new park uses up to 4 (one to find it on Google Maps, up to 3 review counts). Grass Pass stops at{" "}
-            {serp.daily} searches a day and {serp.monthly} a month and keeps each park&apos;s counts for 30 days. When a limit is reached, the pass says &quot;free search limit reached today&quot; instead of Lucky
-            Finds. A count says how many reviews mention a thing, not that it is there today, so the pass calls them
-            &quot;maybe&quot;. No photos are printed.
-          </li>
-          <li>
-            <strong>Sparse data happens.</strong> 3 of the 17 North Texas parks in the test had no research-grade
-            iNaturalist sightings in the last 14 days; the pass then says so instead of inventing Wild Finds.
-          </li>
-        </ul>
-      </Section>
+            <article aria-labelledby="card-safety" className="flex flex-col gap-4 rounded-3xl bg-card p-7 ring-1 ring-border md:col-span-2">
+              <ShieldCheck className="size-7 text-primary" aria-hidden="true" />
+              <h3 id="card-safety" className="text-2xl font-extrabold text-ink">
+                Safety by code
+              </h3>
+              <ul className="flex flex-col gap-2 text-muted-foreground">
+                <li>{BLOCKED_TAXA.length} risky groups are never printed, checked before and after the model.</li>
+                <li>Every clue must quote its source word for word.</li>
+                <li>Every number, date and safety line is written by code.</li>
+              </ul>
+            </article>
 
-      <Section id="privacy" title="Privacy: what leaves your device">
-        <p>
-          No names, no photos, no analytics, and nothing about the child is ever asked for or sent. Browsing, the example
-          passes, shared pass links and printing need no account and set no cookie. Only a grown-up who signs in (to make a
-          new pass or send a report) gets one sign-in cookie. {ACCOUNT_COPY.privacy} The only other things kept in your browser
-          are your light or dark choice and the last age band you picked.
-        </p>
-        <div className="overflow-x-auto rounded-3xl bg-card ring-1 ring-border" role="region" aria-labelledby="privacy-caption" tabIndex={0}>
-          <table className="w-full min-w-[560px] border-collapse text-left text-base">
-            <caption id="privacy-caption" className="px-4 pt-3 pb-2 text-left font-bold">
-              Everything that leaves your device, where it goes and why
-            </caption>
-            <thead>
-              <tr className="border-b-2 border-line">
-                <th scope="col" className="px-4 py-2">
-                  What
-                </th>
-                <th scope="col" className="px-4 py-2">
-                  Where it goes
-                </th>
-                <th scope="col" className="px-4 py-2">
-                  Why
-                </th>
-              </tr>
-            </thead>
-            <tbody>
-              {PRIVACY.map((r) => (
-                <tr key={r.what} className="border-b border-line last:border-b-0">
-                  <th scope="row" className="px-4 py-2 font-semibold">
-                    {r.what}
-                  </th>
-                  <td className="px-4 py-2">{r.where}</td>
-                  <td className="px-4 py-2">{r.why}</td>
-                </tr>
-              ))}
-            </tbody>
-          </table>
+            <article id="privacy" aria-labelledby="card-privacy" className="gp-band flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-band p-7 text-band-foreground sm:scroll-mt-20 md:col-span-2">
+              <Lock className="size-7 text-sun" aria-hidden="true" />
+              <h3 id="card-privacy" className="text-2xl font-extrabold">
+                Privacy
+              </h3>
+              <ul className="flex flex-col gap-2">
+                {PRIVACY_POINTS.map((p) => (
+                  <li key={p} className="flex gap-2 text-band-muted">
+                    <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-sun" />
+                    <span>{p}</span>
+                  </li>
+                ))}
+              </ul>
+              <a className={`${bandLink} mt-auto text-sm`} href="#privacy-table">
+                Everything that leaves your device
+              </a>
+            </article>
+
+            <article id="limits" aria-labelledby="card-limits" className="flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-sun p-7 text-sun-foreground sm:scroll-mt-20 md:col-span-2">
+              <TriangleAlert className="size-7" aria-hidden="true" />
+              <h3 id="card-limits" className="text-2xl font-extrabold">
+                Honest limits
+              </h3>
+              <ul className="flex list-disc flex-col gap-2 pl-5">
+                {aboutLimitPoints().map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
+              </ul>
+              <a className="mt-auto text-sm font-semibold underline underline-offset-2" href="#limits-detail">
+                Every limit, with the numbers
+              </a>
+            </article>
+          </div>
         </div>
-        <p>
-          The model runs on DigitalOcean&apos;s servers in the US, so the park facts and the age band do leave your device.
-          For Lucky Finds we count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI,
-          and nothing about you is sent to SerpApi (only the park&apos;s name and map position).
-          Our own server logs say what happened (which source or model, how long it took, the outcome, the pass id) and
-          never the prompt, your IP address or the text you typed. Our storage is Upstash Redis (caches, saved passes and
-          rate-limit counters). Our hosting provider (Vercel) keeps its own short request logs, as every website host does.
-        </p>
-      </Section>
+      </section>
 
-      <Section id="accounts" title="Accounts and visitor reports">
-        <p>
-          Anyone can search parks, open the example passes and any shared pass link, and print. Making a NEW pass needs a
-          grown-up to sign in with GitHub or Google ({ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas
-          time), because every new pass costs a real model call. {ACCOUNT_COPY.grownUps} We never store a password.
-        </p>
-        <p>
-          Judges can press <strong>Try as a judge</strong>: one click signs in to a shared demo account with no sign-up. All
-          judges together can make {judgeDailyCap()} new passes a day, on top of the usual per-address limits.
-        </p>
-        <p>
-          Signed-in grown-ups can tell us about each find on a pass: <strong>Found it</strong>, <strong>Didn&apos;t find
-          it</strong> or <strong>Not safe</strong> (one report per find per day). {REPORT_COPY.rule}
-        </p>
-      </Section>
+      {/* 4. Details on demand: everything else, folded. */}
+      <section aria-labelledby="details-title" className="scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
+        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-5 py-20 md:px-8 lg:py-24">
+          <div className="flex flex-col gap-4">
+            <Eyebrow>The fine print</Eyebrow>
+            <h2 id="details-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
+              Details, one click away.
+            </h2>
+          </div>
 
-      <Section id="credits" title="Credits and licences">
-        <ul className="flex list-disc flex-col gap-2 pl-6">
-          <li>
-            Park names, places and features: ©{" "}
-            <a className={ext} href="https://www.openstreetmap.org/copyright">
-              OpenStreetMap
-            </a>{" "}
-            contributors, ODbL 1.0, through Nominatim and public Overpass API servers.
-          </li>
-          <li>
-            Wildlife sightings and monarch counts:{" "}
-            <a className={ext} href="https://www.inaturalist.org/">
-              iNaturalist
-            </a>{" "}
-            observers (we show species names and counts only, no photos).
-          </li>
-          <li>Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API.</li>
-          <li>
-            Lucky Finds: Google Maps review counts via{" "}
-            <a className={ext} href="https://serpapi.com/">
-              SerpApi
-            </a>{" "}
-            (we show counts and months only, never review text or reviewer names).
-          </li>
-          <li>
-            Clues:{" "}
-            <a className={ext} href="https://huggingface.co/google/gemma-4-31B-it">
-              Gemma 4 (gemma-4-31B-it)
-            </a>
-            , Apache-2.0, on DigitalOcean serverless inference.
-          </li>
-          <li>
-            Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It only
-            answers real visitors if the server is switched to it (<code>MODEL_ID</code>); every pass names the model that
-            answered and shows &quot;{BUILT_WITH_LLAMA}&quot; when it is a Llama model.
-            {servingLlama ? (
-              <>
-                {" "}
-                <strong data-testid="built-with-llama">{BUILT_WITH_LLAMA}</strong>: this site is set to use a Llama model right now.
-              </>
-            ) : null}
-          </li>
-          <li>
-            Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported into this app by hand. The site
-            logo is a small green ticket with a sprout icon from{" "}
-            <a className={ext} href="https://lucide.dev/">
-              Lucide
-            </a>{" "}
-            (ISC licence), which also draws the other icons on the site.
-          </li>
-          <li>
-            Park photos on the home page (real photos of each park, used under their free licences):
-            <ul className="mt-1 list-disc pl-6" data-testid="about-photo-credits">
-              {Object.values(PARK_PHOTOS).map((p) => (
-                <li key={p.src}>
-                  <PhotoCreditLine photo={p} />
+          <Disclosure id="measured-table" icon={Table2} title="Why open: the full measured table" hint="Gemma 4, Llama 4 and a no-AI template, side by side">
+            <p>
+              We ran the real pass builder on {EVAL_PARKS} real parks and wrote down every result, including the ones that
+              failed (
+              <a className={ext} href={resultsUrl}>
+                full results
+              </a>
+              ; the whole run cost ${EVAL_TOTAL_USD.toFixed(2)}). Gemma&apos;s clues read at grade {gemma.fkGrade.toFixed(1)}; a
+              no-AI template on the same data reads at grade {template.fkGrade.toFixed(1)}. {pct(gemma.groundedPct)} of
+              Gemma&apos;s clues quoted their source word for word before any filter.
+            </p>
+            <p>
+              <strong>In short:</strong> we made passes for {EVAL_PARKS} real parks with each model and counted how often the
+              clues were safe, true to the data, complete, easy to read, quick and cheap. Each row says in plain words what it
+              counts; the last column is the goal we set before the test.
+            </p>
+            <EvalTable columns={EVAL_COLUMNS} />
+            <p>
+              No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
+              answered &quot;403 Forbidden&quot; when we tried them on {CLOSED_MODELS_403_DAY}. Switching models is one setting (
+              <code>MODEL_ID</code>); Llama 4 Maverick ran through the same code in this test.
+            </p>
+          </Disclosure>
+
+          <Disclosure id="limits-detail" icon={CircleAlert} title="What did not pass yet (current limitations)" hint="Every miss, with the numbers">
+            <ul className="flex list-disc flex-col gap-2 pl-6">
+              {aboutLimits().map((l) => (
+                <li key={l.title}>
+                  <strong>{l.title}</strong> {l.detail}
                 </li>
               ))}
             </ul>
-          </li>
-          <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
-          <li>
-            Printed pass logo: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
-            hand-cleaned SVG redraw of it. App icons and share images: the v3 site logo (the green ticket with the Lucide
-            sprout) drawn as SVG by our own script.
-          </li>
-          <li>
-            Fonts: Bricolage Grotesque and DM Sans on the site, Fredoka and Nunito on the printed pass (all SIL Open Font
-            License 1.1), served from this site.
-          </li>
-          <li>
-            App code: MIT licence. A few generic building blocks (the model client, rate limits and caps, request guards
-            and in-flight de-duplication) were adapted from the same author&apos;s unpublished practice project, written on
-            Oct 2, 2026, before the contest entry period. Everything specific to Grass Pass was written from Oct 5, 2026.
-          </li>
-        </ul>
-      </Section>
+          </Disclosure>
 
-      <Section id="source" title="Source code">
-        <p>
-          Grass Pass is open source (MIT). The code, the eval harness and its results are on GitHub.
-        </p>
-        <p className="flex flex-wrap gap-3">
-          <a className={buttonClassName("secondary")} href={REPO_URL}>
-            Grass Pass on GitHub
-          </a>
-          <Link className={buttonClassName("primary")} href="/" prefetch={false}>
-            Make a pass
-          </Link>
-        </p>
-      </Section>
+          <Disclosure id="privacy-table" icon={Lock} title="Privacy: what leaves your device" hint="What, where and why">
+            <div className="overflow-x-auto rounded-2xl bg-card ring-1 ring-border" role="region" aria-labelledby="privacy-caption" tabIndex={0}>
+              <table className="w-full min-w-[560px] border-collapse text-left text-base">
+                <caption id="privacy-caption" className="px-4 pt-3 pb-2 text-left font-bold">
+                  Everything that leaves your device, where it goes and why
+                </caption>
+                <thead>
+                  <tr className="border-b-2 border-line">
+                    <th scope="col" className="px-4 py-2">
+                      What
+                    </th>
+                    <th scope="col" className="px-4 py-2">
+                      Where it goes
+                    </th>
+                    <th scope="col" className="px-4 py-2">
+                      Why
+                    </th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {PRIVACY_ROWS.map((r) => (
+                    <tr key={r.what} className="border-b border-line last:border-b-0">
+                      <th scope="row" className="px-4 py-2 font-semibold">
+                        {r.what}
+                      </th>
+                      <td className="px-4 py-2">{r.where}</td>
+                      <td className="px-4 py-2">{r.why}</td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+            {PRIVACY_NOTES.map((n) => (
+              <p key={n}>{n}</p>
+            ))}
+          </Disclosure>
+
+          <Disclosure id="accounts" icon={UserRound} title="Accounts and visitor reports" hint="New passes need sign-in (2 a day). Judges: Try as a judge.">
+            {accountNotes().map((n) => (
+              <p key={n}>{n}</p>
+            ))}
+          </Disclosure>
+
+          <Disclosure id="sources-detail" icon={Database} title="Data sources and their licences" hint="How far, how recent, what we keep">
+            <ul className="flex flex-col gap-3">
+              {sources.map((s) => (
+                <li key={s.name}>
+                  <a className={ext} href={s.url}>
+                    {s.name}
+                  </a>{" "}
+                  <span className="text-sm text-muted-foreground">({s.licence})</span>: {s.detail}
+                </li>
+              ))}
+            </ul>
+          </Disclosure>
+
+          <Disclosure id="blocked" icon={ShieldCheck} title={`Never on a pass (${BLOCKED_TAXA.length} groups)`} hint="Removed before and after the model">
+            <ul className="grid list-disc gap-x-8 gap-y-1 pl-6 sm:grid-cols-2">
+              {BLOCKED_TAXA.map((t) => (
+                <li key={t.id}>
+                  {t.common} ({t.why})
+                </li>
+              ))}
+            </ul>
+            <p>Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot; line written by code, not by the model.</p>
+          </Disclosure>
+        </div>
+      </section>
+
+      {/* 5. Credits: photos visible as thumbnails, everything else folded. */}
+      <section id="credits" aria-labelledby="credits-title" className="scroll-mt-28 sm:scroll-mt-16">
+        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-20 md:px-8 lg:py-24">
+          <div className="flex max-w-2xl flex-col gap-4">
+            <Eyebrow>Thank you</Eyebrow>
+            <h2 id="credits-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
+              Credits and licences
+            </h2>
+          </div>
+          <ul aria-label="Park photo credits" data-testid="about-photo-credits" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+            {Object.values(PARK_PHOTOS).map((p) => (
+              <li key={p.src} className="flex gap-3 rounded-2xl bg-card p-3 ring-1 ring-border">
+                <Image src={p.src} alt={p.alt} width={p.width} height={p.height} sizes="80px" className="size-20 shrink-0 rounded-xl object-cover" />
+                <p className="min-w-0 text-sm leading-snug break-words">
+                  <PhotoCreditLine photo={p} />
+                </p>
+              </li>
+            ))}
+          </ul>
+          <p className="max-w-[65ch] text-sm text-muted-foreground">
+            {ILLUSTRATION_CREDIT} It shows no real child or park.
+          </p>
+
+          <Disclosure id="all-credits" icon={FileText} title="All credits and licences" hint="Data, model, design, fonts, code">
+            <ul className="flex list-disc flex-col gap-2 pl-6">
+              <li>
+                Park names, places and features: ©{" "}
+                <a className={ext} href="https://www.openstreetmap.org/copyright">
+                  OpenStreetMap
+                </a>{" "}
+                contributors, ODbL 1.0, through Nominatim and public Overpass API servers.
+              </li>
+              <li>
+                Wildlife sightings and monarch counts:{" "}
+                <a className={ext} href="https://www.inaturalist.org/">
+                  iNaturalist
+                </a>{" "}
+                observers (we show species names and counts only, no photos).
+              </li>
+              <li>Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API.</li>
+              <li>
+                Lucky Finds: Google Maps review counts via{" "}
+                <a className={ext} href="https://serpapi.com/">
+                  SerpApi
+                </a>{" "}
+                (we show counts and months only, never review text or reviewer names).
+              </li>
+              <li>
+                Clues:{" "}
+                <a className={ext} href="https://huggingface.co/google/gemma-4-31B-it">
+                  Gemma 4 (gemma-4-31B-it)
+                </a>
+                , Apache-2.0, on DigitalOcean serverless inference.
+              </li>
+              <li>
+                Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It only
+                answers real visitors if the server is switched to it (<code>MODEL_ID</code>); every pass names the model that
+                answered and shows &quot;{BUILT_WITH_LLAMA}&quot; when it is a Llama model.
+              </li>
+              <li>
+                Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported into this app by hand. The site logo
+                is a small green ticket with a sprout icon from{" "}
+                <a className={ext} href="https://lucide.dev/">
+                  Lucide
+                </a>{" "}
+                (ISC licence), which also draws the other icons on the site.
+              </li>
+              <li>
+                Park photos on the home page and above: real photos of each park, used under their free licences (credited
+                above).
+              </li>
+              <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
+              <li>
+                Printed pass logo: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
+                hand-cleaned SVG redraw of it. App icons and share images: the v3 site logo (the green ticket with the Lucide
+                sprout) drawn as SVG by our own script.
+              </li>
+              <li>
+                Fonts: Bricolage Grotesque and DM Sans on the site, Fredoka and Nunito on the printed pass (all SIL Open Font
+                License 1.1), served from this site.
+              </li>
+              <li>
+                App code: MIT licence. A few generic building blocks (the model client, rate limits and caps, request guards and
+                in-flight de-duplication) were adapted from the same author&apos;s unpublished practice project, written on Oct
+                2, 2026, before the contest entry period. Everything specific to Grass Pass was written from Oct 5, 2026.
+              </li>
+            </ul>
+          </Disclosure>
+
+          <div id="source" className="flex flex-col gap-4 rounded-3xl bg-card p-7 ring-1 ring-border sm:flex-row sm:items-center sm:justify-between">
+            <div className="flex items-center gap-4">
+              <span aria-hidden="true" className="flex size-12 shrink-0 items-center justify-center rounded-2xl bg-ink text-on-ink">
+                <Scale className="size-6" />
+              </span>
+              <h2 className="text-2xl leading-tight font-extrabold text-ink">Source code: open source (MIT)</h2>
+            </div>
+            <p className="flex flex-wrap gap-3">
+              <a className={buttonClassName("secondary")} href={REPO_URL}>
+                <Code2 aria-hidden="true" className="size-5" />
+                Grass Pass on GitHub
+              </a>
+              <Link className={buttonClassName("primary")} href="/" prefetch={false}>
+                Make a pass
+              </Link>
+            </p>
+          </div>
+        </div>
+      </section>
     </main>
   );
 }

@@ -5,6 +5,7 @@ import { describe, expect, it } from "vitest";
 import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
+import { PRIVACY_ROWS, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
 import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD } from "@/lib/about/eval-summary";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
@@ -91,8 +92,73 @@ describe("/about", () => {
 
   it("has one h1 and a heading for every part", () => {
     expect(html.match(/<h1[\s>]/g)).toHaveLength(1);
-    for (const h of ["How a pass is made", "Why open", "What did not pass yet (current limitations)", "Privacy: what leaves your device", "Credits and licences", "Source code"]) {
+    for (const h of [
+      "Measured, not promised.",
+      "Open model. Real data. Rules in code.",
+      "Gemma 4 writes the clues",
+      "Safety by code",
+      "Honest limits",
+      "Why open: the full measured table",
+      "What did not pass yet (current limitations)",
+      "Privacy: what leaves your device",
+      "Credits and licences",
+      "Source code",
+    ]) {
       expect(t).toContain(h);
+    }
+    // v3: headings never skip a level (h1 -> h2 -> h3).
+    const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
+    levels.forEach((l, i) => i > 0 && expect(l - levels[i - 1], `heading ${i}`).toBeLessThanOrEqual(1));
+  });
+
+  it("v3: links to the step-by-step page instead of repeating it, and keeps the key links", () => {
+    expect(html).toMatch(/<a[^>]*href="\/how-it-works"[^>]*>See how a pass is made, step by step/);
+    // SEC-3-01: every <Link> to / in the page source opts out of prefetch (the rendered <a> cannot show it).
+    const src = readFileSync(join(ROOT, "src/app/about/page.tsx"), "utf8");
+    const homeLinks = src.match(/<Link[^>]*href="\/"[^>]*>/g) ?? [];
+    expect(homeLinks.length).toBeGreaterThan(0);
+    for (const l of homeLinks) expect(l).toContain("prefetch={false}");
+    for (const id of ["measured", "why-open", "privacy", "limits", "privacy-table", "limits-detail", "measured-table", "credits", "all-credits"]) {
+      expect(html, id).toContain(`id="${id}"`);
+    }
+  });
+
+  it("v3: the stat tiles are the committed eval numbers, and the misses say Missed", () => {
+    const tiles = aboutStatTiles();
+    const g = EVAL_COLUMNS.find((c) => c.model === "gemma-4-31B-it")!;
+    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["98.9%", "0", "$0.00070", "Grade 1.7", "90.2%", "10.0 s", "6.8%", String(UNIT_TESTS.passed)]));
+    expect(tiles.find((x) => x.value === "10.0 s")?.met).toBe(false); // p95 20.5 s > 20 s
+    expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(false);
+    expect(tiles.find((x) => x.value === "0")?.met).toBe(true);
+    const list = html.match(/<ul aria-label="Measured results"[\s\S]*?<\/ul>/)?.[0] ?? "";
+    expect((list.match(/<li /g) ?? []).length).toBe(tiles.length);
+    expect((text(list).match(/Missed/g) ?? []).length).toBe(tiles.filter((x) => x.met === false).length);
+    expect(t).toContain("run 2026-10-06-3 (2026-10-06)");
+  });
+
+  it("v3: the unit-test tile is dated, and its file count matches tests/unit (re-count when tests are added)", () => {
+    const files = readdirSync(join(ROOT, "tests/unit")).filter((f) => /\.test\.tsx?$/.test(f));
+    expect(files.length, "update UNIT_TESTS in src/lib/about/content.ts after re-running pnpm test").toBe(UNIT_TESTS.files);
+  });
+
+  it("v3: details are folded in closed <details> (keyboard-operable natively), and the visible copy stays short", () => {
+    const details = html.match(/<details[^>]*>/g) ?? [];
+    expect(details.length).toBeGreaterThanOrEqual(6);
+    for (const d of details) expect(d).not.toMatch(/\sopen[\s=>]/);
+    expect(html.match(/<summary/g)?.length).toBe(details.length);
+    // What a judge sees before opening anything: everything outside the folded bodies.
+    const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
+    expect(visible.split(" ").length).toBeLessThanOrEqual(650);
+  });
+
+  it("v3: every privacy row and every source is rendered from the shared data", () => {
+    for (const r of PRIVACY_ROWS) {
+      expect(t).toContain(text(r.what));
+      expect(t).toContain(text(r.where));
+    }
+    for (const s of dataSources()) {
+      expect(html).toContain(`href="${s.url}"`);
+      expect(t).toContain(s.licence);
     }
   });
 

@@ -115,12 +115,17 @@ test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds 
   const res = await page.goto("/about");
   expect(res?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: "About Grass Pass" })).toBeVisible();
-  for (const h of ["How a pass is made", "Why open", "Privacy: what leaves your device", "Credits and licences"]) {
+  for (const h of ["Measured, not promised.", "Open model. Real data. Rules in code.", "Details, one click away.", "Credits and licences"]) {
     await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
   }
+  // v3: the summary is visible at once; the fine print is one click away (closed <details>).
   await expect(page.getByText(/Find This Spot/).first()).toBeVisible();
+  await expect(page.getByText(/Lucky Finds run on a free plan/)).toBeHidden();
+  await page.getByText("What did not pass yet (current limitations)").click();
   await expect(page.getByText(/Lucky Finds run on a free plan/)).toBeVisible();
-  await expect(page.getByText(/review text is never shown or sent to the AI/).first()).toBeVisible();
+  await page.getByText("Data sources and their licences").click();
+  await expect(page.locator("details#sources-detail").getByText(/review text is never shown or sent to the AI/)).toBeVisible();
+  await page.getByText("Why open: the full measured table").click();
   await expect(page.getByRole("table").first()).toContainText("Gemma 4 31B");
 });
 

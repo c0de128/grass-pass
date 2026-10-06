@@ -159,7 +159,7 @@ const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Bot,
     title: "AI writes, code checks",
-    body: "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.",
+    body: "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks again if too many fail.",
   },
   { icon: Printer, title: "Print and go", body: "One page. The kid gets the hunt and you keep the answer key." },
 ];
@@ -318,12 +318,12 @@ export default function HowItWorksPage() {
       id: "retry",
       icon: RotateCcw,
       who: "code",
-      title: "Refill once, or print it short",
-      summary: "Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.",
+      title: "Refill, or print it short",
+      summary: "Too few clues pass the check? Code asks the AI again for the missing ones (at most 3 calls per pass). Still short? We list how many are missing. No made-up filler.",
       more: (
         <>
           <p>
-            Little data: the model is asked for one spare. More than one find lost: code asks <strong>once more</strong>:
+            Little data: the model is asked for one spare. More than one find lost: code asks <strong>again</strong>, at most 3 model calls per pass:
           </p>
           <ul className={bullets}>
             <li>
@@ -332,7 +332,7 @@ export default function HowItWorksPage() {
             </li>
             <li>If nothing was kept, it is the whole request again.</li>
             <li>
-              A network or server error is retried once; a timeout is not. The second call needs 20 s of the 85 s budget left.
+              A first call that fails (timeout, network or server error, or an unusable answer) gets one whole retry. A pass still short after a refill gets one more refill. A whole retry needs 25 s of the 85 s budget left, a refill 20 s.
             </li>
           </ul>
           <p>Nothing is padded with made-up finds.</p>

@@ -23,7 +23,7 @@ test("landing page loads with headers, no console errors and no CSP issues", asy
   expect(headers["x-powered-by"]).toBeUndefined();
 
   await expect(page.getByRole("heading", { level: 1, name: "Family time is back! powered by AI." })).toBeVisible();
-  await expect(page.getByText(/^We turn your local park into a real-world treasure hunt/)).toBeVisible();
+  await expect(page.getByText(/^Grass Pass turns your local park into an interactive adventure/)).toBeVisible();
   await expect(page.getByRole("form", { name: "Find a park" })).toBeVisible();
   await page.waitForLoadState("networkidle");
   expect(errors).toEqual([]);

@@ -65,8 +65,15 @@ describe("the copy blocks", () => {
     expect(new Set(BLOCKS.map((b) => b.id)).size).toBe(BLOCKS.length);
   });
 
-  // If today's text fails its own rules, the rules (FACTS / KEEP / limits) are wrong, not Gemma.
-  it.each(BLOCKS.map((b) => [b.id, b] as const))("%s: the current text passes its own check", (_id, b) => {
+  // If the text sent to Gemma fails its own rules, the rules (FACTS / KEEP / limits) are wrong, not Gemma.
+  // Exception: blocks whose old text became untrue after the run (factFixAfterRun in review.json): their FACTS
+  // were corrected, so the old text no longer passes them.
+  const stale = new Set(
+    (JSON.parse(readFileSync(path.join(ROOT, "docs/copy-by-gemma/review.json"), "utf8")) as { decisions: { id: string; factFixAfterRun?: boolean }[] }).decisions
+      .filter((d) => d.factFixAfterRun)
+      .map((d) => d.id),
+  );
+  it.each(BLOCKS.filter((b) => !stale.has(b.id)).map((b) => [b.id, b] as const))("%s: the sent text passes its own check", (_id, b) => {
     expect(checkDraft(b, b.text)).toEqual({ ok: true, reasons: [] });
   });
 });

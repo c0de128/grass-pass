@@ -7,8 +7,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 - **Model:** `gemma-4-31B-it` on DigitalOcean serverless inference, through the app's own model client (`src/lib/model.ts`, strict JSON schema output).
 - **Calls:** 19 (batches of 10), 39,228 prompt + 6,075 completion tokens, **$0.0101** at DigitalOcean list prices (logged in `evals/results/SPEND.md`). Failures: none.
 - **Blocks sent:** 184.
-  - **Accepted** as Gemma wrote them: 80
-  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): 10
+  - **Accepted** as Gemma wrote them: 78
+  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): 12
   - **Rejected** (old text kept): 76 (1 by the code check, 75 by people)
   - **Unchanged** (Gemma returned the old text): 18
 - **Reviewed by:** Builder G (Claude Code), 2026-10-06. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
@@ -30,6 +30,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 5. `pnpm copy:render` writes this file.
 
 **Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) is 17. The sheet below is corrected. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.
+
+**Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (`MAX_MODEL_CALLS = 3`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old "one retry" facts. 4 blocks were fixed by hand for that (marked "Fact fix after the rebase" below): two accepted Gemma drafts became "edited", and two kept old lines were corrected. Their FACTS sheets below show the new rule.
 
 The code check catches new facts, lost facts and hype. It cannot catch a sentence that is true word by word but wrong as a whole: those were caught in step 4 (look for **UNTRUE** below). It also had one false positive: "No one" counted as the number word "one".
 
@@ -546,16 +548,16 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Why:** Gemma returned the current text unchanged.
 - **FACTS:** The AI writes; code checks. · KEEP: "AI"
 
-#### `how.quick.3.body`: accepted
+#### `how.quick.3.body`: edited
 
 `src/app/how-it-works/page.tsx:162` · card body, 2 sentences · max 160 characters
 
 - **Old:** Gemma 4, an open model, picks a fair mix and writes kid-sized clues. Code checks each one, and asks once more if too many fail.
 - **Gemma:** Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.
 - **Code check:** passed
-- **Shipped:** Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.
-- **Why:** True and simpler; the open-model fact is two lines above.
-- **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / Code checks every clue against its source and removes any that fail; the model never decides what is safe. / If too many clues fail, code asks the model once more (one retry at most). · KEEP: "Gemma 4", "once more"
+- **Shipped:** Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks again if too many fail. _(Gemma draft, edited)_
+- **Why:** True and simpler; the open-model fact is two lines above. Gemma draft, edited: 'asks once more' -> 'asks again'. Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.
+- **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / Code checks every clue against its source and removes any that fail; the model never decides what is safe. / If too many clues fail, code asks the model again (a pass makes at most 3 model calls, MAX_MODEL_CALLS). · KEEP: "Gemma 4", "asks again"
 
 #### `how.quick.4.title`: accepted
 
@@ -698,7 +700,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Code sends the park's fact list to {model} on DigitalOcean serverless inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is one call; step 6 is the exception.
 - **Why:** UNTRUE as written: 'writes a clue, a proof quote, and one riddle' reads as one clue in total, not one per find.
-- **FACTS:** {model} is filled in by code: the model id, plus "(Google's Gemma 4, open weights, Apache-2.0)" when it is Gemma. / It runs on DigitalOcean serverless inference. / The model picks finds by id, writes a clue and a proof quote for each, plus one riddle. / Usually one call; step 6 (a refill) is the exception. · KEEP: "DigitalOcean", "step 6"
+- **FACTS:** {model} is filled in by code: the model id, plus "(Google's Gemma 4, open weights, Apache-2.0)" when it is Gemma. / It runs on DigitalOcean serverless inference. / The model picks finds by id, writes a clue and a proof quote for each, plus one riddle. / Usually one call; step 6 (retry or refills, at most 3 calls) is the exception. · KEEP: "DigitalOcean", "step 6"
 
 #### `how.step.checks.title`: rejected
 
@@ -729,20 +731,20 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Old:** Refill once, or print it short
 - **Gemma:** Refill the list or print
 - **Code check:** passed
-- **Shipped:** Refill once, or print it short
-- **Why:** Loses the meaning ('print it short').
+- **Shipped:** Refill, or print it short
+- **Why:** Loses the meaning ('print it short'). Old text kept, then: Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.
 - **FACTS:** Step 6 (code): ask once more, or print a shorter pass.
 
-#### `how.step.retry.summary`: accepted
+#### `how.step.retry.summary`: edited
 
 `src/app/how-it-works/page.tsx:322` · step summary, 3 short sentences · max 190 characters
 
 - **Old:** Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.
 - **Gemma:** Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.
 - **Code check:** passed
-- **Shipped:** Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.
-- **Why:** True, on tone, at least as clear as before.
-- **FACTS:** If too few clues pass, code asks the model once more for the missing ones. / If still short, the pass says how many finds are missing. / Nothing is padded with made-up finds. · KEEP: "once more"
+- **Shipped:** Too few clues pass the check? Code asks the AI again for the missing ones (at most 3 calls per pass). Still short? We list how many are missing. No made-up filler. _(Gemma draft, edited)_
+- **Why:** Gemma draft, edited: 'once more' -> 'again ... (at most 3 calls per pass)'. Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.
+- **FACTS:** If too few clues pass, code asks the model again for the missing ones (at most 3 model calls per pass, MAX_MODEL_CALLS). / If still short, the pass says how many finds are missing. / Nothing is padded with made-up finds. · KEEP: "again"
 
 #### `how.step.spot.title`: unchanged
 
@@ -2107,9 +2109,9 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Old:** Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age (4-6, 6-10 or 10-13). Code collects what is really in that park. Gemma 4 (open weights, Apache-2.0, on DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (plus one refill call if too few pass). Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the answers, safety notes and sources. The phone stays in your pocket.
 - **Gemma:** Grass Pass creates a one-page treasure hunt in about 30 seconds. Pick a park and an age band: 4-6, 6-10, or 10-13. Our AI, Gemma 4 (Apache-2.0, on DigitalOcean), writes kid-level clues based on real park data. Usually, it takes one call, with a refill call if needed. Code fact-checks every clue and removes failures. Code also writes every number, date, and safety line. You print one black-and-white page. Kids use pencils to tick boxes while you keep a tear-off stub with the answers. The phone stays home.
 - **Code check:** passed
-- **Shipped:** Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age (4-6, 6-10 or 10-13). Code collects what is really in that park. Gemma 4 (open weights, Apache-2.0, on DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (plus one refill call if too few pass). Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the answers, safety notes and sources. The phone stays in your pocket.
-- **Why:** Drops 'open weights', 'a fair mix' and 'what is really in that park'.
-- **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / Age bands are exactly 4-6, 6-10 and 10-13 (AGE_BAND_INFO). / A pass usually takes 10-30 seconds (about 30 seconds). / Usually one model call, plus one refill call if too few clues pass. / Code checks every clue against its source and removes any that fail; the model never decides what is safe. / Code writes every number, date and safety line. / One black-and-white page; the kid ticks boxes with a pencil; the grown-up keeps a tear-off stub with answers, safety notes and sources. · KEEP: "Gemma 4", "Apache-2.0", "DigitalOcean", "4-6", "6-10", "10-13", "30 seconds"
+- **Shipped:** Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age (4-6, 6-10 or 10-13). Code collects what is really in that park. Gemma 4 (open weights, Apache-2.0, on DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass). Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the answers, safety notes and sources. The phone stays in your pocket.
+- **Why:** Drops 'open weights', 'a fair mix' and 'what is really in that park'. Old text kept, then: Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.
+- **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / Age bands are exactly 4-6, 6-10 and 10-13 (AGE_BAND_INFO). / A pass usually takes 10-30 seconds (about 30 seconds). / Usually one model call; at most 3 (one whole retry if the first call fails, refills if too few clues pass). / Code checks every clue against its source and removes any that fail; the model never decides what is safe. / Code writes every number, date and safety line. / One black-and-white page; the kid ticks boxes with a pencil; the grown-up keeps a tear-off stub with answers, safety notes and sources. · KEEP: "Gemma 4", "Apache-2.0", "DigitalOcean", "4-6", "6-10", "10-13", "30 seconds"
 
 #### `readme.nodata`: rejected
 

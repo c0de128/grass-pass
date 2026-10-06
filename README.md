@@ -9,7 +9,7 @@ TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with
 
 Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age
 (4-6, 6-10 or 10-13). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
-DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (plus one refill call if too few pass).
+DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass).
 Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety
 line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the
 answers, safety notes and sources. The phone stays in your pocket.
@@ -51,7 +51,7 @@ clue is removed, the refill rules, caching, limits and measured numbers. The sho
 flowchart LR
   S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries<br/>Google review counts (SerpApi)"] --> P["Pools, by code<br/>what is really in this park"]
   P --> F["Code safety<br/>blocked species removed<br/>by iNaturalist taxon"]
-  F --> AI["Gemma 4 31B<br/>usually one model call<br/>(+1 refill if needed)<br/>strict JSON schema"]
+  F --> AI["Gemma 4 31B<br/>usually one model call<br/>(at most 3 with retry/refills)<br/>strict JSON schema"]
   AI --> V["Code checks<br/>quote must be in the source,<br/>no answer names, no added numbers"]
   V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
 ```
@@ -71,7 +71,7 @@ flowchart LR
 5. **Code checks every clue.** Its `sourceQuote` must appear word for word in the item's source; it must not name its
    answer, add a number or contain a link; a "how many" question must not give its own number; a "listen" clue needs a
    source that names a sound. A failing clue is dropped, never rewritten (code only cuts a filler opener like "Quick!"
-   and turns "?" after a command into a full stop). Too few left: one refill call.
+   and turns "?" after a command into a full stop). Too few left: up to two refill calls (at most 3 model calls per pass).
 6. **You print it.** Black and white, one Letter page (A4 works too). Code writes every number and date, and the pass
    names the model that actually answered.
 
@@ -247,7 +247,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Site design (v3, Oct 6, 2026):** designed by Kevin in [v0 by Vercel](https://v0.app/) and ported by hand (no v0
   runtime code, no analytics). Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (10 with small edits) after code and people fact-checked them, and the rest kept
+  text; 90 of its drafts shipped (12 with small edits) after code and people fact-checked them, and the rest kept
   their old text. Every block, old and new, with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.
 - **Home page pictures:** the hero is an AI illustration generated with v0 by Vercel (labelled "AI illustration"; it

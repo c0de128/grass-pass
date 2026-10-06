@@ -51,8 +51,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 alt={HERO_ILLUSTRATION.alt}
                 width={HERO_ILLUSTRATION.width}
                 height={HERO_ILLUSTRATION.height}
-                priority
-                fetchPriority="high"
+                loading="eager"
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover"
               />

@@ -4,11 +4,24 @@ import { AGE_BAND_INFO } from "@/lib/pass/schema";
 import { EXAMPLE_BAND, type ExampleStatus } from "@/lib/prewarm";
 
 /**
+ * The state of one example card, as a data attribute for tests and tooling (never shown):
+ * ready (links a real pass), off (PREWARM_EXAMPLES=0), making (a pass is being made now),
+ * waiting (no pass yet and nothing running; the card says why).
+ */
+export type ExampleState = "ready" | "off" | "making" | "waiting";
+
+export function exampleState(s: ExampleStatus, enabled: boolean): ExampleState {
+  if (s.pass) return "ready";
+  if (!enabled) return "off";
+  return s.refreshing ? "making" : "waiting";
+}
+
+/**
  * "See a real pass now": links to passes made earlier from live data (pre-warmed, SPEC S8). Each link
  * says when that pass was really generated; an example with no pass yet says why instead of linking.
  * Server component, no client JavaScript.
  */
-export function ExampleParks({ statuses }: { statuses: readonly ExampleStatus[] }) {
+export function ExampleParks({ statuses, enabled = true }: { statuses: readonly ExampleStatus[]; enabled?: boolean }) {
   return (
     <section aria-labelledby="examples-title" className="flex flex-col gap-3">
       <h2 id="examples-title" className="text-2xl">
@@ -19,7 +32,7 @@ export function ExampleParks({ statuses }: { statuses: readonly ExampleStatus[] 
       </p>
       <ul className="grid gap-2 sm:grid-cols-2" aria-label="Example parks">
         {statuses.map((s) => (
-          <li key={s.example.slug} data-testid={`example-${s.example.slug}`}>
+          <li key={s.example.slug} data-testid={`example-${s.example.slug}`} data-state={exampleState(s, enabled)}>
             {s.pass ? (
               <Link
                 href={`/pass/${s.pass.passId}?example=1`}
@@ -44,5 +57,31 @@ export function ExampleParks({ statuses }: { statuses: readonly ExampleStatus[] 
         ))}
       </ul>
     </section>
+  );
+}
+
+/**
+ * Phones only (R1 UX m8): the ready example passes as a compact row of links above the form, so a
+ * first-time visitor at 360 px sees a real pass is one tap away. Hidden from 640 px up, where the
+ * example cards are already above the fold. Nothing is shown when no example is ready.
+ */
+export function ExampleChips({ statuses }: { statuses: readonly ExampleStatus[] }) {
+  const ready = statuses.filter((s) => s.pass);
+  if (ready.length === 0) return null;
+  return (
+    <nav aria-label="Open an example pass" className="sm:hidden">
+      <ul className="flex flex-wrap gap-2">
+        {ready.map((s) => (
+          <li key={s.example.slug}>
+            <Link
+              href={`/pass/${s.pass!.passId}?example=1`}
+              className="inline-flex min-h-11 items-center rounded-control border-2 border-line bg-surface px-3 text-base font-semibold text-fg hover:bg-secondary-hover"
+            >
+              {s.example.name}
+            </Link>
+          </li>
+        ))}
+      </ul>
+    </nav>
   );
 }

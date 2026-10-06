@@ -15,21 +15,31 @@ import {
   type PassStep,
 } from "@/lib/pass/schema";
 
-/** A bit over the route's maxDuration (90 s). */
-const CLIENT_TIMEOUT_MS = 95_000;
+/**
+ * The page stops waiting after 45 s (R1 UX M2): a new pass usually takes 10-30 s. The server keeps
+ * going and caches a pass whose model call started, so "Try again" often opens it at once.
+ */
+export const CLIENT_TIMEOUT_MS = 45_000;
 
 export const CLIENT_COPY = {
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the answer. Please try again.",
-  timeout: "This is taking too long (over 90 seconds). Please try again in a minute.",
+  timeout:
+    "This is taking much longer than usual (over 45 seconds), so we stopped waiting. The free map and wildlife servers can be slow at busy times. Try again: if your pass got made in the meantime, it opens right away.",
 } as const;
+
+/** Codes for failures the page itself detects (server failures carry the server's code). */
+export const CLIENT_CODES = { offline: "OFFLINE", badAnswer: "BAD_ANSWER", timeout: "CLIENT_TIMEOUT" } as const;
+
+/** Module-level clock (react-hooks/purity flags Date.now() inside components). */
+export const clientNow = () => Date.now();
 
 export type PassState =
   | { kind: "idle" }
-  | { kind: "working"; steps: { step: PassStep; text: string }[] }
+  | { kind: "working"; steps: { step: PassStep; text: string }[]; startedAt: number }
   | { kind: "done"; pass: Pass; cached: boolean }
   | { kind: "empty"; parkName: string; message: string; sections: Pass["sections"] }
-  | { kind: "failed"; message: string; parkData?: ParkData };
+  | { kind: "failed"; message: string; code: string; parkData?: ParkData };
 
 export function usePassRequest() {
   const [state, setState] = useState<PassState>({ kind: "idle" });
@@ -49,7 +59,13 @@ export function usePassRequest() {
     abortRef.current = ac;
     const timer = setTimeout(() => ac.abort(), CLIENT_TIMEOUT_MS);
     const steps: { step: PassStep; text: string }[] = [];
-    setState({ kind: "working", steps: [] });
+    const startedAt = clientNow();
+    setState({ kind: "working", steps: [], startedAt });
+    const lost = (): PassState =>
+      ac.signal.aborted
+        ? { kind: "failed", message: CLIENT_COPY.timeout, code: CLIENT_CODES.timeout }
+        : { kind: "failed", message: CLIENT_COPY.offline, code: CLIENT_CODES.offline };
+    const bad: PassState = { kind: "failed", message: CLIENT_COPY.badAnswer, code: CLIENT_CODES.badAnswer };
     const finish = (s: PassState) => {
       clearTimeout(timer);
       if (abortRef.current === ac) setState(s);
@@ -65,17 +81,14 @@ export function usePassRequest() {
         signal: ac.signal,
       });
     } catch {
-      return finish({ kind: "failed", message: ac.signal.aborted ? CLIENT_COPY.timeout : CLIENT_COPY.offline });
+      return finish(lost());
     }
 
     if (!res.ok || !res.body) {
       const json = await res.json().catch(() => null);
       const err = PassErrorResponseSchema.safeParse(json);
-      return finish({
-        kind: "failed",
-        message: err.success ? err.data.error.message : CLIENT_COPY.badAnswer,
-        parkData: err.success ? err.data.parkData : undefined,
-      });
+      if (!err.success) return finish(bad);
+      return finish({ kind: "failed", message: err.data.error.message, code: err.data.error.code, parkData: err.data.parkData });
     }
 
     const reader = res.body.getReader();
@@ -95,26 +108,26 @@ export function usePassRequest() {
           try {
             parsed = JSON.parse(raw);
           } catch {
-            return finish({ kind: "failed", message: CLIENT_COPY.badAnswer });
+            return finish(bad);
           }
           const line = PassLineSchema.safeParse(parsed);
-          if (!line.success) return finish({ kind: "failed", message: CLIENT_COPY.badAnswer });
+          if (!line.success) return finish(bad);
           const l = line.data;
           if (l.type === "step") {
             steps.push({ step: l.step, text: l.text });
-            if (abortRef.current === ac) setState({ kind: "working", steps: [...steps] });
+            if (abortRef.current === ac) setState({ kind: "working", steps: [...steps], startedAt });
             continue;
           }
           if (l.type === "result") return finish({ kind: "done", pass: l.pass, cached: l.cached });
           if (l.type === "empty") return finish({ kind: "empty", parkName: l.parkName, message: l.message, sections: l.sections });
-          return finish({ kind: "failed", message: l.error.message, parkData: l.parkData });
+          return finish({ kind: "failed", message: l.error.message, code: l.error.code, parkData: l.parkData });
         }
         if (done) break;
       }
     } catch {
-      return finish({ kind: "failed", message: ac.signal.aborted ? CLIENT_COPY.timeout : CLIENT_COPY.offline });
+      return finish(lost());
     }
-    return finish({ kind: "failed", message: CLIENT_COPY.badAnswer });
+    return finish(bad);
   }, []);
 
   return { state, run, reset };

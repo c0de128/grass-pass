@@ -72,6 +72,13 @@ export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
     <html lang="en" className={`${Fredoka.variable} ${Nunito.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
+        {/* First Tab stop on every page (WCAG 2.4.1): every page has <main id="main">. */}
+        <a
+          href="#main"
+          className="sr-only z-50 rounded-control bg-surface px-4 py-2 font-bold text-fg focus:not-sr-only focus:absolute focus:top-2 focus:left-2 print:hidden"
+        >
+          Skip to main content
+        </a>
         <SiteHeader />
         {children}
         <SiteFooter />

@@ -1,12 +1,24 @@
 import { Chip } from "@/components/ui/Chip";
 import type { ParkData, Pass, PassStep } from "@/lib/pass/schema";
 
+/** The usual order of a new pass, for the "still to come" list (labels only; the real text comes from the server). */
+const PLAN: { step: PassStep; label: string }[] = [
+  { step: "map", label: "Read the park map" },
+  { step: "wildlife", label: "Check recent wildlife sightings" },
+  { step: "clues", label: "Write the clues" },
+  { step: "check", label: "Check every clue" },
+];
+
 /**
  * Real progress from the server, as a checklist (SPEC §8.3 "Progress steps": text list with
- * checkmarks, aria-live polite). Earlier steps are done; the last one is in progress.
+ * checkmarks, aria-live polite). Earlier steps are done; the last one is in progress. Steps that have
+ * not started yet are listed after it (outside the live region, so they are not announced).
  */
 export function ProgressSteps({ steps }: { steps: { step: PassStep; text: string }[] }) {
+  const seen = new Set<PassStep>(steps.map((s) => (s.step === "retry" ? "clues" : s.step)));
+  const upcoming = steps.length === 0 ? [] : PLAN.filter((p) => !seen.has(p.step));
   return (
+    <div className="flex flex-col gap-1">
     <div role="status" aria-live="polite" className="flex flex-col gap-1">
       {steps.length === 0 ? (
         <p>Starting…</p>
@@ -28,6 +40,19 @@ export function ProgressSteps({ steps }: { steps: { step: PassStep; text: string
           })}
         </ol>
       )}
+    </div>
+      {upcoming.length > 0 ? (
+        <ol className="flex flex-col gap-1 text-muted" aria-label="Still to come">
+          {upcoming.map((u) => (
+            <li key={u.step} className="flex items-start gap-2">
+              <span aria-hidden="true" className="w-5 shrink-0 font-bold">
+                ○
+              </span>
+              <span>{u.label}</span>
+            </li>
+          ))}
+        </ol>
+      ) : null}
     </div>
   );
 }

@@ -270,8 +270,14 @@
   margin-top: 0.02in;
 }
 
+/* R1 UX m5: the Find This Spot answer and the October line each get their own space on the stub, so they
+   no longer read as one block with the answer list. */
+.gp-stub [data-slot="spot-answer"] {
+  margin-top: 0.08in;
+}
+
 .gp-stub-october {
-  margin: 0.03in 0 0;
+  margin: 0.08in 0 0;
 }
 
 .gp-spot-answer {

@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
+import { notFound } from "next/navigation";
+import { cache } from "react";
 import { KidPass } from "@/components/pass/KidPass";
 import { OctoberBox, octoberStubText } from "@/components/pass/OctoberBox";
 import { ParentStub, TearLine } from "@/components/pass/ParentStub";
@@ -8,20 +10,21 @@ import { PrintButton } from "@/components/pass/PrintButton";
 import { PrintFit } from "@/components/pass/PrintFit";
 import { SpotAnswer, SpotMap } from "@/components/pass/SpotMap";
 import { buttonClassName } from "@/components/ui/Button";
-import { TicketCard } from "@/components/ui/TicketCard";
 import { isOctoberDay } from "@/lib/october";
 import { loadPass } from "@/lib/pass/make";
-import { PASS_COPY } from "@/lib/pass/schema";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
 
 /**
  * The printable pass (SPEC F6, ADR 0004): one US Letter sheet, black on white. Kid pass on top,
- * dashed tear line, parent stub below. Read from the pass cache only (never calls upstream).
+ * dashed tear line, parent stub below. Read from the pass cache only (never calls upstream), once per
+ * request (metadata and page share the read, SEC-1-02).
  */
+const getPass = cache((id: string) => loadPass(id));
+
 export async function generateMetadata(props: PageProps<"/pass/[id]/print">): Promise<Metadata> {
   const { id } = await props.params;
-  const pass = await loadPass(id);
+  const pass = await getPass(id);
   return {
     title: pass ? `Print: Grass Pass for ${pass.park.name}` : "Grass Pass: pass not found",
     robots: { index: false, follow: false },
@@ -39,31 +42,16 @@ async function passUrl(id: string): Promise<string> {
 export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
   const { id } = await props.params;
   const sp = await props.searchParams;
-  const pass = await loadPass(id);
+  const pass = await getPass(id);
 
-  if (!pass) {
-    return (
-      <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8">
-        <TicketCard as="section" aria-labelledby="gone-title">
-          <div className="flex flex-col gap-4">
-            <h1 id="gone-title" className="text-3xl font-bold">
-              No pass here
-            </h1>
-            <p>{PASS_COPY.passGone}</p>
-            <Link href="/" className={buttonClassName("primary", "self-start")}>
-              Make a pass
-            </Link>
-          </div>
-        </TicketCard>
-      </main>
-    );
-  }
+  // Unknown or expired id: HTTP 404 with the honest "No pass here" copy (../not-found.tsx).
+  if (!pass) notFound();
 
   const spot = pass.spot?.status === "ok" ? pass.spot : null;
   const octoberText = octoberStubText(pass);
 
   return (
-    <main className="gp-print-page mx-auto w-full max-w-5xl flex-1 px-3 py-6 sm:px-5">
+    <main id="main" tabIndex={-1} className="gp-print-page mx-auto w-full max-w-5xl flex-1 px-3 py-6 focus:outline-none sm:px-5">
       <PrintFit />
       <div className="gp-screen-only mx-auto flex w-full max-w-[8.5in] flex-col gap-3">
         <p className="text-lg">

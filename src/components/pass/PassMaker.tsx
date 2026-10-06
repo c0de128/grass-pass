@@ -21,7 +21,21 @@ import {
   type AgeBand,
 } from "@/lib/pass/schema";
 import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
-import { usePassRequest } from "./usePassRequest";
+import { clientNow, usePassRequest } from "./usePassRequest";
+
+/** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
+const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT"]);
+
+/** Real seconds since the request started, ticking once a second while it runs. */
+function useElapsedSeconds(startedAt: number | null): number {
+  const [now, setNow] = useState(() => clientNow());
+  useEffect(() => {
+    if (startedAt === null) return;
+    const t = setInterval(() => setNow(clientNow()), 1000);
+    return () => clearInterval(t);
+  }, [startedAt]);
+  return startedAt === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));
+}
 
 export function readStoredBand(): AgeBand {
   try {
@@ -49,6 +63,19 @@ export function PassMaker() {
   const router = useRouter();
   const { state, run, reset } = usePassRequest();
   const working = state.kind === "working";
+  const elapsed = useElapsedSeconds(state.kind === "working" ? state.startedAt : null);
+  const lastRequest = useRef<{ parkId: string; ageBand: AgeBand } | null>(null);
+
+  // After a park is picked, bring the age step into view and move focus to its heading (R1 UX m2):
+  // with 10 parks listed it starts ~700 px further down on a phone.
+  useEffect(() => {
+    if (!park) return;
+    const h = headingRef.current;
+    if (!h) return;
+    h.focus({ preventScroll: true });
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    h.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+  }, [park]);
 
   useEffect(() => {
     if (state.kind === "done") {
@@ -63,18 +90,19 @@ export function PassMaker() {
     setPark(p);
     // The age step only appears after a pick, so the remembered band is read here (no effect needed).
     setBand(readStoredBand());
-    // Let the age step render, then move focus to it (keyboard and screen-reader users).
-    requestAnimationFrame(() => {
-      headingRef.current?.focus();
-      headingRef.current?.scrollIntoView({ block: "nearest" });
-    });
   }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     if (!park || working) return;
     storeBand(band);
+    lastRequest.current = { parkId: park.id, ageBand: band };
     void run({ parkId: park.id, ageBand: band });
+  }
+
+  function tryAgain() {
+    if (working || !lastRequest.current) return;
+    void run(lastRequest.current);
   }
 
   return (
@@ -100,7 +128,7 @@ export function PassMaker() {
                     value={b}
                     checked={band === b}
                     onChange={() => setBand(b)}
-                    className="h-5 w-5 accent-forest"
+                    className="h-5 w-5 shrink-0 accent-forest"
                   />
                   <span className="flex flex-col">
                     <span className="font-display text-lg font-semibold">
@@ -121,8 +149,12 @@ export function PassMaker() {
           </form>
 
           {state.kind === "working" ? (
-            <div className="mt-4">
+            <div className="mt-4 flex flex-col gap-2">
               <ProgressSteps steps={state.steps} />
+              {/* Not a live region: a ticking number would be read out every second. */}
+              <p className="text-base" data-testid="pass-elapsed">
+                {elapsed} s so far. A new pass usually takes 10-30 seconds.
+              </p>
             </div>
           ) : null}
 
@@ -134,9 +166,14 @@ export function PassMaker() {
 
           {state.kind === "failed" ? (
             <div ref={resultRef} tabIndex={-1} className="mt-4 flex flex-col gap-3">
-              <div role="alert" className="rounded-ticket border-2 border-line bg-surface p-4">
+              <div role="alert" data-error-code={state.code} className="rounded-ticket border-2 border-line bg-surface p-4">
                 <p className="font-semibold">{state.message}</p>
               </div>
+              {NO_RETRY.has(state.code) ? null : (
+                <Button type="button" variant="secondary" className="self-start" onClick={tryAgain}>
+                  Try again
+                </Button>
+              )}
               {state.parkData ? <ParkDataList data={state.parkData} /> : null}
             </div>
           ) : null}

@@ -40,7 +40,8 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
           </p>
         </header>
 
-        {SECTIONS.map((s) => {
+        {/* R1-m10: a switched-off section (Lucky Finds without SerpApi) is left off the kid's side; the stub keeps the honest note. */}
+        {SECTIONS.filter((s) => pass.sections[s].status !== "off" || pass.items.some((i) => i.section === s)).map((s) => {
           const items = pass.items.filter((i) => i.section === s);
           const state = pass.sections[s];
           return (
@@ -128,6 +129,8 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
         ) : null}
       </details>
       <ul className="flex flex-col gap-1 text-sm">
+        {/* R1-m10: switched-off sections are noted here for the grown-up, not on the kid's side. */}
+        {SECTIONS.map((s) => pass.sections[s]).map((st, i) => (st.status === "off" ? <li key={`off-${i}`}>{st.message}</li> : null))}
         {pass.safetyFiltered > 0 ? <li>{SAFETY_FOOTNOTE}</li> : null}
         {pass.removed.other > 0 ? (
           <li>

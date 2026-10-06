@@ -44,6 +44,9 @@ describe("PassPreview (screen pass)", () => {
     expect(t).toContain("Celebration Park");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).toContain(PASS_COPY.luckyOff);
+    // R1-m10: the switched-off Lucky Finds section is not on the kid's side; only the grown-up's stub says so, once.
+    expect(html).not.toContain('id="sec-lucky"');
+    expect(t.split(PASS_COPY.luckyOff)).toHaveLength(2);
     expect((t.match(/on the park map · OpenStreetMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
     expect(t).toContain(`Made ${formatTime(pass.generatedAt)} by gemma-4-31B-it (open model, Apache-2.0)`);
     expect(t).not.toContain("reused for this park today");

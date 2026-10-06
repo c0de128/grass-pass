@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { askMix, buildMessages, computeMix, escapeSource, systemPrompt, userPrompt } from "@/lib/ai/prompt";
+import { buildMessages, computeMix, escapeSource, planRequest, refillPlan, systemPrompt, userPrompt } from "@/lib/ai/prompt";
 import {
-  ASK_EXTRA,
+  ASK_EXTRA_MAX,
   MAX_PASS_ITEMS,
   MIN_PASS_ITEMS,
   PassDraft,
@@ -11,7 +11,7 @@ import {
   QUOTE_WIRE_MAX,
 } from "@/lib/ai/schema";
 import { isGrounded, mergeResults, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
-import { mixFor, passMaxTokens, poolForSpot, PROMPT_SPARES, promptPool } from "@/lib/ai/build-pass";
+import { mixFor, passMaxTokens, poolForSpot, PROMPT_SPARES, promptPool, withRefill } from "@/lib/ai/build-pass";
 import { parseGeometry } from "@/lib/spot/geometry";
 import { pickTarget } from "@/lib/spot/pick-target";
 import { parkPool } from "@/lib/pool/park";
@@ -47,7 +47,9 @@ function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
   // S8b: the model sees at most n + PROMPT_SPARES items per section.
   const pool: PoolItem[] = promptPool(full, mixFor(full, "6-10")!.n);
   const spot = target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null;
-  return { f, park, wild, pool, target, spot };
+  // Content tuning: the request (prompt pool, asked-for mix with spares scaled to the pool, openers) is planned by code.
+  const plan = planRequest(full, "6-10", f.park.name)!;
+  return { f, park, wild, pool, target, spot, plan };
 }
 
 describe("strict JSON schema from zod (SPEC 6.2)", () => {
@@ -85,9 +87,9 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     expect(s.required).toContain("spot");
     expect(s.properties.spot.properties.targetId.enum).toEqual(["osm-shelter"]);
     expect(() => passJsonSchema({ ...opts, n: 0 })).toThrow();
-    // R2-M5: the request may ask for ASK_EXTRA spare items beyond the printed maximum, never more.
-    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA })).not.toThrow();
-    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA + 1 })).toThrow();
+    // R2-M5 + content tuning: the request may ask for up to ASK_EXTRA_MAX spare items beyond the printed maximum, never more.
+    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA_MAX })).not.toThrow();
+    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA_MAX + 1 })).toThrow();
   });
 
   it("the spec schemas: PassDraft takes 3-8 items; the request schema takes exactly n", () => {
@@ -104,11 +106,10 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
 
   it("the schema the app builds today equals the one sent in the recorded live Gemma calls", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
-      const { pool, target } = poolFor(p);
-      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
-      const ask = askMix(computeMix(counts, "6-10")!, counts);
+      const { pool, target, plan } = poolFor(p);
+      expect(plan.pool).toEqual(pool);
       const schema = passJsonSchema({
-        n: ask.n,
+        n: plan.ask.n,
         itemIds: pool.map((i) => i.id) as [string, ...string[]],
         spotTargetId: target?.id ?? null,
       });
@@ -156,13 +157,11 @@ describe("mix limits computed by code", () => {
 describe("prompt (SPEC 6.1)", () => {
   it("the prompt the app builds today equals the recorded live request (both parks)", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
-      const { pool, f, spot } = poolFor(p);
-      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
-      // R2-M5: the prompt states the asked-for mix (n + ASK_EXTRA spare).
-      const ask = askMix(computeMix(counts, "6-10")!, counts);
-      expect(ask.n).toBe(9);
-      // The Find This Spot source is the park-seeded facts (factsFor); Celebration was re-recorded with them.
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
+      const { pool, f, spot, plan } = poolFor(p);
+      // Content tuning: Connemara is a low-data pool (1 spare: 9 asked); Celebration's 11 Park Finds ask for exactly 8.
+      expect(plan.ask.n).toBe(p === PARKS.connemara ? 9 : 8);
+      // The Find This Spot source is the park-seeded facts (factsFor); both were re-recorded after the content tuning.
+      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", plan.ask, spot, { month: 10, openers: plan.openers }));
     }
   });
 
@@ -205,43 +204,65 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded after audit R2, 9 asked for 8 printed): Celebration 8 + 1 spare, Connemara 7", () => {
+  it("the real recorded Gemma answers (re-recorded after the content tuning): Celebration 8 of 8, Connemara 6 then a real refill to 8", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
-      const { pool, target } = poolFor(p);
-      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
-      const mix = computeMix(counts, "6-10")!;
-      const ask = askMix(mix, counts);
+      const { target, plan } = poolFor(p);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
       // S8c: the answer has no section field; code filled it from the pool for every item.
       expect((draft.items as Record<string, unknown>[]).every((i) => !("section" in i))).toBe(true);
-      const out = validateDraft(draft, pool, mix, { hasMap: target !== null, ask });
-      expect(out.returned).toBe(9);
+      const out = validateDraft(draft, plan.pool, plan.mix, { ...plan.validate, hasMap: target !== null });
+      expect(out.returned).toBe(plan.ask.n);
       expect(out.quotesRepaired).toBe(0);
       for (const i of out.items) expect(i.sourceQuote.length).toBeLessThanOrEqual(QUOTE_WIRE_MAX);
-      return out;
+      return { out, plan };
     });
-    const [conn, cel] = results;
-    // Celebration: all 9 pass every check (counts are whole fields and courts with the map's numbers);
-    // the 9th is a spare, not printed and not counted as removed.
+    const [{ out: conn, plan: connPlan }, { out: cel }] = results;
+    // Celebration (11 Park Finds, not low data: exactly 8 asked): all 8 pass every check. 4 copy a 4-word
+    // run of their fact sheet; with no spare to replace them they print, flagged (a style preference only).
     expect(cel.items).toHaveLength(8);
     expect(cel.drops).toEqual({});
-    expect(cel.spares).toBe(1);
-    expect(cel.items.find((i) => i.item.id === "osm-soccer")?.clue).toBe("Look for a big grass area with a goal at each end. How many of these can you find? There are 25!");
-    // Connemara: the Callery pear twice (duplicate) and a generic plant clue ("Do you see a plant with seeds or
-    // fruit?", proved only by the season sentence) are dropped: 7 of 8 is n-1, so no retry.
-    // Re-recorded after R2: find 8 is the pond, so the code-written tip adds the water line.
-    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 8 is near water: stay close.");
-    expect(conn.items).toHaveLength(7);
-    expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 1 });
-    expect(conn.items.length).toBe(retryThreshold(8));
-    expect(conn.parentNote).toBe(conn.parentNote.slice(0, 200));
-    // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target, last after R2 with factsFor) has a riddle for the X
-    // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
+    expect(cel.spares).toBe(0);
+    expect(cel.styleKept).toBe(4);
+    expect(cel.items.filter((i) => i.style === "copies_source").map((i) => i.item.id)).toEqual(["osm-water", "osm-tennis", "osm-playground", "osm-baseball"]);
+    expect(cel.items.find((i) => i.item.id === "osm-basketball")?.clue).toBe("Guess how many flat hard courts have a ring on a pole? There are 2.");
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 3 is near water: stay close.");
+    // Every clue starts with a different first word (the per-park openers).
+    expect(new Set(cel.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(8);
+    // Connemara (low data: 9 asked): a duplicate id and two generic plant clues ("fruit or seeds" only) are dropped: 6 of 8.
+    expect(conn.items).toHaveLength(6);
+    expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 2 });
+    expect(conn.failedIds).toEqual(["inat-51450", "inat-54504"]);
+    expect(conn.copied).toEqual(["a gentle rushing sound"]);
+    expect(conn.items.length).toBeLessThan(retryThreshold(8));
+    // ... so the app makes its one retry as a refill. The real recorded refill (2026-10-06) was asked for the
+    // 2 missing items + 1 spare from the 4 unused items (the 2 that failed are left out), and told what went wrong.
+    const refill = modelRec(PARKS.connemara.slug).refill!;
+    const rp = refillPlan(connPlan, conn.items, conn.failedIds)!;
+    expect([rp.mix.n, rp.ask.n]).toEqual([2, 3]);
+    expect(rp.pool.map((x) => x.id)).toEqual(["inat-126257", "inat-5206", "inat-143484", "inat-53547"]);
+    expect(refill.request.response_format.json_schema.schema).toEqual(
+      passJsonSchema({ n: rp.ask.n, itemIds: rp.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: null }),
+    );
+    const sys = refill.request.messages[0].content;
+    expect(sys).toContain('Never use them in a clue: "a gentle rushing sound".');
+    expect(sys).toContain("Some first-try clues were generic.");
+    const rv = validateDraft(
+      PassDraftEnvelope.parse(JSON.parse((refill.response as { choices: { message: { content: string } }[] }).choices[0].message.content)),
+      rp.pool,
+      rp.mix,
+      { ...rp.validate, prior: conn.items },
+    );
+    // The snail's "round shell" is not in its source (only the name says globular): dropped as generic, not rescued.
+    expect(rv.items.map((i) => i.item.id)).toEqual(["inat-5206"]);
+    expect(rv.drops).toEqual({ generic_clue: 1, name_leak: 1 });
+    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(retryThreshold(8));
+    // S5: Celebration's live answer has a riddle for the X at the picnic shelter, and it passes every riddle
+    // check (the shelter fact's words vary per park now: "pillars"); Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Look for a place with a roof on posts and tables for lunch. It keeps you dry in the rain!" });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "A roof with pillars keeps you dry and cool while you eat." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -303,7 +324,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
           ok("osm-shelter", shelter, "Find the picnic shelter!"), // name leak
           ok("osm-shelter", shelter, "Find 7 tables under a roof."), // number not in source
           { ...ok("osm-shelter", shelter), clue: "x" }, // schema (clue too short)
-          ok("osm-shelter", shelter, "Find a roof on posts where people eat."),
+          ok("osm-shelter", shelter, "Spot a shady cover where people eat."),
           ok("osm-playground", play, "Find a place to climb and swing."), // over the park max of 2
         ],
         parentNote: "Bring 2 snacks!",

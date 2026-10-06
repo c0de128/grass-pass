@@ -34,12 +34,22 @@ type Score = {
   m10: { repeated: number; clues: number; rate: number | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number };
 };
-type Results = { meta: { day: string; ageBand: string; partial: boolean }; cases: unknown[]; scores: Score[]; spend: { usd: number } };
+type RunRow = { model: string; dataRich: boolean; kind: string; items: unknown[]; n: number | null; parkName: string | null };
+type Results = { meta: { day: string; ageBand: string; partial: boolean }; cases: unknown[]; runs: RunRow[]; scores: Score[]; spend: { usd: number } };
 
 const results = JSON.parse(readFileSync(join(ROOT, EVAL_RESULTS_FILE), "utf8")) as Results;
 const r1 = (x: number) => Math.round(x * 1000) / 10; // rate -> percent, 1 decimal
 
 describe("about page numbers come from the committed eval run", () => {
+  it("the hand-written figures on the page come from the results files too", () => {
+    const gemma = results.scores.find((x) => x.model === "gemma-4-31B-it")!;
+    expect(Math.round(gemma.m7.p50Ms! / 10) / 100).toBe(10.04); // "the typical wait was 10.04 s"
+    const before = JSON.parse(readFileSync(join(ROOT, "evals/results/2026-10-06-2.json"), "utf8")) as Results;
+    expect(r1(before.scores.find((x) => x.model === "gemma-4-31B-it")!.m10.rate!)).toBe(29.2); // "down from 29.2%"
+    const short = results.runs.filter((r) => r.model === "gemma-4-31B-it" && r.dataRich && r.kind === "pass" && r.items.length < (r.n ?? 0) - 1);
+    expect(short.map((r) => r.parkName)).toEqual(["Klyde Warren Park"]); // "The fifth (Klyde Warren Park ...)"
+  });
+
   it("is a full (not partial) run with a summary file next to it", () => {
     expect(results.meta.partial).toBe(false);
     expect(statSync(join(ROOT, EVAL_SUMMARY_FILE)).isFile()).toBe(true);
@@ -95,23 +105,26 @@ describe("/about", () => {
 
   it("quotes the measured numbers, failures included", () => {
     for (const s of [
-      "99.1% (549/554)",
-      "86.3% (44/51)",
-      "2.7%",
-      "2.2%",
-      "10.1 s / 20.8 s",
-      "$0.00078",
+      "98.9% (436/441)",
+      "90.2% (46/51)",
+      "2% (clue only 2%)",
+      "10.0 s / 20.5 s",
+      "$0.00070",
       "1.7",
       "3.8",
-      "39.5 s typical",
-      "41.2% complete passes",
-      "Gemma passes (2.7%",
-      "Llama 4 Maverick does not (10.8%)",
-      "Complete passes: Gemma does not pass (86.3%, 44 of 51",
-      "Gemma 29.2%",
-      "29.2% (112/383)",
-      "0 of 124 count clues (1 removed)",
+      "39.4 s typical",
+      "47.1% complete passes",
+      "Gemma passes (2% of its clues",
+      "Llama 4 Maverick does not (11.1%)",
+      "Complete passes: Gemma just passes (90.2%, 46 of 51",
+      "3 model calls ran past the 30 s limit",
+      "Gemma 6.8%",
+      "6.8% (25/366)",
+      "down from 29.2% in the run before",
+      "0 of 135 count clues (11 removed)",
       "Speed: neither model passes.",
+      "the typical wait was 10.04 s",
+      "9 of its calls hit its 60 s limit",
     ]) {
       expect(t).toContain(s);
     }

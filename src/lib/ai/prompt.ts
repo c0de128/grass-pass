@@ -67,16 +67,164 @@ export function computeMix(counts: Record<Section, number>, band: AgeBand): Mix 
  * what each section really has). validate.ts keeps at most mix.n of the items that pass every check
  * (`fitToMix`), so a dropped clue rarely costs a second model call.
  */
-export function askMix(mix: Mix, counts: Record<Section, number>): Mix {
+export function askMix(mix: Mix, counts: Record<Section, number>, extra: number = ASK_EXTRA): Mix {
   const cap: Record<Section, number> = {
     park: Math.max(0, counts.park),
     wild: Math.max(0, counts.wild),
     lucky: Math.min(LUCKY_MAX, Math.max(0, counts.lucky)),
   };
   const max = {} as Record<Section, number>;
-  for (const s of SECTIONS) max[s] = mix.max[s] === 0 ? 0 : Math.min(cap[s], mix.max[s] + ASK_EXTRA);
-  const n = Math.min(mix.n + ASK_EXTRA, SECTIONS.reduce((a, s) => a + max[s], 0));
+  for (const s of SECTIONS) max[s] = mix.max[s] === 0 ? 0 : Math.min(cap[s], mix.max[s] + extra);
+  const n = Math.min(mix.n + extra, SECTIONS.reduce((a, s) => a + max[s], 0));
   return { n, min: { ...mix.min }, max, hardMin: mix.hardMin };
+}
+
+/** Mix limits for a pool (SPEC F2/F4). */
+export function mixFor(pool: readonly PoolItem[], band: AgeBand): Mix | null {
+  const n = (s: Section) => pool.filter((i) => i.section === s).length;
+  return computeMix({ park: n("park"), wild: n("wild"), lucky: n("lucky") }, band);
+}
+
+/**
+ * Spare pool items offered per section beyond the pass size (S8b, M7/M8): the model needs n items
+ * plus room to choose, not every bench and all 16 species. Measured on the 20 eval parks: prompts of
+ * 700-4,500 tokens before; completion tokens, not prompt tokens, set the latency (about 33 ms each).
+ */
+export const PROMPT_SPARES = 4;
+
+/** At most n + PROMPT_SPARES items per section, in the pool's own order (best first). */
+export function promptPool(pool: readonly PoolItem[], n: number): PoolItem[] {
+  const seen: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  return pool.filter((p) => ++seen[p.section] <= n + PROMPT_SPARES);
+}
+
+/**
+ * Content tuning (2026-10-06): a pool item a clue can really be written for: every Park Find (its fact
+ * sheet is code-written), and a Wild Find whose source says how it looks outside its own names
+ * (`looks` > 0, wild.ts `looksOutsideNames`). Items built before that field existed count as strong.
+ */
+export const isStrong = (p: PoolItem) => p.section !== "wild" || (p.looks ?? 1) > 0;
+
+/** Fewer strong items than n + this: the pool is "low data" (the model must use nearly everything it is given). */
+export const LOW_DATA_SLACK = 2;
+
+/**
+ * Spare items to ask for, scaled to the pool (content tuning, measured 2026-10-06). A low-data pool
+ * gets ASK_EXTRA spare (more of its clues fail the checks: 6 of the 7 incomplete Gemma passes of
+ * run 2026-10-06-2 were on such parks; the 7th was a timeout); a bigger pool gets none. Every spare costs about 57 answer tokens
+ * (about 1 s): in a 1-run smoke, first calls asking for n items took 8.2-8.6 s and those asking for
+ * n+1 or n+2 took 9.2-20 s. Missing items are topped up by the short refill call (`refillPlan`), which
+ * took 3-8 s. (Two spares for low-data pools were tried first: slower, and still needed the refill.)
+ */
+export function sparesFor(strong: number, n: number): number {
+  return strong < n + LOW_DATA_SLACK ? ASK_EXTRA : 0;
+}
+
+/** What one pass request sends: the prompt pool, the printed mix and the asked-for mix (with spares). */
+export type RequestPlan = {
+  pool: PoolItem[];
+  mix: Mix;
+  ask: Mix;
+  /** Few strong items: validate.ts treats the style checks as preferences, not drops (never safety, grounding, leaks or counts). */
+  lowData: boolean;
+  /** Per-park first words for the clues (`openersFor`), so passes of different parks don't start alike. */
+  openers: string[];
+  /** The options validate.ts checks this request's answer with (hasMap is set by the caller when a SPOT map is printed). */
+  validate: { hasMap: boolean; ask: Mix; lowData: boolean };
+};
+
+/**
+ * The request for a pool (build-pass.ts; the eval scorer replays it to count drop reasons): the prompt
+ * pool (n + PROMPT_SPARES per section), its mix, and the mix asked for with spares (`sparesFor`).
+ * `seed` is the park name (it picks the clue openers). Null when the pool can't fill MIN_PASS_ITEMS
+ * (the "all empty" path: no model call).
+ */
+export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed = ""): RequestPlan | null {
+  const fullMix = mixFor(fullPool, band);
+  const pool = fullMix ? promptPool(fullPool, fullMix.n) : [...fullPool];
+  const mix = mixFor(pool, band);
+  if (!mix) return null;
+  const count = (s: Section) => pool.filter((p) => p.section === s).length;
+  const strong = pool.filter(isStrong).length;
+  const lowData = strong < mix.n + LOW_DATA_SLACK;
+  const ask = askMix(mix, { park: count("park"), wild: count("wild"), lucky: count("lucky") }, sparesFor(strong, mix.n));
+  return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData } };
+}
+
+/**
+ * The second call (SPEC 6.3's one retry) as a refill (content tuning): only the pool items the first
+ * answer did not get a valid clue for (so it can't repeat an id: Klyde Warren's answers used one
+ * warbler 4 times), asking for the missing items plus one spare, inside what each section still needs
+ * and may still take. A refill answer is a few items (a few seconds), not a whole pass. The openers
+ * already used go last. Null when nothing is left to ask for.
+ */
+export function refillPlan(
+  plan: RequestPlan,
+  kept: readonly { item: PoolItem; clue: string; difficulty?: string }[],
+  failedIds: readonly string[] = [],
+): RequestPlan | null {
+  const used = new Set(kept.map((k) => k.item.id));
+  const unused = plan.pool.filter((p) => !used.has(p.id));
+  const need = plan.mix.n - kept.length;
+  if (need <= 0 || unused.length === 0) return null;
+  const have: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  for (const k of kept) have[k.item.section]++;
+  // Items whose first clue failed a content check are left out when the rest can still fill the need
+  // and each section's minimum (smoke 2026-10-06: Gemma re-picked the same failing species in the refill).
+  const failed = new Set(failedIds);
+  const untried = unused.filter((p) => !failed.has(p.id));
+  const fits = (pool: readonly PoolItem[]) =>
+    pool.length >= need && SECTIONS.every((s) => pool.filter((p) => p.section === s).length >= Math.max(0, plan.mix.min[s] - have[s]));
+  const pool = failed.size > 0 && fits(untried) ? untried : unused;
+  const left: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  for (const p of pool) left[p.section]++;
+  const min = {} as Record<Section, number>;
+  const max = {} as Record<Section, number>;
+  for (const s of SECTIONS) {
+    max[s] = Math.max(0, Math.min(left[s], plan.mix.max[s] - have[s]));
+    min[s] = Math.min(max[s], Math.max(0, plan.mix.min[s] - have[s]));
+  }
+  const room = SECTIONS.reduce((a, s) => a + max[s], 0);
+  if (room === 0) return null;
+  const n = Math.min(need, room);
+  const mix: Mix = { n, min, max, hardMin: Math.min(n, Math.max(0, plan.mix.hardMin - kept.filter((k) => k.difficulty === "hard").length)) };
+  const ask = askMix(mix, left, ASK_EXTRA);
+  const usedOpeners = new Set(kept.map((k) => openingWord(k.clue)));
+  const fresh = plan.openers.filter((o) => !usedOpeners.has(o.toLowerCase()));
+  const openers = [...fresh, ...plan.openers.filter((o) => usedOpeners.has(o.toLowerCase()))].slice(0, Math.max(ask.n, 1));
+  return { pool, mix, ask, lowData: plan.lowData, openers, validate: { hasMap: plan.validate.hasMap, ask, lowData: plan.lowData } };
+}
+
+/** The first word of a clue, lower case ("Peek around the ..." -> "peek"). */
+export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[0] ?? "").toLowerCase();
+
+/**
+ * First words for clues (content tuning, M10): in run 2026-10-06-2, 55 of the 112 clues that repeated a
+ * 5-word run across parks repeated it in their first five words ("I dare you to find" 16 times, "Find
+ * a place with a" on 8 parks). Each park gets its own mix of first words from this bank (hash of the
+ * park name), and the prompt asks for a different one per clue.
+ */
+export const OPENER_BANK = [
+  "Peek", "Spy", "Listen", "Hunt", "Psst", "Quick", "Somewhere", "Tiptoe", "Wander", "Track", "Hmm", "Ready",
+  "Who", "What", "Which", "Guess", "Shh", "Sneak", "Point", "Stop", "Wow", "Squint", "Scan", "Here",
+] as const;
+
+/** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
+export const STOCK_OPENINGS = [
+  "can you find", "can you spot", "can you see", "can you hear", "find a", "find an", "find the", "look for", "i dare you",
+  "do you see", "try to find", "try to spot", "search for", "spot a", "see if you",
+] as const;
+
+/** `k` different first words for a park, picked by a hash of its name (stable). */
+export function openersFor(seed: string, k: number): string[] {
+  const bank: string[] = [...OPENER_BANK];
+  let h = hash32(`openers|${seed}`);
+  const out: string[] = [];
+  while (out.length < Math.min(k, OPENER_BANK.length)) {
+    h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
+    out.push(bank.splice(h % bank.length, 1)[0]);
+  }
+  return out;
 }
 
 /** Escape text for the inside of a <source> tag or an attribute. */
@@ -108,11 +256,33 @@ function mixRules(mix: Mix): string {
 export type PromptContext = {
   /** 1-12, the pass day's month in Chicago time. */
   month: number;
+  /** Content tuning (M10): this park's first words for the clues (`openersFor`), one per clue. */
+  openers?: readonly string[];
+  /** Content tuning: what went wrong in the first answer, told to the refill call (the second call only). */
+  refill?: RefillNotes;
   /** True when some pool plant carries a code-written season sentence (R1-M4). */
   hasSeasonNotes?: boolean;
   /** R2-M5: the writing voice for this park (`voiceFor(park name)`), so passes for different parks read differently. */
   voice?: string;
 };
+
+/** What the refill call is told about the first answer (content tuning). */
+export type RefillNotes = {
+  /** Source runs the first answer's clues copied word for word (validate.ts `copied`). */
+  copied: readonly string[];
+  /** Some Wild Find clues were dropped as generic (only "has fruit or seeds", or nothing from its source). */
+  generic: boolean;
+};
+
+/** The refill's extra rules: the copied phrases, quoted, and the generic-clue reminder (at most 6 phrases). */
+export function refillRules(notes: RefillNotes): string[] {
+  const out: string[] = ["- This is a second try: some clues of the first try were removed by our checks."];
+  if (notes.copied.length > 0) {
+    out.push(`- The first try copied these words from a SOURCE. Never use them in a clue: ${notes.copied.slice(0, 6).map((c) => `"${c}"`).join(", ")}.`);
+  }
+  if (notes.generic) out.push("- Some first-try clues were generic. Each Wild Find clue needs a colour, shape, size or part written in its SOURCE; if its SOURCE has none, choose another item.");
+  return out;
+}
 
 /** Bands old enough for Park Finds that make the child look closely (R1-m10). */
 const LOOK_CLOSELY_BANDS: ReadonlySet<AgeBand> = new Set<AgeBand>(["6-10", "10-13"]);
@@ -150,7 +320,8 @@ export const CLUE_VOICES = [
   "Voice for this park: short, curious questions.",
   "Voice for this park: riddles in which the thing talks about itself (I and my).",
   "Voice for this park: a nature detective's notes, the trait first.",
-  "Voice for this park: playful dares.",
+  // Content tuning: "playful dares" wrote "I dare you to find" on 16 clues of run 2026-10-06-2.
+  "Voice for this park: tiny one-sentence stories.",
   "Voice for this park: a park ranger sharing a secret.",
   "Voice for this park: start with what the child will see or hear first.",
 ] as const;
@@ -183,7 +354,15 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks, resident animals) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
-    "- A good clue gives the child ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy more than 4 words in a row from the SOURCE into the clue (copied words go in sourceQuote). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name. Do not start every clue the same way.",
+    "- A good clue gives the child ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.",
+    // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
+    ...(ctx?.openers && ctx.openers.length > 0
+      ? [
+          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see".`,
+        ]
+      : ["- Start each clue with a different first word."]),
+    '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
+    ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     ...(mix.max.wild > 0 ? [`- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals. Bad: ${bad(0)}, ${bad(1)}.`] : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
@@ -233,7 +412,12 @@ export function userPrompt(parkName: string, pool: readonly PoolItem[], spot: Pr
 }
 
 export function buildMessages(parkName: string, pool: readonly PoolItem[], band: AgeBand, mix: Mix, spot: PromptSpot | null, ctx: PromptContext) {
-  const full: PromptContext = { ...ctx, hasSeasonNotes: pool.some((p) => p.season !== undefined), voice: ctx.voice ?? voiceFor(parkName) };
+  const full: PromptContext = {
+    ...ctx,
+    hasSeasonNotes: pool.some((p) => p.season !== undefined),
+    voice: ctx.voice ?? voiceFor(parkName),
+    openers: ctx.openers ?? openersFor(parkName, mix.n),
+  };
   return [
     { role: "system" as const, content: systemPrompt(band, mix, spot, full) },
     { role: "user" as const, content: userPrompt(parkName, pool, spot) },

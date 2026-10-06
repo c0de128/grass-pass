@@ -258,7 +258,8 @@ describe("R1-m4 no map, no 'map'", () => {
   const pool = parkPool(f).items;
   const creek = pool.find((i) => i.id === "osm-bench")!;
   const mix = computeMix({ park: pool.length, wild: 0, lucky: 0 }, "6-10")!;
-  const quote = "a long outdoor seat for resting";
+  // Content tuning: the fact's words vary per park; Celebration's bench reads "a long outdoor seat for a rest".
+  const quote = "a long outdoor seat for a rest";
 
   it("without a map: a clue that says map is dropped, a lookWhere that says map is blanked", () => {
     expect(mentionsMap("Follow the map!")).toBe(true);

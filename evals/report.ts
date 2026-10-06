@@ -70,6 +70,12 @@ export function sampleClues(runs: readonly RunRecord[], model: string, k: number
   return out;
 }
 
+/** "generic_clue 12, duplicate_id 3" (largest first), or "none". */
+export function dropList(d: Partial<Record<string, number>>): string {
+  const e = Object.entries(d).filter((x): x is [string, number] => typeof x[1] === "number" && x[1] > 0).sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]));
+  return e.length === 0 ? "none" : e.map(([k, n]) => `${k} ${n}`).join(", ");
+}
+
 const esc = (s: string) => s.replace(/\|/g, "\\|").replace(/\n/g, " ");
 
 export function renderMarkdown(results: EvalResults, jsonName: string): string {
@@ -140,6 +146,10 @@ export function renderMarkdown(results: EvalResults, jsonName: string): string {
     const errs = Object.entries(s.errors);
     if (errs.length > 0) L.push(`- ${s.model} errors by code: ${errs.map(([k, v]) => `${k} x ${v}`).join(", ")}`);
     if (s.model !== TEMPLATE_MODEL) L.push(`- ${s.model}: ${s.retries} runs needed a second call.`);
+    if (s.drops) {
+      L.push(`- ${s.model} items removed by the checks, by reason (every call, replayed with the app's validateDraft): ${dropList(s.drops.all)}`);
+      L.push(`- ${s.model} the same, only in the data-rich runs that ended incomplete (M3 misses): ${dropList(s.drops.incomplete)}`);
+    }
   }
   const mismatched = runs.filter((r) => r.calls.some((c) => c.poolMatches === false));
   if (mismatched.length > 0) L.push(`- WARNING: ${mismatched.length} runs sent a pool that differs from the scoring pool.`);

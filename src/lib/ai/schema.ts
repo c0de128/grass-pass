@@ -46,6 +46,11 @@ export const MAX_PASS_ITEMS = 8;
  * run before this change needed a second call on 3 of 6 passes).
  */
 export const ASK_EXTRA = 1;
+/**
+ * The most spares any request asks for (the request schema's size check). Content tuning (2026-10-06):
+ * only low-data pools get ASK_EXTRA spares now; other pools ask for exactly n (prompt.ts `sparesFor`).
+ */
+export const ASK_EXTRA_MAX = ASK_EXTRA;
 
 export const PassItemDraft = z.object({
   itemId: z.string().min(1).max(64), // must exist in the pool
@@ -80,7 +85,7 @@ export const PhotoCheck = z.object({
 
 /** First parse of the model's JSON: right overall shape, items checked one by one later. */
 export const PassDraftEnvelope = z.object({
-  items: z.array(z.unknown()).max(20), // >= MAX_PASS_ITEMS + ASK_EXTRA
+  items: z.array(z.unknown()).max(20), // >= MAX_PASS_ITEMS + ASK_EXTRA_MAX
   spot: z.unknown().optional(),
   parentNote: z.unknown().optional(),
 });
@@ -99,7 +104,7 @@ export type RequestSchemaOptions = {
 
 /** The strict zod schema for one request (source of the JSON Schema sent to the model). */
 export function passRequestSchema(o: RequestSchemaOptions) {
-  if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS + ASK_EXTRA) throw new RangeError("n out of range");
+  if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS + ASK_EXTRA_MAX) throw new RangeError("n out of range");
   const item = z.object({
     itemId: z.enum(o.itemIds),
     clue: z.string().min(CLUE_MIN).max(CLUE_MAX),

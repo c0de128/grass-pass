@@ -42,7 +42,7 @@ import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
 import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
 import { finishSpot, geometryWithin, loadGeometry, planSpot, spotWaitMs, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
-import { askMix, buildMessages, computeMix, type Mix } from "./prompt";
+import { buildMessages, mixFor, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
 import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
 
@@ -234,11 +234,6 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
 
 // ---------- the pass ----------
 
-/** Mix limits for a pool (SPEC F2/F4). */
-export function mixFor(pool: readonly PoolItem[], band: AgeBand): Mix | null {
-  const n = (s: Section) => pool.filter((i) => i.section === s).length;
-  return computeMix({ park: n("park"), wild: n("wild"), lucky: n("lucky") }, band);
-}
 
 /**
  * S5: when the X is the park's only <kind> (its only shelter, say), the pass doesn't also ask for it
@@ -261,17 +256,18 @@ function better(a: ValidationResult | null, b: ValidationResult | null, mix: Mix
   return b.items.length > a.items.length ? mergeResults(b, a, mix) : mergeResults(a, b, mix);
 }
 
-/**
- * Spare pool items offered per section beyond the pass size (S8b, M7/M8): the model needs n items
- * plus room to choose, not every bench and all 16 species. Measured on the 20 eval parks: prompts of
- * 700-4,500 tokens before; completion tokens, not prompt tokens, set the latency (about 33 ms each).
- */
-export const PROMPT_SPARES = 4;
+// S8b / R2-M5: promptPool, PROMPT_SPARES and the request plan live in prompt.ts (the eval scorer replays them).
+export { mixFor, PROMPT_SPARES, promptPool } from "./prompt";
 
-/** At most n + PROMPT_SPARES items per section, in the pool's own order (best first). */
-export function promptPool(pool: readonly PoolItem[], n: number): PoolItem[] {
-  const seen: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
-  return pool.filter((p) => ++seen[p.section] <= n + PROMPT_SPARES);
+/**
+ * Content tuning: the first answer plus the refill's valid items (the refill only had unused ids), with
+ * the removals of both calls counted (the pass footer reports every clue the checks removed).
+ */
+export function withRefill(first: ValidationResult, refill: ValidationResult, mix: Mix): ValidationResult {
+  const merged = mergeResults(first, refill, mix);
+  const drops: ValidationResult["drops"] = { ...first.drops };
+  for (const [k, n] of Object.entries(refill.drops) as [DropReason, number][]) drops[k] = (drops[k] ?? 0) + n;
+  return { ...merged, drops, returned: first.returned + refill.returned };
 }
 
 /**
@@ -326,10 +322,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
   const fullPool = poolForSpot([...park.items, ...wild.items], target, band);
-  const fullMix = mixFor(fullPool, band);
-  const pool = fullMix ? promptPool(fullPool, fullMix.n) : fullPool;
-  const mix: Mix | null = mixFor(pool, band);
-  if (!mix) {
+  const plan = planRequest(fullPool, band, f.park.name);
+  if (!plan) {
     const bothEmpty = park.state.status === "empty" && wild.state.status === "empty";
     return {
       kind: "empty",
@@ -341,18 +335,16 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     };
   }
 
+  const { mix } = plan;
   const parkData = parkDataOf(f.park.name, fullPool);
   deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
-  // R2-M5: ask for up to ASK_EXTRA spare items; validateDraft keeps at most mix.n that pass every check.
-  const ask = askMix(mix, { park: pool.filter((p) => p.section === "park").length, wild: pool.filter((p) => p.section === "wild").length, lucky: pool.filter((p) => p.section === "lucky").length });
-  const messages = buildMessages(f.park.name, pool, band, ask, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null, {
-    month: monthOfDay(input.day),
-  });
-  const jsonSchema = passJsonSchema({
-    n: ask.n,
-    itemIds: pool.map((p) => p.id) as [string, ...string[]],
-    spotTargetId: target?.id ?? null,
+  const promptSpot = target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null;
+  const month = monthOfDay(input.day);
+  /** One request: the messages and strict schema for a plan (the whole pass, or the refill). */
+  const requestFor = (p: RequestPlan, spot: typeof promptSpot, refill?: RefillNotes) => ({
+    messages: buildMessages(f.park.name, p.pool, band, p.ask, spot, { month, openers: p.openers, ...(refill ? { refill } : {}) }),
+    jsonSchema: passJsonSchema({ n: p.ask.n, itemIds: p.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: spot?.id ?? null }),
   });
 
   let attempts = 0;
@@ -363,6 +355,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   /** The first riddle (of up to two calls) that passed every check. */
   let riddle: string | null = null;
   let riddleDrop: SpotReason | null = null;
+  /** The last answer's own check result (the refill is told what went wrong in it). */
+  let lastCheck: ValidationResult | null = null;
 
   for (let call = 1; call <= 2; call++) {
     const remaining = left();
@@ -377,6 +371,15 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       }
       break;
     }
+    // Content tuning: the second call refills only what the first answer could not fill (unused ids only).
+    // When the first answer kept nothing (or failed), the retry is the whole request again (SPEC 6.3).
+    const refill: boolean = call === 2 && best !== null && best.items.length > 0;
+    const callPlan = refill && best ? refillPlan(plan, best.items, lastCheck?.failedIds ?? []) : plan;
+    if (!callPlan) break;
+    const callSpot = target && riddle === null ? promptSpot : null;
+    const notes: RefillNotes | undefined =
+      refill && lastCheck ? { copied: lastCheck.copied ?? [], generic: (lastCheck.drops.generic_clue ?? 0) > 0 } : undefined;
+    const { messages, jsonSchema } = requestFor(callPlan, callSpot, notes);
     const ticket = await deps.reserveAiCall();
     if (!ticket) {
       if (call === 1) return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 }, parkData };
@@ -396,8 +399,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       modelLatency += r.latencyMs;
       answered = r.modelLabel;
       deps.emit("check", stepText("check", deps.env));
-      const v = validateDraft(r.data, pool, mix, { hasMap: target !== null, ask });
-      if (target && riddle === null) {
+      const v = validateDraft(r.data, callPlan.pool, callPlan.mix, { ...callPlan.validate, hasMap: target !== null, prior: refill && best ? best.items : [] });
+      if (callSpot && target && riddle === null) {
         const sv = validateSpot(r.data.spot, target);
         if (sv.ok) riddle = sv.riddle;
         else riddleDrop = sv.reason;
@@ -405,8 +408,11 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       log("pass_checks", {
         spot: target ? (riddle !== null ? "ok" : riddleDrop) : "none",
         call,
+        refill,
         model: r.modelLabel,
-        n: mix.n,
+        n: callPlan.mix.n,
+        asked: callPlan.ask.n,
+        lowData: callPlan.lowData,
         returned: v.returned,
         kept: v.items.length,
         drops: v.drops,
@@ -414,9 +420,11 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         hard: v.hardCount,
         lookWhereCleared: v.lookWhereCleared,
         quotesRepaired: v.quotesRepaired,
-        hardMin: mix.hardMin,
+        styleKept: v.styleKept,
+        hardMin: callPlan.mix.hardMin,
       });
-      best = better(best, v, mix);
+      lastCheck = v;
+      best = refill && best ? withRefill(best, v, mix) : better(best, v, mix);
       if (best && best.items.length >= retryThreshold(mix.n)) break;
     } catch (err) {
       if (!(err instanceof ModelError)) throw err;

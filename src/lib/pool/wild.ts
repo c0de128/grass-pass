@@ -136,11 +136,32 @@ export function looksScore(text: string): number {
   return new Set((text.match(LOOKS_RE) ?? []).map((w) => w.toLowerCase())).size;
 }
 
-/** 0 = two or more looks-like words, 1 = one, 2 = none: describable species go first in the prompt (R2-M5). */
-const looksTier = (text: string) => {
-  const n = looksScore(text);
-  return n >= 2 ? 0 : n === 1 ? 1 : 2;
-};
+/** LOOKS_RE for one whole token (its source is `\b(?:...)\b`). */
+const LOOKS_WORD_RE = new RegExp(`^${LOOKS_RE.source.slice(2, -2)}$`, "i");
+
+/**
+ * Looks-like words in a summary that are NOT part of the species' names (content tuning, 2026-10-06):
+ * "Black-and-white Warbler ... is a species of New World warbler" has "black" and "white" only in its
+ * name, so a clue can't use them (name leak) and the summary says nothing else about its looks. A word
+ * right before a name word ("white oak section" for bur oak, "red cedar" for eastern redcedar) is a
+ * name too. Measured on the 20 eval parks: these species were where most generic clues were dropped.
+ */
+export function looksOutsideNames(text: string, nameWords: readonly string[]): number {
+  const names = new Set(nameWords.flatMap((w) => w.toLowerCase().split(/[^\p{L}]+/u)).filter((w) => w.length >= 3));
+  const toks = text.toLowerCase().split(/[^\p{L}]+/u).filter(Boolean);
+  const out = new Set<string>();
+  for (let i = 0; i < toks.length; i++) {
+    const w = toks[i];
+    if (!LOOKS_WORD_RE.test(w) || names.has(w)) continue;
+    const next = toks[i + 1] ?? "";
+    if (next.length >= 3 && [...names].some((n) => n.includes(next) || next.includes(n))) continue;
+    out.add(w);
+  }
+  return out.size;
+}
+
+/** 0 = two or more looks-like words outside the names, 1 = one, 2 = none: describable species go first in the prompt. */
+const looksTier = (n: number) => (n >= 2 ? 0 : n === 1 ? 1 : 2);
 
 /**
  * Step 2: build pool items from candidates that have a usable summary. The danger check runs
@@ -176,6 +197,13 @@ export function wildPool(
       season && s.iconic === "Plantae" ? seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) : undefined;
     // R1-M4 follow-up: the season fact is part of the SOURCE (a code-written sentence, quotable and true).
     const sourceText = `${label}. ${leadSentences(sum.summary)}${plantSeason ? ` ${seasonSentence(plantSeason)}` : ""}`;
+    const nameWords = [
+      ...new Set([
+        ...(s.commonName ? [s.commonName.toLowerCase(), ...distinctiveWords(s.commonName)] : []),
+        s.name.toLowerCase(),
+        ...distinctiveWords(s.name),
+      ]),
+    ];
     items.push({
       id: `inat-${s.taxonId}`,
       section: "wild",
@@ -184,13 +212,8 @@ export function wildPool(
       answer: label,
       evidence: wildEvidence(s.count, sinceDay),
       source: "iNaturalist",
-      nameWords: [
-        ...new Set([
-          ...(s.commonName ? [s.commonName.toLowerCase(), ...distinctiveWords(s.commonName)] : []),
-          s.name.toLowerCase(),
-          ...distinctiveWords(s.name),
-        ]),
-      ],
+      nameWords,
+      looks: looksOutsideNames(leadSentences(sum.summary), nameWords),
       safety: safetyLineFor(taxon, sum.summary),
       stationary: isStationary(taxon),
       taxon,
@@ -203,7 +226,7 @@ export function wildPool(
   }
   // R2-M5: species whose summary says how they look go first (stable: most sightings first inside a tier),
   // so the model's pool (n + spares) holds things a clue can describe, not only "a species of ... native to ...".
-  const tier = new Map(items.map((it) => [it, looksTier(it.sourceText.slice(it.answer.length))]));
+  const tier = new Map(items.map((it) => [it, looksTier(it.looks ?? 0)]));
   const ordered = items.map((it, i) => ({ it, i })).sort((a, b) => tier.get(a.it)! - tier.get(b.it)! || a.i - b.i).map((x) => x.it);
   return { items: ordered.slice(0, WILD_PROMPT_MAX), state: { status: "ok" }, blocked };
 }

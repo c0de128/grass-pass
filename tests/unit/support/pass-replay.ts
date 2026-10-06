@@ -16,7 +16,12 @@ export const PARKS = {
 } as const;
 
 type Rec = { _recording: Record<string, unknown> & { status?: number; recordedAtMs?: number }; body: unknown };
-type ModelRec = { _recording: { recordedAtMs: number }; request: { messages: { role: string; content: string }[]; response_format: { json_schema: { schema: unknown } } }; response: unknown };
+type ModelRequest = { messages: { role: string; content: string }[]; response_format: { json_schema: { schema: unknown } } };
+/** `refill` (content tuning, Connemara): the real second call, the refill of what the first answer did not fill. */
+type ModelRec = { _recording: { recordedAtMs: number }; request: ModelRequest; response: unknown; refill?: { request: ModelRequest; response: unknown } };
+
+/** The refill call's system prompt says so (prompt.ts refillRules). */
+export const REFILL_MARK = "- This is a second try:";
 
 export const rec = (name: string) => fixture(name) as unknown as Rec;
 
@@ -59,8 +64,12 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
       if (o) return o;
       const sent = JSON.parse(body ?? "{}") as { messages?: { content: string }[] };
       const user = sent.messages?.[1]?.content ?? "";
+      const isRefill = (sent.messages?.[0]?.content ?? "").includes(REFILL_MARK);
       for (const p of Object.values(PARKS)) {
-        if (user.includes(`kind="park name">${p.name}</source>`)) return json(modelRec(p.slug).response);
+        if (!user.includes(`kind="park name">${p.name}</source>`)) continue;
+        const m = modelRec(p.slug);
+        // A refill gets the recorded refill answer when there is one (else the first answer, as before).
+        return json(isRefill && m.refill ? m.refill.response : m.response);
       }
       throw new Error("no model recording for this prompt");
     }

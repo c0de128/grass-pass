@@ -142,11 +142,11 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // Connemara (7 finds since the R1 follow-up recording) with every clue just over one printed line and
-    // four long hints lands in between.
+    // Connemara (7 finds: 6 from the first answer + 1 from the real refill, content-tuning recording) with every
+    // clue just over one printed line and three long hints lands in between.
     const connemara = await realPass(PARKS.connemara.id);
     expect(connemara.items).toHaveLength(7);
-    const mid = connemara.items.map((it, i) => ({ ...it, clue: it.clue.padEnd(70, " x"), ...(i < 4 ? { lookWhere: it.lookWhere.padEnd(60, " x") } : {}) }));
+    const mid = connemara.items.map((it, i) => ({ ...it, clue: it.clue.padEnd(70, " x"), ...(i < 3 ? { lookWhere: it.lookWhere.padEnd(60, " x") } : {}) }));
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);
@@ -183,9 +183,9 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // The post-R2 live answer prints the pond (a water find), so that find carries a safety line and the
-    // stub points to it; nothing was filtered, so there is still no safety footnote.
-    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(7);
+    // The content-tuning live answer prints the pond (a water find) as find 3, so that find carries a safety
+    // line and the stub points to it; nothing was filtered, so there is still no safety footnote.
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(2);
     expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });

@@ -4,6 +4,7 @@
  *   - Park Finds: the fixed kid-level description of that kind ("A ____ court is a flat hard court...");
  *   - Wild Finds: the first sentence of the species' Wikipedia summary;
  * with every name word masked as "____". Grounded by construction (the quote is the source sentence).
+ * It is exempt from one check only: copying a 4-word run of its source (it copies by design).
  */
 import type { Mix } from "@/lib/ai/prompt";
 import { CLUE_MAX, QUOTE_MAX } from "@/lib/ai/schema";
@@ -107,5 +108,7 @@ export function templateDraft(pool: readonly PoolItem[], mix: Mix): TemplateDraf
 /** The baseline pass after the same server checks the model's answer gets. */
 export function templatePass(pool: readonly PoolItem[], mix: Mix): { draft: TemplateDraft; result: ValidationResult } {
   const draft = templateDraft(pool, mix);
-  return { draft, result: validateDraft(draft, pool, mix) };
+  // Content tuning: the template copies whole source sentences by design, so only the source-copy check
+  // (a style rule for the model's own words) is off for it; every other check is the same.
+  return { draft, result: validateDraft(draft, pool, mix, { hasMap: false, allowSourceCopies: true }) };
 }

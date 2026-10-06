@@ -14,16 +14,21 @@
  * map counts, with the map's number) -> a generic Wild Find clue (no trait from its own source) -> a
  * copy of a prompt example -> a near-repeat of a clue already kept on this pass. Then the mix limits
  * computed by code are re-applied (extras beyond a section's max are dropped, in answer order).
+ * Content tuning (2026-10-06): a clue cut off mid-sentence is dropped first; style checks (a 4-word run
+ * copied from its own source, a stock or repeated opening, and on a low-data pool a near-repeat) only
+ * make an item the first to go when a spare can replace it (`StyleReason`).
  * The grown-up's note is code-written from the kept items (`parentNoteFor`), never the model's.
  */
 import { seasonProblem } from "@/lib/pool/season";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { PoolItem, Section } from "@/lib/pool/types";
-import { PROMPT_EXAMPLE_TEXTS, type Mix } from "./prompt";
+import { looksScore } from "@/lib/pool/wild";
+import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
 export type DropReason =
   | "schema"
+  | "cut_off"
   | "url_or_markup"
   | "unknown_id"
   | "duplicate_id"
@@ -37,7 +42,9 @@ export type DropReason =
   | "wrong_count"
   | "generic_clue"
   | "copies_example"
+  | "copies_source"
   | "repeats_clue"
+  | "repeats_opening"
   | "over_section_max";
 
 export type ValidItem = {
@@ -46,7 +53,18 @@ export type ValidItem = {
   lookWhere: string;
   difficulty: "easy" | "medium" | "hard";
   sourceQuote: string;
+  /** Content tuning: the style preference this item failed (it is printed only when no spare can replace it). */
+  style?: StyleReason;
 };
+
+/** Drops that say the model could not write a valid clue for THAT item (not an id or shape problem, not style). */
+const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
+  "cut_off", "url_or_markup", "danger", "not_grounded", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
+  "wrong_count", "generic_clue", "copies_example", "repeats_clue",
+]);
+
+/** Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening on every pass). */
+export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening">;
 
 export type ValidationResult = {
   items: ValidItem[];
@@ -61,8 +79,14 @@ export type ValidationResult = {
   lookWhereCleared: number;
   /** S8c: items whose quote had the next JSON field glued on and was cut back to its real source part. */
   quotesRepaired: number;
+  /** Content tuning: 4-word runs that clues copied from their source (for the refill's feedback). */
+  copied?: string[];
+  /** Content tuning: pool ids whose clue failed a content check and that were not kept (the refill offers other items first). */
+  failedIds?: string[];
   /** R2-M5: valid spare items not printed (the model is asked for up to ASK_EXTRA more than n). */
   spares?: number;
+  /** Content tuning: printed items that failed a style preference (no spare was left to replace them). */
+  styleKept?: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -256,6 +280,17 @@ export type ValidateOptions = {
   hasMap: boolean;
   /** R2-M5: the mix the model was asked for (with spares). Defaults to `mix` (no spares asked). */
   ask?: Mix;
+  /**
+   * Content tuning: a low-data pool (prompt.ts `planRequest`). Only style checks change: a near-repeat
+   * becomes a preference, and a Wild Find whose describing word is in its own quote (which holds a
+   * looks-like word) passes the generic check. Safety, grounding, name leaks, numbers and counts are
+   * never relaxed.
+   */
+  lowData?: boolean;
+  /** Eval baseline only: the no-AI template copies its source sentences by design, so the copy check is off for it. */
+  allowSourceCopies?: boolean;
+  /** Clues already kept by an earlier call of this pass (the refill): repeats are checked against them too. */
+  prior?: readonly Pick<ValidItem, "clue">[];
 };
 
 export function validateDraft(
@@ -266,13 +301,19 @@ export function validateDraft(
 ): ValidationResult {
   const byId = new Map(pool.map((p) => [p.id, p]));
   const drops: Partial<Record<DropReason, number>> = {};
+  /** Content tuning: ids whose clue failed a content check (the refill offers other items first). */
+  const failed = new Set<string>();
+  let current: string | null = null;
   const drop = (r: DropReason) => {
     drops[r] = (drops[r] ?? 0) + 1;
+    if (current !== null && CONTENT_FAILS.has(r)) failed.add(current);
   };
   const used = new Set<string>();
   const kept: ValidItem[] = [];
   let lookWhereCleared = 0;
   let quotesRepaired = 0;
+  /** Content tuning: the source runs clues copied (the refill call is told not to use them). */
+  const copied = new Set<string>();
 
   for (const raw of draft.items) {
     const parsed = PassItemDraft.safeParse(raw && typeof raw === "object" ? withCodeSection(tidyStrings(raw as Record<string, unknown>), byId) : raw);
@@ -282,6 +323,13 @@ export function validateDraft(
       continue;
     }
     const d = parsed.data;
+    current = d.itemId;
+    // Content tuning: a clue cut off mid-sentence ("Hunt for a ", seen 4 times in one answer of the
+    // 2026-10-06 smoke) is broken output, whatever else it says.
+    if (isCutOff(d.clue)) {
+      drop("cut_off");
+      continue;
+    }
     if (hasUrlOrMarkup(d.clue) || hasUrlOrMarkup(d.lookWhere)) {
       drop("url_or_markup");
       continue;
@@ -353,7 +401,15 @@ export function validateDraft(
     }
     // R2-M5: "Look for a tree with seeds or fruit." fits hundreds of species; "white flowers" proved by
     // "show it with flowers" was never checked.
-    if (item.section === "wild" && (isGenericClue(d.clue, item.sourceText) || quoteIsOnlyName(sourceQuote, item.answer))) {
+    // Content tuning: on a low-data pool, a clue whose describing word is in its own quote, and that
+    // quote holds a looks-like word, is not generic even when the quote is the name ("bright yellow"
+    // proved by "yellow garden spider"). A trait the quote does not hold ("a round shell" for a quote
+    // about an operculum) is still dropped: grounding is never relaxed.
+    if (
+      item.section === "wild" &&
+      (isGenericClue(d.clue, item.sourceText) || quoteIsOnlyName(sourceQuote, item.answer)) &&
+      !(opts.lowData && looksScore(sourceQuote) > 0 && !isGenericClue(d.clue, sourceQuote))
+    ) {
       drop("generic_clue");
       continue;
     }
@@ -362,12 +418,30 @@ export function validateDraft(
       drop("copies_example");
       continue;
     }
-    if (kept.some((k) => trigramOverlap(k.clue, d.clue) >= COPY_OVERLAP)) {
-      drop("repeats_clue");
-      continue;
+    // Content tuning (M10): style checks. A clue that copies a 4-word run of its own source ("things to
+    // climb, slide and swing on" on 5 parks in run 2026-10-06-2) is the first to go when there is a
+    // spare, never a hard drop: as a drop it cost 2 of 17 passes their completeness in a 1-run smoke
+    // (Gemma kept copying in the refill too). The Park Finds facts now vary their words per park
+    // (pool/park.ts chooseWords), so a copied phrase differs between parks. Near-repeats on the same
+    // pass stay drops, except on a low-data pool.
+    let style: StyleReason | undefined;
+    const run = opts.allowSourceCopies ? null : copiedRun(d.clue, item.sourceText);
+    if (run !== null) {
+      copied.add(run);
+      style = "copies_source";
     }
+    const earlier = [...(opts.prior ?? []), ...kept];
+    if (earlier.some((k) => trigramOverlap(k.clue, d.clue) >= COPY_OVERLAP)) {
+      if (!opts.lowData) {
+        drop("repeats_clue");
+        continue;
+      }
+      style ??= "repeats_clue";
+    }
+    // A stock opening ("Can you find ...") or the same first words as an earlier clue: always only a preference.
+    if (style === undefined && (stockOpening(d.clue) !== null || earlier.some((k) => sameOpening(k.clue, d.clue)))) style = "repeats_opening";
     used.add(item.id);
-    kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote });
+    kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote, ...(style ? { style } : {}) });
   }
 
   // Re-check the mix limits computed by code (against what was asked, spares included).
@@ -384,7 +458,19 @@ export function validateDraft(
     asked.push(v);
   }
   // R2-M5: then keep at most mix.n of them inside the printed mix (spares that weren't needed are not drops).
-  const { items, spares } = fitToMix(asked, mix);
+  // Content tuning: items that failed a style preference go first when something has to go; the
+  // printed items keep the answer's order. A style item left out counts as a drop for its reason.
+  const preferred = [...asked.filter((v) => !v.style), ...asked.filter((v) => v.style)];
+  const chosen = new Set(fitToMix(preferred, mix).items);
+  const items = asked.filter((v) => chosen.has(v));
+  let spares = 0;
+  let styleKept = 0;
+  for (const v of asked) {
+    if (chosen.has(v)) {
+      if (v.style) styleKept++;
+    } else if (v.style) drop(v.style);
+    else spares++;
+  }
   for (const s of Object.keys(perSection) as Section[]) perSection[s] = items.filter((v) => v.item.section === s).length;
   const belowMin = (Object.keys(perSection) as Section[]).filter((s) => perSection[s] < mix.min[s]);
 
@@ -400,7 +486,10 @@ export function validateDraft(
     hardCount: items.filter((i) => i.difficulty === "hard").length,
     lookWhereCleared,
     quotesRepaired,
+    copied: [...copied],
+    failedIds: [...failed].filter((id) => !used.has(id)),
     spares,
+    styleKept,
   };
 }
 
@@ -677,19 +766,86 @@ const TRAIT_STOP = new Set([
 const traitStem = (w: string) => (w.length >= 5 ? w.slice(0, 4) : w);
 
 /**
+ * Content tuning: the word with a common ending taken off ("wades" and "wading" -> "wad", "spiny" and
+ * "spines" -> "spin"), so a clue in the child's words still matches its source. Run 2026-10-06-2 dropped
+ * "I am a big bird that wades in the wet areas." for a "large wading bird" as generic.
+ */
+export function suffixStem(w: string): string {
+  for (const suf of ["ing", "ed", "es", "er", "ly", "s", "y", "e"]) {
+    if (w.length - suf.length >= 3 && w.endsWith(suf)) return w.slice(0, -suf.length);
+  }
+  return w;
+}
+
+/** The describing words of a text: no generic find words, no stop words, no digits (singular). */
+export function traitWords(text: string): string[] {
+  return sentencesOf(text)
+    .flat()
+    .map(singularWord)
+    .filter((w) => w.length >= 3 && !TRAIT_STOP.has(w) && !RUN_STOP.has(w) && !/^\d+$/.test(w));
+}
+
+/**
  * R2-M5: a Wild Find clue with no detail from its own source ("Look for a tree with seeds or fruit.",
  * "Do you see a plant with flowers that are a purple color?" when the source never says purple) fits
  * hundreds of species, or can't be checked. Generic = no word of the clue beyond the generic ones is
- * also in the item's source (same first 4 letters for longer words: "spiny" ~ "spines").
+ * also in the item's source (same first 4 letters for longer words: "spiny" ~ "spines"; or the same
+ * word with its ending taken off: "wades" ~ "wading").
  */
 export function isGenericClue(clue: string, sourceText: string): boolean {
-  const content = (text: string) =>
-    sentencesOf(text)
-      .flat()
-      .map(singularWord)
-      .filter((w) => w.length >= 3 && !TRAIT_STOP.has(w) && !RUN_STOP.has(w) && !/^\d+$/.test(w));
-  const src = new Set(content(sourceText).map(traitStem));
-  return !content(clue).some((w) => src.has(traitStem(w)));
+  const src = traitWords(sourceText);
+  const first4 = new Set(src.map(traitStem));
+  const stems = new Set(src.map(suffixStem));
+  return !traitWords(clue).some((w) => first4.has(traitStem(w)) || stems.has(suffixStem(w)));
+}
+
+/** A copied run is this many words in a row (content tuning, M10). */
+export const COPY_RUN = 4;
+
+/**
+ * Content tuning (M10): the first run of COPY_RUN words (inside one sentence) that the clue copies from
+ * its own source, or null. A run with a number in it ("has 25 benches") or with fewer than 2 describing
+ * words ("in the middle of") is not a copy. Run 2026-10-06-2: "climb, slide and swing on" (5 parks),
+ * "a soft rushing sound" (5), "a roof on posts" (5) all came from the shared Park Finds facts.
+ */
+export function copiedRun(clue: string, source: string): string | null {
+  const src = ngrams(source, COPY_RUN);
+  for (const t of sentencesOf(clue)) {
+    for (let i = 0; i + COPY_RUN <= t.length; i++) {
+      const g = t.slice(i, i + COPY_RUN);
+      if (g.some((w) => numberOf(w) !== null || /\d/.test(w))) continue;
+      if (g.filter((w) => w.length >= 3 && !RUN_STOP.has(w)).length < 2) continue;
+      const run = g.join(" ");
+      if (src.has(run)) return run;
+    }
+  }
+  return null;
+}
+
+/** Words a finished sentence never ends on. */
+const DANGLING = new Set(["a", "an", "the", "with", "of", "to", "for", "and", "or", "but", "on", "in", "at", "by", "from", "its", "your", "my", "is", "are", "that"]);
+
+/** A clue that stops mid-sentence: its last word is an article, a preposition or a joining word ("Hunt for a"). */
+export function isCutOff(clue: string): boolean {
+  const t = clue.trim();
+  if (/[.!?)"'”]$/.test(t)) return false;
+  const last = (t.match(/[\p{L}']+$/u)?.[0] ?? "").toLowerCase();
+  return last === "" ? /[,;:\-]$/.test(t) : DANGLING.has(last);
+}
+
+/** The first words of a clue (lower case, letters and digits). */
+const firstWords = (clue: string, k: number) => (sentencesOf(clue)[0] ?? []).slice(0, k).join(" ");
+
+/** The stock opening a clue starts with ("can you find"), or null (prompt.ts STOCK_OPENINGS). */
+export function stockOpening(clue: string): string | null {
+  const start = `${firstWords(clue, 4)} `;
+  return STOCK_OPENINGS.find((o) => start.startsWith(`${o} `)) ?? null;
+}
+
+/** Two clues that start with the same 3 words. */
+export function sameOpening(a: string, b: string): boolean {
+  const fa = firstWords(a, 3);
+  return fa.split(" ").length === 3 && fa === firstWords(b, 3);
 }
 
 /**

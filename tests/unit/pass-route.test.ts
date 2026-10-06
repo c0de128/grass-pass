@@ -107,35 +107,39 @@ describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
 });
 
 describe("POST /api/pass: Connemara (live recordings)", () => {
-  it("streams the real steps, then an 8-item pass (8 asked, all kept) from the model that actually answered", async () => {
+  it("streams the real steps, then a 7-item pass from the real first answer and its real refill", async () => {
     const res = await route.POST(post(connemara));
     expect(res.status).toBe(200);
     const ls = await lines(res);
-    expect(ls.filter((l) => l.type === "step").map((l) => (l.type === "step" ? l.step : ""))).toEqual(["map", "wildlife", "clues", "check"]);
+    // Content tuning: the first answer keeps 6 of 8, so the one retry is a refill of the missing items.
+    expect(ls.filter((l) => l.type === "step").map((l) => (l.type === "step" ? l.step : ""))).toEqual(["map", "wildlife", "clues", "check", "retry", "check"]);
     const steps = ls.filter((l) => l.type === "step").map((l) => (l.type === "step" ? l.text : ""));
     expect(steps[2]).toBe("Writing clues with gemma-4-31B-it (open model)…");
     const f = final(ls);
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    // Audit R2 recording: 9 asked (8 + 1 spare). The Callery pear is used twice (the second is dropped as a
-    // duplicate) and "Do you see a plant with seeds or fruit?" is a generic clue (R2-M5): 7 of 8 is n-1, so no retry.
+    // Content-tuning recording: 9 asked (low-data pool: 8 + 1 spare). One duplicate id and two generic plant
+    // clues ("fruit or seeds" only) leave 6, so the refill asks for 2 + 1 spare from the 4 unused items. It
+    // keeps 1 (a "round shell" the snail's source never says is dropped, and one name leak): 7 of 8.
     expect(p.items).toHaveLength(7);
     expect(p.target).toBe(8);
-    expect(p.removed).toEqual({ notGrounded: 0, other: 2 });
+    expect(p.removed).toEqual({ notGrounded: 0, other: 5 });
+    expect(p.model.attempts).toBe(2);
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: PASS_COPY.luckyOff });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
     expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild"]);
-    // R2-M5: the grown-up's line is code-written from these items (an easy find away from the creek first).
-    expect(p.parentNote).toMatch(/^Start with find [2-7]: it's easy and it stays put./);
+    // R2-M5: the grown-up's line is code-written from these items. In this answer the only easy find that stays
+    // put is the creek (find 1), so the tip names it and says to stay close.
+    expect(p.parentNote).toMatch(/^Start with find 1: it's easy and it stays put, but it's near water, so stay close./);
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
     // Two Overpass queries, two iNaturalist calls plus the three R1-M4 season-check calls ("Flowers and
-    // Fruits" counts), one model call. (In October the S7 monarch box adds two free iNaturalist counts; they
+    // Fruits" counts), two model calls (the first answer and the refill). (In October the S7 monarch box adds two free iNaturalist counts; they
     // are tested with a fixed clock in october.test.ts.)
     // SEC-1-01: the park-features query goes FIRST; the optional Find This Spot geometry query starts only
     // after it confirmed a named park (it then runs alongside the wildlife step).
@@ -144,6 +148,7 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     expect(overpassQuery(calls[0])).not.toContain("out geom");
     expect(calls.map((c) => c.host).sort()).toEqual([
       ...Array<string>(5).fill("api.inaturalist.org"),
+      "inference.do-ai.run",
       "inference.do-ai.run",
       "overpass-api.de",
       "overpass-api.de",
@@ -158,14 +163,18 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
       const auth = new Headers(c.init?.headers).get("authorization");
       expect(auth).toBe(c.host === "inference.do-ai.run" ? `Bearer ${FAKE_KEY}` : null);
     }
-    // The request sent to the model is exactly the recorded live one.
+    // The requests sent to the model are exactly the recorded live ones (first call and refill).
     const sent = JSON.parse(modelCalls(replay.calls)[0].body!);
     expect(sent.messages).toEqual(modelRec(PARKS.connemara.slug).request.messages);
     expect(sent.response_format.json_schema.strict).toBe(true);
+    const sentRefill = JSON.parse(modelCalls(replay.calls)[1].body!);
+    expect(sentRefill.messages).toEqual(modelRec(PARKS.connemara.slug).refill!.request.messages);
+    expect(sentRefill.response_format).toEqual(modelRec(PARKS.connemara.slug).refill!.request.response_format);
 
     // The pass page reads it back from the cache only.
     expect(await loadPass(p.id)).toEqual(p);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":7'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":6') && l.includes('"refill":false'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":1') && l.includes('"refill":true'))).toBe(true);
   });
 
   it("the same park + age today is answered from the cache: one line, cached:true, no upstream call", async () => {
@@ -188,11 +197,12 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
       ids.push(f.pass.id);
     }
     expect(ids.map((i) => i.slice(-2))).toEqual(["-1", "-2", "-3"]);
-    expect(modelCalls(replay.calls)).toHaveLength(3);
+    // Each Connemara build is the first call + its refill (content-tuning recording).
+    expect(modelCalls(replay.calls)).toHaveLength(6);
     const res = await route.POST(post({ ...connemara, fresh: true }, {}, nextIp()));
     expect(res.status).toBe(429);
     expect(PassErrorResponseSchema.parse(await res.json()).error).toMatchObject({ code: "VARIANT_LIMIT", message: PASS_COPY.variantLimit });
-    expect(modelCalls(replay.calls)).toHaveLength(3);
+    expect(modelCalls(replay.calls)).toHaveLength(6);
     // Without "fresh", the latest variant comes back from the cache.
     const again = final(await lines(await route.POST(post(connemara))));
     expect(again.type === "result" && again.pass.variant).toBe(3);
@@ -223,12 +233,12 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     expect(replay.calls.length).toBe(before); // not even Overpass
   });
 
-  it("identical concurrent requests share ONE build and ONE model call", async () => {
+  it("identical concurrent requests share ONE build (one first call and its refill)", async () => {
     const [a, b] = await Promise.all([route.POST(post(connemara)), route.POST(post(connemara))]);
     const fa = final(await lines(a));
     const fb = final(await lines(b));
     expect(fa.type === "result" && fb.type === "result" && fa.pass.id === fb.pass.id).toBe(true);
-    expect(modelCalls(replay.calls)).toHaveLength(1);
+    expect(modelCalls(replay.calls)).toHaveLength(2);
   });
 });
 
@@ -322,7 +332,8 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(ls.some((l) => l.type === "step" && l.step === "retry")).toBe(true);
     const f = final(ls);
     if (f.type !== "result") throw new Error(f.type);
-    expect(f.pass.items).toHaveLength(7); // the real retry answer: 7 of 8 pass the checks
+    // Nothing was kept, so the retry is the whole request again (not a refill): the real first answer, 6 of 8.
+    expect(f.pass.items).toHaveLength(6);
     expect(f.pass.model.attempts).toBe(2);
     expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(logs.filter((l) => l.includes('"event":"pass_checks"'))).toHaveLength(2);
@@ -372,7 +383,8 @@ describe("a client that leaves does not cancel the paid model call", () => {
     expect(modelSignalAborted).toBe(false);
     const again = await makePass(connemara, { ip: "192.0.2.51", fetchImpl: replay.fetchImpl, modelFetch: replay.fetchImpl });
     expect(again).toMatchObject({ kind: "pass", cached: true });
-    expect(modelCalls(replay.calls)).toHaveLength(1);
+    // One build: the gated first call and its refill (Connemara's real first answer keeps 6 of 8).
+    expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(steps).toContain("clues");
   }, 15_000);
 

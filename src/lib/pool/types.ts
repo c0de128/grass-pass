@@ -37,6 +37,12 @@ export type PoolItem = {
    * the source states no count of 2 or more (one thing, or a creek), so no count clue is allowed.
    */
   count?: { of: string[]; n: number | null };
+  /**
+   * Wild Finds only (content tuning 2026-10-06): how many looks-like words its source has OUTSIDE the
+   * species' own names (`looksOutsideNames`). 0 = a clue can only describe it with a name word or a
+   * generic fact. Used to order the pool and to spot low-data pools (prompt.ts `planRequest`).
+   */
+  looks?: number;
 };
 
 export type SectionState =

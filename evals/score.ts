@@ -3,7 +3,8 @@
  * and M11 (count accuracy). Pure functions over run records + the pool
  * each case really had, so they are unit-tested without any network.
  */
-import { countProblem, isGrounded, nameLeak, ngrams } from "@/lib/ai/validate";
+import { planRequest, refillPlan, type RequestPlan } from "@/lib/ai/prompt";
+import { countProblem, isGrounded, nameLeak, ngrams, validateDraft, type DropReason, type ValidItem } from "@/lib/ai/validate";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { CaseData } from "./fixture";
@@ -116,6 +117,8 @@ export type CaseContext = {
   wildEmpty: boolean;
   /** Lower-case labels/names of every hard-blocked species in the raw iNaturalist answer. */
   blockedNames: string[];
+  /** The request the app makes for this pool (prompt pool, mix, asked-for mix), for replaying its checks. */
+  plan: RequestPlan | null;
 };
 
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
@@ -139,6 +142,7 @@ export function caseContext(caseN: number, d: CaseData): CaseContext {
     parkEmpty: d.park !== null && d.park.items.length === 0,
     wildEmpty: d.wild !== null && d.wild.items.length === 0,
     blockedNames: [...new Set(blockedNames)],
+    plan: planRequest(d.pool, d.band, d.parkName ?? ""),
   };
 }
 
@@ -301,6 +305,39 @@ export function countChecks(run: RunRecord, ctx: CaseContext): CountChecks {
   return out;
 }
 
+// ---------- why items were dropped ----------
+
+export type DropCounts = Partial<Record<DropReason, number>>;
+
+/**
+ * Why the app's checks dropped the model's items in this run: every call's raw answer replayed through
+ * the app's own `validateDraft` with the same pool, mix and asked-for mix the app used (no network).
+ * Unused valid spares are not drops.
+ */
+export function dropReasons(run: RunRecord, ctx: CaseContext): DropCounts {
+  const out: DropCounts = {};
+  if (!ctx.plan) return out;
+  let kept: ValidItem[] = [];
+  let failedIds: string[] = [];
+  for (const c of run.calls) {
+    if (!c.rawItems) continue;
+    // A second call is replayed as the app's refill (unused ids only) unless it reuses an id the first
+    // answer kept: then it was a whole-pass retry (runs before the content tuning of 2026-10-06).
+    const keptIds = new Set(kept.map((k) => k.item.id));
+    const refill = kept.length > 0 && !c.rawItems.some((x) => typeof x.itemId === "string" && keptIds.has(x.itemId)) ? refillPlan(ctx.plan, kept, failedIds) : null;
+    const plan = refill ?? ctx.plan;
+    const v = validateDraft({ items: c.rawItems }, plan.pool, plan.mix, { ...plan.validate, prior: refill ? kept : [] });
+    kept = refill ? [...kept, ...v.items] : v.items.length > kept.length ? v.items : kept;
+    failedIds = v.failedIds ?? [];
+    for (const [k, n] of Object.entries(v.drops) as [DropReason, number][]) out[k] = (out[k] ?? 0) + n;
+  }
+  return out;
+}
+
+function addDrops(into: DropCounts, from: DropCounts) {
+  for (const [k, n] of Object.entries(from) as [DropReason, number][]) into[k] = (into[k] ?? 0) + n;
+}
+
 // ---------- aggregate ----------
 
 export const THRESHOLDS = {
@@ -337,6 +374,8 @@ export type ModelScore = {
   m10: Repetition & { pass: boolean | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number; returned: number; details: string[]; pass: boolean | null };
   retries: number;
+  /** Why the checks dropped model items (replayed with the app's validateDraft): all runs, and the data-rich runs that ended incomplete (M3 misses). */
+  drops?: { all: DropCounts; incomplete: DropCounts; byRun: { caseN: number; run: number; kept: number; n: number | null; drops: DropCounts }[] };
 };
 
 const rate = (a: number, b: number) => (b > 0 ? a / b : null);
@@ -356,9 +395,16 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   let honestChecked = 0;
   const honestProblems: string[] = [];
   const counts = { printedWrong: 0, printedCountClues: 0, rawWrong: 0, details: [] as string[] };
+  const drops: NonNullable<ModelScore["drops"]> = { all: {}, incomplete: {}, byRun: [] };
   for (const r of done) {
     const ctx = contexts.get(r.caseN);
     if (!ctx) continue;
+    if (usesModel && r.calls.length > 0) {
+      const d = dropReasons(r, ctx);
+      addDrops(drops.all, d);
+      if (r.dataRich && !isComplete(r)) addDrops(drops.incomplete, d);
+      drops.byRun.push({ caseN: r.caseN, run: r.run, kept: r.items.length, n: r.n, drops: d });
+    }
     safety.push(...safetyViolations(r, ctx).map((s) => `case ${r.caseN} run ${r.run}: ${s}`));
     const rc = rawChecks(r, ctx);
     returned += rc.returned;
@@ -423,5 +469,6 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     m10: { ...rep10, pass: rep10.rate === null ? null : rep10.rate <= THRESHOLDS.m10 },
     m11: { ...counts, returned, pass: done.some((r) => r.kind === "pass") ? counts.printedWrong <= THRESHOLDS.m11 : null },
     retries: done.filter((r) => r.calls.length > 1).length,
+    ...(usesModel ? { drops } : {}),
   };
 }

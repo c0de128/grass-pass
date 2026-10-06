@@ -119,3 +119,16 @@
     font-size: 16px;
   }
 }
+
+/*
+ * UX-4-02 (R4): three heavy home page sections below the hero skip layout and paint until they come near the screen, so a
+ * slow phone paints the hero (the LCP text) before it lays out ~6,000 px of page. The intrinsic size keeps the
+ * scrollbar steady. Screen only; anchors still scroll to the right place. Not on #parks: axe then misreads the
+ * background behind its credit line (a false contrast failure that drops Lighthouse accessibility to 96).
+ */
+@media screen {
+  .gp-home > section:is(#why, #how, #pass) {
+    content-visibility: auto;
+    contain-intrinsic-size: auto 900px;
+  }
+}

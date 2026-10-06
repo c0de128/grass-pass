@@ -47,7 +47,7 @@ export default async function Home() {
   // Keep any background refresh this visit started alive after the response (serverless).
   after(() => prewarmIdle());
   return (
-    <main id="main" tabIndex={-1} className="flex w-full flex-1 flex-col focus:outline-none">
+    <main id="main" tabIndex={-1} className="gp-home flex w-full flex-1 flex-col focus:outline-none">
       <HomeHero card={heroCard(statuses)} examples={readyExamples(statuses)}>
         <RestingNotice state={resting} />
         <PassMaker account={account} />

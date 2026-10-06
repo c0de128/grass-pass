@@ -13,23 +13,15 @@
  * `/?resume=1`.
  */
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { z } from "@/lib/zod-config";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SignInCard } from "@/components/account/SignInCard";
 import { FindAPark } from "@/components/parks/FindAPark";
 import type { SignInOptions } from "@/lib/accounts/config";
 import { Button, buttonClassName } from "@/components/ui/Button";
-import { ParkSchema, type Park } from "@/lib/parks/schema";
+import type { Park } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
-import {
-  AGE_BAND_INFO,
-  AGE_BAND_STORAGE_KEY,
-  AGE_BANDS,
-  AgeBandSchema,
-  DEFAULT_AGE_BAND,
-  type AgeBand,
-} from "@/lib/pass/schema";
+import { AGE_BAND_INFO, AGE_BAND_STORAGE_KEY, AGE_BANDS, DEFAULT_AGE_BAND, isAgeBand, type AgeBand } from "@/lib/pass/constants";
 import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
 import { clientNow, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
 
@@ -38,7 +30,6 @@ const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACC
 
 /** sessionStorage key: the park + age picked before signing in (this tab only, removed once restored). */
 export const RESUME_KEY = "grass-pass:resume";
-const ResumeSchema = z.object({ park: ParkSchema, band: AgeBandSchema });
 
 function rememberForSignIn(park: Park, band: AgeBand): void {
   try {
@@ -48,14 +39,20 @@ function rememberForSignIn(park: Park, band: AgeBand): void {
   }
 }
 
-/** The park + age saved before sign-in, once (validated; anything else is ignored). */
-export function takeResume(): { park: Park; band: AgeBand } | null {
+/**
+ * The park + age saved before sign-in, once (validated with the real schemas, loaded on demand so zod is not in
+ * the first JavaScript, UX-4-02; anything else is ignored).
+ */
+export async function takeResume(): Promise<{ park: Park; band: AgeBand } | null> {
   try {
     const raw = window.sessionStorage.getItem(RESUME_KEY);
     window.sessionStorage.removeItem(RESUME_KEY);
     if (!raw) return null;
-    const r = ResumeSchema.safeParse(JSON.parse(raw));
-    return r.success ? r.data : null;
+    const [{ ParkSchema }, { AgeBandSchema }] = await Promise.all([import("@/lib/parks/schema"), import("@/lib/pass/schema")]);
+    const json: unknown = JSON.parse(raw);
+    const r = ParkSchema.safeParse((json as { park?: unknown } | null)?.park);
+    const b = AgeBandSchema.safeParse((json as { band?: unknown } | null)?.band);
+    return r.success && b.success ? { park: r.data, band: b.data } : null;
   } catch {
     return null;
   }
@@ -135,8 +132,8 @@ export function PassFailure({
 
 export function readStoredBand(): AgeBand {
   try {
-    const v = AgeBandSchema.safeParse(window.localStorage.getItem(AGE_BAND_STORAGE_KEY));
-    return v.success ? v.data : DEFAULT_AGE_BAND;
+    const v = window.localStorage.getItem(AGE_BAND_STORAGE_KEY);
+    return isAgeBand(v) ? v : DEFAULT_AGE_BAND;
   } catch {
     return DEFAULT_AGE_BAND;
   }
@@ -224,15 +221,19 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   const resume = useSearchParams().get("resume");
   useEffect(() => {
     if (resume === null) return;
-    const r = takeResume();
     window.history.replaceState(null, "", "/#find");
-    if (!r) return;
-    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from sessionStorage after a redirect
-    setPark(r.park);
-    setPickedBand(r.band);
-    storeBand(r.band);
-    resumedRef.current = true;
-    setResumed(true);
+    let live = true;
+    void takeResume().then((r) => {
+      if (!live || !r) return;
+      setPark(r.park);
+      setPickedBand(r.band);
+      storeBand(r.band);
+      resumedRef.current = true;
+      setResumed(true);
+    });
+    return () => {
+      live = false;
+    };
   }, [resume]);
 
   // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):

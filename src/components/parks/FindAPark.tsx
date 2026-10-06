@@ -12,15 +12,14 @@ import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, typ
 import { buttonClassName } from "@/components/ui/Button";
 import { distanceLabel, roundCoord } from "@/lib/geo";
 import { safeParkName } from "@/lib/safety/contact";
-import {
-  ApiErrorSchema,
-  LOCATION_DECIMALS,
-  ParksResultSchema,
-  PlaceQueryLimits,
-  type ExampleLink,
-  type Park,
-  type ParksResult,
-} from "@/lib/parks/schema";
+import { LOCATION_DECIMALS, PlaceQueryLimits } from "@/lib/parks/constants";
+import type { ExampleLink, Park, ParksResult } from "@/lib/parks/schema";
+
+/**
+ * UX-4-02: the answer's schemas (and zod) load on demand, in parallel with the search request, so they are not
+ * part of the home page's first JavaScript. A failed chunk load counts as being offline.
+ */
+const loadSchemas = () => import("@/lib/parks/schema");
 
 const COPY = {
   qEmpty: "Type a town, ZIP or park name.",
@@ -142,13 +141,17 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
 
     let res: Response;
     let json: unknown;
+    let schemas: Awaited<ReturnType<typeof loadSchemas>>;
     try {
-      res = await fetch("/api/parks", {
-        method: "POST",
-        headers: { Accept: "application/json", "Content-Type": "application/json" },
-        body: JSON.stringify(body),
-        signal: ac.signal,
-      });
+      [res, schemas] = await Promise.all([
+        fetch("/api/parks", {
+          method: "POST",
+          headers: { Accept: "application/json", "Content-Type": "application/json" },
+          body: JSON.stringify(body),
+          signal: ac.signal,
+        }),
+        loadSchemas(),
+      ]);
       json = await res.json().catch(() => null);
     } catch {
       clearTimeout(timeout);
@@ -162,7 +165,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
     stopSlowTimer();
 
     if (!res.ok) {
-      const err = ApiErrorSchema.safeParse(json);
+      const err = schemas.ApiErrorSchema.safeParse(json);
       const message = err.success ? err.data.error.message : COPY.badAnswer;
       const field = err.success ? err.data.error.field : undefined;
       setPhase({ kind: "idle" });
@@ -176,7 +179,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
       });
       return;
     }
-    const parsed = ParksResultSchema.safeParse(json);
+    const parsed = schemas.ParksResultSchema.safeParse(json);
     if (!parsed.success) {
       setPhase({ kind: "failed", message: COPY.badAnswer, code: "BAD_ANSWER" });
       return;

@@ -10,15 +10,12 @@ import { LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { z } from "@/lib/zod-config";
 import { signOutAction } from "@/app/actions/auth";
 import { PROVIDER_LABELS } from "@/lib/accounts/config";
 import { announceSessionChange, SESSION_EVENT } from "./session-event";
+// UX-4-02: a small hand-written check (no zod), so the header does not pull zod into every page's first JavaScript.
+import { parseMe } from "./session-schema";
 
-const MeSchema = z.discriminatedUnion("signedIn", [
-  z.object({ signedIn: z.literal(false) }),
-  z.object({ signedIn: z.literal(true), provider: z.enum(["github", "google", "judge"]), name: z.string().max(40).nullable() }),
-]);
 
 type Who = { signedIn: false } | { signedIn: true; label: string };
 
@@ -44,7 +41,7 @@ export function AccountMenu() {
     fetch("/api/me", { cache: "no-store", credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
       .then((j: unknown) => {
-        const s = MeSchema.safeParse(j);
+        const s = parseMe(j);
         if (live) setWho(s.success && s.data.signedIn ? { signedIn: true, label: whoLabel(s.data.name, s.data.provider) } : { signedIn: false });
       })
       .catch(() => live && setWho({ signedIn: false }));

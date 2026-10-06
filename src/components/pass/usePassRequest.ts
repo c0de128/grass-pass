@@ -7,15 +7,11 @@
  */
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExampleLink } from "@/lib/parks/schema";
-import {
-  AUTO_RETRY_CODES,
-  PassErrorResponseSchema,
-  PassLineSchema,
-  type ParkData,
-  type Pass,
-  type PassRequest,
-  type PassStep,
-} from "@/lib/pass/schema";
+import { AUTO_RETRY_CODES } from "@/lib/pass/constants";
+import type { ParkData, Pass, PassRequest, PassStep } from "@/lib/pass/schema";
+
+/** UX-4-02: the answer's schemas (and zod) load on demand, with the request, not on first paint. */
+const loadSchemas = () => import("@/lib/pass/schema");
 
 /**
  * R2-M2 (Q-2-02): the page waits longer than the server's whole pass deadline (85 s, PASS_DEADLINE_MS)
@@ -148,16 +144,21 @@ export function usePassRequest() {
     };
 
     let res: Response;
+    let schemas: Awaited<ReturnType<typeof loadSchemas>>;
     try {
-      res = await fetch("/api/pass", {
-        method: "POST",
-        headers: { "Content-Type": "application/json", Accept: "application/x-ndjson, application/json" },
-        body: JSON.stringify(body),
-        signal: ac.signal,
-      });
+      [res, schemas] = await Promise.all([
+        fetch("/api/pass", {
+          method: "POST",
+          headers: { "Content-Type": "application/json", Accept: "application/x-ndjson, application/json" },
+          body: JSON.stringify(body),
+          signal: ac.signal,
+        }),
+        loadSchemas(),
+      ]);
     } catch {
       return finish(lost());
     }
+    const { PassErrorResponseSchema, PassLineSchema } = schemas;
 
     if (!res.ok || !res.body) {
       const json = await res.json().catch(() => null);

@@ -9,19 +9,21 @@ import { ExampleLinkSchema } from "@/lib/parks/schema";
 import { SpotSchema } from "@/lib/spot/types";
 
 // ---------- age bands (SPEC F2) ----------
+// The plain constants live in ./constants (no zod, for the browser's first paint, UX-4-02); re-exported here.
+import { AGE_BANDS, MAX_VARIANTS, type AgeBand } from "./constants";
+export {
+  AGE_BAND_INFO,
+  AGE_BAND_STORAGE_KEY,
+  AGE_BANDS,
+  AUTO_RETRY_CODES,
+  DEFAULT_AGE_BAND,
+  isAgeBand,
+  MAP_DATA_FAILURE_CODES,
+  MAX_VARIANTS,
+  type AgeBand,
+} from "./constants";
 
-export const AGE_BANDS = ["4-6", "6-10", "10-13"] as const;
-export const AgeBandSchema = z.enum(AGE_BANDS);
-export type AgeBand = z.infer<typeof AgeBandSchema>;
-export const DEFAULT_AGE_BAND: AgeBand = "6-10";
-/** localStorage key for the remembered band (never sent anywhere except inside a pass request). */
-export const AGE_BAND_STORAGE_KEY = "grass-pass:age-band";
-
-export const AGE_BAND_INFO: Record<AgeBand, { label: string; hint: string; items: number; hardMin: number; grade: string }> = {
-  "4-6": { label: "Ages 4-6", hint: "6 finds, picture-simple words for a grown-up to read aloud", items: 6, hardMin: 0, grade: "1 (a grown-up reads it aloud)" },
-  "6-10": { label: "Ages 6-10", hint: "8 finds, easy words", items: 8, hardMin: 0, grade: "2" },
-  "10-13": { label: "Ages 10-13", hint: "8 finds, 2 of them hard", items: 8, hardMin: 2, grade: "5" },
-};
+export const AgeBandSchema = z.enum(AGE_BANDS) satisfies z.ZodType<AgeBand>;
 
 // ---------- request ----------
 
@@ -35,8 +37,6 @@ export const PassRequestSchema = z.object({
 });
 export type PassRequest = z.infer<typeof PassRequestSchema>;
 
-/** Different passes per park + age band + day (SPEC §7). */
-export const MAX_VARIANTS = 3;
 
 // ---------- the pass ----------
 
@@ -129,13 +129,6 @@ export const ApiErrorBody = z.object({
   example: ExampleLinkSchema.optional(),
 });
 
-/**
- * Pass failures caused by the free map data (OpenStreetMap busy or slow, or our own queue), where a
- * ready example pass is offered and the page tries ONE more time by itself (R2-M3).
- */
-export const MAP_DATA_FAILURE_CODES: readonly string[] = ["OSM_UNAVAILABLE", "BUSY_HERE", "DATA_TOO_SLOW", "PARK_TOO_BIG"];
-/** Of those, the ones where trying again soon can help (not PARK_TOO_BIG). */
-export const AUTO_RETRY_CODES: readonly string[] = ["OSM_UNAVAILABLE", "BUSY_HERE", "DATA_TOO_SLOW"];
 
 /** What we could still show when the model failed: real park data, never printed as a pass. */
 export const ParkDataSchema = z.object({

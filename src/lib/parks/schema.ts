@@ -4,15 +4,9 @@
  */
 import "@/lib/zod-config";
 import { z } from "zod";
-
-/** Search radius around the point (SPEC F1). */
-export const PARK_RADIUS_M = 5_000;
-/** At most this many parks, nearest first (SPEC F1). */
-export const MAX_PARKS = 10;
-/** "Use my location" is rounded to this many decimals in the browser and again on the server (~1 km). */
-export const LOCATION_DECIMALS = 2;
-
-export const PlaceQueryLimits = { min: 2, max: 100 } as const;
+import { MAX_PARKS } from "./constants";
+// The plain constants live in ./constants (no zod, for the browser's first paint, UX-4-02); re-exported here.
+export { LOCATION_DECIMALS, MAX_PARKS, PARK_RADIUS_M, PlaceQueryLimits } from "./constants";
 
 /** Exact empty / failure copy (SPEC §5.4). */
 export const PARKS_COPY = {

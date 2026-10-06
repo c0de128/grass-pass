@@ -51,7 +51,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 alt={HERO_ILLUSTRATION.alt}
                 width={HERO_ILLUSTRATION.width}
                 height={HERO_ILLUSTRATION.height}
-                loading="eager"
+                // UX-4-02: no preload/eager. On phones this picture sits below the search card (the LCP there is the
+                // lead text), and an eager preload competed with the first paint; on desktop it loads at layout.
+                loading="lazy"
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover"
               />

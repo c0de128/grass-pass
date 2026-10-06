@@ -10,9 +10,24 @@
  * - Call `release()` only when no upstream call was started (e.g. a cache hit after
  *   all, or a refusal before sending). It is a no-op after `commit()`.
  * A store failure throws StoreError; callers answer 503 and call nothing upstream.
+ *
+ * SEC-1-05: an IPv6 key (see ./ip.ts) also fills a coarser /48 bucket with NET48_FACTOR x the per-key
+ * share, so one network with many /64s can't take a global cap alone. The global count is logged once
+ * when it reaches 50% and 90% of its cap.
+ * SEC-1-02: one store command per reserve when the store supports it (`reserve`, a single EVAL), and a
+ * refusal is remembered in this process for up to REFUSAL_MEMO_SEC (no store command while it lasts).
  */
 import type { Store } from "@/lib/cache/store";
+import { log } from "@/lib/log";
 import { localDay, localMonth, secondsUntilLocalMidnight, secondsUntilNextLocalMonth } from "@/lib/time";
+import { networkKey } from "./ip";
+import { refusalWait, rememberRefusal } from "./rate";
+
+/** A /48 may use this many per-key (/64) shares in total. */
+export const NET48_FACTOR = 2;
+/** How long a refusal is remembered in process (a released slot can free a share again). */
+export const REFUSAL_MEMO_SEC = 60;
+export const QUOTA_ALERT_PCTS = [50, 90] as const;
 
 export type Period = { kind: "day" } | { kind: "month" } | { kind: "window"; seconds: number };
 
@@ -26,6 +41,37 @@ export function periodOf(period: Period, now: number): { id: string; resetSec: n
 
 export type QuotaTicket = { commit(): void; release(): Promise<void>; readonly committed: boolean };
 export type QuotaResult = { ok: true; ticket: QuotaTicket } | { ok: false; scope: "key" | "global"; retryAfter: number };
+
+type Counter = { key: string; cap: number; scope: "key" | "global" };
+
+/** All-or-nothing add of 1 to every counter, without the store's `reserve` (older/fake stores). */
+async function reserveStepwise(store: Store, counters: Counter[], ttl: number): Promise<{ failed: number; counts: number[] }> {
+  const done: Counter[] = [];
+  const counts: number[] = [];
+  try {
+    for (let i = 0; i < counters.length; i++) {
+      const c = counters[i];
+      const v = await store.incr(c.key, 1, ttl);
+      done.push(c);
+      counts.push(v);
+      if (v > c.cap) {
+        for (const d of done) await store.incr(d.key, -1, ttl);
+        return { failed: i + 1, counts: [] };
+      }
+    }
+  } catch (err) {
+    for (const d of done) await store.incr(d.key, -1, ttl).catch(() => undefined);
+    throw err;
+  }
+  return { failed: 0, counts };
+}
+
+function alertIfCrossed(name: string, used: number, cap: number): void {
+  if (!Number.isFinite(cap) || cap <= 0) return;
+  for (const pct of QUOTA_ALERT_PCTS) {
+    if (used === Math.ceil((cap * pct) / 100)) log("quota_alert", { quota: name, pct, used, cap }, pct >= 90 ? "error" : "warn");
+  }
+}
 
 export async function reserveQuota(
   store: Store,
@@ -41,29 +87,32 @@ export async function reserveQuota(
 ): Promise<QuotaResult> {
   const { id, resetSec } = periodOf(opts.period, opts.now);
   const ttl = resetSec + 3600;
-  const globalKey = `q:${opts.name}:${id}:all`;
-  const ownKey = `q:${opts.name}:${id}:k:${opts.key}`;
   const trackKey = Number.isFinite(opts.perKey);
+  const net = trackKey ? networkKey(opts.key) : null;
 
-  const g = await store.incr(globalKey, 1, ttl);
-  if (g > opts.global) {
-    await store.incr(globalKey, -1, ttl);
-    return { ok: false, scope: "global", retryAfter: resetSec };
+  const counters: Counter[] = [{ key: `q:{${opts.name}:${id}}:all`, cap: opts.global, scope: "global" }];
+  if (trackKey) counters.push({ key: `q:{${opts.name}:${id}}:k:${opts.key}`, cap: opts.perKey, scope: "key" });
+  if (net) counters.push({ key: `q:{${opts.name}:${id}}:${net}`, cap: opts.perKey * NET48_FACTOR, scope: "key" });
+
+  // The global memo includes the cap: callers with a larger cap (the reserved slice) are not blocked by it.
+  const memo = { global: `q|${opts.name}|${id}|all|${opts.global}`, key: `q|${opts.name}|${id}|${opts.key}` };
+  if (refusalWait(store, memo.global, opts.now) > 0) return { ok: false, scope: "global", retryAfter: resetSec };
+  if (trackKey && refusalWait(store, memo.key, opts.now) > 0) return { ok: false, scope: "key", retryAfter: resetSec };
+
+  const r = store.reserve
+    ? await store.reserve(
+        counters.map((c) => c.key),
+        counters.map((c) => c.cap),
+        ttl,
+      )
+    : await reserveStepwise(store, counters, ttl);
+
+  if (r.failed > 0) {
+    const scope = counters[r.failed - 1].scope;
+    rememberRefusal(store, scope === "global" ? memo.global : memo.key, opts.now + Math.min(resetSec, REFUSAL_MEMO_SEC) * 1000);
+    return { ok: false, scope, retryAfter: resetSec };
   }
-  if (trackKey) {
-    let mine: number;
-    try {
-      mine = await store.incr(ownKey, 1, ttl);
-    } catch (err) {
-      await store.incr(globalKey, -1, ttl).catch(() => undefined);
-      throw err;
-    }
-    if (mine > opts.perKey) {
-      await store.incr(ownKey, -1, ttl);
-      await store.incr(globalKey, -1, ttl);
-      return { ok: false, scope: "key", retryAfter: resetSec };
-    }
-  }
+  alertIfCrossed(opts.name, r.counts[0], opts.global);
 
   let settled = false;
   let committed = false;
@@ -78,8 +127,7 @@ export async function reserveQuota(
         if (settled) return;
         settled = true;
         // Keys carry the period id, so a release after rollover only touches the old (expiring) counters.
-        await store.incr(globalKey, -1, ttl).catch(() => undefined);
-        if (trackKey) await store.incr(ownKey, -1, ttl).catch(() => undefined);
+        for (const c of counters) await store.incr(c.key, -1, ttl).catch(() => undefined);
       },
       get committed() {
         return committed;
@@ -91,7 +139,7 @@ export async function reserveQuota(
 /** Current usage (for logs and the about page). */
 export async function quotaUsage(store: Store, opts: { name: string; key?: string; period: Period; now: number }) {
   const { id } = periodOf(opts.period, opts.now);
-  const global = Number(await store.get(`q:${opts.name}:${id}:all`)) || 0;
-  const key = opts.key === undefined ? undefined : Number(await store.get(`q:${opts.name}:${id}:k:${opts.key}`)) || 0;
+  const global = Number(await store.get(`q:{${opts.name}:${id}}:all`)) || 0;
+  const key = opts.key === undefined ? undefined : Number(await store.get(`q:{${opts.name}:${id}}:k:${opts.key}`)) || 0;
   return { global, key };
 }

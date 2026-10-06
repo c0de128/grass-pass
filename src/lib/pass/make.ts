@@ -16,7 +16,7 @@ import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
 import { createInflight, createJsonCache, getStore, StoreError, WaiterAbortedError, type Store } from "@/lib/cache";
-import { hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type QuotaTicket } from "@/lib/limits";
+import { aiCapFor, hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type QuotaTicket } from "@/lib/limits";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
@@ -90,6 +90,11 @@ export type MakeDeps = {
    * (AI_DAILY_CAP and the global new-pass share).
    */
   internal?: boolean;
+  /**
+   * May use the reserved slice of AI_DAILY_CAP (SEC-1-05): the route sets it for the example parks; the
+   * pre-warm (internal) always may. Everyone else stops at aiCapFor(cfg, false).
+   */
+  reserved?: boolean;
 };
 
 export type MakeOutcome =
@@ -200,8 +205,9 @@ async function build(ctx: {
   if (ctx.signal.aborted) throw new WaiterAbortedError();
 
   // Caps BEFORE any upstream: the model budget must have room, then the per-IP daily share.
+  const aiCap = aiCapFor(cfg, Boolean(ctx.deps.internal || ctx.deps.reserved));
   const ai = await quotaUsage(store, { name: "ai-calls", period: { kind: "day" }, now: now() });
-  if (ai.global >= cfg.aiDailyCap) {
+  if (ai.global >= aiCap) {
     return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 } };
   }
   const share = await reserveQuota(store, {
@@ -251,7 +257,7 @@ async function build(ctx: {
             name: "ai-calls",
             key: "all",
             perKey: Infinity,
-            global: cfg.aiDailyCap,
+            global: aiCap,
             period: { kind: "day" },
             now: now(),
           });

@@ -16,6 +16,7 @@ import { guardJsonPost } from "@/lib/http/guard";
 import { jsonError } from "@/lib/http/respond";
 import { clientIp } from "@/lib/limits";
 import { makePass, type MakeOutcome } from "@/lib/pass/make";
+import { EXAMPLE_PARKS } from "@/lib/prewarm";
 import { PassRequestSchema, type PassLine } from "@/lib/pass/schema";
 
 export const runtime = "nodejs";
@@ -49,6 +50,8 @@ export async function POST(req: Request): Promise<Response> {
 
   const work = makePass(g.data, {
     ip: clientIp(req),
+    // The example parks may use the reserved slice of the AI budget (SEC-1-05).
+    reserved: EXAMPLE_PARKS.some((e) => e.parkId === g.data.parkId),
     signal: req.signal,
     onStep: ({ step, text }) => {
       const line: PassLine = { type: "step", step, text };

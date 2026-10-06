@@ -238,10 +238,15 @@ describe("concurrency controls", () => {
 describe("client keys", () => {
   const req = (h: Record<string, string>) => new Request("http://localhost/api/pass", { headers: h });
 
-  it("uses the first x-forwarded-for entry, then x-real-ip", () => {
-    expect(clientIp(req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }))).toBe("203.0.113.9");
-    expect(clientIp(req({ "x-real-ip": "203.0.113.7" }))).toBe("203.0.113.7");
-    expect(clientIp(req({}))).toBe("unknown");
+  it("uses the first x-forwarded-for entry, then x-real-ip, and never returns the raw address", () => {
+    const env = { LIMITER_KEY_SECRET: "test-secret-0123456789" };
+    const a = clientIp(req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }), env);
+    expect(a).toMatch(/^4:[A-Za-z0-9_-]{22}$/);
+    expect(a).not.toContain("203.0.113");
+    expect(a).toBe(clientIp(req({ "x-forwarded-for": "203.0.113.9" }), env));
+    expect(clientIp(req({ "x-real-ip": "203.0.113.7" }), env)).toMatch(/^4:/);
+    expect(clientIp(req({ "x-real-ip": "203.0.113.7" }), env)).not.toBe(a);
+    expect(clientIp(req({}), env)).toBe("unknown");
   });
 
   it("keys IPv6 by /64 and unwraps IPv4-mapped addresses", () => {
@@ -264,6 +269,9 @@ describe("limitsConfig", () => {
       parksDailyCap: 2000,
       serpapiDailyCap: 12,
       serpapiMonthlyCap: 200,
+      aiReservePct: 10,
+      preLimitBurst: 40,
+      preLimitPerSec: 4,
     });
   });
 

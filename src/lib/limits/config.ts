@@ -24,6 +24,14 @@ export type LimitsConfig = {
   parksDailyCap: number;
   serpapiDailyCap: number;
   serpapiMonthlyCap: number;
+  /**
+   * Percent of AI_DAILY_CAP kept for the example parks and the server pre-warm (SEC-1-05), so a flood of
+   * new passes for other parks cannot use the whole day. 0 switches the reserve off; max 50.
+   */
+  aiReservePct: number;
+  /** In-process pre-limiter (SEC-1-02): burst size and refill per second, per IP, per instance. */
+  preLimitBurst: number;
+  preLimitPerSec: number;
 };
 
 export const LIMIT_DEFAULTS: LimitsConfig = {
@@ -35,6 +43,9 @@ export const LIMIT_DEFAULTS: LimitsConfig = {
   parksDailyCap: 2000,
   serpapiDailyCap: 12,
   serpapiMonthlyCap: 200,
+  aiReservePct: 10,
+  preLimitBurst: 40,
+  preLimitPerSec: 4,
 };
 
 /** SerpApi free plan is 250 searches/month; never configure above it. */
@@ -51,5 +62,17 @@ export function limitsConfig(env: Env = process.env): LimitsConfig {
     parksDailyCap: intFromEnv(env.PARKS_DAILY_CAP, d.parksDailyCap),
     serpapiDailyCap: intFromEnv(env.SERPAPI_DAILY_CAP, d.serpapiDailyCap),
     serpapiMonthlyCap: Math.min(intFromEnv(env.SERPAPI_MONTHLY_CAP, d.serpapiMonthlyCap), SERPAPI_FREE_MONTHLY),
+    aiReservePct: env.AI_RESERVE_PCT?.trim() === "0" ? 0 : Math.min(intFromEnv(env.AI_RESERVE_PCT, d.aiReservePct), 50),
+    preLimitBurst: intFromEnv(env.PRELIMIT_BURST, d.preLimitBurst),
+    preLimitPerSec: intFromEnv(env.PRELIMIT_PER_SEC, d.preLimitPerSec),
   };
+}
+
+/**
+ * The AI_DAILY_CAP a request may use: the whole cap for the example parks and the server pre-warm,
+ * the cap minus the reserved slice for everything else (SEC-1-05). Always at least 1.
+ */
+export function aiCapFor(cfg: Pick<LimitsConfig, "aiDailyCap" | "aiReservePct">, reserved: boolean): number {
+  if (reserved) return cfg.aiDailyCap;
+  return Math.max(1, cfg.aiDailyCap - Math.ceil((cfg.aiDailyCap * cfg.aiReservePct) / 100));
 }

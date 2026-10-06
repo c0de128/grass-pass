@@ -23,3 +23,8 @@ S8c total (builder, 2026-10-05 CDT): smoke $0.0035 + fixture re-recording $0.001
 | 2026-10-06T03:39:04.451Z | 2026-10-05-4.md | 87 | 166294 | 36215 | $0.0552 |
 
 Audit round 1 total (Builder B, 2026-10-05 CDT): fixture re-recordings $0.0021 + smoke $0.0032 + full run $0.0552 = **$0.0605** (cap $0.10).
+| 2026-10-06T04:41Z | Audit R1 follow-up (Builder E) re-recording of the two model fixtures in tests/fixtures (not an eval run) | 2 | 3577 | 989 | $0.0011 |
+| 2026-10-06T05:07:55.192Z | 2026-10-06-partial-0007.md | 14 | 30951 | 6091 | $0.0114 |
+| 2026-10-06T05:13:16.346Z | 2026-10-06.md | 78 | 179143 | 35965 | $0.0581 |
+
+Audit round 1 follow-up total (Builder E, 2026-10-05/06 CDT): fixture re-recording $0.0011 + smoke $0.0114 + full run $0.0581 = **$0.0706** (cap $0.10).

@@ -68,7 +68,7 @@ test("360 px wide: no horizontal scroll with the map, on the pass page and the p
   }
 });
 
-test("print: map + riddle on the kid pass, answer on the stub, ONE page (Letter and A4), scale >= 0.95, black and white", async ({ page }) => {
+test("print: map + riddle on the kid pass, answer on the stub, ONE page (Letter and A4), scale >= 0.91 (SPEC §8.4), black and white", async ({ page }) => {
   needMap();
   await page.goto(`/pass/${pass.id}/print`);
   await expect(page.locator(".gp-sheet[data-fit]")).toHaveCount(1);
@@ -98,7 +98,7 @@ test("print: map + riddle on the kid pass, answer on the stub, ONE page (Letter 
     type: "note",
     description: `Celebration print scale ${fit}; body ${bodyPt} pt at 100% = ${(bodyPt * fit).toFixed(2)} pt printed; ${pass.items} finds`,
   });
-  expect(fit).toBeGreaterThanOrEqual(0.95);
+  expect(fit).toBeGreaterThanOrEqual(0.91);
 
   const letter = await page.pdf({ preferCSSPageSize: true, printBackground: false });
   expect(pdfPages(letter)).toBe(1);

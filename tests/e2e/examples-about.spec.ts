@@ -57,6 +57,31 @@ test.describe("example parks", () => {
     await expect(page.getByRole("link", { name: "Print pass" })).toBeVisible();
   });
 
+  test("R2-m9 + R2-m4: a complete park comes first, and every ready example prints on ONE page at scale >= 0.91", async ({ page }) => {
+    test.setTimeout(120_000);
+    await page.goto("/");
+    const list = page.getByRole("list", { name: "Example parks" });
+    await expect(list.getByRole("listitem").first()).toContainText("Arbor Hills Nature Preserve");
+    await expect(list.getByRole("listitem").last()).toContainText("Connemara Meadow Preserve");
+    const hrefs = await list.getByRole("link").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
+    if (hrefs.length === 0) test.skip(true, `No example pass is ready on this server; the cards say: ${(await list.textContent())?.slice(0, 300)}`);
+    const pdfPages = (pdf: Buffer) => (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
+    for (const href of hrefs) {
+      const id = /\/pass\/([a-z0-9-]+)/.exec(href)![1];
+      await page.emulateMedia({ media: "screen" });
+      await page.goto(`/pass/${id}/print`);
+      await expect(page.locator(".gp-sheet[data-fit]")).toHaveCount(1);
+      await page.emulateMedia({ media: "print", colorScheme: "light" });
+      await page.evaluate(async () => {
+        await document.fonts.ready;
+      });
+      const fit = Number(await page.locator(".gp-sheet").getAttribute("data-fit"));
+      test.info().annotations.push({ type: "note", description: `${id}: print scale ${fit}` });
+      expect(fit, `${id} print scale`).toBeGreaterThanOrEqual(0.91);
+      expect(pdfPages(await page.pdf({ preferCSSPageSize: true, printBackground: false })), `${id} Letter pages`).toBe(1);
+    }
+  });
+
   test("the examples link jumps to the examples", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "See a real example pass" }).click();

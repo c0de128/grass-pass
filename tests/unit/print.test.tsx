@@ -291,7 +291,11 @@ describe("PrintFit (one-page safety net)", () => {
     expect(fitFor(PRINT_HEIGHT_PX)).toBe(1);
     expect(fitFor(1000)).toBe(0.97);
     expect(fitFor(1000) * 1000).toBeLessThanOrEqual(PRINT_HEIGHT_PX);
-    expect(fitFor(1100)).toBe(0.88);
+    // R2-m4: never below SPEC §8.4's 0.91 (an 11 pt clue still prints >= 10 pt); below that, a second page.
+    expect(MIN_FIT).toBe(0.91);
+    expect(11 * MIN_FIT).toBeGreaterThanOrEqual(10);
+    expect(fitFor(1060)).toBe(0.91);
+    expect(fitFor(1100)).toBe(MIN_FIT);
     expect(fitFor(5000)).toBe(MIN_FIT);
     expect(fitFor(0)).toBe(1);
     expect(fitFor(Number.NaN)).toBe(1);
@@ -323,7 +327,7 @@ describe("PrintFit (one-page safety net)", () => {
     expect(MAP_MIN_PRINTED_IN).toBeGreaterThanOrEqual(3.1);
     expect(mapColumnFor(1)).toBe(MAP_COL_IN);
     expect(mapColumnFor(0.96)).toBe(MAP_COL_IN);
-    for (const fit of [0.95, 0.93, 0.92, 0.9, MIN_FIT]) {
+    for (const fit of [0.95, 0.93, 0.92, MIN_FIT]) {
       for (const kidZoom of [1, 0.86]) {
         const col = mapColumnFor(fit, kidZoom);
         expect(col).toBeGreaterThanOrEqual(MAP_COL_IN);

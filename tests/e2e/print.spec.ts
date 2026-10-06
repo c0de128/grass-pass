@@ -103,7 +103,7 @@ test.describe("a real pass", () => {
     await expect(sheet.getByText(/^No Find This Spot today: /)).toBeVisible();
     const fit = await sheet.getAttribute("data-fit");
     test.info().annotations.push({ type: "note", description: `PrintFit print scale for this real pass: ${fit}` });
-    expect(Number(fit)).toBeGreaterThanOrEqual(0.85);
+    expect(Number(fit)).toBeGreaterThanOrEqual(0.91); // SPEC §8.4, PrintFit MIN_FIT (R2-m4)
 
     // Checkboxes are at least 7 mm (96 px per inch -> 7 mm = 26.5 px).
     const box = await sheet.locator(".gp-box").first().boundingBox();

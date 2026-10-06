@@ -6,8 +6,8 @@ import { useEffect } from "react";
 export const PRINT_HEIGHT_PX = 10.2 * 96 - 8;
 /** Printable width of US Letter with 0.4 in margins, in CSS px (7.7 in x 96). */
 export const PRINT_WIDTH_PX = 7.7 * 96;
-/** Never shrink below this: a second page is more honest than unreadable text. */
-export const MIN_FIT = 0.85;
+/** Never shrink below this (SPEC §8.4: an 11 pt clue prints >= 10 pt): a second page is more honest than unreadable text. */
+export const MIN_FIT = 0.91;
 
 /** The map column at 100% (print.css default), in inches. */
 export const MAP_COL_IN = 3.27;

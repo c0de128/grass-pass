@@ -133,6 +133,9 @@ export type RequestPlan = {
   validate: { hasMap: boolean; ask: Mix; lowData: boolean };
 };
 
+/** Hard items asked for beyond the band's promise (ages 10-13: 2 promised, 3 asked). */
+export const HARD_EXTRA = 1;
+
 /**
  * The request for a pool (build-pass.ts; the eval scorer replays it to count drop reasons): the prompt
  * pool (n + PROMPT_SPARES per section), its mix, and the mix asked for with spares (`sparesFor`).
@@ -147,7 +150,10 @@ export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed =
   const count = (s: Section) => pool.filter((p) => p.section === s).length;
   const strong = pool.filter(isStrong).length;
   const lowData = strong < mix.n + LOW_DATA_SLACK;
-  const ask = askMix(mix, { park: count("park"), wild: count("wild"), lucky: count("lucky") }, sparesFor(strong, mix.n));
+  const asked = askMix(mix, { park: count("park"), wild: count("wild"), lucky: count("lucky") }, sparesFor(strong, mix.n));
+  // Audit R4 (Q-4-04): ask for one hard item more than the pass promises, so one dropped hard clue still
+  // leaves the promised number (validate.ts fitToMix keeps hard items last to go).
+  const ask = mix.hardMin > 0 ? { ...asked, hardMin: Math.min(asked.n, mix.hardMin + HARD_EXTRA) } : asked;
   return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData } };
 }
 
@@ -215,16 +221,18 @@ export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[
  * question are left; validate.ts `trimFillerOpening` takes off any filler the model still writes.
  * The 10-13 smoke of 2026-10-06 dropped "Here" ("Here is a place to sit."), "Near" (it wrote a fragment:
  * "Near a plant with fruit or seeds ...") and "Follow" ("Follow a bug ...": too close to "chase").
+ * Audit R4-C2: a bank of 21 rotating command verbs read machine-made on paper ("Explore for a bug",
+ * "Glance at the paths", "Track a ride", "Seek ...", "Discover ..."): the bank now holds only words a
+ * grown-up writing a scavenger hunt would use, and a question word or "Somewhere" for variety.
  */
 export const OPENER_BANK = [
-  "Peek", "Spy", "Hunt", "Somewhere", "Tiptoe", "Wander", "Track", "Who", "What", "Which", "Sneak",
-  "Point", "Squint", "Scan", "Watch", "Notice", "Seek", "Explore", "Glance", "Discover", "Check",
+  "Spot", "Hunt", "Watch", "Check", "Notice", "Point", "Peek", "Who", "What", "Which", "Where", "Somewhere",
 ] as const;
 
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
 export const STOCK_OPENINGS = [
   "can you find", "can you spot", "can you see", "can you hear", "find a", "find an", "find the", "look for", "i dare you",
-  "do you see", "try to find", "try to spot", "search for", "spot a", "see if you",
+  "do you see", "try to find", "try to spot", "search for", "see if you",
 ] as const;
 
 /** `k` different first words for a park, picked by a hash of its name (stable). */
@@ -330,7 +338,8 @@ export const NAME_LEAK_EXAMPLES = [
  */
 export const CLUE_VOICES = [
   "Voice for this park: short, curious questions.",
-  "Voice for this park: riddles in which the thing talks about itself (I and my).",
+  // Audit R4-C2: "riddles in which the thing talks about itself" wrote "me; I am ..." on 6-8 clues of a pass.
+  "Voice for this park: a friendly guide pointing out one clear detail.",
   "Voice for this park: a nature detective's notes, the trait first.",
   // Content tuning: "playful dares" wrote "I dare you to find" on 16 clues of run 2026-10-06-2.
   "Voice for this park: tiny one-sentence stories.",
@@ -346,7 +355,7 @@ export const CLUE_VOICES = [
  */
 export const OLDER_VOICES = [
   "Voice for this park: a nature detective's field notes: the trait first, then exactly where on the thing to check it.",
-  "Voice for this park: riddles in which the thing talks about itself (I and my), each with one precise detail.",
+  "Voice for this park: a naturalist's tip: one precise detail and where on the thing to see it.",
   "Voice for this park: a park ranger explaining one detail and what it is for.",
   "Voice for this park: start with what the child will see from far away, then a closer detail to check.",
 ] as const;
@@ -405,16 +414,19 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     '- Never open with a filler word or cry such as Quick, Psst, Shh, Wow, Hmm, Hey, Ooh, Ready or Stop: start with the clue itself.',
     "- Ask the child to listen or hear ONLY when that item's SOURCE says it makes a sound. Plants, fungi, spiders, snails, butterflies, moths, dragonflies and damselflies make no sound.",
     '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
+    // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
+    "- Write every clue to the child. At most ONE clue on the pass may be a riddle in which the thing talks as itself (I, me, my).",
+    '- A count clue is a task ("Count the ..."), never a "Which ...?" or "What ...?" question with the number in it, and never a question followed by "Count ...".',
     ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.
     ...(mix.max.lucky > 0
-      ? ['- Lucky Finds (section "lucky") come and go: the clue must say the child MIGHT see it today, and describe how it looks, sounds or moves from its SOURCE.']
+      ? ['- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the child might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.']
       : []),
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
     ...(mix.max.wild > 0
       ? [
-          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for a green anole never say green, for an amberwing never say amber). Bad: ${bad(0)}, ${bad(1)}.`,
+          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for a green anole never say green, for an amberwing never say amber), and never the describing phrase its name is made of (for a red-tailed hawk never say a red tail). Bad: ${bad(0)}, ${bad(1)}.`,
         ]
       : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
@@ -434,7 +446,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     ...(spot ? [] : ['- This pass has NO map. Never write map, mapped or "on the map" in a clue or lookWhere.']),
     "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, no family name, not even one word of its name or of its kind (for a honey bee, never say honey or bee; for a pond or lake, never say pond or lake). Describe what it looks like or what it does.",
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
-    `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine.`,
+    `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
     ...readingRules(band, info.grade),
     `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look).`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",

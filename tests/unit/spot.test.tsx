@@ -354,7 +354,7 @@ describe("makePass with Find This Spot (live recordings)", () => {
     const p = await pass(CEL.id);
     const s = p.spot as SpotOk;
     expect(s.status).toBe("ok");
-    expect(s.riddle).toBe("A roof and pillars keep you dry and cool while you eat a snack."); // audit R3 recording
+    expect(s.riddle).toBe("I have pillars and a roof. I keep you dry in the rain while you eat a snack."); // audit R4 recording
     expect(s.riddleBy).toBe("model");
     expect(s.target.osmId).toBe("way/536185861");
     expect(p.items).toHaveLength(8); // content-tuning recording: 8 asked (no spare for an 11-find pool), all 8 pass the checks

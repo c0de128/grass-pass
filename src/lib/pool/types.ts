@@ -30,6 +30,13 @@ export type PoolItem = {
    * replace it. A hint (lookWhere) that uses one is still left out. Never in `nameWords`.
    */
   nameTraits?: string[];
+  /**
+   * Wild Finds only (audit R4-C2): the describing PHRASES of its own names, each a trait word and the body
+   * or plant part the name pins it to ("red tail" for Red-tailed Hawk, "amber wing" for Eastern Amberwing,
+   * "white flower" for a "White ... flower"). A clue that puts the two together gives the answer away: a
+   * hard name leak (validate.ts `traitPartLeak`). A lone colour word stays the `name_trait` preference.
+   */
+  nameTraitParts?: { trait: string; part: string }[];
   /** Fixed safety line printed with the item, or null. */
   safety: string | null;
   /** True for things that stay put (landmarks, plants, fungi). */

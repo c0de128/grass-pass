@@ -191,6 +191,45 @@ export function nameTraitWords(name: string): string[] {
   return [...out];
 }
 
+/**
+ * Body and plant parts a species name can pin a trait word to (singular). Audit R4-C2: "Glance up for a
+ * bird with a red tail." printed for Red-tailed Hawk on the first example pass.
+ */
+export const NAME_PARTS: ReadonlySet<string> = new Set([
+  "tail", "throat", "wing", "belly", "head", "back", "eye", "bill", "beak", "breast", "crown", "cap", "neck", "shoulder",
+  "leg", "foot", "face", "chin", "cheek", "rump", "side", "flank", "vent", "crest", "hood", "mask", "tuft", "collar",
+  "ear", "nose", "horn", "spine", "shell", "toe", "brow", "eyebrow", "spot", "stripe", "band", "tip", "ring",
+  "leaf", "flower", "fruit", "stem", "berry", "bud", "bark", "cone", "seed", "petal", "bloom", "blossom", "needle", "pod", "root",
+]);
+
+/** The part a name word names: "tailed" -> "tail", "leaved" -> "leaf", "wings" -> "wing", "flower" -> "flower"; else null. */
+export function namePart(word: string): string | null {
+  const w = word.toLowerCase();
+  const tries = [w, w.replace(/s$/, ""), w.replace(/ies$/, "y"), w.replace(/ed$/, ""), w.replace(/d$/, ""), w.replace(/ied$/, "y"), w.replace(/ved$/, "f"), w.replace(/ted$/, "t"), w.replace(/(.)\1ed$/, "$1")];
+  return tries.find((t) => t.length >= 2 && NAME_PARTS.has(t)) ?? null;
+}
+
+/**
+ * Audit R4-C2: the trait word + part pairs of a name. A trait word (colour, pattern, size; or the colour a
+ * compound word starts with) is pinned to every part word after it in the same name ("Red-tailed Hawk" ->
+ * red + tail; "White Prairie Clover flower" -> white + flower), and a compound's own rest ("Amberwing" ->
+ * amber + wing, "Redbud" -> red + bud).
+ */
+export function nameTraitParts(name: string): { trait: string; part: string }[] {
+  const words = name.toLowerCase().normalize("NFKC").split(/[^\p{L}]+/u).filter(Boolean);
+  const out = new Map<string, { trait: string; part: string }>();
+  const add = (trait: string, part: string | null) => {
+    if (part) out.set(`${trait} ${part}`, { trait, part });
+  };
+  words.forEach((w, i) => {
+    const pre = COLOUR_PREFIXES.filter((c) => w.startsWith(c) && w.length - c.length >= 2).sort((a, b) => b.length - a.length)[0];
+    if (pre && !NAME_TRAIT_WORDS.has(w)) add(pre, namePart(w.slice(pre.length)));
+    if (!NAME_TRAIT_WORDS.has(w)) return;
+    for (const later of words.slice(i + 1)) add(w, namePart(later));
+  });
+  return [...out.values()];
+}
+
 /** 0 = two or more looks-like words outside the names, 1 = one, 2 = none: describable species go first in the prompt. */
 const looksTier = (n: number) => (n >= 2 ? 0 : n === 1 ? 1 : 2);
 
@@ -243,6 +282,12 @@ export function wildPool(
     const nameTraits = [
       ...new Set([...(s.commonName ? nameTraitWords(s.commonName) : []), ...(sum.names ?? []).flatMap((n) => nameTraitWords(n))]),
     ].filter((w) => !nameWords.includes(w));
+    // Audit R4-C2: "a red tail" for Red-tailed Hawk is the name itself, not a trait: a hard leak.
+    const traitParts = [
+      ...new Map(
+        [...(s.commonName ? nameTraitParts(s.commonName) : []), ...(sum.names ?? []).flatMap((n) => nameTraitParts(n))].map((p) => [`${p.trait} ${p.part}`, p]),
+      ).values(),
+    ];
     items.push({
       id: `inat-${s.taxonId}`,
       section: "wild",
@@ -253,6 +298,7 @@ export function wildPool(
       source: "iNaturalist",
       nameWords,
       ...(nameTraits.length > 0 ? { nameTraits } : {}),
+      ...(traitParts.length > 0 ? { nameTraitParts: traitParts } : {}),
       // Name trait words are still "inside the names" here, so the pool order and low-data test are unchanged.
       looks: looksOutsideNames(leadSentences(sum.summary), [...nameWords, ...nameTraits]),
       safety: safetyLineFor(taxon, sum.summary),

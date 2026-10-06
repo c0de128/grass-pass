@@ -8,7 +8,7 @@
  */
 import { MIN_PASS_ITEMS } from "@/lib/ai/schema";
 import type { PoolItem, SectionState } from "@/lib/pool/types";
-import type { Pass } from "./schema";
+import { AGE_BAND_INFO, type Pass } from "./schema";
 
 type Sections = Pass["sections"];
 
@@ -46,4 +46,17 @@ export function explainShortSections(
 export function shortPassMessage(parkName: string, found: number): string {
   const what = found === 0 ? "we found none" : found === 1 ? "we found 1" : `we found ${found}`;
   return `Not enough real data for a pass at ${parkName} right now: a pass needs at least ${MIN_PASS_ITEMS} finds, and ${what}. Each section below says why.`;
+}
+
+/**
+ * Audit R4 (Q-4-04): ages 10-13 promise "8 finds, 2 of them hard"; a live pass printed 1 hard find and
+ * said nothing. The grown-up's stub says so when fewer hard finds than the band promises made it through
+ * the checks. Null when the band promises none or the pass has enough.
+ */
+export function hardShortNote(pass: Pick<Pass, "ageBand" | "items">): string | null {
+  const promised = AGE_BAND_INFO[pass.ageBand].hardMin;
+  const hard = pass.items.filter((i) => i.difficulty === "hard").length;
+  if (promised === 0 || hard >= promised || pass.items.length === 0) return null;
+  const what = hard === 0 ? "none of today's finds is" : hard === 1 ? "only 1 of today's finds is" : `only ${hard} of today's finds are`;
+  return `${AGE_BAND_INFO[pass.ageBand].label} aim for ${promised} hard finds; ${what} marked hard, because fewer hard clues passed our checks.`;
 }

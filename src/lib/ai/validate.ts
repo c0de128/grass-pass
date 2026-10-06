@@ -24,7 +24,7 @@ import { seasonProblem } from "@/lib/pool/season";
 import { hasUrlOrMarkup } from "@/lib/safety/contact";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { PoolItem, Section } from "@/lib/pool/types";
-import { looksScore } from "@/lib/pool/wild";
+import { looksScore, namePart } from "@/lib/pool/wild";
 import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
@@ -50,6 +50,8 @@ export const DROP_REASONS = [
   "broken_count",
   "silent_sound",
   "filler_only",
+  "odd_wording",
+  "riddle_frame",
   "generic_clue",
   "copies_example",
   "copies_source",
@@ -237,6 +239,27 @@ export function nameLeak(text: string, words: readonly string[]): string | null 
 /** A clue that talks about the thing's name ("a white name", "named after", "is called"). */
 export const NAME_TALK_RE = /\b(?:names?|named|called|nicknamed?)\b/i;
 
+/** A trait word and its part count as one phrase when at most this many words apart ("a red tail", "its tail is bright red"). */
+export const TRAIT_PART_GAP = 3;
+
+/**
+ * Audit R4-C2: the name phrase a clue spells out, or null: the trait word of a name trait pair ("red")
+ * within TRAIT_PART_GAP words of its part ("tail", "tails", "tailed"), in either order. "a bird with a red
+ * tail" (Red-tailed Hawk) and "orange or amber wings" (Eastern Amberwing) are leaks; "a red patch on its
+ * shoulder" for Red-tailed Hawk and "a white belly" are not.
+ */
+export function traitPartLeak(clue: string, pairs: readonly { trait: string; part: string }[]): string | null {
+  if (pairs.length === 0) return null;
+  const tokens = normalizeForMatch(clue).match(/\p{L}+/gu) ?? [];
+  for (const { trait, part } of pairs) {
+    const tPos = tokens.flatMap((t, i) => (t === trait ? [i] : []));
+    if (tPos.length === 0) continue;
+    const pPos = tokens.flatMap((t, i) => (namePart(t) === part ? [i] : []));
+    if (tPos.some((i) => pPos.some((j) => j !== i && Math.abs(j - i) <= TRAIT_PART_GAP))) return `${trait} ${part}`;
+  }
+  return null;
+}
+
 /** Numbers written with digits in `text` that do not appear in `source`. */
 export function numbersNotIn(text: string, source: string): string[] {
   const found = text.match(/\d+(?:[.,]\d+)?/g) ?? [];
@@ -383,11 +406,24 @@ export function validateDraft(
       drop("name_leak");
       continue;
     }
+    // Audit R4-C2: "Glance up for a bird with a red tail." for Red-tailed Hawk. The trait word together with
+    // the part its name pins it to IS the name: a hard leak. (A lone colour word stays a preference.)
+    if (traitPartLeak(d.clue, item.nameTraitParts ?? []) !== null) {
+      drop("name_leak");
+      continue;
+    }
     // A name word only in lookWhere ("at the pond" for a pond): the clue is fine, so keep the item and
     // leave the hint out (S8b). lookWhere is optional on the pass; the answer is never printed for the kid.
     // A name trait word in the hint ("by the white flowers") is left out too.
     let lookWhere = d.lookWhere;
-    if (nameLeak(lookWhere, item.nameWords) || (traits.length > 0 && nameLeak(lookWhere, traits))) {
+    if (nameLeak(lookWhere, item.nameWords) || (traits.length > 0 && nameLeak(lookWhere, traits)) || traitPartLeak(lookWhere, item.nameTraitParts ?? []) !== null) {
+      lookWhere = "";
+      lookWhereCleared++;
+    }
+    // Audit R4 (quality content note): "Look: on the ground" printed for a bridge railing and a picnic
+    // shelter. A ground, sky, tree or bush hint says nothing about where a built Park Find is, and a water
+    // hint for a pond or creek gives it away: the hint is left out (the clue is kept).
+    if (lookWhere && item.section === "park" && parkLookProblem(lookWhere, item.id) !== null) {
       lookWhere = "";
       lookWhereCleared++;
     }
@@ -418,8 +454,13 @@ export function validateDraft(
     }
     // Audit R3-C1: "Guess how many 25 big grass areas have goals?" / "How many seats ...? There are 9."
     // A "how many" question that states a number gives its own answer away (and often reads broken).
-    if (brokenCountQuestion(d.clue) !== null) {
+    if (brokenCountQuestion(d.clue) !== null || questionCountMix(d.clue, item) !== null) {
       drop("broken_count");
+      continue;
+    }
+    // Audit R4-C2: "Explore for a bug ..." is not English.
+    if (oddWording(d.clue) !== null) {
+      drop("odd_wording");
       continue;
     }
     // Audit R3-C1: "Listen for a bug! Is there one that is green with blue on its end?" (a damselfly).
@@ -467,9 +508,20 @@ export function validateDraft(
       }
       style ??= "repeats_clue";
     }
-    // A stock opening ("Can you find ...") or the same first words as an earlier clue: always only a preference.
-    // Audit R3-C1: the same FIRST word as an earlier clue on this pass counts as a repeated opening too.
-    if (style === undefined && (stockOpening(d.clue) !== null || earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue)))) {
+    // Audit R4-C2: the same first word as an earlier clue on this pass ("Glance at ...", "Glance up for ...")
+    // reads machine-made on paper: a drop now (it was a preference, and most passes have no spare).
+    if (earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue))) {
+      drop("repeats_opening");
+      continue;
+    }
+    // Audit R4-C2: "Point to me; I am a board ...", "Scan for me; I am a metal cooker ..." on 6 of 8 clues.
+    // One clue in which the thing talks as "I" is a riddle; a second one on the same pass is a tic.
+    if (isRiddleFrame(d.clue) && earlier.some((k) => isRiddleFrame(k.clue))) {
+      drop("riddle_frame");
+      continue;
+    }
+    // A stock opening ("Can you find ..."): only a preference.
+    if (style === undefined && stockOpening(d.clue) !== null) {
       style = "repeats_opening";
     }
     used.add(item.id);
@@ -532,7 +584,7 @@ export function validateDraft(
  * while there are more than mix.n, the last item of a section that is above its minimum goes.
  * `spares` = valid items left over (the model was asked for spares; they are not counted as removed).
  */
-export function fitToMix<T extends { item: { section: Section } }>(valid: readonly T[], mix: Mix): { items: T[]; spares: number } {
+export function fitToMix<T extends { item: { section: Section }; difficulty?: string }>(valid: readonly T[], mix: Mix): { items: T[]; spares: number } {
   const per: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
   const items: T[] = [];
   for (const v of valid) {
@@ -541,11 +593,19 @@ export function fitToMix<T extends { item: { section: Section } }>(valid: readon
     items.push(v);
   }
   capLucky(items, per, mix);
-  for (let i = items.length - 1; i >= 0 && items.length > mix.n; i--) {
-    const s = items[i].item.section;
-    if (per[s] > mix.min[s]) {
-      per[s]--;
-      items.splice(i, 1);
+  // Audit R4 (Q-4-04): a "hard" item is the last to go while the pass has no more than hardMin of them
+  // (ages 10-13 promise 2 hard finds; a live pass printed 1).
+  let hard = items.filter((v) => v.difficulty === "hard").length;
+  for (const keepHard of [true, false]) {
+    for (let i = items.length - 1; i >= 0 && items.length > mix.n; i--) {
+      const s = items[i].item.section;
+      const isHard = items[i].difficulty === "hard";
+      if (keepHard && isHard && hard <= mix.hardMin) continue;
+      if (per[s] > mix.min[s]) {
+        per[s]--;
+        if (isHard) hard--;
+        items.splice(i, 1);
+      }
     }
   }
   while (items.length > mix.n) items.pop();
@@ -951,9 +1011,11 @@ export function sameFirstWord(a: string, b: string): boolean {
  * "ready" 24, "wow" 20, "guess" 16, "shh" 13, "stop" 12, "listen" 12, "psst" 10, "hmm" 8). They only
  * count as filler when punctuation follows them ("Quick!", "Psst,", "Listen closely."), so "Look at the
  * bark" or "Listen for a gurgle" stay.
+ * Audit R4 (UX-4-04): "Maybe! Track a ride with two wheels..." on a Lucky Find. "Maybe!" / "Perhaps," as
+ * an opener is filler too; a Lucky Find says "might" or "maybe" inside its sentence (prompt.ts).
  */
 const FILLER_WORDS =
-  "quick|quickly|psst+|pst|shh+|sh|hush|hey|hi|hello|ooh+|oh+|wow+|whoa|hmm+|yay|aha|ahoy|look|stop|listen|okay|ok|alright|ready|attention|guess what";
+  "maybe|perhaps|quick|quickly|psst+|pst|shh+|sh|hush|hey|hi|hello|ooh+|oh+|wow+|whoa|hmm+|yay|aha|ahoy|look|stop|listen|okay|ok|alright|ready|attention|guess what";
 const FILLER_HEAD_RE = new RegExp(
   `^(?:(?:${FILLER_WORDS})(?:\\s+(?:closely|carefully|up|now|there|everyone|here))?\\s*[!?.,…:;]+\\s*)`,
   "iu",
@@ -1027,6 +1089,58 @@ export function brokenCountQuestion(clue: string): string | null {
   if (!asks) return null;
   const n = sentences.flat().find((w) => numberOf(w) !== null || /^\d/.test(w));
   return n === undefined ? null : `asks "how many" and also says ${n}`;
+}
+
+/**
+ * Audit R4-C2: a question mixed with a count, or null. "Which roof held up by poles has tables below it?
+ * Count 4 of them." asks one thing and then orders another; "Which long seat outdoors can you find 2 of?"
+ * (a Park Find with a map count) hides the count inside a which/what question. A count task ("Count the
+ * 4 seats by the path."), "Can you spot 4 long seats for resting?" and a question alone stay (checked on
+ * every recorded clue of runs 2026-10-05 to 2026-10-06-4). Code may not rewrite the words, so it is dropped.
+ */
+export function questionCountMix(clue: string, item: Pick<PoolItem, "count">): string | null {
+  const sentences = clue.trim().split(/(?<=[.!?])\s+/u).filter(Boolean);
+  const isQuestion = (s: string) => /\?\s*["'”)]*$/u.test(s);
+  const hasCount = (s: string) => /\bcount(?:ing)?\b/iu.test(s);
+  const hasNumber = (s: string) => sentencesOf(s).flat().some((w) => numberOf(w) !== null || /^\d/.test(w));
+  const firstQ = sentences.findIndex((s) => isQuestion(s) && !hasCount(s));
+  if (firstQ >= 0 && sentences.slice(firstQ + 1).some((s) => !isQuestion(s) && hasCount(s))) return "a question, then a count task";
+  if (item.count && sentences.some((s) => isQuestion(s) && /^\s*(?:which|what|who)\b/iu.test(s) && hasNumber(s))) return "a which/what question that states the map count";
+  return null;
+}
+
+/**
+ * Audit R4-C2: openings that are not English or read machine-made ("Explore for a bug ...", the opener
+ * bank's old "Explore"; "Wander to find ..."). Returns the phrase, or null.
+ */
+const ODD_OPENING_RE = /^\s*(explore\s+(?:for|to\s+find)|wander\s+to\s+find|glance\s+(?:up\s+)?for|track\s+(?:a|an)\s+(?:ride|place|spot|seat))\b/iu;
+export function oddWording(clue: string): string | null {
+  return ODD_OPENING_RE.exec(clue)?.[1].toLowerCase().replace(/\s+/g, " ") ?? null;
+}
+
+/**
+ * Audit R4-C2: a clue in which the thing talks as itself ("Point to me; I am a board ...", "Discover my
+ * small arc of water"). One per pass is a riddle; more is a tic (validateDraft drops the second).
+ */
+export function isRiddleFrame(clue: string): boolean {
+  return /(?:^|[^\p{L}'])(?:I|I'm|I've|I'll)(?![\p{L}'])/u.test(clue) || /\b(?:me|my|myself|mine)\b/iu.test(clue);
+}
+
+/** Hints that say nothing about where a built thing stands (or point at a creature's place, not a park's). */
+const PARK_LOOK_BAD_RE =
+  /\b(?:on|in|under|up\s+in|at)\s+(?:the\s+)?(?:ground|sky|grass|tall\s+grass|soil|dirt|tree\s+trunks?|trees?|tree\s+bark|bark|bushes|leaves|plants|flowers)\b/iu;
+/** Park Find kinds whose own nature is water: a water hint gives them away. */
+const WATER_KIND_IDS: ReadonlySet<string> = new Set(["osm-water", "osm-creek"]);
+
+/**
+ * Audit R4 (quality content note): why a Park Find's hint is wrong, or null. "on the ground" for a bridge
+ * or a picnic shelter (the nature hints of the prompt fit plants and bugs, not built things), and "near
+ * the water" for a pond.
+ */
+export function parkLookProblem(lookWhere: string, itemId: string): string | null {
+  if (PARK_LOOK_BAD_RE.test(lookWhere)) return "a nature hint for a built thing";
+  if (WATER_KIND_IDS.has(itemId) && /\b(?:water|wet|watery)\b/iu.test(lookWhere)) return "a water hint for water";
+  return null;
 }
 
 /** iNaturalist taxa that never make a sound a child can hear (verified on api.inaturalist.org 2026-10-06). */

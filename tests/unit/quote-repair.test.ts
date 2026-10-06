@@ -99,7 +99,9 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
       expect(v.drops.not_grounded ?? 0).toBe(0);
       expect(v.quotesRepaired).toBe(8);
       // R2-M5's stricter clue checks (generic clue, wrong count) may drop some of these old clues; none is ungrounded.
-      expect(v.items.length + (v.drops.generic_clue ?? 0) + (v.drops.wrong_count ?? 0) + (v.drops.copies_example ?? 0) + (v.drops.repeats_clue ?? 0)).toBeGreaterThanOrEqual(d.mix!.n - 2);
+      expect(v.items.length + (v.drops.generic_clue ?? 0) + (v.drops.wrong_count ?? 0) + (v.drops.copies_example ?? 0) + (v.drops.repeats_clue ?? 0) +
+        // Audit R4-C2: the old opener bank ("Wander to find ...") and the "I am" voice are drops now too.
+        (v.drops.odd_wording ?? 0) + (v.drops.riddle_frame ?? 0) + (v.drops.repeats_opening ?? 0) + (v.drops.broken_count ?? 0)).toBeGreaterThanOrEqual(d.mix!.n - 2);
       for (const i of v.items) expect(normalizeForMatch(i.item.sourceText).includes(i.sourceQuote)).toBe(true);
     }
   });

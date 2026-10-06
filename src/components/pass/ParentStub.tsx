@@ -2,6 +2,7 @@ import type { ReactNode } from "react";
 import { HIDDEN_PARK_NOTE, safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import type { Pass, SectionId } from "@/lib/pass/schema";
+import { hardShortNote } from "@/lib/pass/short-copy";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
@@ -73,6 +74,7 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
     return st.status === "ok" ? [] : [{ s, message: st.message }];
   });
   const { notGrounded, other } = pass.removed;
+  const hardNote = hardShortNote(pass);
   const notes: string[] = [
     // R2-m3: the park name was hidden on this pass; say why.
     ...(safeParkName(pass.park.name).hidden ? [HIDDEN_PARK_NOTE] : []),
@@ -80,6 +82,8 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
     // S5: why there is no Find This Spot map (the kid side shows nothing in that case).
     ...(pass.spot?.status === "none" ? [pass.spot.message] : []),
     ...(short > 0 ? [`No data available for ${short} more ${short === 1 ? "find" : "finds"}: ${short === 1 ? "its clue" : "their clues"} didn't pass our checks, so we left ${short === 1 ? "it" : "them"} off.`] : []),
+    // Audit R4 (Q-4-04): fewer hard finds than the age band promises.
+    ...(hardNote ? [hardNote] : []),
     ...(notGrounded > 0 ? [`${notGrounded} ${notGrounded === 1 ? "clue" : "clues"} removed: didn't match ${notGrounded === 1 ? "its" : "their"} source.`] : []),
     ...(other > 0 ? [`${other} ${other === 1 ? "clue" : "clues"} removed: gave away the answer or broke a rule.`] : []),
   ];

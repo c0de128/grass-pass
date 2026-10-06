@@ -209,7 +209,8 @@ describe("the checks (style is a preference, truth and safety are not)", () => {
     const mix: Mix = { n: 2, min: { park: 1, wild: 0, lucky: 0 }, max: { park: 2, wild: 0, lucky: 0 }, hardMin: 0 };
     const same = "Sneak to a quiet seat by the path.";
     const a = draftItem(bench, same, bench.sourceText.slice(-30));
-    const b = draftItem(water, same, water.sourceText.slice(-30));
+    // Audit R4-C2: the same FIRST word twice is a drop on every pass now, so the near-repeat starts with another word.
+    const b = draftItem(water, `Now ${same.charAt(0).toLowerCase()}${same.slice(1)}`, water.sourceText.slice(-30));
     expect(validateDraft({ items: [a, b] }, celebration, mix, { hasMap: false }).drops).toEqual({ repeats_clue: 1 });
     const low = validateDraft({ items: [a, b] }, celebration, mix, { hasMap: false, lowData: true });
     expect(low.items).toHaveLength(2);

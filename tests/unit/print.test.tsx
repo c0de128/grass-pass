@@ -145,12 +145,14 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // In between, with no padding: Connemara's 6 real finds plus Celebration's 2 real finds that take the most
-    // lines (an 8-find pass; before R3-leftovers Connemara's own 8 finds landed here).
+    // In between: Connemara's 6 real finds plus Celebration's 2 real finds that take the most lines (an 8-find
+    // pass), with real clues lengthened one at a time to the maximum until the estimate passes the roomy budget.
+    // (Audit R4: Park Finds no longer print a guessed "Look:" hint, so the unpadded real passes are shorter.)
     const connemara = await realPass(PARKS.connemara.id);
     expect(connemara.items).toHaveLength(6);
     const longest = [...pass.items].sort((x, y) => estimatedLines([y]) - estimatedLines([x]));
-    const mid = [...connemara.items, ...longest.slice(0, 2)];
+    let mid = [...connemara.items, ...longest.slice(0, 2)];
+    for (let i = 0; i < mid.length && estimatedLines(mid) <= SNUG_LINE_BUDGET; i++) mid = mid.map((it, k) => (k === i ? { ...it, clue: it.clue.padEnd(120, " x") } : it));
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);
@@ -187,9 +189,9 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // The audit R3 live answer prints the pond (a water find) as find 2, so that find carries a safety
+    // The audit R4 live answer prints the pond (a water find) as find 4, so that find carries a safety
     // line and the stub points to it; nothing was filtered, so there is still no safety footnote.
-    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(1);
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(3);
     expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });

@@ -152,9 +152,13 @@ describe("R3-M2a + PM 1B: a colour or size word of the species' own name is a pr
     expect(a.items[0].style).toBe("name_trait");
     expect(a.styleKept).toBe(1);
     const quote = amber().sourceText.match(/[^.]*orange[^.]*/i)?.[0].trim().split(/\s+/).slice(0, 8).join(" ") ?? "";
+    // Audit R4-C2: "amber wings" for Eastern Amberwing is the name's own phrase (amber + wing): a hard leak now.
     const b = validateDraft({ items: [draftOf(amber(), "Explore for a tiny flyer with orange or amber wings.", quote)] }, pool(), oneWild);
-    expect(b.drops).toEqual({});
-    expect(b.items[0].style).toBe("name_trait");
+    expect(b.drops).toEqual({ name_leak: 1 });
+    // The lone colour word stays a preference.
+    const c = validateDraft({ items: [draftOf(amber(), "Spot a tiny flyer that is orange or amber all over.", quote)] }, pool(), oneWild);
+    expect(c.drops).toEqual({});
+    expect(c.items[0].style).toBe("name_trait");
   });
 
   it("... and is the one to go when a spare can replace it (the spare is printed, the drop is counted as name_trait)", () => {

@@ -113,7 +113,7 @@ describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
 });
 
 describe("POST /api/pass: Connemara (live recordings)", () => {
-  it("streams the real steps, then a 6-item pass from the real first answer and its real refill (PM 1B recording)", async () => {
+  it("streams the real steps, then a 6-item pass from the real first answer and its real refill (audit R4 recording)", async () => {
     const res = await route.POST(post(connemara));
     expect(res.status).toBe(200);
     const ls = await lines(res);
@@ -125,10 +125,10 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    // Builder M's first answer (R3 leftovers): 9 asked (low-data pool: 8 + 1 spare). Two duplicate ids and a generic
-    // plant clue leave 6 ("white flowers" for White Morning-glory is only a preference since PM 1B, and no spare can
-    // replace it), so the refill (builder N's recording) asks for 2 + 1 spare from the 5 unused items. It keeps none
-    // (2 generic clues; "a tree with a white name" for American elm talks about its name): the pass prints 6 of 8.
+    // The audit R4 recording: 9 asked (low-data pool: 8 + 1 spare). A duplicate id and two generic plant clues leave
+    // 6 ("white flowers" for White Morning-glory is only a preference since PM 1B, and no spare can replace it), so
+    // the refill asks for 2 + 1 spare from the 4 unused items that did not fail. It keeps none (3 generic clues):
+    // the pass prints 6 of 8.
     expect(p.items).toHaveLength(6);
     expect(p.target).toBe(8);
     expect(p.removed).toEqual({ notGrounded: 0, other: 6 });
@@ -141,9 +141,9 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild"]);
     // Audit R3: no printed clue opens with filler or ends a command with "?".
     for (const i of p.items) expect(i.clue).not.toMatch(/^(Quick|Psst|Shh|Wow|Hmm|Ready|Stop)|^(Scan|Seek|Explore|Notice|Wander|Sneak|Discover|Track)[^.!?]*?$/);
-    // R2-M5: the grown-up's line is code-written from these items. In this answer the only easy find that stays
-    // put is the creek (find 1), so the tip names it and says to stay close.
-    expect(p.parentNote).toMatch(/^Start with find 1: it's easy and it stays put, but it's near water, so stay close./);
+    // R2-M5: the grown-up's line is code-written from these items. In the audit R4 answer the first easy find that
+    // stays put away from water is find 5 (a plant), and the creek (find 1) gets the stay-close line.
+    expect(p.parentNote).toBe("Start with find 5: it's easy and it stays put. Find 1 is near water: stay close.");
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 

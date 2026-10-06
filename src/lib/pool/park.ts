@@ -36,26 +36,28 @@ const ORDER: readonly FeatureKind[] = FEATURE_KIND_IDS;
  */
 export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   basketball: [
-    "It is a flat {hard|paved} court with a {hoop|ring} on a {tall|high} pole at {each end|both ends}.",
+    "It is a flat {hard|paved|smooth} court with a {hoop|ring|rim} on a {tall|high} {pole|post} at {each end|both ends}.",
     "Its {hoop|ring} is {a metal ring|a round metal rim}, {often|usually} with a net {hanging down|dangling below}, fixed to a {flat|square} board.",
     "{Lines|Stripes} painted on its {hard ground|flat floor} show where {players|people} stand.",
     "{Players|People} {bounce|dribble} a big ball on it and try to {drop|toss} the ball through a {ring|hoop}.",
   ],
   tennis: [
-    "It is a flat court with a {low|short} net {across the middle|stretched across its middle}.",
-    "A {tall|high} {wire|metal} fence {usually|often} goes {all around|round} it to keep the balls in.",
+    // Audit R4 (M10): "a low net across the" was printed on 3 parks.
+    "It is a flat court with a {low|short|waist-high|knee-high} {net|mesh net|long net} {across the middle|stretched across its middle|strung across its center|hung across the middle|that splits it in half|running through its center}.",
+    "A {tall|high} {wire|metal|chain-link} fence {usually|often} goes {all around|round} it to keep the balls in.",
     "{White|Painted} lines on its {ground|surface} make {long|big} boxes and {short|small} boxes.",
     "{Players|People} hit a {small|little} {fuzzy|furry} ball {back and forth|to and fro} over its net.",
   ],
   pickleball: [
-    "It is a {small|short} flat court with a {low|short} net {across the middle|stretched across its middle}.",
+    "It is a {small|short} flat court with a {low|short|waist-high} net {across the middle|stretched across its middle|strung across its center}.",
     "{Players|People} use flat paddles to hit a {plastic|light} ball {full of|covered in} {little|tiny} holes.",
     "Lines on its {ground|surface} mark a {short|narrow} zone {right next to|close to} the net.",
   ],
   volleyball: [
-    "It has a {high|tall} net {across the middle|stretched across its middle}, above the players' heads.",
-    "Some are on {soft|deep} sand, and some are on grass or a {hard|flat} floor.",
-    "{Players|People} {hit|bump} a big ball over its {high|tall} net with their hands and arms.",
+    // Audit R4 (M10): "a tall net across the" was printed on 3 parks.
+    "It has a {high|tall|raised|lofty} {net|mesh net|long net} {across the middle|stretched across its middle|strung across its center|hung across the middle|that splits it in half|running through its center}, {above|over} the players' heads.",
+    "Some are on {soft|deep|loose} sand, and some are on grass or a {hard|flat} floor.",
+    "{Players|People} {hit|bump|pass} a big ball over its {high|tall} net with their hands and arms.",
   ],
   soccer: [
     "It is a big {grass|grassy} field with a goal {with a net|and its net} at {each end|both ends}.",
@@ -64,23 +66,25 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "{Players|Kids} kick a ball {across|along} it and try to get the ball into a net.",
   ],
   baseball: [
-    "It has a {dirt|sandy} infield with a base at {each corner|every corner}.",
-    "A {tall|high} fence stands behind home plate to {stop|catch} the ball.",
+    // Audit R4 (M10): "a base at every corner" was printed on 3 parks.
+    "It has a {dirt|sandy|reddish dirt} infield with {a base|a flat base|a white base|a square base|one base|a padded base} {at each corner|at every corner|on each corner|at every turn|on every corner}.",
+    "A {tall|high} {fence|wire fence|net fence} stands behind home plate to {stop|catch} the ball.",
     "A {small|low} {dirt hill|mound of dirt} in the {middle|center} of it is where the pitcher stands.",
     "{Players|Teams} wait their turn on {long|low} benches in {low|sunken} dugouts {beside|next to} it.",
   ],
   football: [
     "It is a long {grass|grassy} field with goal posts shaped like a {tall|big} letter Y or H.",
-    "{White|Painted} lines cross its grass every few steps from one end to the other.",
+    "{White|Painted} lines {cross|run across} its grass every few {steps|strides} from one end to the other.",
     "The {tall|high} goal posts at {each end|both ends} of it are {often|usually} painted yellow.",
   ],
   sports_field: [
-    "It is an open {marked|lined} area where people play games.",
+    "It is an open {marked|lined} {area|space} where people play {games|sports}.",
     "Painted lines or {flat|wide} open grass show where a game is played on it.",
     "{Teams|Players} and families use it for {running games|ball games} and practice.",
   ],
   playground: [
-    "It is a place with things to {climb, slide and swing on|climb up, slide down and swing on|climb, swing on and slide down}.",
+    // Audit R4 (M10): "with things to climb, swing" was printed on 3 parks.
+    "It is a {play area|play space|kids' area|play spot} with {things|parts|pieces} to {climb, slide and swing on|climb up, slide down and swing on|climb, swing on and slide down|swing on, climb and slide down|slide down, swing on and climb|climb on, swing on and slide down}.",
     "The ground under it is {often|usually} soft: {wood chips, sand or rubber|sand, rubber or wood chips|rubber, wood chips or sand}.",
     "Kids climb {ladders and steps|steps and ladders} on it to reach the top of the {play set|climbing frame}.",
     "It {often|usually} has a {low|short} fence or a border {around|round} it.",
@@ -93,38 +97,38 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   ],
   swing: [
     "It is a seat that hangs from {chains|ropes} and moves back and forth.",
-    "A {tall|high} frame holds it up from above.",
+    "A {tall|high} {frame|metal frame|bar frame} holds it up from above.",
     "Some seats are flat, and some are a {big|wide} round {basket|nest} you can lie in.",
   ],
   climbing: [
-    "It has bars, ropes or holds to climb up and across.",
-    "You hold on with your hands and feet to go up high on it.",
-    "Some look like a big web of rope, and some are metal bars in squares.",
+    "It has {bars, ropes or holds|ropes, holds or bars|holds, bars or ropes} to climb up and across.",
+    "You hold on with your hands and feet to {go up high|get up high|reach the top} on it.",
+    "Some look like a big {web|net} of rope, and some are metal bars in {squares|a grid}.",
   ],
   sandbox: [
     "It is a {low|shallow} box filled with sand for digging.",
-    "Kids build castles and tunnels in its soft sand.",
-    "It has {low|short} walls of wood, stone or plastic {around|round} it.",
+    "Kids build {castles and tunnels|tunnels and castles|hills and castles} in its soft sand.",
+    "It has {low|short} walls of {wood, stone or plastic|stone, plastic or wood|plastic, wood or stone} {around|round} it.",
   ],
   seesaw: [
-    "It is a long board that goes up and down with a rider at each end.",
-    "It balances on a bar in the middle.",
-    "When one end of it goes up, the other end goes down.",
+    "It is a long {board|plank} that goes up and down with a rider at {each end|both ends}.",
+    "It balances on a {bar|pivot} in the {middle|center}.",
+    "When one end of it goes up, the other end {goes down|drops down|sinks}.",
   ],
   spring_rider: [
-    "It is a little seat on a big metal coil that rocks back and forth.",
-    "Many are shaped like an animal or a car.",
-    "It wobbles in every direction when you lean.",
+    "It is a {little|small} seat on a big metal coil that rocks back and forth.",
+    "Many are shaped like an animal or a {car|boat|bike}.",
+    "It {wobbles|sways|rocks} in every direction when you lean.",
   ],
   merry_go_round: [
-    "It is a round platform that spins when you push it.",
-    "It has bars to hold on to while it turns.",
-    "Kids run beside it, push, then jump on for a ride.",
+    "It is a round {platform|disc} that spins when you push it.",
+    "It has {bars|handles|rails} to hold on to while it turns.",
+    "Kids run beside it, push, then {jump|hop} on for a ride.",
   ],
   zip_line: [
-    "It has a seat or handle that rolls along a cable.",
-    "Its cable is stretched tight between two posts.",
-    "You hold on and whoosh from one end of it to the other.",
+    "It has a seat or handle that {rolls|slides|glides} along a cable.",
+    "Its cable is stretched tight between two {posts|poles|tall posts}.",
+    "You hold on and {whoosh|zoom|fly} from one end of it to the other.",
   ],
   splash_pad: [
     "It is a play area with water that {sprays|squirts|shoots} up from the ground.",
@@ -138,8 +142,9 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "{Families|Neighbours} and {groups|friends} {often|sometimes} meet under it for {parties|birthdays} and picnics.",
   ],
   picnic_table: [
-    "It is an outdoor table with {benches|seats} {attached|joined on}.",
-    "Its seats are {joined|fixed} to the table on both long sides.",
+    // Audit R4 (M10): "tables with benches joined on" was printed on 3 parks.
+    "It is an outdoor table with {benches|seats|bench seats|long seats|plank seats} {attached|joined on|built on|fixed to it|bolted on|joined to its legs}.",
+    "Its seats are {joined|fixed|bolted} to the table on both long sides.",
     "Many are made of {wood, metal or thick plastic|thick plastic, wood or metal|metal, wood or thick plastic}.",
     "People sit on both sides of it to {eat a meal|have a snack|share food} outside.",
   ],
@@ -147,7 +152,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     // Audit R3-C1: "long outdoor seats" and "metal box on a post" were printed on several example parks.
     "It is a {long outdoor seat|long seat out in the open|wide seat outside|long seat outdoors} for {resting|taking a break|a rest}.",
     "Many face a {path|trail|walkway} or a {nice|pretty} view.",
-    "Some have a back to lean on and {arms|armrests} at the ends.",
+    // Audit R4 (M10): "has armrests at the ends" was printed on 3 parks.
+    "Some have a {back|backrest|tall back} to lean on and {arms|armrests|side rails|handles|elbow rests} at {the ends|each end|both ends|its two ends}.",
     "They can be made of {wood, metal or stone|stone, wood or metal|metal, stone or wood}.",
   ],
   fountain: [
@@ -156,9 +162,10 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "Some shoot water up {high|into the air}, and some let it {trickle|dribble|run} down.",
   ],
   drinking_water: [
-    "It gives you a {sip|drink} of water when you {press|push} a button.",
-    "A {little|small} arc of water {bubbles|pops|bobs} up from its spout.",
-    "Some have a {low|short} spout for kids or a bowl for dogs.",
+    // Audit R4 (M10): "gives you a sip of water" and "a little arc of water" were printed on 3 parks each.
+    "It {gives you|lets you get|offers|hands you} a {sip|drink|gulp|mouthful|swallow} of {water|cool water|cold water|fresh water} when you {press|push|turn} a {button|knob|handle}.",
+    "A {little|small|short|thin|low|tiny} {arc|stream|curve|jet|spurt|spray} of water {bubbles|pops|bobs|springs|leaps} up from its spout.",
+    "Some have a {low|short|second} spout for kids or a {bowl|dish} for dogs.",
   ],
   bbq: [
     "It is a {metal box|metal cooker|low metal box|metal fire box} {on|up on|set on} a {post|pole|stand} where people cook food.",
@@ -166,29 +173,29 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "It is often {black|dark} from smoke and old fires.",
   ],
   dog_park: [
-    "It is a fenced area where dogs can run {off the leash|free}.",
+    "It is a fenced {area|yard} where dogs can run {off the leash|free}.",
     "It often has two gates in a row, so dogs can't slip out.",
     "You may hear barking and see balls being {thrown|tossed} inside it.",
   ],
   fitness: [
-    "It has bars or machines for stretching and {working out|getting strong}.",
-    "A sign by it often shows pictures of how to do each move.",
-    "Grown-ups do pull-ups, push-ups and step-ups on it.",
+    "It has {bars|metal bars|posts and bars} or machines for stretching and {working out|getting strong}.",
+    "A sign by it often shows {pictures|drawings} of how to do each move.",
+    "Grown-ups do {pull-ups, push-ups and step-ups|push-ups, step-ups and pull-ups|step-ups, pull-ups and push-ups} on it.",
   ],
   pool: [
-    "It is a big tank of water for swimming.",
+    "It is a big {tank|basin} of water for swimming.",
     "It has a deep end and a shallow end.",
-    "A tall fence goes around it to keep people safe when it is closed.",
+    "A {tall|high} fence goes {around|round} it to keep people safe when it is closed.",
   ],
   track: [
-    "It is an oval path with lanes for running.",
+    "It is an oval {path|loop} with lanes for running.",
     "Lines split it into long lanes side by side.",
-    "It is often red or black and feels bouncy under your feet.",
+    "It is often {red or black|black or red} and feels {bouncy|springy|soft} under your feet.",
   ],
   garden: [
-    "It is a planted area with flowers or plants that people look after.",
+    "It is a planted {area|patch|space} with flowers or plants that people look after.",
     "Its plants grow in rows or in {neat|tidy} beds with edges.",
-    "Some have small labels that tell the plant names.",
+    "Some have {small|little} labels that tell the plant names.",
   ],
   bleachers: [
     "They are rows of {benches|seats} stepped up high so people can watch a game.",
@@ -198,12 +205,12 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   artwork: [
     "It is something an artist made for everyone to see, like a shape of metal or stone, or a big painting on a wall.",
     "It may be {bright and colourful|colourful and bright}, or old and worn by the weather.",
-    "Some have a small sign that tells who made it.",
+    "Some have a {small|little} sign that tells who made it.",
   ],
   info_board: [
-    "It is a board with words and pictures about the park.",
-    "It stands on posts near a {path|trail} or a parking lot.",
-    "It may show trails, plants or animals that live nearby.",
+    "It is a board with {words and pictures|pictures and words} about the park.",
+    "It stands on {posts|legs} near a {path|trail} or a parking lot.",
+    "It may show trails, plants or animals that live {nearby|close by}.",
   ],
   viewpoint: [
     "It is a {spot|perch} with a {good|wide} view across the park.",
@@ -217,23 +224,25 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "Ripples spread across it when a fish jumps or a bird lands.",
   ],
   creek: [
-    "It is a {narrow|thin} {line|ribbon} of moving water with a {muddy or rocky|rocky or muddy} bank on {each side|both sides}.",
+    // Audit R4 (M10): "a narrow ribbon of moving" and "a thin line of moving" were printed on 3 parks each.
+    "It is a {narrow|thin|slim|small|skinny} {line|ribbon|strip|band|thread} of {moving|running|flowing|sliding} water with a {muddy or rocky|rocky or muddy} bank on {each side|both sides}.",
     "{Running|Flowing} water in it can make a {soft|gentle|quiet} {rushing|bubbling|gurgling} sound.",
     "After rain it runs fast, and in dry weather it may be just puddles.",
   ],
   bridge: [
-    "It lets a path cross over water or a dip in the ground.",
+    // Audit R4 (M10): "paths that cross over water" was printed on 4 parks.
+    "It lets a {path|trail|walkway|footpath} {cross|go|pass|run} {over|above|high over} water or a {dip|low spot|ditch} in the ground.",
     "Many have {rails|railings} on {the sides|both sides|each side} to hold on to.",
     "You may hear your feet {thump|clomp|tap} on its {boards|planks} as you walk across.",
   ],
   tower: [
-    "It is a tall, narrow structure you can see from far away.",
-    "Some have stairs inside that go up to the top.",
-    "It stands up above the trees around it.",
+    "It is a tall, narrow {structure|building} you can see from far away.",
+    "Some have {stairs|steps} inside that go up to the top.",
+    "It stands up above the trees {around|round} it.",
   ],
   flagpole: [
     "It is a very tall pole that holds a flag up high.",
-    "On windy days its flag flaps and snaps.",
+    "On windy days its flag {flaps and snaps|snaps and flaps|ripples and flaps}.",
     "A rope runs up its side to raise and lower the flag.",
   ],
   historic: [
@@ -285,7 +294,7 @@ const COUNT_NOUNS: Record<FeatureKind, readonly string[]> = {
   viewpoint: ["spot", "view"],
   water: ["pool", "patch"],
   creek: [],
-  bridge: ["way", "crossing", "walkway", "path"],
+  bridge: ["way", "crossing", "walkway", "path", "trail"],
   tower: ["structure"],
   flagpole: ["pole", "flag"],
   historic: ["sign", "plaque", "site", "spot"],

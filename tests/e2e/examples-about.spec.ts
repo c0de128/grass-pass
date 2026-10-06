@@ -114,7 +114,7 @@ test.describe("example parks", () => {
 test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds and their free-plan limit", async ({ page }) => {
   const res = await page.goto("/about");
   expect(res?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1, name: "About Grass Pass" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "An open model, a real park and a pencil." })).toBeVisible();
   for (const h of ["Measured, not promised.", "Open model. Real data. Rules in code.", "Details, one click away.", "Credits and licences"]) {
     await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
   }

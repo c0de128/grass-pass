@@ -11,7 +11,7 @@ import { EXAMPLE_BAND, type ExampleStatus } from "@/lib/prewarm";
 /**
  * "See a real pass, right now" (Kevin's v0 photo cards), wired to the real pre-warmed example passes
  * (src/lib/prewarm.ts). A ready card links its saved pass ("See the pass") and lists real facts from that
- * pass: its computed pass type (Wild / Mixed / Built, rule in passType), its real number of finds, its finds by
+ * pass: its real number of finds ("N finds to spot"; Kevin 2026-10-06, A2: no Wild / Mixed / Built label), its finds by
  * section, the extras (map, October box) as tags and when it was really made. A card with no pass is not a
  * link and says why ("No data available yet: ..."). No distances (the page doesn't know where you are).
  * The pill says only a computed, true statement and pulses only while it is about today.
@@ -85,12 +85,7 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
                     <div className="flex flex-1 flex-col gap-3 p-5">
                       {title}
                       {facts.count > 0 ? (
-                        <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink" data-testid="pass-type">
-                          {facts.type ? (
-                            <span className="rounded-full bg-sun px-2.5 py-1 text-xs font-bold text-sun-foreground" data-kind={facts.type.kind}>
-                              {facts.type.label} <span aria-hidden="true">{facts.type.emoji}</span>
-                            </span>
-                          ) : null}
+                        <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink" data-testid="find-count">
                           <span>
                             {facts.count} {facts.count === 1 ? "find" : "finds"} to spot
                           </span>

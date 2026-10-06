@@ -56,32 +56,11 @@ export function heroCard(statuses: readonly ExampleStatus[], preferred = HERO_EX
   };
 }
 
-export type PassKind = "wild" | "mixed" | "built";
-export type PassType = { kind: PassKind; label: string; emoji: string };
-
-const PASS_TYPES: Record<PassKind, PassType> = {
-  wild: { kind: "wild", label: "Wild Pass", emoji: "🌲" },
-  mixed: { kind: "mixed", label: "Mixed Pass", emoji: "🦆" },
-  built: { kind: "built", label: "Built Pass", emoji: "🏟️" },
-};
-
 /**
- * The pass-type label on a sample park card (Kevin's home copy, 2026-10-06), computed from the pass's real
- * section counts. Lucky Finds are left out (they are neither nature nor park gear). With W Wild Finds and P Park
- * Finds: Wild Pass when W >= 2 x P, Built Pass when P >= 2 x W, Mixed Pass otherwise; no label when W + P = 0.
- * Example: 6 wild + 2 park -> Wild; 3 + 5 -> Mixed; 0 + 8 -> Built.
+ * `count`: the real number of finds on the pass. Kevin 2026-10-06 (A2): no Wild / Mixed / Built label on the cards,
+ * only the real "N finds to spot".
  */
-export function passType(pass: Pass): PassType | null {
-  const wild = pass.items.filter((i) => i.section === "wild").length;
-  const park = pass.items.filter((i) => i.section === "park").length;
-  if (wild + park === 0) return null;
-  if (wild >= 2 * park) return PASS_TYPES.wild;
-  if (park >= 2 * wild) return PASS_TYPES.built;
-  return PASS_TYPES.mixed;
-}
-
-/** `count`: the real number of finds on the pass; `type`: its computed pass-type label (passType). */
-export type CardFacts = { facts: string; tags: string[]; count: number; type: PassType | null };
+export type CardFacts = { facts: string; tags: string[]; count: number };
 
 /** Real facts for a sample park card, from that park's saved pass (counts by section, the map, the October box). */
 export function cardFacts(pass: Pass): CardFacts {
@@ -97,7 +76,7 @@ export function cardFacts(pass: Pass): CardFacts {
   const tags: string[] = [];
   if (pass.spot?.status === "ok") tags.push("Find This Spot map");
   if (pass.october?.status === "ok") tags.push("October monarch box");
-  return { facts, tags, count: n, type: passType(pass) };
+  return { facts, tags, count: n };
 }
 
 export type LiveStatement = { text: string; live: boolean };

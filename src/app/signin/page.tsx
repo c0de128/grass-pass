@@ -11,14 +11,14 @@ export const metadata: Metadata = { title: "Sign in · Grass Pass", robots: { in
 
 /** Auth.js error codes (pages.error) and ours, as plain words. Unknown codes get the general line. */
 const ERRORS: Record<string, string> = {
-  rate_limited: "That's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.",
+  rate_limited: "Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.",
   unavailable: "That sign-in option isn't set up on this server. Pick another one below.",
-  AccessDenied: "Sign-in was cancelled, so nothing changed. You can try again below.",
-  OAuthCallbackError: "The sign-in page didn't finish. Please try again.",
+  AccessDenied: "Sign-in was cancelled, so nothing changed. Changed your mind? Try again below.",
+  OAuthCallbackError: "The sign-in page didn't finish loading. Please try again.",
   Configuration: "Sign-in isn't set up correctly on this server right now. The examples and saved passes still work.",
   Verification: "That sign-in link didn't work. Please try again.",
 };
-const GENERAL_ERROR = "Sign-in didn't work this time. Please try again.";
+const GENERAL_ERROR = "Sign-in didn't work this time. Please give it another try.";
 
 /**
  * Auth.js passes an absolute callbackUrl: keep only its path + query (the sign-in buttons send a path, and
@@ -74,14 +74,14 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           </div>
         </section>
       ) : (
-        <SignInCard options={options} returnTo={from} heading="Sign in to make passes and send reports" headingLevel={2} id="signin-page" />
+        <SignInCard options={options} returnTo={from} heading="Sign in to make new passes and tell us what you found" headingLevel={2} id="signin-page" />
       )}
       <section aria-labelledby="why-sign-in" className="flex flex-col gap-2">
         <h2 id="why-sign-in" className="text-xl font-extrabold text-ink">
           Why sign in?
         </h2>
         <ul className="flex list-disc flex-col gap-1 pl-5">
-          <li>Only to make a NEW pass (2 a day) or to report what you found. Examples, shared links and printing work without it.</li>
+          <li>Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.</li>
           <li>{ACCOUNT_COPY.privacy}</li>
           <li>{ACCOUNT_COPY.grownUps}</li>
           <li>
@@ -90,7 +90,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
         </ul>
         <p>
           <Link href="/about#privacy" prefetch={false} className="font-semibold text-link underline underline-offset-4">
-            What we keep, and for how long
+            What we keep (spoiler: very little), and for how long
           </Link>
         </p>
       </section>

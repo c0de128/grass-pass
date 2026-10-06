@@ -44,9 +44,9 @@ import { WINDOW_MONTHS } from "@/lib/sources/serpapi";
 import { REPO_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "How Grass Pass works: the data, the open model and the checks",
+  title: "How Grass Pass works: real park data in, one open model, paper out",
   description:
-    "Step by step: how Grass Pass turns real park data into a printable kids' pass with one call to the open Gemma 4 model, what the AI does and doesn't do, what code checks, and what we measured.",
+    "Step by step: how Grass Pass turns one park's real map and recent wildlife sightings into a printable kids' pass. Gemma 4, an open model, writes the clues; code fact-checks every one. What the AI does and doesn't do, and what we measured.",
 };
 
 const ext = "font-semibold text-link underline underline-offset-2";
@@ -150,14 +150,18 @@ function Steps({ steps }: { steps: readonly Step[] }) {
 const bullets = "flex list-disc flex-col gap-1.5 pl-5";
 
 const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: MapPinned, title: "Pick a park", body: "A grown-up picks a real park and an age: 4-6, 6-10 or 10-13." },
+  { icon: MapPinned, title: "Pick a park & age", body: "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13." },
   {
     icon: Database,
-    title: "Read real data",
-    body: `The park's map, ${WILD_WINDOW_DAYS} days of nearby sightings, and what visitor reviews mention.`,
+    title: "We read the park",
+    body: `Its map, the last ${WILD_WINDOW_DAYS} days of wildlife sightings nearby, and what visitor reviews mention.`,
   },
-  { icon: Bot, title: "One AI call", body: "Gemma 4 picks a fair mix and writes kid-sized clues. Code checks each one." },
-  { icon: Printer, title: "Print, phone away", body: "One page: the kid's pass and the grown-up's stub." },
+  {
+    icon: Bot,
+    title: "AI writes, code checks",
+    body: "Gemma 4, an open model, picks a fair mix and writes kid-sized clues. Code checks each one, and asks once more if too many fail.",
+  },
+  { icon: Printer, title: "Print, phone away", body: "One page. The kid takes the hunt; you keep the answer key." },
 ];
 
 export default function HowItWorksPage() {
@@ -174,7 +178,7 @@ export default function HowItWorksPage() {
       icon: Search,
       who: "code",
       title: "Find the park",
-      summary: "Type a town, ZIP or park name, or use your location (rounded to about 1 km). Code lists parks within 5 km from OpenStreetMap.",
+      summary: "Type a town, ZIP or park name, or tap Use my location (we round it to about 1 km). Code lists the parks within 5 km, from OpenStreetMap.",
       more: (
         <>
           <p>
@@ -188,7 +192,7 @@ export default function HowItWorksPage() {
       id: "data",
       icon: Database,
       who: "code",
-      title: "Collect real facts about that park",
+      title: "Gather what's really there",
       summary:
         "Code fills three lists, each fact dated and sourced: Park Finds (OpenStreetMap), Wild Finds (iNaturalist, Wikipedia) and Lucky Finds (review counts via SerpApi).",
       more: (
@@ -220,8 +224,8 @@ export default function HowItWorksPage() {
       id: "safety",
       icon: ShieldCheck,
       who: "code",
-      title: "Take out anything unsafe",
-      summary: `Code removes ${BLOCKED_TAXA.length} blocked groups of risky species before the model sees the list, and checks again after.`,
+      title: "Take out anything that bites, stings or itches",
+      summary: `Code removes ${BLOCKED_TAXA.length} blocked groups of risky species (think fire ants and poison ivy) before the model sees the list, and checks again after.`,
       more: (
         <>
           <p>
@@ -240,12 +244,13 @@ export default function HowItWorksPage() {
       id: "model",
       icon: PenLine,
       who: "model",
-      title: "One call to an open model writes the clues",
+      title: "The open model writes the clues",
       summary: (
         <>
-          <strong>One</strong> request to <code>{modelId}</code>
+          Code sends the park&apos;s fact list to <code>{modelId}</code>
           {modelId === "gemma-4-31B-it" ? " (Google's Gemma 4, open weights, Apache-2.0)" : ""} on DigitalOcean serverless
-          inference. It picks finds by id and writes a clue and a proof quote for each, plus one riddle.
+          inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is
+          one call; step 6 is the exception.
         </>
       ),
       more: (
@@ -276,8 +281,8 @@ export default function HowItWorksPage() {
       id: "checks",
       icon: ListChecks,
       who: "code",
-      title: "Code checks every clue",
-      summary: `Code never trusts the answer as it is. It removes any clue that breaks one of ${always.length} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss ${softer.length} style rules when it can.`,
+      title: "Code fact-checks every clue",
+      summary: `Code never takes the AI's word for it. It removes any clue that breaks one of ${always.length} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss ${softer.length} style rules when it can.`,
       more: (
         <>
           <p>A clue is removed when:</p>
@@ -314,7 +319,7 @@ export default function HowItWorksPage() {
       icon: RotateCcw,
       who: "code",
       title: "Refill once, or print it short",
-      summary: "Too few clues survive? Code asks once more for the missing ones. Still short? The pass says how many are missing.",
+      summary: "Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.",
       more: (
         <>
           <p>
@@ -359,8 +364,8 @@ export default function HowItWorksPage() {
       id: "print",
       icon: Printer,
       who: "you",
-      title: "Print one page",
-      summary: "One black-and-white page: the kid's pass on top, the grown-up's stub with answers and sources below.",
+      title: "Print it, hide the phone",
+      summary: "One black-and-white page: the kid's hunt on top, your answer key and sources below. Then the phone goes in the bag.",
       more: (
         <>
           <p>
@@ -422,10 +427,11 @@ export default function HowItWorksPage() {
         <div className="mx-auto flex max-w-5xl flex-col gap-5 px-5 pt-14 pb-12 md:px-8 lg:pt-20">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
           <h1 id="how-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
-            How Grass Pass works
+            How a park becomes a pass.
           </h1>
           <p className="max-w-[55ch] text-xl leading-relaxed text-pretty">
-            Real park data in, one call to Gemma 4 (an open-weight model), every clue checked by code, one printed page out.
+            You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of
+            wildlife sightings. Code fact-checks every one. Your printer does the rest.
           </p>
           <nav aria-label="On this page">
             <ul className="flex flex-wrap gap-2">
@@ -475,15 +481,16 @@ export default function HowItWorksPage() {
         <p className="flex items-start gap-2 text-muted-foreground">
           <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
           <span>
-            A new pass usually takes 10-30 seconds. A section with no data says &quot;No data available&quot; and why.
+            A new pass usually takes 10-30 seconds, about as long as finding the other shoe. A section with no data says
+            &quot;No data available&quot; and why.
           </span>
         </p>
       </Band>
 
-      <Band id="steps" eyebrow="Step by step" title="From a park name to a printed page" tone="muted" width="max-w-4xl">
+      <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted" width="max-w-4xl">
         <p className="-mt-2 max-w-[65ch]">
-          Each step says who does it: <strong>code</strong> (the same every time) or <strong>the open model</strong>. The AI
-          does one step.
+          Each step says who does it: <strong>code</strong> (the same result every time), <strong>the open model</strong>, or{" "}
+          <strong>you</strong>. The AI has one job: picking the finds and writing the words.
         </p>
         <Steps steps={steps} />
       </Band>
@@ -519,7 +526,7 @@ export default function HowItWorksPage() {
           </div>
         </div>
         <p className="max-w-[65ch]">
-          The AI can&apos;t add a find: the answer&apos;s schema only allows ids from the park&apos;s own list.
+          The AI can&apos;t invent a find: its answer&apos;s schema only allows ids from the park&apos;s own list.
         </p>
       </Band>
 
@@ -619,7 +626,7 @@ export default function HowItWorksPage() {
         </Disclosure>
       </Band>
 
-      <Band id="limits" eyebrow="Honest limits" title="What does not work yet">
+      <Band id="limits" eyebrow="Honest limits" title="What doesn’t work (yet)">
         <ul className="grid gap-3 sm:grid-cols-2">
           {howLimits().map((l) => (
             <li key={l.title} className="flex gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">

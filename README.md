@@ -1,4 +1,4 @@
-# Grass Pass: an open model reads your park and writes a one-page pass
+# Grass Pass: Family time is back, powered by AI.
 
 > Your ticket to get outside. Pick a park. Print a pass. Phone away.
 
@@ -7,14 +7,14 @@ sign-in; to make your own, press **Try as a judge** (one click, no sign-up).
 
 TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with its date).
 
-Grass Pass turns one real park into a one-page pass a child can carry outside. A grown-up picks a park and an age
+Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age
 (4-6, 6-10 or 10-13). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
-DigitalOcean) picks a fair mix and writes kid-level clues in one call (plus one refill call if too few pass). Code
-then checks every clue against its source, drops any that fail, and writes every number, date and safety line itself.
-You print one black-and-white page: the kid ticks boxes with a pencil; the grown-up keeps a tear-off stub with the
-answers, safety notes and sources.
+DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (plus one refill call if too few pass).
+Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety
+line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the
+answers, safety notes and sources. The phone stays in your pocket.
 
-Why not a generic printable hunt? "Find a pinecone" fits every park and none. Two parks in Allen, TX, measured on
+Why not a generic printable hunt? Because "Find a pinecone" fails by age five, and parks aren't generic. Two parks in Allen, TX, measured on
 Oct 5, 2026: Connemara Meadow had 70 wildlife species photographed in 14 days and no playgrounds, courts or
 shelters on the map; Celebration Park had 25 soccer fields and no recent sightings. Each gets its own pass, from:
 - **Park Finds:** what is mapped inside the park on OpenStreetMap (courts, playgrounds, shelters, bridges, ponds...).
@@ -51,7 +51,7 @@ clue is removed, the refill rules, caching, limits and measured numbers. The sho
 flowchart LR
   S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries<br/>Google review counts (SerpApi)"] --> P["Pools, by code<br/>what is really in this park"]
   P --> F["Code safety<br/>blocked species removed<br/>by iNaturalist taxon"]
-  F --> AI["Gemma 4 31B<br/>ONE model call<br/>strict JSON schema"]
+  F --> AI["Gemma 4 31B<br/>usually one model call<br/>(+1 refill if needed)<br/>strict JSON schema"]
   AI --> V["Code checks<br/>quote must be in the source,<br/>no answer names, no added numbers"]
   V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
 ```
@@ -66,7 +66,7 @@ flowchart LR
 3. **Code decides what is safe.** The blocked groups in `src/lib/safety/danger-taxa.ts` (venomous snakes, recluse and
    widow spiders, fire ants, poison ivy...) are removed by iNaturalist taxon and ancestor ids before the model sees the
    list, and checked again after. Every Wild Find gets a fixed "look, don't touch" line from code.
-4. **One call to an open model** (`gemma-4-31B-it` on DigitalOcean serverless inference by default) picks items by
+4. **An open model writes the clues** (`gemma-4-31B-it` on DigitalOcean serverless inference by default): it picks items by
    id and writes the clues. The JSON schema allows only the real pool ids.
 5. **Code checks every clue.** Its `sourceQuote` must appear word for word in the item's source; it must not name its
    answer, add a number or contain a link; a "how many" question must not give its own number; a "listen" clue needs a

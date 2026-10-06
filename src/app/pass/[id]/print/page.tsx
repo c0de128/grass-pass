@@ -57,8 +57,8 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
       <PrintFit />
       <div className="gp-screen-only mx-auto flex w-full max-w-[8.5in] flex-col gap-3">
         <p className="text-lg">
-          This is your pass on one Letter page, in black and white. In the print box pick <strong>Scale: 100%</strong> (or
-          &quot;Default&quot;). Then cut on the dashed line: the kid takes the top, you keep the answer key.
+          Here&apos;s your pass: one Letter page, black and white. In the print box, pick <strong>Scale: 100%</strong> (or
+          &quot;Default&quot;). Then cut on the dashed line: the kid takes the hunt, you keep the answer key.
         </p>
         <div className="flex flex-wrap gap-3">
           <PrintButton auto={sp.print === "1"} />

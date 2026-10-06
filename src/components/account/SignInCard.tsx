@@ -92,8 +92,8 @@ export function SignInCard({
         {heading}
       </H>
       <p className="text-base">
-        Each new pass is a real call to the AI model, so a grown-up signs in first: 2 new passes a day each. Examples and
-        saved passes need no sign-in. {ACCOUNT_COPY.grownUps}
+        Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved
+        passes need no sign-in. {ACCOUNT_COPY.grownUps}
       </p>
       <form
         action={async (fd: FormData) => {

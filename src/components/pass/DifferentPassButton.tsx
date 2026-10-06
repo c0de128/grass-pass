@@ -37,7 +37,7 @@ export function DifferentPassButton({
   }, [state, router]);
 
   if (variant >= MAX_VARIANTS) {
-    return <p className="text-base">This is today&apos;s last different pass for this park and age ({MAX_VARIANTS} of {MAX_VARIANTS}).</p>;
+    return <p className="text-base">That&apos;s today&apos;s last different pass for this park and age ({MAX_VARIANTS} of {MAX_VARIANTS}). Come back tomorrow for a new one.</p>;
   }
 
   return (

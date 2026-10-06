@@ -144,9 +144,9 @@ export function stepText(step: PassStep, env: Env): string {
     case "clues":
       return `Writing clues with ${configuredModelId(env)} (open model)…`;
     case "check":
-      return "Checking every clue against its source…";
+      return "Fact-checking every clue against its source…";
     case "retry":
-      return "Some clues didn't pass the checks. Asking once more…";
+      return "A few clues didn't pass the checks. Asking the model once more…";
   }
 }
 

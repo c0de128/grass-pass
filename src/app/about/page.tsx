@@ -45,9 +45,9 @@ import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "About Grass Pass: the open model, the real data, what we measured and privacy",
+  title: "About Grass Pass: an open model, a real park and a pencil",
   description:
-    "Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). What we measured, what leaves your device, and every credit.",
+    "Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). Code checks every clue. What we measured (misses included), what leaves your device, and every credit.",
 };
 
 const gemma = evalColumn("gemma-4-31B-it");
@@ -78,11 +78,11 @@ export default function AboutPage() {
         <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 pt-14 pb-16 md:px-8 lg:pt-20 lg:pb-20">
           <Eyebrow>About</Eyebrow>
           <h1 id="about-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
-            About Grass Pass
+            An open model, a real park and a pencil.
           </h1>
           <p className="max-w-[60ch] text-xl leading-relaxed text-pretty">
-            A one-page pass for a <em>real</em> park. Gemma 4, an open-weight model, writes the clues from that park&apos;s
-            map and recent wildlife sightings, and code checks each clue against its source. The finding happens on paper.
+            A one-page treasure hunt for a <em>real</em> park. Gemma 4, an open-weight model, writes clues from its map and recent
+            wildlife sightings. Code checks each one. The finding happens on paper.
           </p>
           <ul aria-label="Grass Pass in four facts" className="flex flex-wrap gap-2">
             <li>
@@ -182,7 +182,7 @@ export default function AboutPage() {
                 Gemma 4 writes the clues
               </h3>
               <p className="leading-relaxed">
-                <code>gemma-4-31B-it</code> on DigitalOcean serverless inference (US). One call per pass.
+                <code>gemma-4-31B-it</code> on DigitalOcean serverless inference (US). One or two calls per pass.
               </p>
               <ul aria-label="Model facts" className="flex flex-wrap gap-2">
                 <li>
@@ -233,7 +233,7 @@ export default function AboutPage() {
               </ul>
               <p className="text-sm text-muted-foreground">
                 No data for a park? The pass says <strong className="text-ink">&quot;No data available&quot;</strong> and why.
-                It is never padded.
+                Never padded.
               </p>
             </article>
 

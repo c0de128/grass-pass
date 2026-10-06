@@ -92,7 +92,7 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(html).toContain(`src="${PRINT_LOGO_SRC}"`);
     expect(html).toContain('alt="Grass Pass: your ticket to get outside"');
     expect(PRINT_LOGO_SRC).toBe("/logo-print-1c.svg");
-    expect(t).toContain(`Find these ${pass.items.length} things. Tick a box when you find one!`);
+    expect(t).toContain(`Find these ${pass.items.length} things. Spot one? Tick its box!`);
     expect(t).toContain(KID_STAY_CLOSE);
   });
 

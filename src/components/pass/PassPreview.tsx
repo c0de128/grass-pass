@@ -63,14 +63,14 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
         {reports && pass.items.some((it) => it.ref) ? (
           <p className="rounded-control bg-muted px-3 py-2 text-sm print:hidden" data-testid="report-intro">
             {reports.signedIn ? (
-              "Back from the park? Tell us about each find: it helps the next family, and a find nobody can spot (or that isn't safe) is left off new passes."
+              "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes."
             ) : (
               <>
                 Grown-ups: back from the park?{" "}
                 <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-link underline underline-offset-4">
                   Sign in
                 </Link>{" "}
-                to tell us what you found. It helps the next family, and a find nobody can spot (or that isn&apos;t safe) is left off new passes.
+                to tell us what you found. It helps the next family, and a find nobody can spot (or that isn&apos;t safe) gets left off new passes.
               </>
             )}
           </p>
@@ -86,7 +86,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
                 <Chip kind={s} />
               </h2>
               {s === "lucky" && items.length > 0 ? (
-                <p className="text-base">Maybe finds: they come and go, so it&apos;s fine to miss them. Visitors&apos; Google reviews say people see them here.</p>
+                <p className="text-base">Maybe finds: they come and go, so missing one is totally fine. Visitors&apos; Google reviews say people spot them here.</p>
               ) : null}
               {items.length > 0 ? (
                 <ol className="flex flex-col gap-3">

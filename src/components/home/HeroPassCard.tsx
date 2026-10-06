@@ -31,7 +31,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
           </p>
           {card?.kind === "ready" ? (
             <p className="text-xs text-muted-foreground">
-              {placeLabel(card.ex.example.place)} · real example pass, made {card.ex.madeAt}
+              {placeLabel(card.ex.example.place)} · real pass, made {card.ex.madeAt}
             </p>
           ) : card ? (
             <p className="text-xs text-muted-foreground">{card.place}</p>

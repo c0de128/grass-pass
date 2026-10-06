@@ -77,6 +77,8 @@
   :focus-visible {
     outline: 3px solid var(--gp-ring);
     outline-offset: 2px;
+    /* Tailwind's transition-colors / transition-all also animate outline-color and -offset: show the ring at once. */
+    transition-property: none !important;
   }
 }
 

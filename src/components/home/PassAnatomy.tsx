@@ -29,7 +29,7 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
           <article className="flex flex-col gap-6 rounded-3xl bg-primary p-7 text-primary-foreground md:col-span-3 md:row-span-2 lg:p-9">
             <div className="flex items-center justify-between gap-3">
               <Bird className="size-8" aria-hidden="true" />
-              <span className="rounded-full bg-primary-foreground/15 px-3 py-1 text-xs font-semibold">iNaturalist · last 14 days</span>
+              <span className="rounded-full bg-black/20 px-3 py-1 text-xs font-semibold">iNaturalist · last 14 days</span>
             </div>
             <h3 className="text-3xl leading-tight font-extrabold sm:text-4xl">Wild Finds</h3>
             <p className="max-w-md leading-relaxed">

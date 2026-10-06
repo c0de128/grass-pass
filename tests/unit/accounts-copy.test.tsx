@@ -105,6 +105,6 @@ describe("RULES-4-02/03/04: the pages name only the sign-in providers set up on 
 describe("UX-4-03: the note after signing in", () => {
   it("names the judge demo, and tells the visitor the next step", () => {
     expect(signedInNote(true)).toBe("Signed in as a judge. You can make this pass now.");
-    expect(signedInNote(false)).toBe("Signed in. You can make this pass now.");
+    expect(signedInNote(false)).toBe("Signed in. You can make the pass now.");
   });
 });

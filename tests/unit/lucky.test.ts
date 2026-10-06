@@ -462,7 +462,7 @@ describe("loadLucky (the whole lookup)", () => {
     const r = serpReplay();
     const out = await loadLucky(ARBOR, { features: {} }, deps(r.fetchImpl, { ...ENV, SERPAPI_DAILY_CAP: "1" }));
     expect(out.state).toEqual({ status: "off", message: LUCKY_COPY.dailyCap });
-    expect(LUCKY_COPY.dailyCap).toContain("free search limit");
+    expect(LUCKY_COPY.dailyCap).toContain("free SerpApi search limit");
     expect(r.calls).toHaveLength(1); // the place search only
     // Next day (new daily count): the place is cached, so only review searches are sent.
     const next = serpReplay();

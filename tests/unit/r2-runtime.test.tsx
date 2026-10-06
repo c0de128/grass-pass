@@ -305,7 +305,7 @@ describe("R2-m2: a park whose live query ran into our client timeout is not sent
 
   it("audit Q-3-06: the busy copy no longer promises 'a minute' next to the page's own countdown", () => {
     expect(PARKS_COPY.overpassDown).not.toMatch(/in a minute/);
-    expect(PARKS_COPY.overpassDown).toBe("No data available: the OpenStreetMap server is busy. Try again shortly, or pick an example park.");
+    expect(PARKS_COPY.overpassDown).toBe("No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park.");
   });
 
   it("a DFW park still gets its saved answer while it is negative-cached", async () => {

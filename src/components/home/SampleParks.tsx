@@ -30,7 +30,7 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
               See a real pass, right now.
             </h2>
             <p className="text-lg leading-relaxed text-pretty text-muted-foreground">
-              Passes for parks near Dallas, already written from live park data for{" "}
+              Example passes for parks near Dallas, made from live data for{" "}
               {AGE_BAND_INFO[EXAMPLE_BAND].label.toLowerCase().replace("-", "–")}. Tap one to open it; no sign-up needed.
             </p>
           </div>

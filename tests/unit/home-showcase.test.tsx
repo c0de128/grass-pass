@@ -115,9 +115,9 @@ describe("home showcase (v0 slots filled with real data)", () => {
     const pass = realPass();
     expect(liveStatement([readyStatus("connemara", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "2 example passes made today from live data", live: true });
     expect(liveStatement([readyStatus("connemara", pass, false)], true)).toEqual({ text: "1 example pass ready (made on an earlier day)", live: false });
-    expect(liveStatement([missingStatus("connemara", "x", true)], true)).toEqual({ text: "Making today's example passes now", live: true });
+    expect(liveStatement([missingStatus("connemara", "x", true)], true)).toEqual({ text: "Making today's example passes", live: true });
     expect(liveStatement([missingStatus("connemara", "x")], true)).toEqual({ text: "Example passes not ready yet", live: false });
-    expect(liveStatement([missingStatus("connemara", "x")], false)).toEqual({ text: "Example passes are switched off on this server", live: false });
+    expect(liveStatement([missingStatus("connemara", "x")], false)).toEqual({ text: "Example passes are turned off", live: false });
     const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("connemara", "No data available yet: no pass has been made for it today.")]} enabled />);
     expect(html).toContain('data-live="false"');
     expect(html).not.toContain("animate-ping");
@@ -141,8 +141,8 @@ describe("home showcase (v0 slots filled with real data)", () => {
     expect(spotQuote([missingStatus("connemara", "x")])).toBeNull();
     const html = renderToStaticMarkup(<PassAnatomy spot={null} />);
     expect(html).not.toContain("Something with a roof where people eat lunch");
-    expect(html).toContain("No proof, no Lucky Finds");
-    expect(html).toContain("at least 3 Google Maps reviews from the last 2 years");
+    expect(html).toContain("No proof? The pass leaves them off and says why.");
+    expect(html).toContain("Maybe-sightings, like dogs or bikes, mentioned in at least 3 Google Maps reviews from the last 2 years");
     expect(html).not.toMatch(/printed as .look, don/);
   });
 

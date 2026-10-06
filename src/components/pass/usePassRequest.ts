@@ -22,13 +22,13 @@ const loadSchemas = () => import("@/lib/pass/schema");
 export const CLIENT_TIMEOUT_MS = 95_000;
 
 /** Shown under the progress steps (measured reality, R2-M2). */
-export const PASS_WAIT_COPY = "A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map websites are slow.";
+export const PASS_WAIT_COPY = "A new pass usually takes 10-30 seconds, and up to a minute and a half if the free map websites are slow.";
 
 export const CLIENT_COPY = {
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the answer. Please try again.",
   timeout:
-    "This is taking much longer than usual (over a minute and a half), so we stopped waiting. The free map and wildlife websites can be slow at busy times. Try again: if your pass got made in the meantime, it opens right away.",
+    "This is taking longer than a minute and a half, so we stopped waiting. Free map and wildlife sites can be slow when they're busy. Try again; if your pass is ready, it will open now.",
 } as const;
 
 /** Codes for failures the page itself detects (server failures carry the server's code). */

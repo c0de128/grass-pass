@@ -119,7 +119,7 @@ test.describe("Use my location, blocked", () => {
     const button = page.getByRole("button", { name: "Use my location" });
     await button.click();
     const alert = page.getByRole("alert").filter({ hasText: "location" });
-    await expect(alert).toContainText(/Type a town or ZIP instead|Try again, or type a town or ZIP/);
+    await expect(alert).toContainText(/Type a town or ZIP instead|Type a town or ZIP, or allow location|Try again or type a town or ZIP/);
     const errorId = await alert.getAttribute("id");
     expect((await button.getAttribute("aria-describedby"))?.split(" ")).toContain(errorId);
   });

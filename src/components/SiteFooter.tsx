@@ -21,12 +21,12 @@ export function SiteFooter() {
             <ul className="flex flex-wrap gap-x-8 gap-y-1 text-sm font-medium">
               <li>
                 <Link className={link} href="/about">
-                  About Grass Pass
+                  About
                 </Link>
               </li>
               <li>
                 <Link className={link} href="/how-it-works">
-                  How Grass Pass works
+                  How it works
                 </Link>
               </li>
               <li>

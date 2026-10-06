@@ -23,11 +23,11 @@ export const ITEM_REF_PATTERN = /^[a-z0-9][a-z0-9_-]{0,63}$/;
  */
 export const REPORT_COPY = {
   rule: `A find is left off new passes for that park when at least ${NOT_FOUND_MIN} different signed-in visitors didn't find it in the last ${WINDOW_DAYS} days and they are more than ${Math.round(NOT_FOUND_SHARE * 100)}% of those who reported on it, or at once when ${UNSAFE_ACCOUNTS} say it is not safe (we then review it). Each visitor counts once per find. Judge demo reports are only logged, never counted. Reports are deleted after ${KEEP_DAYS} days.`,
-  thanks: "Thanks — counted.",
-  duplicate: "You already reported this find today. Thanks!",
+  thanks: "Thanks, counted!",
+  duplicate: "You already reported this today. Thanks!",
   /** UX-4-05 / SEC-4-01: the judge demo's reports are logged, never counted. */
-  judgeLogged: "Thanks! Judge demo reports are logged for us to review, but they don't change passes or the counts.",
-  judgeDuplicate: "You already sent that one from this browser today. Try another find.",
+  judgeLogged: "Thanks! Judge demo reports are logged for review, but they don't change the counts or passes.",
+  judgeDuplicate: "This browser already sent that report today. Try another find.",
 } as const;
 
 /** What POST /api/report answers: counted, a repeat, or (the judge demo) logged only. */

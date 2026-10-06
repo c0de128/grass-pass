@@ -114,7 +114,7 @@ describe("searchParks with live recordings", () => {
   it("no parks within 5 km -> the exact §5.4 copy (real empty answer)", async () => {
     const { fetchImpl } = osmReplay();
     const r = await searchParks({ kind: "location", lat: 31, lng: -103 }, deps(fetchImpl));
-    expect(r.ok && r.result.empty).toEqual({ reason: "no_parks", message: "No parks found within 5 km in OpenStreetMap." });
+    expect(r.ok && r.result.empty).toEqual({ reason: "no_parks", message: "No parks within 5 km in OpenStreetMap." });
     expect(r.ok && r.result.query).toEqual({ kind: "location" });
   });
 

@@ -91,7 +91,7 @@ describe("daily pace of the shared store (SEC-3-03)", () => {
     const visitor = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, { ip: "4:visitor", store });
     expect(visitor).toMatchObject({ kind: "error", status: 429, error: { code: "DAILY_LIMIT" } });
     if (visitor.kind === "error") {
-      expect(visitor.error.message).toMatch(/^Clue writing is paused for today \(free budget used\)\. Passes already made today still work\. It resets in /);
+      expect(visitor.error.message).toMatch(/^Clue writing is paused for today since the free budget is used\. Passes made earlier still work\. It resets in /);
       expect(visitor.error.retryAfter).toBeGreaterThan(0);
     }
     expect(replay.calls.length).toBe(calls); // nothing upstream

@@ -91,7 +91,7 @@ export const SPOT_COPY = {
   /** SPEC §5.4, exact. */
   noLandmark: "No Find This Spot today: this park has no single landmark on the map (OpenStreetMap).",
   noOutline: "No Find This Spot today: this park is mapped as a single point, so there is no park outline to draw (OpenStreetMap).",
-  busy: "No Find This Spot today: the OpenStreetMap server was busy, so we couldn't draw the map. Make a different pass to try again.",
+  busy: "No Find This Spot today: the OpenStreetMap server was busy and we couldn't draw the map. Make a different pass to try again.",
   slow: "No Find This Spot today: the OpenStreetMap server was too slow, so we couldn't draw the map. Make a different pass to try again.",
   attribution: "© OpenStreetMap contributors",
   /** Fixed riddle when the model's riddle failed our checks (never a guess about the place). */

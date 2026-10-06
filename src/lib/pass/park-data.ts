@@ -44,7 +44,7 @@ export const HEAVY_TTL_SEC = 15 * 60;
 
 /** Copy for a data stage stopped by the pass deadline (SPEC §5.4, existing DATA_TOO_SLOW wording). */
 // Audit Q-3-06: "Try again shortly", not "in a minute" (the page's own countdown says the real wait).
-export const DATA_TOO_SLOW_COPY = "The park data took too long to load, so there was no time left to write clues. Try again shortly.";
+export const DATA_TOO_SLOW_COPY = "The park data took too long to load, so we ran out of time to write clues. Try again shortly.";
 
 const featuresCache = createCachePair({
   name: "park-features",

@@ -41,7 +41,7 @@ export function TearLine() {
         <path d="M8.1 8.1L20 20M8.1 15.9L20 4M14.5 12h0" />
       </svg>
       <span className="gp-tear-line" aria-hidden="true" />
-      <span aria-hidden="true">cut here · kid keeps the top, grown-up keeps the bottom</span>
+      <span aria-hidden="true">cut here: top for kids, bottom for grown-ups</span>
       <span className="gp-tear-line" aria-hidden="true" />
     </div>
   );

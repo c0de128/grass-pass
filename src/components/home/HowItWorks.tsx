@@ -27,7 +27,7 @@ export const HOW_STEPS: readonly Step[] = [
   {
     icon: Smartphone,
     title: "Hide the phone",
-    body: "Phone away. Your kid ticks off finds with a pencil; you keep the stub, in case anyone needs a hint.",
+    body: "Phone away. Kids tick off finds with a pencil while you keep the stub for hints (and sanity).",
   },
 ];
 

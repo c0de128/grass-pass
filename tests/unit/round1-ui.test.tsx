@@ -65,7 +65,7 @@ describe("long waits (R1 UX M2)", () => {
   it("the page waits longer than the server's 85 s pass deadline (R2-M2), then says so clearly", () => {
     expect(CLIENT_TIMEOUT_MS).toBe(95_000);
     expect(CLIENT_TIMEOUT_MS).toBeGreaterThan(PASS_DEADLINE_MS + 5_000);
-    expect(CLIENT_COPY.timeout).toMatch(/over a minute and a half/);
+    expect(CLIENT_COPY.timeout).toMatch(/longer than a minute and a half/);
     expect(CLIENT_COPY.timeout).not.toMatch(/servers/);
     expect(CLIENT_COPY.timeout).toMatch(/Try again/);
     expect(CLIENT_CODES.timeout).toBe("CLIENT_TIMEOUT");

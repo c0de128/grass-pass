@@ -12,7 +12,7 @@ export default function PassNotFound() {
           <h1 id="gone-title" className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
             No pass here
           </h1>
-          <p>This pass seems to have wandered off. {PASS_COPY.passGone}</p>
+          <p>This pass wandered off. {PASS_COPY.passGone}</p>
           <Link href="/" prefetch={false} className={buttonClassName("primary", "self-start")}>
             Make a pass
           </Link>

@@ -98,12 +98,12 @@ export function signInOptions(env: Env = process.env): SignInOptions {
 
 /** Copy shown next to the sign-in buttons and on /about (Kevin's privacy promise). */
 export const ACCOUNT_COPY = {
-  privacy: "We only keep a scrambled ID to count your 2 passes a day and your found-it reports. No email, no name.",
-  grownUps: "Sign-in is for parents and teachers, not kids.",
+  privacy: "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.",
+  grownUps: "Sign-in is for grown-ups, not kids.",
   signInToMake: `Sign in to make a new pass (${ACCOUNT_PASSES_PER_DAY} a day).`,
-  accountLimit: `That's your ${ACCOUNT_PASSES_PER_DAY} new passes for today. Your passes and the examples still work, and you get ${ACCOUNT_PASSES_PER_DAY} more after midnight (Dallas time).`,
-  judgeNote: "Try as a judge signs you in to a shared demo account: no sign-up, nothing to type.",
-  notConfigured: "Sign-in isn't set up on this server yet, so it can't make new passes. The examples and saved passes still work.",
+  accountLimit: `You used your ${ACCOUNT_PASSES_PER_DAY} new passes for today. Saved passes and examples still work. You get ${ACCOUNT_PASSES_PER_DAY} more after midnight Dallas time.`,
+  judgeNote: "Try as a judge to use a shared demo account. No sign-up, nothing to type.",
+  notConfigured: "Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work.",
 } as const;
 
 /** SEC-4-02: the judge demo's limits in words (the same numbers the code uses). */

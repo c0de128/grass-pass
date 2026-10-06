@@ -158,9 +158,9 @@ export const PassErrorResponseSchema = z.object({ error: ApiErrorBody, parkData:
 
 export const PASS_COPY = {
   allEmpty: (park: string) =>
-    `No data available for ${park} yet: no mapped features and no recent wildlife sightings. Try a bigger park nearby from the list.`,
+    `No data available for ${park}. We found no mapped features or recent wildlife sightings here. Try a bigger park from the list.`,
   notAPark: "We couldn't read that park on OpenStreetMap. Pick another park from the list.",
-  paused: "Clue writing is paused for today (free budget used). Passes already made today still work.",
+  paused: "Clue writing is paused for today since the free budget is used. Passes made earlier still work.",
   passGone: "No data available: this pass isn't saved here anymore (passes are kept for 30 days), or the link is wrong.",
   variantLimit: `That's ${MAX_VARIANTS} different passes for this park and age today, the most we make. Print one of them, pick another park, or come back tomorrow.`,
 } as const;

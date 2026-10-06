@@ -70,7 +70,7 @@ export function cardFacts(pass: Pass): CardFacts {
     .filter((x) => x.n > 0)
     .map((x) => `${x.n} ${x.n === 1 ? SECTION_NAME[x.s].replace(/s$/, "") : SECTION_NAME[x.s]}`);
   const n = pass.items.length;
-  const facts = n === 0 ? "No data available: this pass has no finds that passed our checks." : `${parts.join(", ")}.`;
+  const facts = n === 0 ? "No data available: none of the finds on this pass passed our checks." : `${parts.join(", ")}.`;
 
   // The sections are named in `facts`, so the tags list only the extras on the pass.
   const tags: string[] = [];
@@ -89,11 +89,11 @@ export function liveStatement(statuses: readonly ExampleStatus[], enabled: boole
   const readyOnes = statuses.filter((s) => s.pass);
   const today = statuses.filter((s) => s.pass && s.fresh).length;
   if (today > 0) return { text: `${today} example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
-  if (statuses.some((s) => s.refreshing)) return { text: "Making today's example passes now", live: true };
+  if (statuses.some((s) => s.refreshing)) return { text: "Making today's example passes", live: true };
   if (readyOnes.length > 0) {
     return { text: `${readyOnes.length} example ${readyOnes.length === 1 ? "pass" : "passes"} ready (made on an earlier day)`, live: false };
   }
-  if (!enabled) return { text: "Example passes are switched off on this server", live: false };
+  if (!enabled) return { text: "Example passes are turned off", live: false };
   return { text: "Example passes not ready yet", live: false };
 }
 

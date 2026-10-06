@@ -153,7 +153,7 @@ describe("/about", () => {
   });
 
   it("v3: links to the step-by-step page instead of repeating it, and keeps the key links", () => {
-    expect(html).toMatch(/<a[^>]*href="\/how-it-works"[^>]*>See how a pass is made, step by step/);
+    expect(html).toMatch(/<a[^>]*href="\/how-it-works"[^>]*>See how a pass is made/);
     // SEC-3-01: every <Link> to / in the page source opts out of prefetch (the rendered <a> cannot show it).
     const src = readFileSync(join(ROOT, "src/app/about/page.tsx"), "utf8");
     const homeLinks = src.match(/<Link[^>]*href="\/"[^>]*>/g) ?? [];
@@ -272,7 +272,7 @@ describe("/about", () => {
     expect(t).toContain("request logs (Vercel)");
     expect(t).toContain("never the address itself");
     expect(t).not.toContain("Our server only");
-    expect(t).toContain("the park facts and the age band do leave your device");
+    expect(t).toContain("so park facts and the age band leave your device");
     expect(t.toLowerCase()).not.toContain("never leaves your device");
     // Accounts exist now (sign-in to make a new pass): no "no accounts" claim anywhere on the page.
     expect(t).not.toMatch(/no accounts/i);
@@ -328,7 +328,7 @@ describe("site header and footer", () => {
     expect(t).toContain("OpenStreetMap contributors (ODbL)");
     expect(t).toContain("iNaturalist");
     expect(t).toContain("Apache-2.0");
-    expect(html).toMatch(/<a[^>]*href="\/about"[^>]*>About Grass Pass<\/a>/);
+    expect(html).toMatch(/<a[^>]*href="\/about"[^>]*>About<\/a>/);
     expect(html).toContain(`href="${REPO_URL}"`);
     // The pass page and park list own the "© OpenStreetMap contributors" link name (e2e looks it up).
     expect(html).not.toMatch(/>© OpenStreetMap contributors</);

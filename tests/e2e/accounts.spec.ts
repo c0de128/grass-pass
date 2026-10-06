@@ -63,7 +63,7 @@ test("signed out: a new pass asks a grown-up to sign in (card with Try as a judg
   await expect(card.getByRole("heading", { name: "Sign in to make this pass" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Try as a judge" })).toBeVisible();
   await expect(card.getByText("We only keep a scrambled ID")).toBeVisible();
-  await expect(card.getByText("Sign-in is for parents and teachers")).toBeVisible();
+  await expect(card.getByText("Sign-in is for grown-ups, not kids")).toBeVisible();
   await expect(page.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
   // SEC-4-02: the real number of judge passes left today (from the store), never made up.
   await expect(card.getByTestId("judge-left")).toHaveText(/\d+ of \d+ judge passes left today|0 judge passes left today for your connection/);
@@ -119,7 +119,7 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   // Report buttons on the screen pass (signed in). The counts as they are before the judge reports anything.
   await expect(page.getByTestId("report-intro")).toBeVisible();
   const statsBefore = await page.getByTestId("report-stats").allTextContents();
-  const judgeAnswer = /Judge demo reports are logged for us to review, but they don't change passes or the counts\./;
+  const judgeAnswer = /Judge demo reports are logged for review, but they don't change the counts or passes\./;
   const find1 = page.getByRole("group", { name: "Report find 1" });
   await find1.getByRole("button", { name: "Found it" }).click();
   // UX-4-05: each judge browser has its own "already sent" check, so a judge's first click is never a dead end.

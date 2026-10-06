@@ -41,7 +41,7 @@ test("the page renders every step and links back to About and the footer links t
   await expect(steps).toHaveCount(9);
   await expect(page.getByText("Done by the open model")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "About page" }).first()).toHaveAttribute("href", /\/about#/);
-  await expect(page.getByRole("contentinfo").getByRole("link", { name: "How Grass Pass works" })).toHaveAttribute("href", "/how-it-works");
+  await expect(page.getByRole("contentinfo").getByRole("link", { name: "How it works", exact: true })).toHaveAttribute("href", "/how-it-works");
   // The in-page index jumps to a section.
   await page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Honest limits" }).click();
   await expect(page).toHaveURL(/#limits$/);

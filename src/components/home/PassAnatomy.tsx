@@ -33,8 +33,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-3xl leading-tight font-extrabold sm:text-4xl">Wild Finds</h3>
             <p className="max-w-md leading-relaxed">
-              Real sightings of birds, bugs and blooms: plants and animals people photographed in or near the park (within
-              1.5 km) in the last 14 days. Gemma must quote each one&apos;s source, and code checks the quote word for word.
+              Real birds, bugs and blooms photographed within 1.5 km of the park in the last 14 days. Gemma quotes the source
+              for each find, and code checks it word for word.
             </p>
             <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-paper p-5 text-ink">
               <div className="flex items-start gap-3">
@@ -55,8 +55,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-2xl font-extrabold text-ink">Park Finds</h3>
             <p className="leading-relaxed text-muted-foreground">
-              Hoops, shelters, bridges and playground gear, straight from the park&apos;s OpenStreetMap map, with real counts
-              like &ldquo;2 basketball courts.&rdquo;
+              Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like &ldquo;2 basketball
+              courts.&rdquo;
             </p>
           </article>
 
@@ -67,8 +67,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-2xl font-extrabold text-ink">Lucky Finds</h3>
             <p className="leading-relaxed text-muted-foreground">
-              Maybe-sightings, like a dog or a bike, backed by at least 3 Google Maps reviews from the last 2 years that
-              mention them (counted via SerpApi). No proof, no Lucky Finds: the pass leaves them off and says why.
+              Maybe-sightings, like dogs or bikes, mentioned in at least 3 Google Maps reviews from the last 2 years. SerpApi
+              counts them. No proof? The pass leaves them off and says why.
             </p>
           </article>
 
@@ -76,7 +76,7 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             <MapIcon className="size-7 text-sun" aria-hidden="true" />
             <h3 className="text-2xl font-extrabold sm:text-3xl">Find This Spot</h3>
             <p className="max-w-lg leading-relaxed text-band-muted">
-              Code draws a small black-and-white map of the park with a START and an X. Gemma writes a riddle about the spot.
+              Code draws a simple map with a START and an X. Gemma writes a riddle to help the kids find the spot.
             </p>
             {spot ? (
               <figure className="mt-auto flex flex-col gap-2" data-testid="spot-quote">
@@ -94,8 +94,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             <p className="text-xs font-bold tracking-widest uppercase">Sept 15 to Nov 15</p>
             <h3 className="text-2xl font-extrabold">October monarch box</h3>
             <p className="text-sm leading-relaxed">
-              Code counts monarchs reported nearby in the last 14 days, next to the same days last year. Printed honestly,
-              even when it&apos;s zero.
+              Code counts nearby monarchs from the last 14 days versus the same days last year. It prints the real number,
+              even if it is zero.
             </p>
           </article>
         </div>

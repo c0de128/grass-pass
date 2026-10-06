@@ -36,7 +36,7 @@ export const HONEST_SKIP_CODES = new Set([
 ]);
 
 /** The exact SPEC 5.4 copy for a busy OpenStreetMap (checked whenever that code is shown). */
-export const OSM_BUSY = "No data available: the OpenStreetMap server is busy. Try again shortly, or pick an example park.";
+export const OSM_BUSY = "No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park.";
 
 /** Skip (with the reason) for an honest outside failure; fail for anything else. */
 export function skipIfHonest(code: string, message: string, where: string): void {

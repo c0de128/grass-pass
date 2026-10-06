@@ -46,7 +46,7 @@ import { REPO_URL } from "@/lib/site-url";
 export const metadata: Metadata = {
   title: "How Grass Pass works: real park data in, one open model, paper out",
   description:
-    "Step by step: how Grass Pass turns one park's real map and recent wildlife sightings into a printable kids' pass. Gemma 4, an open model, writes the clues; code fact-checks every one. What the AI does and doesn't do, and what we measured.",
+    "See how we turn a park's real map and wildlife sightings into a printable pass. Gemma 4, an open model, writes the clues and code fact-checks every one. What the AI does, what it doesn't, and what we measured.",
 };
 
 const ext = "font-semibold text-link underline underline-offset-2";
@@ -159,9 +159,9 @@ const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
   {
     icon: Bot,
     title: "AI writes, code checks",
-    body: "Gemma 4, an open model, picks a fair mix and writes kid-sized clues. Code checks each one, and asks once more if too many fail.",
+    body: "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.",
   },
-  { icon: Printer, title: "Print, phone away", body: "One page. The kid takes the hunt; you keep the answer key." },
+  { icon: Printer, title: "Print and go", body: "One page. The kid gets the hunt and you keep the answer key." },
 ];
 
 export default function HowItWorksPage() {
@@ -177,8 +177,8 @@ export default function HowItWorksPage() {
       id: "park",
       icon: Search,
       who: "code",
-      title: "Find the park",
-      summary: "Type a town, ZIP or park name, or tap Use my location (we round it to about 1 km). Code lists the parks within 5 km, from OpenStreetMap.",
+      title: "Pick your park",
+      summary: "Search by town, ZIP, park name, or tap Use my location (rounded to about 1 km). Code finds parks within 5 km using OpenStreetMap.",
       more: (
         <>
           <p>
@@ -194,7 +194,7 @@ export default function HowItWorksPage() {
       who: "code",
       title: "Gather what's really there",
       summary:
-        "Code fills three lists, each fact dated and sourced: Park Finds (OpenStreetMap), Wild Finds (iNaturalist, Wikipedia) and Lucky Finds (review counts via SerpApi).",
+        "Code builds three dated, sourced lists. Park Finds come from OpenStreetMap, Wild Finds from iNaturalist and Wikipedia, and Lucky Finds from Google review counts via SerpApi.",
       more: (
         <>
           <ul className={bullets}>
@@ -225,7 +225,7 @@ export default function HowItWorksPage() {
       icon: ShieldCheck,
       who: "code",
       title: "Take out anything that bites, stings or itches",
-      summary: `Code removes ${BLOCKED_TAXA.length} blocked groups of risky species (think fire ants and poison ivy) before the model sees the list, and checks again after.`,
+      summary: `Code removes ${BLOCKED_TAXA.length} groups of risky species, like fire ants and poison ivy, before the model sees the list and checks again after.`,
       more: (
         <>
           <p>
@@ -244,7 +244,7 @@ export default function HowItWorksPage() {
       id: "model",
       icon: PenLine,
       who: "model",
-      title: "The open model writes the clues",
+      title: "The AI writes the clues",
       summary: (
         <>
           Code sends the park&apos;s fact list to <code>{modelId}</code>
@@ -319,7 +319,7 @@ export default function HowItWorksPage() {
       icon: RotateCcw,
       who: "code",
       title: "Refill once, or print it short",
-      summary: "Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.",
+      summary: "Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.",
       more: (
         <>
           <p>
@@ -344,7 +344,7 @@ export default function HowItWorksPage() {
       icon: MapPinned,
       who: "code",
       title: "Find This Spot and the October box",
-      summary: "Code picks a landmark, draws a map with an X and measures the walk. The October box is all code.",
+      summary: "Code picks a landmark, draws a map with an X, and measures the walk. The October box is all code.",
       more: (
         <>
           <p>
@@ -364,7 +364,7 @@ export default function HowItWorksPage() {
       id: "print",
       icon: Printer,
       who: "you",
-      title: "Print it, hide the phone",
+      title: "Print and ditch the phone",
       summary: "One black-and-white page: the kid's hunt on top, your answer key and sources below. Then the phone goes in the bag.",
       more: (
         <>
@@ -380,7 +380,7 @@ export default function HowItWorksPage() {
       id: "cache",
       icon: Timer,
       who: "code",
-      title: "Saving work, and fair limits",
+      title: "Saved passes and fair limits",
       summary: `Passes are saved for 30 days. A new pass needs a grown-up signed in (${ACCOUNT_PASSES_PER_DAY} a day); daily limits protect the model budget and the free map servers.`,
       more: (
         <>
@@ -481,16 +481,16 @@ export default function HowItWorksPage() {
         <p className="flex items-start gap-2 text-muted-foreground">
           <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
           <span>
-            A new pass usually takes 10-30 seconds, about as long as finding the other shoe. A section with no data says
-            &quot;No data available&quot; and why.
+            A new pass usually takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing,
+            the pass says &quot;No data available&quot; and why.
           </span>
         </p>
       </Band>
 
       <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted" width="max-w-4xl">
         <p className="-mt-2 max-w-[65ch]">
-          Each step says who does it: <strong>code</strong> (the same result every time), <strong>the open model</strong>, or{" "}
-          <strong>you</strong>. The AI has one job: picking the finds and writing the words.
+          Each step is handled by <strong>code</strong>, <strong>the open model</strong>, or <strong>you</strong>. The AI has
+          one job: picking the finds and writing the words.
         </p>
         <Steps steps={steps} />
       </Band>
@@ -526,7 +526,7 @@ export default function HowItWorksPage() {
           </div>
         </div>
         <p className="max-w-[65ch]">
-          The AI can&apos;t invent a find: its answer&apos;s schema only allows ids from the park&apos;s own list.
+          The AI cannot invent finds because it can only use ids from the park&apos;s own fact list.
         </p>
       </Band>
 
@@ -537,7 +537,7 @@ export default function HowItWorksPage() {
             {
               icon: Hammer,
               title: "It can be self-hosted.",
-              body: "Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.",
+              body: "Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.",
             },
             {
               icon: ShieldCheck,
@@ -626,7 +626,7 @@ export default function HowItWorksPage() {
         </Disclosure>
       </Band>
 
-      <Band id="limits" eyebrow="Honest limits" title="What doesn’t work (yet)">
+      <Band id="limits" eyebrow="Honest limits" title="Where we fall short">
         <ul className="grid gap-3 sm:grid-cols-2">
           {howLimits().map((l) => (
             <li key={l.title} className="flex gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">

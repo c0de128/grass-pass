@@ -64,7 +64,7 @@ export type PassMakerAccount = { signedIn: boolean; judge?: boolean; options: Si
 
 /** Said (polite live region) and shown after coming back from signing in, as focus moves to "Make my pass". */
 export function signedInNote(judge: boolean): string {
-  return judge ? "Signed in as a judge. You can make this pass now." : "Signed in. You can make this pass now.";
+  return judge ? "Signed in as a judge. You can make this pass now." : "Signed in. You can make the pass now.";
 }
 
 /** Real seconds since the request started, ticking once a second while it runs. */

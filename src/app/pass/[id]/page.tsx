@@ -49,7 +49,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
         <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
           Print pass
         </Link>
-        <p className="text-base text-muted-foreground">One black-and-white page. Cut it in half: the kid gets the hunt, you get the answers.</p>
+        <p className="text-base text-muted-foreground">One black-and-white page. Cut it in half: kids get the hunt, you get the answers.</p>
       </div>
       <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">

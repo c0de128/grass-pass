@@ -96,7 +96,7 @@ test.describe("example parks", () => {
     const card = page.getByTestId("hero-pass-card");
     await expect(card).toBeVisible();
     if ((await card.getAttribute("data-state")) === "ready") {
-      await expect(card.getByRole("link", { name: /Open this pass/ })).toHaveAttribute("href", /^\/pass\/[nwr]\d+-6to10-\d{8}-[1-3]\?example=1$/);
+      await expect(card.getByRole("link", { name: /View pass/ })).toHaveAttribute("href", /^\/pass\/[nwr]\d+-6to10-\d{8}-[1-3]\?example=1$/);
       await expect(card.getByRole("listitem")).toHaveCount(4);
     } else {
       await expect(card).toContainText(/Example pass not ready yet: \S/);

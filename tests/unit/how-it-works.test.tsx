@@ -56,7 +56,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(t).toContain("DigitalOcean serverless inference");
     expect(t).toContain("There is no automatic switch to another model");
     expect(t).toContain("What it is NOT given: review text, reviewer names or review counts");
-    expect(t).toContain(`${BLOCKED_TAXA.length} blocked groups`);
+    expect(t).toContain(`removes ${BLOCKED_TAXA.length} groups of risky species`);
   });
 
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {

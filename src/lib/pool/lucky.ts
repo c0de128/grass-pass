@@ -125,13 +125,13 @@ export function keywordsFor(features: Pick<ParkFeatures, "features"> | null): Lu
 const listWords = (w: readonly string[]) => (w.length <= 1 ? (w[0] ?? "") : `${w.slice(0, -1).join(", ")} or ${w[w.length - 1]}`);
 
 export const LUCKY_COPY = {
-  notConnected: "Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews.",
-  dailyCap: "Lucky Finds: off for today. Grass Pass has used its free search limit for visitor reviews (SerpApi); it resets at midnight Dallas time.",
+  notConnected: "Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews.",
+  dailyCap: "Lucky Finds: off for today. We hit the free SerpApi search limit for visitor reviews. It resets at midnight Dallas time.",
   monthlyCap: "Lucky Finds: off until the free monthly searches reset. Grass Pass used its monthly search limit for visitor reviews (SerpApi).",
   storePace: "Lucky Finds: off for today. Grass Pass reached its daily share of its free storage service, so it skipped new visitor-review lookups; they come back tomorrow.",
   paused: "Lucky Finds: paused. The visitor-review service (SerpApi) asked us to wait, so we stopped asking for now.",
   auth: "Lucky Finds: off. The visitor-review service (SerpApi) did not accept this server's key.",
-  down: "No data available: Google reviews (via SerpApi) didn't answer, so there are no Lucky Finds on this pass.",
+  down: "No data available: SerpApi didn't answer for Google reviews, so there are no Lucky Finds on this pass.",
   slow: "No data available: Google reviews (via SerpApi) were too slow when this pass was made.",
   noMatch: (park: string) => `No data available: we couldn't match ${park} to one place on Google Maps, so there are no Lucky Finds from visitor reviews.`,
   noEvidence: (keywords: readonly string[]) =>

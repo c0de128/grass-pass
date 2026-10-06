@@ -27,7 +27,14 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1024, files: 49, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1401, files: 50, day: "Oct 6, 2026" } as const;
+
+/**
+ * The Gemma copy rewrite (docs/COPY-BY-GEMMA.md, 2026-10-06): blocks sent, drafts shipped (accepted + edited),
+ * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
+ * docs/copy-by-gemma/review.json.
+ */
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 10 } as const;
 
 export type StatTile = {
   value: string;
@@ -62,7 +69,7 @@ export function aboutStatTiles(): StatTile[] {
 /** Short "why open" points on the Open model card. */
 export const WHY_OPEN_POINTS: readonly string[] = [
   "Anyone can download, run and build on the weights.",
-  "Our safety rules live in our code, not a vendor's.",
+  "Our safety rules are in our code, not a vendor's.",
   "Self-hosting is possible, but not measured yet.",
 ];
 
@@ -82,21 +89,21 @@ export function dataSources(): DataSource[] {
     {
       name: "iNaturalist",
       url: "https://www.inaturalist.org/",
-      gives: "Wildlife people really spotted nearby",
+      gives: "Wildlife people actually spotted nearby",
       licence: "Names + counts only",
       detail: `iNaturalist observers. Wild Finds: research-grade species photographed within ${WILD_RADIUS_KM} km in the last ${WILD_WINDOW_DAYS} days. From ${OCTOBER_WINDOW_LABEL}, the October box adds monarch counts within ${MONARCH_RADIUS_KM} km (last 14 days, next to the same days last year) and milkweed within ${MILKWEED_RADIUS_KM} km. Names and counts only, no photos.`,
     },
     {
       name: "Wikipedia",
       url: "https://www.wikipedia.org/",
-      gives: "A short fact about each species",
+      gives: "A short summary of each species",
       licence: "CC BY-SA",
       detail: "Species summaries, via the iNaturalist API. The model must quote these words exactly.",
     },
     {
       name: "SerpApi",
       url: "https://serpapi.com/",
-      gives: "How often Google Maps reviews mention dogs or bikes",
+      gives: "Google Maps review counts for dogs or bikes",
       licence: "Counts only, no review text",
       detail: `Lucky Finds: Google Maps review counts via SerpApi, from the last ${WINDOW_MONTHS / 12} years (dogs, bikes, ducks, skateboards; at least ${MIN_MENTIONS}). We count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI. SerpApi gets only the park's name and position.`,
     },
@@ -105,12 +112,12 @@ export function dataSources(): DataSource[] {
 
 /** Short ✓ lines on the Privacy card. */
 export const PRIVACY_POINTS: readonly string[] = [
-  "Browsing and printing need no account or cookie.",
-  "Sign-in only to make a new pass; we keep a scrambled ID, no email or name.",
-  "Nothing about your child is asked for.",
-  "Your location is rounded to about 1 km first.",
+  "No account or cookies needed to browse and print.",
+  "Sign-in is only for new passes. We keep a scrambled ID, no name or email.",
+  "We never ask for info about your child.",
+  "Your location is rounded to about 1 km in your browser.",
   "Your IP is kept only scrambled, for about a day.",
-  "Park facts and age band go to the model (US).",
+  "Park facts and age band go to the model in the US.",
 ];
 
 /** The full privacy table: everything that leaves your device, where it goes and why. */
@@ -171,7 +178,7 @@ export function privacyRows(): PrivacyRow[] {
 /** The paragraph under the privacy table. */
 export const PRIVACY_NOTES: readonly string[] = [
   `No names, no photos, no analytics; nothing about the child is asked for. Only a grown-up who signs in gets a cookie. ${ACCOUNT_COPY.privacy} Your browser keeps only your light or dark choice and the last age band.`,
-  "The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device.",
+  "The model runs on DigitalOcean servers in the US, so park facts and the age band leave your device.",
   "Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.",
 ];
 
@@ -187,11 +194,11 @@ export function accountNotes(): string[] {
 /** Short privacy lines on /how-it-works. */
 export function howPrivacyPoints(): string[] {
   return [
-    "No names, no photos, no analytics. Browsing and printing set no cookie.",
+    "No names, photos, or analytics. Browsing and printing set no cookie.",
     `Signing in (grown-ups, only for new passes and reports): ${ACCOUNT_COPY.privacy} No password is stored.`,
     "What you type goes to our server and OpenStreetMap, never into the web address.",
-    "\"Use my location\" is rounded to about 1 km in your browser.",
-    "The model sees the park's public facts and the age band, nothing about you.",
+    "\"Use my location\" is rounded to about 1 km in your browser before it is sent.",
+    "The AI sees park facts and the age band, nothing about you or your child.",
   ];
 }
 

@@ -25,12 +25,12 @@ const COPY = {
   qEmpty: "Type a town, ZIP or park name.",
   qShort: "Type at least 2 letters or numbers: a town, ZIP or park name.",
   qLong: `That's too long. Type a town, ZIP or park name (up to ${PlaceQueryLimits.max} characters).`,
-  noGeo: "Your browser can't share a location. Type a town or ZIP instead.",
-  geoDenied: "Location is blocked for this site. Type a town or ZIP instead, or allow location in your browser settings.",
-  geoFailed: "We couldn't get your location. Try again, or type a town or ZIP.",
+  noGeo: "Your browser can't share your location. Type a town or ZIP instead.",
+  geoDenied: "Location is blocked for this site. Type a town or ZIP, or allow location in your browser settings.",
+  geoFailed: "We couldn't get your location. Try again or type a town or ZIP.",
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the park list. Please try again.",
-  slow: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer soon, we use a saved park list or the OpenStreetMap place search instead.",
+  slow: "Still working. The OpenStreetMap park server can be slow. If it doesn't answer soon, we'll try a saved park list or the OpenStreetMap place search instead.",
 } as const;
 
 /** Client-side wait for /api/parks: a bit over the route's maxDuration (90 s). */

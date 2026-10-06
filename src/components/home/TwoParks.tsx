@@ -10,14 +10,14 @@ export const TWO_PARKS = [
   {
     name: "Connemara Meadow",
     slug: "connemara",
-    big: { value: "70", label: "kinds of plants and animals spotted in and around it in 2 weeks" },
+    big: { value: "70", label: "species spotted nearby in 2 weeks" },
     small: { value: "0", label: "playgrounds, courts or shelters" },
     verdict: "So its pass is wild: birds, bugs, blooms.",
   },
   {
     name: "Celebration Park",
     slug: "celebration",
-    big: { value: "25", label: "soccer fields mapped here, plus 6 courts" },
+    big: { value: "25", label: "soccer fields, plus 6 courts" },
     small: { value: "0", label: "recent wildlife sightings" },
     verdict: "So its pass is built: hoops, nets, a shelter.",
   },

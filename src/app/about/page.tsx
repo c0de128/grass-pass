@@ -27,6 +27,7 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { PARK_PHOTOS } from "@/data/photo-credits";
 import {
   EVAL_RUN_ID,
+  GEMMA_COPY,
   PRIVACY_NOTES,
   accountNotes,
   PRIVACY_POINTS,
@@ -100,7 +101,7 @@ export default function AboutPage() {
           </ul>
           <div className="flex flex-wrap gap-3 pt-2">
             <Link className={buttonClassName("primary", "group")} href="/how-it-works">
-              See how a pass is made, step by step
+              See how a pass is made
               <ArrowRight aria-hidden="true" className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
             </Link>
             <Link className={buttonClassName("secondary")} href="/" prefetch={false}>
@@ -232,8 +233,8 @@ export default function AboutPage() {
                 ))}
               </ul>
               <p className="text-sm text-muted-foreground">
-                No data? The pass says <strong className="text-ink">&quot;No data available&quot;</strong> and why.
-                Never padded.
+                No data? We say <strong className="text-ink">&quot;No data available&quot;</strong> and why. We never
+                pad the list.
               </p>
             </article>
 
@@ -244,8 +245,8 @@ export default function AboutPage() {
               </h3>
               <ul className="flex flex-col gap-2 text-muted-foreground">
                 <li>{BLOCKED_TAXA.length} risky groups are never printed, checked before and after the model.</li>
-                <li>Every clue must quote its source word for word.</li>
-                <li>Every number, date and safety line is written by code.</li>
+                <li>Every clue quotes its source word for word.</li>
+                <li>Code writes every number, date and safety line.</li>
               </ul>
             </article>
 
@@ -456,6 +457,14 @@ export default function AboutPage() {
                   Lucide
                 </a>{" "}
                 (ISC).
+              </li>
+              <li data-testid="copy-credit">
+                Site copy: Gemma 4 redrafted {GEMMA_COPY.sent} blocks of this site&apos;s text; {GEMMA_COPY.shipped} of its drafts
+                shipped ({GEMMA_COPY.edited} with small edits) after code and people fact-checked them. Every block, old and new:{" "}
+                <a className={ext} href={`${REPO_URL}/blob/main/docs/COPY-BY-GEMMA.md`}>
+                  docs/COPY-BY-GEMMA.md
+                </a>
+                . Kevin&apos;s own lines are his.
               </li>
               <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
               <li>

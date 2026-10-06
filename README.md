@@ -177,6 +177,40 @@ results JSON by a unit test).
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
   server, e.g. Ollama. A self-hosted run has **not** been measured for this app yet.
 
+## Abuse limits and the free storage quota
+Every cache, limit and saved pass lives in Upstash Redis, whose free plan allows 500,000 commands a month. A
+flood of requests must not use that up, or saved pass links would stop opening. So, in front of every page and API
+that reads the store, an in-process limiter (`src/proxy.ts`, `src/lib/limits/prelimit.ts`) answers 429 before any
+store command:
+- **Pages** (`/`, `/pass/*`): 20 at once, then one every 10 seconds per IP.
+- **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, an API call 4,
+  measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP.
+- **IPv6:** one shared bucket per /48 network (2 clients' worth), not one per /64.
+- **Pass ids that can't exist** (a day in the future or older than the 30-day pass life, a variant above 3, a
+  malformed park id) are a 404 with no store read. Saved passes are kept in memory for 30 minutes after a read.
+
+With these defaults one IPv4 address can spend at most **about 148,000 commands a month (29.6%)**, new passes and
+park searches included. The math is in `src/lib/limits/prelimit.ts` and checked by a unit test. The limits are per
+server instance, so the optional firewall rule below is the backstop across instances.
+
+**At 95% of the monthly budget Grass Pass rests instead of breaking.** Saved passes and the example passes still
+open. New passes and park searches answer "Grass Pass is resting until <the 1st of next month>", and the home page
+shows the same notice. The logs get `upstash_budget` at 50%, 90% and 95%.
+
+### Optional: a Vercel Firewall rate-limit rule (not set up)
+Vercel's WAF rate limiting is on every plan; Hobby gets 1 rate-limit rule per project, a fixed window of 10 s to
+10 min, IP or JA4 keys, and 1,000,000 allowed requests included
+([docs](https://vercel.com/docs/vercel-firewall/vercel-waf/rate-limiting), checked Oct 6, 2026). Counters are per
+region. A rule that matches the in-app limits across all instances:
+1. Project → **Firewall** → **Configure** → **+ New Rule**, name it `pass-and-api-per-ip`.
+2. **If** Request Path **matches expression** `^/(pass|api)/`.
+3. **Then** Rate Limit, Fixed Window, **Time Window 600 s**, **Request Limit 60**, key **IP**, action **Default (429)**.
+   Start with **Log** for a day to check that no real visitor hits it, then switch to 429.
+4. **Review Changes** → **Publish**.
+
+This is a decision for the project owner (see `ACCEPTED-RISKS.md` / the decision log); nothing has been created on
+Vercel.
+
 ## Privacy
 No accounts, no names, no photos, no cookies, no analytics. Nothing about the child is asked for or sent. What does
 leave the device (also on `/about`):
@@ -245,4 +279,11 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - Data credits for SerpApi will be added if Lucky Finds are connected.
 
 ## Licence
-[MIT](LICENSE)
+The code is [MIT](LICENSE). MIT covers the code only: recorded data in this repo keeps its source licence.
+- `src/data/osm/` (the saved Dallas-area park list and the example parks' map data) and the OpenStreetMap answers in
+  `tests/fixtures/` and `tests/fixtures/evals/`: © OpenStreetMap contributors, [ODbL 1.0](https://opendatacommons.org/licenses/odbl/1-0/)
+  (share-alike applies to databases derived from it).
+- iNaturalist observations and taxa in `tests/fixtures/` and `tests/fixtures/evals/`: each observation keeps the
+  licence its observer chose (shown on iNaturalist).
+- Wikipedia summaries (via iNaturalist) in those fixtures: [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/).
+- Fonts keep their OFL licences (see Credits).

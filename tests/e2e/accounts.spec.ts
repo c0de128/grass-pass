@@ -1,11 +1,14 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Browser, type BrowserContext, type Page } from "@playwright/test";
 import { skipIfHonestAlert } from "./support/honest";
+import { judgeAddress } from "./support/judge";
 
 // Accounts (Kevin, 2026-10-06), against the real server: signed out you can search, open passes and print, but a
 // NEW pass asks a grown-up to sign in; "Try as a judge" signs in with one click (no OAuth), comes back to the same
 // park + age, makes the pass, and reports finds; then sign out. Live data and the open model: an outside failure
 // is checked and reported as SKIPPED with its code (support/honest.ts), never as passed.
+// Round 4: judge demo reports are only logged (they never change a pass or the counts), so this spec is safe to run
+// against a preview or production store; it checks that the counts don't move. Browsing signed out sets no cookie.
 const WAIT = 95_000;
 // Celebration Park: a smaller park (one model call when measured), to keep paid model calls low.
 const PARK = "Celebration Park";
@@ -13,6 +16,8 @@ const QUERY = "Celebration Park Allen TX";
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 
 test.describe.configure({ mode: "serial" });
+// SEC-4-02: this spec's own address for the judge demo's 3 passes per connection.
+test.use(judgeAddress(4));
 
 let passPath: string | null = null;
 
@@ -60,6 +65,15 @@ test("signed out: a new pass asks a grown-up to sign in (card with Try as a judg
   await expect(card.getByText("We only keep a scrambled ID")).toBeVisible();
   await expect(card.getByText("Sign-in is for parents and teachers")).toBeVisible();
   await expect(page.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
+  // SEC-4-02: the real number of judge passes left today (from the store), never made up.
+  await expect(card.getByTestId("judge-left")).toHaveText(/\d+ of \d+ judge passes left today|0 judge passes left today for your connection/);
+  // SEC-4-04: browsing, searching and the sign-in card set no cookie at all.
+  expect(await page.context().cookies()).toEqual([]);
+  for (const path of ["/about", "/how-it-works", "/signin"]) {
+    await page.goto(path);
+    await expect(page.getByTestId("header-sign-in")).toBeVisible();
+  }
+  expect(await page.context().cookies()).toEqual([]);
 });
 
 test("the sign-in card has no axe violations and no sideways scroll (360/1280, light/dark)", async ({ browser }) => {
@@ -76,6 +90,11 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   await searchAndPick(page);
   await page.getByTestId("sign-in-card").getByRole("button", { name: "Try as a judge" }).click();
 
+  // SEC-4-05: the judge sign-in cookie lasts 1 day (from signing in), not 7 or 30.
+  await expect.poll(async () => (await page.context().cookies()).some((c) => c.name.endsWith("authjs.session-token"))).toBe(true);
+  const sessionCookie = (await page.context().cookies()).find((c) => c.name.endsWith("authjs.session-token"))!;
+  expect(Math.abs(sessionCookie.expires - (Date.now() / 1000 + 24 * 3600))).toBeLessThan(300);
+
   // Back on the home page with the park and age restored, signed in.
   await expect(page.getByRole("heading", { name: `Make a pass for ${PARK}` })).toBeVisible({ timeout: 30_000 });
   await expect(page).toHaveURL(/\/#find$/);
@@ -89,15 +108,18 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   await expect(page).toHaveURL(/\/pass\/w188145317-6to10-\d{8}-\d(\?reused=1)?$/);
   passPath = new URL(page.url()).pathname;
 
-  // Report buttons on the screen pass (signed in).
+  // Report buttons on the screen pass (signed in). The counts as they are before the judge reports anything.
   await expect(page.getByTestId("report-intro")).toBeVisible();
+  const statsBefore = await page.getByTestId("report-stats").allTextContents();
+  const judgeAnswer = /Judge demo reports are logged for us to review, but they don't change passes or the counts\./;
   const find1 = page.getByRole("group", { name: "Report find 1" });
   await find1.getByRole("button", { name: "Found it" }).click();
-  await expect(find1.getByTestId("report-status")).toHaveText(/Thanks — counted\.|You already reported this item today/);
+  // UX-4-05: each judge browser has its own "already sent" check, so a judge's first click is never a dead end.
+  await expect(find1.getByTestId("report-status")).toHaveText(judgeAnswer);
   await expect(find1.getByRole("button", { name: "Found it" })).toHaveAttribute("aria-pressed", "true");
   const find2 = page.getByRole("group", { name: "Report find 2" });
   await find2.getByRole("button", { name: "Didn't find it" }).click();
-  await expect(find2.getByTestId("report-status")).toHaveText(/Thanks — counted\.|You already reported this item today/);
+  await expect(find2.getByTestId("report-status")).toHaveText(judgeAnswer);
 
   // "Not safe" asks once more first; Cancel sends nothing.
   const find3 = page.getByRole("group", { name: "Report find 3" });
@@ -106,9 +128,11 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   await find3.getByRole("button", { name: "Cancel" }).click();
   await expect(find3.getByTestId("report-status")).toHaveText("");
 
-  // The real count shows after a reload.
+  // SEC-4-01: the judge's reports never change the public counts (nor the pool, which uses the same data):
+  // after a reload (the server forgets its 5-minute count memo when a report is counted) they are unchanged.
   await page.reload();
-  await expect(page.getByTestId("report-stats").first()).toHaveText(/^Visitor reports, last 30 days: (\d+ found it|\d+ didn't)/);
+  await expect(page.getByTestId("report-intro")).toBeVisible();
+  expect(await page.getByTestId("report-stats").allTextContents()).toEqual(statsBefore);
 
   // Axe on the pass page with report buttons, signed in, at both widths and schemes.
   const state = await page.context().storageState();

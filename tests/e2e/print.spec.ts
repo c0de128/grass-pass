@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { passOrSkip } from "./support/honest";
-import { judgeSignInRequest } from "./support/judge";
+import { judgeAddress, judgeSignInRequest } from "./support/judge";
 
 // S4 print: a REAL pass from the running server (live OpenStreetMap + iNaturalist + the open model,
 // or today's cached pass when the server already made it), printed with print media emulation.
@@ -14,6 +14,8 @@ test.describe.configure({ mode: "serial" });
 // Screenshots use LCD subpixel text antialiasing by default (blue/orange fringes on black text), which
 // is a screen artefact, not ink. Grayscale antialiasing shows what a printer gets.
 test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
+// SEC-4-02: this spec's own address for the judge demo's 3 passes per connection.
+test.use(judgeAddress(2));
 
 /** Ask the server for today's pass the way the page does (same origin, JSON), reading the stream to the end. */
 async function realPassId(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number }> {

@@ -5,7 +5,10 @@ import { expect, type APIRequestContext, type Page } from "@playwright/test";
  * - `judgeSignInPage`: open /signin and press "Try as a judge" (the server action), back on `/`.
  * - `judgeSignInRequest`: for API-only specs, Auth.js's own CSRF-protected form post
  *   (GET /api/auth/csrf, then POST /api/auth/callback/judge); the request context keeps the cookie.
+ * SEC-4-02: one connection gets at most 3 judge passes a day, and every local test browser is one address,
+ * so each spec that makes judge passes sends its own test address (`judgeAddress`, x-forwarded-for).
  */
+export const judgeAddress = (n: number) => ({ extraHTTPHeaders: { "x-forwarded-for": `10.70.0.${n}` } });
 export async function judgeSignInPage(page: Page): Promise<void> {
   await page.goto("/signin");
   await page.getByRole("button", { name: "Try as a judge" }).click();
@@ -21,6 +24,6 @@ export async function judgeSignInRequest(request: APIRequestContext, baseURL: st
     maxRedirects: 0,
   });
   expect([200, 302, 303]).toContain(res.status());
-  const session = (await (await request.get("/api/auth/session")).json()) as { provider?: string } | null;
-  expect(session?.provider, "judge sign-in").toBe("judge");
+  const me = (await (await request.get("/api/me")).json()) as { signedIn?: boolean; provider?: string };
+  expect(me.provider, "judge sign-in").toBe("judge");
 }

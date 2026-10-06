@@ -1,7 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { passOrSkip } from "./support/honest";
-import { judgeSignInRequest } from "./support/judge";
+import { judgeAddress, judgeSignInRequest } from "./support/judge";
 
 // S5 Find This Spot: a REAL Celebration Park pass from the running server (live OpenStreetMap,
 // iNaturalist and the open model, or today's cached pass). Its only picnic shelter is the X.
@@ -14,6 +14,8 @@ const CELEBRATION = { id: "way/188145317", name: "Celebration Park" };
 
 test.describe.configure({ mode: "serial" });
 test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
+// SEC-4-02: this spec's own address for the judge demo's 3 passes per connection.
+test.use(judgeAddress(3));
 
 type Spot = { status: string; message?: string; riddle?: string };
 

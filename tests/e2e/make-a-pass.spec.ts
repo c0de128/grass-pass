@@ -1,6 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { skipIfHonestAlert } from "./support/honest";
-import { judgeSignInPage } from "./support/judge";
+import { judgeAddress, judgeSignInPage } from "./support/judge";
 
 // S3 main journey against the real server and the LIVE services: OpenStreetMap (Nominatim + Overpass),
 // iNaturalist and the open model on DigitalOcean (the server reads its key from .env.local).
@@ -52,6 +52,9 @@ async function makePassOrHonestError(page: Page, parkName: string) {
   }
   await expect(page).toHaveURL(/\/pass\/w\d+-6to10-\d{8}-\d(\?reused=1)?$/);
 }
+
+// SEC-4-02: this spec's own address for the judge demo's 3 passes per connection (it makes 2).
+test.use(judgeAddress(1));
 
 test("pick Connemara Meadow Preserve -> age 6-10 -> a real pass on screen with evidence and the model that answered", async ({ page }) => {
   test.setTimeout(2 * WAIT + 30_000);

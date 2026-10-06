@@ -2036,7 +2036,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `wild.down`: rejected
 
-`src/lib/pool/wild.ts:72` · section message, starts with "No data available:", 2 sentences · max 150 characters
+`src/lib/pool/wild.ts:118` · section message, starts with "No data available:", 2 sentences · max 150 characters
 
 - **Old:** No data available: iNaturalist (the wildlife sightings service) didn't answer when this pass was made. Trying again in a minute may help.
 - **Gemma:** No data available: iNaturalist didn't answer when this pass was made. Trying again in a minute may help.

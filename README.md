@@ -85,41 +85,52 @@ Slice S3, the pass on screen:
 
 ## Evals
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
-with the real pass builder. Current numbers: [`evals/results/2026-10-05-3.md`](evals/results/2026-10-05-3.md)
-(what changed and why: [`2026-10-05-3-notes.md`](evals/results/2026-10-05-3-notes.md)). The earlier runs,
-[`2026-10-05.md`](evals/results/2026-10-05.md) and [`2026-10-05-2.md`](evals/results/2026-10-05-2.md), are kept for comparison. No closed model was run (open models only).
+with the real pass builder. Current numbers: [`evals/results/2026-10-05-4.md`](evals/results/2026-10-05-4.md)
+(what changed and why: [`2026-10-05-4-notes.md`](evals/results/2026-10-05-4-notes.md)). The earlier runs,
+[`2026-10-05.md`](evals/results/2026-10-05.md), [`2026-10-05-2.md`](evals/results/2026-10-05-2.md) and
+[`2026-10-05-3.md`](evals/results/2026-10-05-3.md), are kept for comparison. No closed model was run (open models only).
 Find This Spot is not in the eval (its map data was not recorded for these parks).
 
-| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, run 2 | Gemma, first run |
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, run 3 | Gemma, first run |
 |---|---|---|---|---|---|
 | Blocked taxa printed | 0 | 0 | 0 | 0 | 0 |
-| Clues quoting their source word for word (target 85%) | 99.5% | 94.3% | 100% (by construction) | 91.6% | 99.2% |
-| Passes with >= n-1 items (target 90%) | 96.1% | 82.4% | 100% | 86.3% | 64.7% |
-| Reading level, FK grade median (target <= 3.5) | 2.3 | 2.3 | 5.9 | 2.1 | 2.3 |
-| Name leaks in clue or hint, before the filter (target <= 5%) | 5.4% (FAIL; clue only 3.5%) | 6.4% | 0% | 4.9% | 17.5% |
-| Model call p50 / p95 (target 10 s / 20 s) | 9.4 s / 11.3 s | 43.0 s / 52.3 s | none | 10.7 s / 17.1 s | 13.8 s / 24.3 s |
-| Median answer length (tokens) | 456 | 462 | none | 557 | 583 |
-| Cost per pass | $0.00056 | $0.00086 | $0 | $0.00062 | $0.00086 |
+| Clues quoting their source word for word (target 85%) | 99.6% | 80.1% | 100% (by construction) | 99.5% | 99.2% |
+| Passes with >= n-1 items (target 90%) | 100% | 41.2% | 94.1% | 96.1% | 64.7% |
+| Reading level, FK grade median (target <= 3.5) | 1.7 | 1.9 | 5.8 | 2.3 | 2.3 |
+| Name leaks in clue or hint, before the filter (target <= 5%) | 10.5% (FAIL; clue only 6.7%) | 12.2% | 6.4% | 5.4% (6.1% with today's stricter check) | 17.5% |
+| Model call p50 / p95 (target 10 s / 20 s) | 8.9 s / 12.8 s | 39.2 s / 46.3 s | none | 9.4 s / 11.3 s | 13.8 s / 24.3 s |
+| Median answer length (tokens) | 460 | 455 | none | 456 | 583 |
+| Cost per pass | $0.00064 | $0.00116 | $0 | $0.00056 | $0.00086 |
+| Printed plant clues about flowers or fruit not seen this month (season check) | 0 | 0 | 0 | 6 (checked afterwards) | not checked |
+| Printed clues or hints that say "map" on a pass with no map | 0 | 0 | 0 | 6 (checked afterwards) | not checked |
+
+The last two rows are counted by `validate.ts` rules on the saved answers (the season evidence is the recorded
+iNaturalist "Flowers and Fruits" annotations for each park, this month, all years, within 50 km); they are not SPEC 6.4
+metrics. The season rule is cautious: a plant with fewer than 3 such records this month (for example autumn clematis
+near White Rock Lake, 2 of 3) is treated as not flowering, so the model describes its leaves instead.
 
 ## Why open
 The clue writer is an open-weight model: `gemma-4-31B-it` (Gemma 4, Apache-2.0) on DigitalOcean serverless
 inference by default. Measured in the eval above (same parks, same checks for every column):
-- **It makes the words kid-sized:** Gemma's clues read at FK grade 2.3 (median); the no-AI template on the same data
-  reads at 5.9.
-- **It sticks to the facts:** 99.5% of its clues quoted their source word for word before any filter (the rest are
+- **It makes the words kid-sized:** Gemma's clues read at FK grade 1.7 (median); the no-AI template on the same data
+  reads at 5.8.
+- **It sticks to the facts:** 99.6% of its clues quoted their source word for word before any filter (the rest are
   dropped by code); 0 blocked species printed in 60 runs.
-- **It is cheap enough for a classroom:** about $0.00056 per pass at DigitalOcean list prices.
+- **It is cheap enough for a classroom:** about $0.00064 per pass at DigitalOcean list prices.
 - **The safety rules live in our code, not a vendor's:** the same checks run on any model, and switching is one
   setting (`MODEL_ID`); Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
   server, e.g. Ollama. A self-hosted run has **not** been measured for this app yet.
 
 No closed model was compared (open models only; the closed models on our DigitalOcean tier answered 403 on Oct 5).
-What did not pass yet: name leaks before the filter, 5.4% of Gemma's clues or "look where" hints (target 5%; in the
-clue itself 3.5%; code drops every leaky clue and blanks every leaky hint, so nothing is given away on a pass), and
-the human kid check is not done. In the previous run, 3 of 56 Gemma answers (all for one park) had the next JSON
-field stuck onto every quote; code now cuts it off at the field name and keeps a quote only if the rest is really in
-the source (it did not happen in the current run). The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`, checked against the
+What did not pass yet: name leaks before the filter, 10.5% of Gemma's clues or "look where" hints (target 5%; in the
+clue itself 6.7%). Two changes in this round raised it: the check is stricter (it now also catches words built on a
+name, like "Passifloraceae" for a passionflower; on run 3's saved answers that alone moves 5.4% to 6.1%), and the new
+"make the child look closely" rule for Park Finds led to clues like "Count the bridges" for the bridges. Code drops
+every leaky clue and blanks every leaky hint, so nothing is given away on a pass, and with the retry at n-1 every
+data-rich Gemma pass still kept at least n-1 finds. Llama 4 Maverick got worse in this run (80.1% grounded, 41.2%
+complete): it often copied the new code-written season note ("flowers seen in October") as its quote, which is not in
+the source text, so those clues were dropped. The human kid check is not done yet. The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`, checked against the
 results JSON by a unit test).
 
 ### Example parks (pre-warmed)

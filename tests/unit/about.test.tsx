@@ -86,7 +86,7 @@ describe("/about", () => {
   });
 
   it("quotes the measured numbers, failures included", () => {
-    for (const s of ["99.5%", "96.1% (49/51)", "5.4%", "3.5%", "9.4 s / 11.3 s", "$0.00056", "2.3", "5.9", "43.0 s typical", "82.4% complete passes", "Answers that name themselves: 5.4%"]) {
+    for (const s of ["99.6%", "100% (51/51)", "10.5%", "6.7%", "8.9 s / 12.8 s", "$0.00064", "1.7", "5.8", "39.2 s typical", "41.2% complete passes", "Answers that name themselves: 10.5%"]) {
       expect(t).toContain(s);
     }
     expect(t).toContain("No closed model was compared");

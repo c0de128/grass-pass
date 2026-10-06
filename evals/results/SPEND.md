@@ -18,3 +18,8 @@ Tokens are counted from each answer's `usage`; USD = tokens x the DO price list 
 | 2026-10-06T02:15:33.541Z | 2026-10-05-3.md | 73 | 133550 | 32579 | $0.0457 |
 
 S8c total (builder, 2026-10-05 CDT): smoke $0.0035 + fixture re-recording $0.0010 + full run $0.0457 = **$0.0502** (cap $0.12).
+| 2026-10-06T03:19Z + 03:20Z | Audit R1 (Builder B) re-recording of the two model fixtures in tests/fixtures, twice (prompt changed between them; not an eval run) | 4 | 6333 | 1994 | $0.0021 |
+| 2026-10-06T03:37:10.582Z | 2026-10-05-partial-2237.md | 6 | 11715 | 2272 | $0.0032 |
+| 2026-10-06T03:39:04.451Z | 2026-10-05-4.md | 87 | 166294 | 36215 | $0.0552 |
+
+Audit round 1 total (Builder B, 2026-10-05 CDT): fixture re-recordings $0.0021 + smoke $0.0032 + full run $0.0552 = **$0.0605** (cap $0.10).

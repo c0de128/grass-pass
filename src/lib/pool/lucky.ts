@@ -18,6 +18,7 @@ import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
 import { createJsonCache, type Store } from "@/lib/cache";
+import { dailyPaceState } from "@/lib/limits/budget";
 import { log } from "@/lib/log";
 import { APP_TIME_ZONE } from "@/lib/time";
 import type { FetchLike } from "@/lib/sources/common";
@@ -127,6 +128,7 @@ export const LUCKY_COPY = {
   notConnected: "Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews.",
   dailyCap: "Lucky Finds: off for today. Grass Pass used its free search limit for visitor reviews (SerpApi) today; it resets at midnight Central time.",
   monthlyCap: "Lucky Finds: off until the free monthly searches reset. Grass Pass used its monthly search limit for visitor reviews (SerpApi).",
+  storePace: "Lucky Finds: off for today. Grass Pass reached its daily share of its free storage service, so it skipped new visitor-review lookups; they come back tomorrow.",
   paused: "Lucky Finds: paused. The visitor-review service (SerpApi) asked us to wait, so we stopped asking for now.",
   auth: "Lucky Finds: off. The visitor-review service (SerpApi) did not accept this server's key.",
   down: "No data available: Google reviews (via SerpApi) didn't answer, so there are no Lucky Finds on this pass.",
@@ -256,6 +258,13 @@ export async function loadLucky(park: Park, features: Pick<ParkFeatures, "featur
   if (!serpapiKey(deps.env)) return { items: [], state: { status: "off", message: LUCKY_COPY.notConnected }, checkedAt: null, searches: 0 };
   const hit = await resultCache.get(park.id, deps.now());
   if (hit) return fromRecord(hit.value, park, hit.storedAt, 0, null);
+  // SEC-3-03 daily store pace: a new lookup costs about 16 store commands (caps, breaker, caches), so none
+  // starts once today's share of the storage budget is used (cached counts above still show).
+  const paced = dailyPaceState(deps.now());
+  if (paced.paced) {
+    log("lucky_paused_daily_pace", { park: park.id, used: paced.used, pace: paced.pace }, "warn");
+    return { items: [], state: { status: "off", message: LUCKY_COPY.storePace }, checkedAt: null, searches: 0 };
+  }
 
   let searches = 0;
   const src = {

@@ -10,7 +10,8 @@ import { getStore, resetStores, type Store } from "@/lib/cache/store";
 import { limitsConfig, quotaUsage } from "@/lib/limits";
 import { SERPAPI_DAY_QUOTA, SERPAPI_MONTH_QUOTA, serpapiCaps } from "@/lib/limits/serpapi";
 import { setLogSink } from "@/lib/log";
-import { localCycle } from "@/lib/time";
+import { localCycle, localDay } from "@/lib/time";
+import { dailyPace, noteDailyCommands, noteMonthlyCommands, resetBudget } from "@/lib/limits/budget";
 import { buildMessages, computeMix, planRequest } from "@/lib/ai/prompt";
 import { validateDraft } from "@/lib/ai/validate";
 import {
@@ -463,6 +464,25 @@ describe("loadLucky (the whole lookup)", () => {
     const r = serpReplay({ answer: () => new Response("", { status: 503 }) });
     const out = await loadLucky(ARBOR, { features: {} }, deps(r.fetchImpl));
     expect(out.state).toEqual({ status: "unavailable", message: LUCKY_COPY.down });
+  });
+
+  it("the daily store pace (SEC-3-03) stops NEW lookups (nothing sent) but cached counts still show", async () => {
+    const r = serpReplay();
+    await loadLucky(CELEBRATION, withWater, deps(r.fetchImpl)); // cached now
+    const sent = r.calls.length;
+    const day = localDay(REC_AT);
+    noteMonthlyCommands(1, 500_000, new Date(REC_AT).toISOString().slice(0, 7));
+    noteDailyCommands(dailyPace(500_000, REC_AT), day);
+    try {
+      const paced = await loadLucky(ARBOR, { features: {} }, deps(r.fetchImpl));
+      expect(paced.state).toEqual({ status: "off", message: LUCKY_COPY.storePace });
+      expect(r.calls.length).toBe(sent);
+      const cached = await loadLucky(CELEBRATION, withWater, deps(r.fetchImpl));
+      expect(cached.state).toEqual({ status: "ok" });
+      expect(r.calls.length).toBe(sent);
+    } finally {
+      resetBudget();
+    }
   });
 
   it("the pass deadline already passed: 'too slow', nothing sent", async () => {

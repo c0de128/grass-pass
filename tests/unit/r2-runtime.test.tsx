@@ -15,7 +15,7 @@ import { MODEL_NOT_CONFIGURED_TAIL, modelFailure, PASS_DEADLINE_MS } from "@/lib
 import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { ModelError } from "@/lib/model";
-import { loadFeatures } from "@/lib/pass/park-data";
+import { loadFeatures, peekFeatures } from "@/lib/pass/park-data";
 import { AUTO_RETRY_CODES, MAP_DATA_FAILURE_CODES, PassLineSchema } from "@/lib/pass/schema";
 import { parsePhenology } from "@/lib/sources/inat-phenology";
 import { dfwParkFile, dfwParkFileName, resetSavedOsm, savedDfwFeatures, savedDfwGeometry } from "@/lib/sources/osm-snapshot";
@@ -266,6 +266,17 @@ describe("R2-m2: a park whose live query ran into our client timeout is not sent
       "No data available: this park's map took too long to load from OpenStreetMap a moment ago, so we won't ask for it again for about 5 minutes. Meanwhile, open an example pass or pick another park.",
     );
     expect(PARKS_COPY.parkSlow(1)).toContain("about 1 minute.");
+  });
+
+  it("audit Q-3-01: the one-MGET peek (SEC-3-02, what makePass uses) answers with the real time left too", async () => {
+    const store = new MemoryStore();
+    const calls: string[] = [];
+    let t = Date.UTC(2026, 9, 6, 15, 0, 0);
+    const deps = { store, env: {}, now: () => t, fetchImpl: hang(calls), timeoutMs: 50 };
+    await loadFeatures({ type: "way", id: 3 }, deps);
+    t += 3 * 60 * 1000; // 3 min later: 12 min left
+    const plan = await peekFeatures({ type: "way", id: 3 }, { store, env: {}, now: () => t });
+    expect(plan).toEqual({ kind: "fail", outcome: { kind: "error", status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.parkSlow(12), retryAfter: 720 } } });
   });
 
   it("audit Q-3-01: the page never auto-retries into that wait, and offers no 'Try again' that would fail at once", () => {

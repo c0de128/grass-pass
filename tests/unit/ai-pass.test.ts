@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import { factsFor } from "@/lib/pool/park";
 import { askMix, buildMessages, computeMix, escapeSource, systemPrompt, userPrompt } from "@/lib/ai/prompt";
 import {
   ASK_EXTRA,
@@ -161,7 +162,12 @@ describe("prompt (SPEC 6.1)", () => {
       // R2-M5: the prompt states the asked-for mix (n + ASK_EXTRA spare).
       const ask = askMix(computeMix(counts, "6-10")!, counts);
       expect(ask.n).toBe(9);
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
+      // R2 (Builder F): the Find This Spot source now uses the park-seeded facts (factsFor) instead of one
+      // fixed sentence. The recordings predate that, so the old sentence is swapped for today's facts here;
+      // everything else must still match the live request exactly (re-record in the next paid eval run).
+      const OLD_SPOT = "A picnic shelter has a roof on posts and tables underneath where people eat lunch.";
+      const recorded = JSON.parse(JSON.stringify(modelRec(p.slug).request.messages).replace(OLD_SPOT, factsFor("shelter", p.id, 1).join(" ")));
+      expect(recorded).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
     }
   });
 

@@ -17,6 +17,7 @@ import "server-only";
 import { hasUrlOrMarkup } from "@/lib/ai/validate";
 import { distinctiveWords, kindLabelWords } from "@/lib/pool/types";
 import { classify, FEATURE_KINDS, type FeatureKind, type ParkFeatures } from "@/lib/sources/overpass-features";
+import { factsFor } from "@/lib/pool/park";
 import { centerOf, compass, distanceM, type GeoElement, type LatLng, type ParkGeometry } from "./geometry";
 
 export type TargetKind = FeatureKind | "toilets";
@@ -179,7 +180,9 @@ export function pickTarget(
     : `${article(info.label)} ${info.label}${name ? ` named ${name}` : ""}`;
   const sourceText = [
     `On the map of ${opts.parkName} (OpenStreetMap), the X marks ${what}.`,
-    info.describe,
+    // R2-M5 follow-up: the same rotating, park-seeded facts as the Park Finds (pool/park.ts factsFor), not
+    // one fixed description copied into every riddle ("a roof on posts with tables underneath").
+    ...(c.kind === "toilets" ? [TOILETS.describe] : factsFor(c.kind, g.parkId, 1)),
     walk && start ? `It is about ${walk.meters} m ${walk.direction} of the START (${start.label}).` : "",
   ]
     .filter(Boolean)

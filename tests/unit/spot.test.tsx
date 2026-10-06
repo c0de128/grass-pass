@@ -177,7 +177,7 @@ describe("pickTarget (code decides where the X goes)", () => {
     expect(v1.start).toMatchObject({ osmId: "way/374628989", label: "parking lot" });
     expect(v1.walk).toEqual({ meters: 140, direction: "south-east" });
     expect(v1.sourceText).toBe(
-      "On the map of Celebration Park (OpenStreetMap), the X marks a picnic shelter. A picnic shelter has a roof on posts and tables underneath where people eat lunch. It is about 140 m south-east of the START (parking lot).",
+      "On the map of Celebration Park (OpenStreetMap), the X marks a picnic shelter. It has a roof on posts and tables underneath where people eat lunch. It gives shade from the sun and cover from the rain. It is about 140 m south-east of the START (parking lot).",
     );
     expect(v1.nameWords).toEqual(["shelter", "pavilion", "gazebo"]);
     expect(v1.answer).toBe("The picnic shelter");

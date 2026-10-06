@@ -62,13 +62,15 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-4");
-    expect(t).toContain("2026-10-06-partial-1218");
-    expect(t).toContain(`$${SMOKE_10_13.costPerPass.toFixed(5)} per pass, which is over`);
-    // Run 2026-10-06-4: speed met (just), repetition missed; the table must say so.
+    expect(t).toContain("2026-10-06-5");
+    expect(t).toContain("2026-10-06-partial-1439");
+    expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
+    expect(t).toContain(`only ${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete`);
+    // Run 2026-10-06-5: speed, complete passes and repetition missed; the table must say so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
-    expect(rows).toContainEqual(["Model time per call, typical / slow", "Met"]);
-    expect(t).toContain("first calls alone took 10.6 s typical");
+    expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
+    expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Missed"]);
+    expect(t).toContain("Speed is missed: the typical call took 12.29 s, first calls alone 13.7 s");
     expect(rows).toContainEqual(["Clues repeated across parks", "Missed"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
     expect(g.repeatPct).toBeGreaterThan(EVAL_THRESHOLDS.repeatPct);
@@ -77,7 +79,9 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("the 10-13 smoke numbers match the committed results JSON", () => {
     const j = JSON.parse(readFileSync(join(ROOT, SMOKE_10_13.file), "utf8")) as {
       meta: { day: string; ageBand: string; partial: boolean; settings: { cases: number[] } };
-      scores: { model: string; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { p50Ms: number; p95Ms: number }; m8: { costPerPass: number } }[];
+      scores: { model: string; errors: Record<string, number>; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { p50Ms: number; p95Ms: number }; m8: { costPerPass: number } }[];
+      runs: { model: string; kind: string }[];
+      spend: { usd: number };
     };
     const s = j.scores.find((x) => x.model === "gemma-4-31B-it")!;
     expect(j.meta.partial).toBe(true);
@@ -89,6 +93,10 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(Math.round(s.m7.p50Ms / 100) / 10).toBe(SMOKE_10_13.p50s);
     expect(Math.round(s.m7.p95Ms / 100) / 10).toBe(SMOKE_10_13.p95s);
     expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_10_13.costPerPass);
+    const finished = j.runs.filter((r) => r.model === "gemma-4-31B-it" && r.kind === "pass").length;
+    expect(finished).toBe(2);
+    expect(Math.round((j.spend.usd / finished) * 1e5) / 1e5).toBe(SMOKE_10_13.costPerFinishedPass);
+    expect(j.scores.find((x) => x.model === "gemma-4-31B-it")!.errors).toEqual({ MODEL_TIMEOUT: SMOKE_10_13.timeouts });
   });
 
   it("v3: every step shows a short summary and folds its detail into a closed disclosure; visible copy stays short", () => {

@@ -29,7 +29,7 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -600,8 +600,9 @@ export default function HowItWorksPage() {
             </table>
           </div>
           <p>
-            Speed is met, just: the typical call took {GEMMA_P50_EXACT_S} s, helped by the short refill calls; first calls alone
-            took {GEMMA_FIRST_CALL_P50_S} s typical. Lucky Finds and Find This Spot are not in this test.
+            Speed is missed: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s. DigitalOcean
+            answered slower in this run ({GEMMA_TOKENS_PER_S.now} answer tokens a second, {GEMMA_TOKENS_PER_S.before} the run before).
+            Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
             Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
@@ -609,10 +610,11 @@ export default function HowItWorksPage() {
             <a className={bandLink} href={smokeUrl}>
               results
             </a>
-            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete, grade {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s
-            typical and {SMOKE_10_13.p95s} s slow, and {usd(SMOKE_10_13.costPerPass)} per pass, which is <strong>over</strong>{" "}
-            the {usd(EVAL_THRESHOLDS.costPerPass)} target (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}%
-            of its clues named their answer; code removed them all.
+            ): only {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete ({SMOKE_10_13.timeouts} call hit the 30 s limit),
+            grade {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow. A finished 10-13 pass cost
+            about {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target
+            (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer; code removed
+            them all.
           </p>
         </Disclosure>
       </Band>

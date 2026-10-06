@@ -95,6 +95,12 @@ export const PassSchema = z.object({
   dataCheckedAt: z.object({ osm: z.string(), inat: z.string().nullable() }),
   /** First day of the iNaturalist window ("2026-09-21"), when iNat answered. */
   wildSince: z.string().nullable(),
+  /**
+   * R1 follow-up: true when the iNaturalist season lookup (flowers/fruit this month) failed for this
+   * pass, so its plants were described without flowers or fruit. The pass is "degraded" (make.ts) and
+   * is re-made after DEGRADED_RETRY_SEC. Absent when the check worked or there were no plants.
+   */
+  seasonUnknown: z.boolean().optional(),
   /** October special (S7): monarch counts, checked when the pass was made. Absent outside October and on older passes. */
   october: OctoberBoxSchema.optional(),
   /** Find This Spot (S5): the map + riddle, or why there is none. Absent on passes made before S5. */

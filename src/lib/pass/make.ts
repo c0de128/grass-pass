@@ -50,8 +50,8 @@ export const PASS_TTL_SEC = 30 * DAY;
 export const OCTOBER_WAIT_MS = 6_000;
 
 /**
- * R1-m2 (Q-1-05): a pass made while a source was down or slow (Wild Finds unavailable, no Find This
- * Spot because OpenStreetMap was busy/slow, October box down/slow) is "degraded". It is still saved
+ * R1-m2 (Q-1-05): a pass made while a source was down or slow (Wild Finds unavailable, the plant season
+ * check unavailable, no Find This Spot because OpenStreetMap was busy/slow, October box down/slow) is "degraded". It is still saved
  * and shown, but after this long the next request tries to make a better one with the same id
  * (and keeps showing the degraded one if that fails). The example warm-up treats it the same way.
  */
@@ -62,6 +62,8 @@ const DEGRADED_OCTOBER: readonly string[] = [OCTOBER_REASONS.down, OCTOBER_REASO
 /** True when a source was down or slow when this pass was made (see DEGRADED_RETRY_SEC). */
 export function isDegraded(pass: Pass): boolean {
   if (pass.sections.wild.status === "unavailable") return true;
+  // R1 follow-up: the plant season check could not run (iNaturalist phenology failed or was too slow).
+  if (pass.seasonUnknown === true) return true;
   if (pass.spot?.status === "none" && SPOT_DEGRADED_MESSAGES.includes(pass.spot.message)) return true;
   if (pass.october?.status === "unavailable" && DEGRADED_OCTOBER.includes(pass.october.reason)) return true;
   return false;

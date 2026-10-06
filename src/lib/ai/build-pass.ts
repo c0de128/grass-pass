@@ -156,7 +156,12 @@ type WildResult = {
   blocked: number;
   checkedAt: number | null;
   since: string | null;
+  /** R1 follow-up: a plant on offer has no season evidence because the phenology lookup failed (degraded pass). */
+  seasonUnknown?: boolean;
 };
+
+/** True when some plant in the pool could not be season-checked (the iNaturalist phenology lookup failed). */
+const seasonUnknownIn = (items: readonly PoolItem[]) => items.some((i) => i.season !== undefined && !i.season.known);
 
 async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
   const since = windowStart(deps.now());
@@ -210,7 +215,7 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
       }
     } catch (err) {
       const partial = wildPool(list, summaries, since, { month: monthOfDay(localDay(deps.now())), phenology: null });
-      if (partial.state.status === "ok") return { ...partial, checkedAt, since };
+      if (partial.state.status === "ok") return { ...partial, checkedAt, since, seasonUnknown: seasonUnknownIn(partial.items) };
       return down(err);
     }
   }
@@ -218,7 +223,7 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
   const month = monthOfDay(localDay(deps.now()));
   const season: WildSeasonInput = { month, phenology: await loadPhenology(f.park.id, center, month, plantCandidateIds(list), srcDeps) };
   const pool = wildPool(list, summaries, since, season);
-  return { ...pool, checkedAt, since };
+  return { ...pool, checkedAt, since, seasonUnknown: seasonUnknownIn(pool.items) };
 }
 
 // ---------- the pass ----------
@@ -467,6 +472,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       inat: wild.checkedAt === null ? null : new Date(wild.checkedAt).toISOString(),
     },
     wildSince: wild.since,
+    ...(wild.seasonUnknown ? { seasonUnknown: true } : {}),
     spot: finishSpot(spotPlan, riddle),
   };
   return { kind: "pass", pass };

@@ -30,6 +30,9 @@ function cssTokens(): Record<string, string> {
   return out;
 }
 
+/** v3 files where text-sun sits on the dark band (or is the decorative underline under "outside."). */
+const V3_SUN_ON_DARK = new Set(["src/components/home/TwoParks.tsx", "src/components/home/PassAnatomy.tsx", "src/components/home/HomeHero.tsx"]);
+
 describe("design tokens", () => {
   const css = cssTokens();
 
@@ -113,8 +116,11 @@ describe("design tokens", () => {
     walk(path.join(APP, "src"));
     for (const f of files) {
       const src = readFileSync(f, "utf8");
-      const bad = src.match(/\b(?:text|border|outline)-(?:sage|sun)\b/g) ?? [];
-      expect(bad, path.relative(APP, f)).toEqual([]);
+      const rel = path.relative(APP, f).replaceAll("\\", "/");
+      // v3: sunflower text only sits on the dark band (9.9:1), or is the decorative underline under "outside.".
+      if (V3_SUN_ON_DARK.has(rel)) continue;
+      const bad = src.match(/\b(?:text|border|outline)-(?:sage|sun)(?![\w-])/g) ?? [];
+      expect(bad, rel).toEqual([]);
     }
   });
 });

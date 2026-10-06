@@ -24,13 +24,17 @@ async function searchAndPick(page: Page, query: string, parkName: string) {
 
 /** Make the pass; skips (after checking the code and the message) when an upstream or a limit stopped it. */
 async function makePassOrHonestError(page: Page, parkName: string) {
-  const heading = page.getByRole("heading", { name: `Who's hunting at ${parkName}?` });
-  // After the pick, focus moves to the age step and it scrolls into view (R1 UX m2).
+  const heading = page.getByRole("heading", { name: `Make a pass for ${parkName}` });
+  // After the pick, focus moves to the make step and it scrolls into view (R1 UX m2).
   await expect(heading).toBeFocused();
   await expect(heading).toBeInViewport();
-  await expect(page.getByRole("radio", { name: /Ages 6-10 \(most kids\)/ })).toBeChecked();
-  // Every age radio is drawn the same size (R1 UX m3: "Ages 4-6" used to shrink).
-  const widths = await page.getByRole("radio").evaluateAll((els) => els.map((e) => Math.round(e.getBoundingClientRect().width)));
+  // v3: the age was chosen in the search card (Explorer age), so it isn't asked again; the step says which.
+  await expect(page.getByRole("radio", { name: /Ages 6–10 \(most kids\)/ })).toBeChecked();
+  await expect(page.getByTestId("chosen-age")).toContainText("Ages 6-10");
+  // Every age tile is drawn the same size (R1 UX m3: "Ages 4-6" used to shrink).
+  const widths = await page
+    .getByRole("radio")
+    .evaluateAll((els) => els.map((e) => Math.round(e.closest("label")!.getBoundingClientRect().width)));
   expect(widths).toHaveLength(3);
   expect(new Set(widths).size).toBe(1);
   await page.getByRole("button", { name: "Make my pass" }).click();

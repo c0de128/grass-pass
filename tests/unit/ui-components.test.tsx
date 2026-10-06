@@ -1,22 +1,14 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
-import { ExplorerScene, Logo, TicketMark } from "@/components/art/BrandArt";
 import { readFileSync } from "node:fs";
-import {
-  DIVIDER_HEIGHT,
-  GRASS_LAYERS,
-  GRASS_STRIP_FILES,
-  GRASS_TILES,
-  TILE,
-  grassStripSvg,
-} from "@/components/art/grass";
-import { Hero } from "@/components/Hero";
+import { DIVIDER_HEIGHT, GRASS_LAYERS, GRASS_TILES, TILE, grassStripSvg } from "@/components/art/grass";
+import { Logo } from "@/components/site/Logo";
+import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { parseTheme } from "@/components/theme";
 import { ThemeToggle, themeToggleLabel } from "@/components/ThemeToggle";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Chip, SECTION_LABELS, type SectionKind } from "@/components/ui/Chip";
-import { GrassDivider } from "@/components/ui/GrassDivider";
 import { TicketCard } from "@/components/ui/TicketCard";
 import { siteUrl } from "@/lib/site-url";
 
@@ -26,13 +18,20 @@ describe("Button", () => {
   it("is a real button (type=button by default) with a 44 px minimum target", () => {
     const out = html(<Button>Make my pass</Button>);
     expect(out).toMatch(/^<button type="button"/);
-    expect(out).toContain("min-h-11");
+    expect(out).toContain("min-h-12");
     expect(out).toContain("min-w-11");
-    expect(out).toContain("bg-primary text-on-primary");
+    expect(out).toContain("bg-primary text-primary-foreground");
     expect(out).toContain(">Make my pass</button>");
   });
 
-  it("secondary has the 2 px line border, and submit type and disabled pass through", () => {
+  it("v3: hover lift and the ink step shadow only move when motion is OK", () => {
+    const cls = buttonClassName("primary");
+    expect(cls).toContain("shadow-[0_4px_0_0_var(--gp-foreground)]");
+    expect(cls).toContain("motion-safe:hover:-translate-y-0.5");
+    expect(cls).not.toMatch(/(^| )hover:-translate/);
+  });
+
+  it("secondary has a 2 px line ring, and submit type and disabled pass through", () => {
     const out = html(
       <Button variant="secondary" type="submit" disabled>
         Go
@@ -40,7 +39,7 @@ describe("Button", () => {
     );
     expect(out).toContain('type="submit"');
     expect(out).toContain("disabled");
-    expect(out).toContain("border-2 border-line bg-surface text-heading");
+    expect(out).toContain("bg-card text-foreground ring-2 ring-line");
   });
 
   it("never removes the focus outline", () => {
@@ -70,16 +69,17 @@ describe("TicketCard", () => {
         <h2 id="t1">Pass</h2>
       </TicketCard>,
     );
-    expect(out).toMatch(/^<section class="relative rounded-ticket border-2 border-line bg-surface/);
+    expect(out).toMatch(/^<section class="relative rounded-3xl bg-card text-card-foreground/);
     expect(out).toContain('aria-labelledby="t1"');
     expect(out.match(/data-notch="(left|right)"/g)).toEqual(['data-notch="left"', 'data-notch="right"']);
     expect(out.match(/data-notch="[a-z]+" class="[^"]*top-1\/2/g)).toHaveLength(2);
     expect(out).not.toContain("ticket-stub");
   });
 
-  it("puts the notches on a dashed tear line above the stub", () => {
+  it("puts the notches on a perforated tear line above the stub", () => {
     const out = html(<TicketCard stub={<p>Parent stub</p>}>Kid pass</TicketCard>);
-    expect(out).toContain('data-testid="ticket-stub" class="relative border-t-2 border-dashed border-line');
+    expect(out).toContain('data-testid="ticket-stub" class="relative rounded-b-3xl bg-muted/60');
+    expect(out).toContain('class="perforation absolute');
     const stub = out.slice(out.indexOf("ticket-stub"));
     expect(stub.match(/data-notch=/g)).toHaveLength(2);
     expect(stub).toContain("Parent stub");
@@ -87,23 +87,13 @@ describe("TicketCard", () => {
   });
 });
 
-describe("GrassDivider", () => {
-  it("is decorative: an empty aria-hidden box drawn by the --grass-strip background, no inline SVG or text", () => {
-    const out = html(<GrassDivider />);
-    expect(out).toBe('<div aria-hidden="true" data-testid="grass-divider" class="grass-strip w-full"></div>');
-  });
-
-  it("tokens.css picks the light strip by default and the dark strip in both dark-mode blocks, 34 px tall", () => {
+// The lawn strip art (src/components/art/grass.ts) is no longer on the v3 site, but scripts/render-brand.mjs still
+// draws it into the brand files (public/brand), so its geometry rules stay tested.
+describe("lawn strip art (brand files)", () => {
+  it("the v3 site no longer draws the strip (tokens.css has no --grass-strip)", () => {
     const css = readFileSync(new URL("../../src/styles/tokens.css", import.meta.url), "utf8");
-    const urls = [...css.matchAll(/--grass-strip:\s*url\("\/([^"]+)"\)/g)].map((m) => m[1]);
-    expect(urls).toEqual([GRASS_STRIP_FILES.light, GRASS_STRIP_FILES.dark, GRASS_STRIP_FILES.dark]);
-    const rule = css.match(/\.grass-strip\s*\{([^}]+)\}/)?.[1] ?? "";
-    expect(rule).toContain(`height: ${DIVIDER_HEIGHT}px`);
-    expect(rule).toContain(`background: var(--grass-strip) left bottom / auto ${DIVIDER_HEIGHT}px repeat-x;`);
+    expect(css).not.toContain("--grass-strip");
     expect(DIVIDER_HEIGHT).toBe(34); // option C, Kevin's pick
-    // The footer strip shows a different stretch of lawn than the header.
-    expect(css).toMatch(/\.grass-strip-alt\s*\{\s*background-position: -\d+px bottom;/);
-    expect(html(<GrassDivider className="grass-strip-alt" />)).toContain('class="grass-strip w-full grass-strip-alt"');
   });
 
   it("every blade is a single soft blade with its own root, never a fan (at most 3 blades per spot)", () => {
@@ -163,37 +153,46 @@ describe("GrassDivider", () => {
   });
 });
 
-describe("brand art", () => {
-  it("Logo has the full name + tagline as alt text, with a dark-mode twin", () => {
+describe("v3 logo, header and footer", () => {
+  it("Logo: a decorative ticket with a sprout, and the real wordmark text", () => {
     const out = html(<Logo />);
-    expect(out.match(/alt="Grass Pass: your ticket to get outside"/g)).toHaveLength(2);
-    expect(out).toContain('src="/logo-header.svg"');
-    expect(out).toContain('src="/logo-header-dark.svg"');
-    expect(out).toContain("only-light");
-    expect(out).toContain("only-dark");
+    expect(out).toContain('aria-hidden="true" data-testid="logo-ticket"');
+    expect(out).toContain("bg-primary text-primary-foreground");
+    expect(out).toContain(">Grass Pass</span>");
+    expect(out).not.toContain("<img");
+    expect(html(<Logo inverted />)).toContain("bg-sun text-sun-foreground");
   });
 
-  it("decorative Logo, TicketMark and ExplorerScene have empty alt text", () => {
-    expect(html(<Logo decorative />).match(/alt=""/g)).toHaveLength(2);
-    expect(html(<TicketMark />)).toContain('alt=""');
-    const scene = html(<ExplorerScene />);
-    expect(scene).toContain('alt=""');
-    expect(scene).toContain('aria-hidden="true"');
-    expect(scene).toContain('src="/brand/explorer-scene.svg"');
-  });
-
-  it("Hero gives the headline an h1 and hides the scene under 480 px", () => {
-    const out = html(<Hero title="Pick a park" lead="Print a pass." />);
-    expect(out).toContain('<h1 id="hero-title"');
-    expect(out).toContain("Pick a park</h1>");
-    expect(out).toContain('class="hidden min-[480px]:block"');
-  });
-
-  it("SiteHeader links home with a name, and holds the dark mode switch", () => {
+  it("SiteHeader links home with a name (never prefetched), the section anchors, About and the dark mode switch", () => {
     const out = html(<SiteHeader />);
     expect(out).toContain("<header");
     expect(out).toContain('aria-label="Grass Pass home"');
     expect(out).toContain(">Switch to dark mode</span>");
+    for (const a of ["/#why", "/#how", "/#pass", "/#parks", "/#find", "/about"]) expect(out).toContain(`href="${a}"`);
+    expect(out).toContain(">Make a pass");
+  });
+
+  it("SiteFooter keeps every credit and the real links", () => {
+    const out = html(<SiteFooter />);
+    for (const c of [
+      "OpenStreetMap",
+      "ODbL",
+      "iNaturalist",
+      "Wikipedia (CC BY-SA)",
+      "SerpApi",
+      "Gemma 4",
+      "Apache-2.0",
+      "Lucide (ISC)",
+      "Bricolage Grotesque and DM Sans",
+      "Fredoka and Nunito",
+      "SIL OFL 1.1",
+      "Hero illustration generated with v0 by Vercel",
+      "Park photos: Robert Nunnally",
+    ]) {
+      expect(out, c).toContain(c);
+    }
+    expect(out).toContain('href="https://github.com/c0de128/grass-pass"');
+    expect(out).toContain('href="/about"');
   });
 });
 
@@ -205,10 +204,13 @@ describe("theme", () => {
     expect(parseTheme(null)).toBeNull();
   });
 
-  it("toggle renders without a pressed state on the server (filled in after hydration)", () => {
+  it("toggle is a plain button: a changing label and never aria-pressed", () => {
     const out = html(<ThemeToggle />);
     expect(out).toMatch(/^<button type="button"/);
     expect(out).not.toContain("aria-pressed");
+    expect(out).toContain('title="Switch to dark mode"');
+    const src = readFileSync(new URL("../../src/components/ThemeToggle.tsx", import.meta.url), "utf8");
+    expect(src).not.toMatch(/aria-pressed=\{/);
   });
 
   it("R2-m10: the label says what a press does", () => {

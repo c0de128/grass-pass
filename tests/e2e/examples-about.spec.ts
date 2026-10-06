@@ -12,7 +12,7 @@ test.describe("example parks", () => {
   test("home lists the example parks; a ready one opens a real pass in under 3 s", async ({ page }) => {
     test.setTimeout(240_000);
     await page.goto("/");
-    await expect(page.getByRole("heading", { level: 2, name: "See a real pass now" })).toBeVisible();
+    await expect(page.getByRole("heading", { level: 2, name: "See a real pass, right now." })).toBeVisible();
     const list = page.getByRole("list", { name: "Example parks" });
     await expect(list.getByRole("listitem")).toHaveCount(4);
 
@@ -46,7 +46,8 @@ test.describe("example parks", () => {
     }
     await expect(link).toBeVisible();
     await expect(link).toContainText(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
-    const name = (await link.locator("span").first().textContent())?.trim() ?? "";
+    const name = (await link.getByRole("heading", { level: 3 }).textContent())?.trim() ?? "";
+    await expect(link).toContainText("See the pass");
 
     const started = Date.now();
     await link.click();
@@ -90,11 +91,23 @@ test.describe("example parks", () => {
     }
   });
 
-  test("the examples link jumps to the examples", async ({ page }) => {
+  test("v3: the header's Sample parks link jumps to the examples; the hero pass card is a real example or says why", async ({ page }) => {
     await page.goto("/");
-    await page.getByRole("link", { name: "See a real example pass" }).click();
-    await expect(page).toHaveURL(/#examples-title$/);
-    await expect(page.getByRole("heading", { level: 2, name: "See a real pass now" })).toBeInViewport();
+    const card = page.getByTestId("hero-pass-card");
+    await expect(card).toBeVisible();
+    if ((await card.getAttribute("data-state")) === "ready") {
+      await expect(card.getByRole("link", { name: /Open this pass/ })).toHaveAttribute("href", /^\/pass\/[nwr]\d+-6to10-\d{8}-[1-3]\?example=1$/);
+      await expect(card.getByRole("listitem")).toHaveCount(4);
+    } else {
+      await expect(card).toContainText(/Example pass not ready yet: \S/);
+    }
+    for (const fake of ["Spot a monarch on the milkweed", "Live park feeds", "3.2 mi"]) await expect(page.getByText(fake)).toHaveCount(0);
+    const sample = page.getByRole("navigation", { name: "Site" }).getByRole("link", { name: "Sample parks" });
+    if (await sample.isVisible()) {
+      await sample.click();
+      await expect(page).toHaveURL(/#parks$/);
+      await expect(page.getByRole("heading", { level: 2, name: "See a real pass, right now." })).toBeInViewport();
+    }
   });
 });
 

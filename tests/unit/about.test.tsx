@@ -203,7 +203,7 @@ describe("/about with a Llama model configured", () => {
 describe("site header and footer", () => {
   it("header links to /about", () => {
     const html = renderToStaticMarkup(<SiteHeader />);
-    expect(html).toMatch(/<nav aria-label="Site">/);
+    expect(html).toMatch(/<nav aria-label="Site"/);
     expect(html).toMatch(/<a[^>]*href="\/about"[^>]*>About<\/a>/);
   });
 
@@ -224,9 +224,13 @@ describe("site header and footer", () => {
 describe("fonts are self-hosted", () => {
   const fontsDir = join(ROOT, "src/app/fonts");
 
-  it("ships the five woff2 files and both OFL licences", () => {
+  it("ships the woff2 files and every OFL licence (v3 site fonts + the printed pass fonts)", () => {
     const files = readdirSync(fontsDir).sort();
     expect(files).toEqual([
+      "OFL-BricolageGrotesque.txt",
+      "OFL-DMSans.txt",
+      "bricolage-grotesque-latin-wght-normal.woff2",
+      "dm-sans-latin-wght-normal.woff2",
       "OFL-Fredoka.txt",
       "OFL-Nunito.txt",
       "fredoka-latin-600-normal.woff2",
@@ -238,7 +242,7 @@ describe("fonts are self-hosted", () => {
     for (const f of files.filter((x) => x.endsWith(".woff2"))) {
       expect(readFileSync(join(fontsDir, f)).subarray(0, 4).toString("latin1"), f).toBe("wOF2");
     }
-    for (const f of ["OFL-Fredoka.txt", "OFL-Nunito.txt"]) {
+    for (const f of ["OFL-Fredoka.txt", "OFL-Nunito.txt", "OFL-BricolageGrotesque.txt", "OFL-DMSans.txt"]) {
       expect(readFileSync(join(fontsDir, f), "utf8")).toContain("SIL Open Font License, Version 1.1");
     }
   });
@@ -246,7 +250,12 @@ describe("fonts are self-hosted", () => {
   it("the layout uses next/font/local with the same CSS variables, and nothing imports next/font/google", () => {
     const layout = readFileSync(join(ROOT, "src/app/layout.tsx"), "utf8");
     expect(layout).toContain('from "next/font/local"');
-    // next/font/local names the family after the const: keep "Fredoka" / "Nunito" (brand e2e checks document.fonts).
+    // next/font/local names the family after the const (brand e2e checks document.fonts).
+    expect(layout).toContain("const BricolageGrotesque = localFont(");
+    expect(layout).toContain("const DMSans = localFont(");
+    expect(layout).toContain('variable: "--font-bricolage"');
+    expect(layout).toContain('variable: "--font-dm-sans"');
+    // The printed pass keeps Fredoka + Nunito (print.css), not preloaded on screen pages.
     expect(layout).toContain("const Fredoka = localFont(");
     expect(layout).toContain("const Nunito = localFont(");
     expect(layout).toContain('variable: "--font-fredoka"');

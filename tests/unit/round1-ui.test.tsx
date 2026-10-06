@@ -1,6 +1,8 @@
 import { describe, expect, it } from "vitest";
 import { renderToStaticMarkup } from "react-dom/server";
-import { ExampleChips, ExampleParks, exampleState } from "@/components/ExampleParks";
+import { HeroPassCard } from "@/components/home/HeroPassCard";
+import { SampleParks } from "@/components/home/SampleParks";
+import { exampleState, heroCard } from "@/lib/home/showcase";
 import { ProgressSteps } from "@/components/pass/PassStatus";
 import { CLIENT_CODES, CLIENT_COPY, CLIENT_TIMEOUT_MS } from "@/components/pass/usePassRequest";
 import { PASS_DEADLINE_MS } from "@/lib/ai/build-pass";
@@ -23,19 +25,17 @@ describe("example cards (R1-B2 data-state, UX m8 phone row)", () => {
     expect(exampleState(making, true)).toBe("making");
     expect(exampleState(waiting, true)).toBe("waiting");
     expect(exampleState(waiting, false)).toBe("off");
-    const html = renderToStaticMarkup(<ExampleParks statuses={[ready, making, waiting]} enabled />);
+    const html = renderToStaticMarkup(<SampleParks statuses={[ready, making, waiting]} enabled />);
     expect(html).toContain('data-state="ready"');
     expect(html).toContain('data-state="making"');
     expect(html).toContain('data-state="waiting"');
   });
 
-  it("the phone row links only ready passes, and is absent when none is ready", () => {
-    const html = renderToStaticMarkup(<ExampleChips statuses={[ready, making, waiting]} />);
-    expect(html).toContain('aria-label="Open an example pass"');
-    expect(html).toContain("sm:hidden");
-    expect(html.match(/<a /g)).toHaveLength(1);
-    expect(html).toContain('href="/pass/w306191453-6to10-20261005-1?example=1"');
-    expect(renderToStaticMarkup(<ExampleChips statuses={[making, waiting]} />)).toBe("");
+  it("v3: with no example pass ready, the hero card says why and links nothing", () => {
+    const html = renderToStaticMarkup(<HeroPassCard card={heroCard([making, waiting])} />);
+    expect(html).toContain('data-state="missing"');
+    expect(html).toContain("Example pass not ready yet:");
+    expect(html).not.toContain("<a ");
   });
 });
 

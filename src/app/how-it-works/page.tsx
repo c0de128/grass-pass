@@ -318,18 +318,16 @@ export default function HowItWorksPage() {
       more: (
         <>
           <p>
-            On a park with little data, the model is asked for one spare. If more than one find is lost to the checks, code asks{" "}
-            <strong>once more</strong>:
+            Little data: the model is asked for one spare. More than one find lost: code asks <strong>once more</strong>:
           </p>
           <ul className={bullets}>
             <li>
-              If some clues were kept, the second call is a <strong>refill</strong>: only the missing finds (plus one spare),
-              from unused facts, skipping facts whose clue already failed, and naming what was copied or too generic.
+              Some clues kept: a <strong>refill</strong> for the missing finds (plus one spare) from unused facts, naming what
+              was copied or too generic.
             </li>
             <li>If nothing was kept, it is the whole request again.</li>
             <li>
-              A network or server error is retried once inside the call. A timeout is not, and the second call starts only if
-              20 s of the pass&apos;s 85 s budget remain.
+              A network or server error is retried once; a timeout is not. The second call needs 20 s of the 85 s budget left.
             </li>
           </ul>
           <p>Nothing is padded with made-up finds.</p>
@@ -350,9 +348,8 @@ export default function HowItWorksPage() {
             measures the walk.
           </p>
           <p>
-            The model writes the riddle in the same call, under the same checks. If it fails, or the map is late (code waits
-            about 2 s before the call and 3 s after), code uses a fixed riddle. A park with nothing to point at gets &quot;No
-            Find This Spot today&quot;.
+            The model writes the riddle in the same call, under the same checks. If it fails or the map is late (about 2 s
+            before the call, 3 s after), code uses a fixed riddle. No landmark: &quot;No Find This Spot today&quot;.
           </p>
           <p>The October box (step 2) is all code, numbers and dates included.</p>
         </>

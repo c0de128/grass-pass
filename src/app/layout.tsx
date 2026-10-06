@@ -1,13 +1,33 @@
 import type { Metadata, Viewport } from "next";
-import { Fredoka, Nunito } from "next/font/google";
+import localFont from "next/font/local";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-// Self-hosted at build time by next/font (no requests to Google from the browser). Both OFL.
-const fredoka = Fredoka({ subsets: ["latin"], weight: ["600", "700"], variable: "--font-fredoka", display: "swap" });
-const nunito = Nunito({ subsets: ["latin"], weight: ["400", "600", "700"], variable: "--font-nunito", display: "swap" });
+// Fonts live in the repo (src/app/fonts: the @fontsource 5.3.0 latin woff2 files, SIL OFL 1.1, licences
+// alongside), so neither the build nor the browser ever fetches Google Fonts.
+// next/font/local names the font family after the const, so the consts are "Fredoka" / "Nunito": the same family
+// names the Google Fonts loader produced before (computed styles and document.fonts still say Fredoka and Nunito).
+const Fredoka = localFont({
+  src: [
+    { path: "./fonts/fredoka-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/fredoka-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-fredoka",
+  display: "swap",
+  fallback: ["ui-rounded", "system-ui", "sans-serif"],
+});
+const Nunito = localFont({
+  src: [
+    { path: "./fonts/nunito-latin-400-normal.woff2", weight: "400", style: "normal" },
+    { path: "./fonts/nunito-latin-600-normal.woff2", weight: "600", style: "normal" },
+    { path: "./fonts/nunito-latin-700-normal.woff2", weight: "700", style: "normal" },
+  ],
+  variable: "--font-nunito",
+  display: "swap",
+  fallback: ["ui-rounded", "system-ui", "sans-serif"],
+});
 
 const TITLE = "Grass Pass: your ticket to get outside";
 const DESCRIPTION =
@@ -50,7 +70,7 @@ export const viewport: Viewport = {
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${fredoka.variable} ${nunito.variable} h-full antialiased`}>
+    <html lang="en" className={`${Fredoka.variable} ${Nunito.variable} h-full antialiased`}>
       <body className="flex min-h-full flex-col">
         <SiteHeader />
         {children}

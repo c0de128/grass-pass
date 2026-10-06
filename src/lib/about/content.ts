@@ -6,7 +6,7 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { MODEL_TIMEOUT_MS } from "@/lib/model";
@@ -206,11 +206,11 @@ export type Limit = { title: string; detail: string };
 export function aboutLimitPoints(): string[] {
   const g = evalColumn("gemma-4-31B-it");
   return [
-    `Speed: just over target (${secs(g.p50s)} / ${secs(g.p95s)}).`,
-    `Some clues repeat across parks (${pct(g.repeatPct)}).`,
+    `Clues repeat across parks (${pct(g.repeatPct)}).`,
+    `Speed just meets target (${secs(g.p50s)}).`,
     "Sparse parks get shorter passes, and say so.",
     "The read-it-as-a-7-year-old check is not done yet.",
-    "Find This Spot is not in the eval yet.",
+    "Find This Spot and Lucky Finds are not in the eval yet.",
   ];
 }
 
@@ -222,20 +222,20 @@ export function aboutLimits(): Limit[] {
   const serp = serpapiCaps();
   return [
     {
-      title: `Complete passes: Gemma just passes (${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more).`,
-      detail: `4 of the 5 short or missing passes were the AI service, not the clues: ${g.timeouts} model calls ran past the 30 s limit in the last of the three runs, and one call was refused at once. The fifth (Klyde Warren Park, a park with little data) ended 2 finds short even after its second try. A short pass says how many finds are missing; it is never padded.`,
+      title: `Clues repeat across parks: Gemma ${pct(g.repeatPct)}`,
+      detail: `of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}% or lower). That is up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before (${PREVIOUS_RUN.id}), so it got worse and does not pass. Most of the repeats are Park Finds that copy a phrase of the code-written park facts ("paths that cross over water"). Wrong counts pass: ${g.wrongCounts} of ${g.countClues} printed count clues (${g.wrongCountsRemoved} wrong ones were removed by code before printing).`,
     },
     {
-      title: `Clues still repeat across parks a little: Gemma ${pct(g.repeatPct)}`,
-      detail: `of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}% or lower). That is down from 29.2% in the run before, but it does not pass yet. Wrong counts pass: ${g.wrongCounts} of ${g.countClues} printed count clues (${g.wrongCountsRemoved} wrong ones were removed by code before printing).`,
+      title: `Speed: Gemma only just passes (${secs(g.p50s)} typical, ${secs(g.p95s)} slow-case; target ${t.p50s} s / ${t.p95s} s).`,
+      detail: `The typical call took ${GEMMA_P50_EXACT_S} s, and that per-call figure includes the short second calls that fill a short pass (about 4 s each). First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical, which is over the mark. Most of the wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: ${secs(l.p50s)} typical, with ${pct(l.completePct)} complete passes and ${usd(l.costPerPass)} a pass, over the ${usd(t.costPerPass)} mark (${l.timeouts} of its calls hit its 60 s limit).`,
+    },
+    {
+      title: `Complete passes: Gemma passes (${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more).`,
+      detail: `The one short pass was Spring Creek Forest Preserve, a park with little data, which ended 2 finds short even after its second try. No call failed or timed out in this run. A short pass says how many finds are missing; it is never padded.`,
     },
     {
       title: "Answers that name themselves:",
       detail: `Gemma passes (${pct(g.nameLeakPct)} of its clues or "look where" hints used a word of their own answer before the filter; target ${t.nameLeakPct}% or lower), but Llama 4 Maverick does not (${pct(l.nameLeakPct)}). Code catches every one: a clue that names its answer is dropped, and a hint that does is left off. So nothing is given away on the pass, but those clues are lost.`,
-    },
-    {
-      title: "Speed: neither model passes.",
-      detail: `Gemma took ${secs(g.p50s)} typical and ${secs(g.p95s)} slow-case per model call (target ${t.p50s} s / ${t.p95s} s): just over both marks (the typical wait was 10.04 s), and the slow case includes the ${g.timeouts} calls that hit the 30 s limit. Most of the wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: ${secs(l.p50s)} typical, with ${pct(l.completePct)} complete passes (${l.timeouts} of its calls hit its 60 s limit).`,
     },
     {
       title: "A model glitch we saw in an earlier run:",
@@ -244,7 +244,7 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: "Not in this test:",
-      detail: `the Find This Spot map and riddle (the map data was not recorded for the ${EVAL_PARKS} test parks).`,
+      detail: `the Find This Spot map and riddle (the map data was not recorded for the ${EVAL_PARKS} test parks), and Lucky Finds (the test parks have no recorded Google Maps review counts, and the free SerpApi searches are kept for the live site).`,
     },
     {
       title: "Kid check not done yet.",
@@ -277,12 +277,12 @@ export function howLimits(): Limit[] {
   const serp = serpapiCaps();
   return [
     {
-      title: "Speed is just over target.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow per model call (target ${t.p50s} s / ${t.p95s} s), and ${g.timeouts} model calls in ${g.runs} test passes hit the ${MODEL_TIMEOUT_MS / 1000} s limit.`,
+      title: "Clues repeat across parks.",
+      detail: `${pct(g.repeatPct)} of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}%), up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before.`,
     },
     {
-      title: "Clues still repeat across parks a little.",
-      detail: `${pct(g.repeatPct)} of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}%).`,
+      title: "Speed only just meets its target.",
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow per model call (target ${t.p50s} s / ${t.p95s} s), and ${g.timeouts} model calls in ${g.runs} test passes hit the ${MODEL_TIMEOUT_MS / 1000} s limit. First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical.`,
     },
     {
       title: "Parks with little data make shorter passes.",

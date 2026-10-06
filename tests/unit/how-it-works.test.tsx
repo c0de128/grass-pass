@@ -62,12 +62,13 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-3");
-    expect(t).toContain("2026-10-06-partial-1015");
+    expect(t).toContain("2026-10-06-4");
+    expect(t).toContain("2026-10-06-partial-1218");
     expect(t).toContain(`$${SMOKE_10_13.costPerPass.toFixed(5)} per pass, which is over`);
-    // Speed and repetition were missed in run 2026-10-06-3: the table must say so.
+    // Run 2026-10-06-4: speed met (just), repetition missed; the table must say so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
-    expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
+    expect(rows).toContainEqual(["Model time per call, typical / slow", "Met"]);
+    expect(t).toContain("first calls alone took 10.6 s typical");
     expect(rows).toContainEqual(["Clues repeated across parks", "Missed"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
     expect(g.repeatPct).toBeGreaterThan(EVAL_THRESHOLDS.repeatPct);

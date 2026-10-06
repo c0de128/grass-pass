@@ -26,10 +26,10 @@ import type { ReactNode } from "react";
 import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
-import { EVAL_RUN_ID, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
+import { EVAL_RUN_ID, UNIT_TESTS, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -586,7 +586,7 @@ export default function HowItWorksPage() {
           <Gauge aria-hidden="true" className="mt-1 size-4 shrink-0 text-sun" />
           <span>
             Measured on {EVAL_PARKS} parks: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (a no-AI
-            template: {template.fkGrade.toFixed(1)}), speed missed just. All numbers on the{" "}
+            template: {template.fkGrade.toFixed(1)}), speed met just, repeats across parks missed. All numbers on the{" "}
             <Link className={bandLink} href="/about#measured">
               About page
             </Link>
@@ -638,7 +638,7 @@ export default function HowItWorksPage() {
           </div>
           <p>
             The no-AI template on the same data reads at grade {template.fkGrade.toFixed(1)}; Gemma&apos;s clues read at grade{" "}
-            {gemma.fkGrade.toFixed(1)}. Speed is missed, just: the typical call took 10.04 s.
+            {gemma.fkGrade.toFixed(1)}. Speed is met, just: the typical call took {GEMMA_P50_EXACT_S} s, helped by the short second calls that fill a short pass; first calls alone took {GEMMA_FIRST_CALL_P50_S} s typical. Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
             The newest results file is a smaller check for ages {SMOKE_10_13.ageBand} (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
@@ -719,7 +719,7 @@ export default function HowItWorksPage() {
               judge simulator. The builders then fix what they found. Three audit rounds have run so far.
             </li>
             <li>
-              Every change is checked before it is merged: lint, type checks, more than 800 unit tests on recorded real API
+              Every change is checked before it is merged: lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
               answers, a production build, and browser tests with automatic accessibility checks.
             </li>
             <li>Claude helped build the app. It never writes a pass: the clues on every pass come from the open model named on that pass.</li>

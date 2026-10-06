@@ -6,7 +6,7 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { PRIVACY_ROWS, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
 
@@ -35,20 +35,35 @@ type Score = {
   m10: { repeated: number; clues: number; rate: number | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number };
 };
-type RunRow = { model: string; dataRich: boolean; kind: string; items: unknown[]; n: number | null; parkName: string | null };
+type RunRow = { model: string; dataRich: boolean; kind: string; items: unknown[]; n: number | null; parkName: string | null; calls?: { status: number; latencyMs: number }[] };
 type Results = { meta: { day: string; ageBand: string; partial: boolean }; cases: unknown[]; runs: RunRow[]; scores: Score[]; spend: { usd: number } };
 
 const results = JSON.parse(readFileSync(join(ROOT, EVAL_RESULTS_FILE), "utf8")) as Results;
 const r1 = (x: number) => Math.round(x * 1000) / 10; // rate -> percent, 1 decimal
+/** Linear-interpolated percentile, the same formula as evals/score.ts percentile(). */
+const percentile = (values: number[], p: number) => {
+  const s = [...values].sort((a, b) => a - b);
+  const i = (p / 100) * (s.length - 1);
+  const lo = Math.floor(i);
+  return s[lo] + (s[Math.ceil(i)] - s[lo]) * (i - lo);
+};
 
 describe("about page numbers come from the committed eval run", () => {
   it("the hand-written figures on the page come from the results files too", () => {
     const gemma = results.scores.find((x) => x.model === "gemma-4-31B-it")!;
-    expect(Math.round(gemma.m7.p50Ms! / 10) / 100).toBe(10.04); // "the typical wait was 10.04 s"
-    const before = JSON.parse(readFileSync(join(ROOT, "evals/results/2026-10-06-2.json"), "utf8")) as Results;
-    expect(r1(before.scores.find((x) => x.model === "gemma-4-31B-it")!.m10.rate!)).toBe(29.2); // "down from 29.2%"
+    expect(Math.round(gemma.m7.p50Ms! / 10) / 100).toBe(GEMMA_P50_EXACT_S); // "the typical call took 9.98 s"
+    const firstCalls = results.runs
+      .filter((r) => r.model === "gemma-4-31B-it")
+      .flatMap((r) => (r.calls ?? []).slice(0, 1))
+      .filter((c) => c.status === 200)
+      .map((c) => c.latencyMs);
+    expect(Math.round(percentile(firstCalls, 50) / 100) / 10).toBe(GEMMA_FIRST_CALL_P50_S); // "First calls alone took 10.6 s"
+    const before = JSON.parse(readFileSync(join(ROOT, PREVIOUS_RUN.file), "utf8")) as Results;
+    expect(before.meta.partial).toBe(false);
+    expect(r1(before.scores.find((x) => x.model === "gemma-4-31B-it")!.m10.rate!)).toBe(PREVIOUS_RUN.repeatPct); // "up from 6.8%"
     const short = results.runs.filter((r) => r.model === "gemma-4-31B-it" && r.dataRich && r.kind === "pass" && r.items.length < (r.n ?? 0) - 1);
-    expect(short.map((r) => r.parkName)).toEqual(["Klyde Warren Park"]); // "The fifth (Klyde Warren Park ...)"
+    expect(short.map((r) => r.parkName)).toEqual(["Spring Creek Forest Preserve Park"]); // "The one short pass was Spring Creek ..."
+    expect(gemma.errors).toEqual({}); // "No call failed or timed out in this run."
   });
 
   it("is a full (not partial) run with a summary file next to it", () => {
@@ -126,14 +141,14 @@ describe("/about", () => {
   it("v3: the stat tiles are the committed eval numbers, and the misses say Missed", () => {
     const tiles = aboutStatTiles();
     const g = EVAL_COLUMNS.find((c) => c.model === "gemma-4-31B-it")!;
-    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["98.9%", "0", "$0.00070", "Grade 1.7", "90.2%", "10.0 s", "6.8%", String(UNIT_TESTS.passed)]));
-    expect(tiles.find((x) => x.value === "10.0 s")?.met).toBe(false); // p95 20.5 s > 20 s
+    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["99.4%", "0", "$0.00089", "Grade 2.5", "98%", "10.0 s", "13.4%", String(UNIT_TESTS.passed)]));
+    expect(tiles.find((x) => x.value === "10.0 s")?.met).toBe(true); // run 2026-10-06-4: p50 9.98 s, p95 16.1 s
     expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(false);
     expect(tiles.find((x) => x.value === "0")?.met).toBe(true);
     const list = html.match(/<ul aria-label="Measured results"[\s\S]*?<\/ul>/)?.[0] ?? "";
     expect((list.match(/<li /g) ?? []).length).toBe(tiles.length);
     expect((text(list).match(/Missed/g) ?? []).length).toBe(tiles.filter((x) => x.met === false).length);
-    expect(t).toContain("run 2026-10-06-3 (2026-10-06)");
+    expect(t).toContain("run 2026-10-06-4 (2026-10-06)");
   });
 
   it("v3: the unit-test tile is dated, and its file count matches tests/unit (re-count when tests are added)", () => {
@@ -171,26 +186,30 @@ describe("/about", () => {
 
   it("quotes the measured numbers, failures included", () => {
     for (const s of [
-      "98.9% (436/441)",
-      "90.2% (46/51)",
-      "2% (clue only 2%)",
-      "10.0 s / 20.5 s",
-      "$0.00070",
-      "1.7",
-      "3.8",
-      "39.4 s typical",
-      "47.1% complete passes",
-      "Gemma passes (2% of its clues",
-      "Llama 4 Maverick does not (11.1%)",
-      "Complete passes: Gemma just passes (90.2%, 46 of 51",
-      "3 model calls ran past the 30 s limit",
-      "Gemma 6.8%",
-      "6.8% (25/366)",
-      "down from 29.2% in the run before",
-      "0 of 135 count clues (11 removed)",
-      "Speed: neither model passes.",
-      "the typical wait was 10.04 s",
-      "9 of its calls hit its 60 s limit",
+      "99.4% (512/515)",
+      "98% (50/51)",
+      "3.7% (clue only 3.1%)",
+      "10.0 s / 16.1 s",
+      "$0.00089",
+      "2.5",
+      "3.7",
+      "35.5 s typical",
+      "82.4% complete passes",
+      "$0.00149 a pass, over the $0.00100 mark",
+      "Gemma passes (3.7% of its clues",
+      "Llama 4 Maverick does not (9.8%)",
+      "Complete passes: Gemma passes (98%, 50 of 51",
+      "The one short pass was Spring Creek Forest Preserve",
+      "No call failed or timed out in this run.",
+      "Gemma 13.4%",
+      "13.4% (54/404)",
+      "up from 6.8% in the run before (2026-10-06-3)",
+      "0 of 136 count clues (7 removed)",
+      "Speed: Gemma only just passes (10.0 s typical, 16.1 s slow-case",
+      "The typical call took 9.98 s",
+      "First calls alone took 10.6 s typical, which is over the mark",
+      "1 of its calls hit its 60 s limit",
+      "and Lucky Finds (the test parks have no recorded Google Maps review counts",
     ]) {
       expect(t).toContain(s);
     }

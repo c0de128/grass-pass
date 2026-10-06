@@ -58,8 +58,9 @@ test("the pre-limiter answers 429 with Retry-After before the store is touched",
   const limitedPage = pages.find((p) => p.status() === 429);
   expect(limitedPage).toBeDefined();
   if (!limitedPage) return;
-  expect(limitedPage.headers()["content-type"]).toMatch(/text\/plain/);
-  expect(await limitedPage.text()).toMatch(/Please wait about \d+ seconds? and try again/);
+  // UX-5-02: a styled page in the site's voice (with the wait and a way home), not plain text.
+  expect(limitedPage.headers()["content-type"]).toMatch(/text\/html/);
+  expect(await limitedPage.text()).toMatch(/Please wait about \d+ seconds?, then try again/);
 });
 
 test.describe("360 px phone", () => {

@@ -21,7 +21,7 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
   const live = liveStatement(statuses, enabled);
   const states = statuses.map((s) => exampleState(s, enabled));
   return (
-    <section id="parks" aria-labelledby="examples-title" className="scroll-mt-28 sm:scroll-mt-16">
+    <section id="parks" aria-labelledby="examples-title" className="relative z-[1] scroll-mt-28 bg-background sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 py-24 md:px-8 lg:py-32">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="flex max-w-2xl flex-col gap-4">

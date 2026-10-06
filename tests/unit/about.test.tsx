@@ -86,12 +86,12 @@ describe("/about", () => {
   });
 
   it("quotes the measured numbers, failures included", () => {
-    for (const s of ["99.6%", "100% (51/51)", "10.5%", "6.7%", "8.9 s / 12.8 s", "$0.00064", "1.7", "5.8", "39.2 s typical", "41.2% complete passes", "Answers that name themselves: 10.5%"]) {
+    for (const s of ["98.8%", "100% (51/51)", "2.3%", "2.1%", "9.4 s / 11.7 s", "$0.00065", "1.0", "5.8", "29.9 s typical", "94.1% complete passes", "Gemma now passes (2.3%", "Llama 4 Maverick does not (9.4%)"]) {
       expect(t).toContain(s);
     }
     expect(t).toContain("No closed model was compared");
     expect(t).toContain("Find This Spot");
-    expect(t).toMatch(/Lucky Finds .*not available yet/);
+    expect(t).toMatch(/Lucky Finds .*left off the kid's pass; only the grown-up's part says "not available yet"/);
     expect(t).not.toContain("known bug we are fixing");
     expect(t).toContain("We have not measured a self-hosted run for this app yet.");
   });

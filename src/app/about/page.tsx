@@ -6,6 +6,7 @@ import { TicketCard } from "@/components/ui/TicketCard";
 import {
   EVAL_AGE_BAND,
   EVAL_COLUMNS,
+  CLOSED_MODELS_403_DAY,
   EVAL_DAY,
   EVAL_PARKS,
   EVAL_SUMMARY_FILE,
@@ -303,7 +304,7 @@ export default function AboutPage() {
         </ul>
         <p>
           No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
-          answered &quot;403 Forbidden&quot; when we tried them on {EVAL_DAY}.
+          answered &quot;403 Forbidden&quot; when we tried them on {CLOSED_MODELS_403_DAY}.
         </p>
         <p>
           <strong>In short:</strong> we made passes for {EVAL_PARKS} real parks with each model and counted how often the
@@ -315,16 +316,17 @@ export default function AboutPage() {
         <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
-            <strong>Answers that name themselves: {pct(gemma.nameLeakPct)}</strong> of Gemma&apos;s clues or &quot;look
-            where&quot; hints used a word of their own answer before the filter (target {EVAL_THRESHOLDS.nameLeakPct}% or
-            lower; in the clue itself {pct(gemma.clueLeakPct)}). Code catches every one: a clue that names its answer is
-            dropped, and a hint that does is left off. So nothing is given away on the pass, but those clues are lost.
+            <strong>Answers that name themselves:</strong> Gemma now passes ({pct(gemma.nameLeakPct)} of its clues or
+            &quot;look where&quot; hints used a word of their own answer before the filter; target{" "}
+            {EVAL_THRESHOLDS.nameLeakPct}% or lower), but Llama 4 Maverick does not ({pct(llama.nameLeakPct)}). Code catches
+            every one: a clue that names its answer is dropped, and a hint that does is left off. So nothing is given away
+            on the pass, but those clues are lost.
           </li>
           <li>
             <strong>Llama 4 Maverick is too slow to be the default:</strong> {secs(llama.p50s)} typical per model call
-            (target {EVAL_THRESHOLDS.p50s} s), and {pct(llama.completePct)} complete passes. Gemma took {secs(gemma.p50s)}{" "}
-            typical and {secs(gemma.p95s)} slow-case; most of that wait is the model writing its answer, so we made the answer
-            shorter.
+            (target {EVAL_THRESHOLDS.p50s} s), with {pct(llama.completePct)} complete passes. Gemma took{" "}
+            {secs(gemma.p50s)} typical and {secs(gemma.p95s)} slow-case; most of that wait is the model writing its
+            answer, so we made the answer shorter.
           </li>
           <li>
             <strong>A model glitch we saw in an earlier run:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park,
@@ -340,8 +342,8 @@ export default function AboutPage() {
             automated.
           </li>
           <li>
-            <strong>Not built yet:</strong> Lucky Finds (visitor-review counts) show &quot;not available yet&quot; on the pass,
-            and no photos are printed.
+            <strong>Not built yet:</strong> Lucky Finds (visitor-review counts) are left off the kid&apos;s pass; only the
+            grown-up&apos;s part says &quot;not available yet&quot;, and no photos are printed.
           </li>
           <li>
             <strong>Sparse data happens.</strong> 3 of the 17 North Texas parks in the test had no research-grade

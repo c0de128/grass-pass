@@ -1,18 +1,21 @@
 /**
  * The measured numbers the /about page quotes (SPEC §6.4 / §6.5, F14).
  *
- * Copied from the committed eval run `evals/results/2026-10-05-4.json` (summary: `2026-10-05-4.md`), the audit
- * round 1 re-run (season check, retry at n-1, stricter name-leak check, no-map rule, look-closely Park Finds). The
- * earlier runs (`2026-10-05.json`, `-2.json`, `-3.json`) stay in the repo for comparison.
+ * Copied from the committed eval run `evals/results/2026-10-06.json` (summary: `2026-10-06.md`), the audit
+ * round 1 follow-up run (season fact as a code-written source sentence, count clues that don't name the thing,
+ * fewer false name-leak matches). The earlier runs (`2026-10-05.json`, `-2.json`, `-3.json`, `-4.json`) stay in the
+ * repo for comparison.
  * tests/unit/about.test.tsx re-reads that JSON and fails if any number here drifts from it, so the page
  * can never show a number that was not measured. When the eval is re-run, point EVAL_RESULTS_FILE at the new
  * results and update the numbers; FAILs stay on the page as current limitations.
  */
 
-export const EVAL_RESULTS_FILE = "evals/results/2026-10-05-4.json";
-export const EVAL_SUMMARY_FILE = "evals/results/2026-10-05-4.md";
+export const EVAL_RESULTS_FILE = "evals/results/2026-10-06.json";
+export const EVAL_SUMMARY_FILE = "evals/results/2026-10-06.md";
 /** Chicago day of the run. */
-export const EVAL_DAY = "2026-10-05";
+export const EVAL_DAY = "2026-10-06";
+/** Chicago day the closed models on our DigitalOcean tier answered 403. */
+export const CLOSED_MODELS_403_DAY = "2026-10-05";
 
 export type EvalColumn = {
   model: string;
@@ -47,7 +50,7 @@ export type EvalColumn = {
 
 export const EVAL_PARKS = 20;
 export const EVAL_AGE_BAND = "6-10";
-export const EVAL_TOTAL_USD = 0.0552;
+export const EVAL_TOTAL_USD = 0.0581;
 
 export const EVAL_COLUMNS: readonly EvalColumn[] = [
   {
@@ -56,20 +59,20 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Apache-2.0",
     runs: 60,
     blockedPrinted: 0,
-    groundedPct: 99.6,
-    grounded: 445,
-    returned: 447,
+    groundedPct: 98.8,
+    grounded: 426,
+    returned: 431,
     completePct: 100,
     complete: 51,
     dataRichRuns: 51,
     honestEmptiesPct: 100,
-    fkGrade: 1.7,
-    nameLeakPct: 10.5,
-    clueLeakPct: 6.7,
-    p50s: 8.9,
-    p95s: 12.8,
+    fkGrade: 1,
+    nameLeakPct: 2.3,
+    clueLeakPct: 2.1,
+    p50s: 9.4,
+    p95s: 11.7,
     timeouts: 0,
-    costPerPass: 0.00064,
+    costPerPass: 0.00065,
   },
   {
     model: "llama-4-maverick",
@@ -77,20 +80,20 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Llama 4 Community Licence",
     runs: 20,
     blockedPrinted: 0,
-    groundedPct: 80.1,
-    grounded: 145,
+    groundedPct: 93.9,
+    grounded: 170,
     returned: 181,
-    completePct: 41.2,
-    complete: 7,
+    completePct: 94.1,
+    complete: 16,
     dataRichRuns: 17,
     honestEmptiesPct: 100,
-    fkGrade: 1.9,
-    nameLeakPct: 12.2,
-    clueLeakPct: 11.0,
-    p50s: 39.2,
-    p95s: 46.3,
+    fkGrade: 1,
+    nameLeakPct: 9.4,
+    clueLeakPct: 8.3,
+    p50s: 29.9,
+    p95s: 37.2,
     timeouts: 0,
-    costPerPass: 0.00116,
+    costPerPass: 0.00128,
   },
   {
     model: "no-AI template",
@@ -106,8 +109,8 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     dataRichRuns: 17,
     honestEmptiesPct: 100,
     fkGrade: 5.8,
-    nameLeakPct: 6.4,
-    clueLeakPct: 6.4,
+    nameLeakPct: 5,
+    clueLeakPct: 5,
     p50s: null,
     p95s: null,
     timeouts: 0,

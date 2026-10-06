@@ -98,18 +98,18 @@ These are laptop numbers, not the hosting provider's; the deployed cold start wi
 
 ## Limitations
 Copied from the app's `/about` page ("What did not pass yet"), with the same numbers:
-- **Answers that name themselves: 10.5% FAIL** (target 5% or lower). Before the filter, 10.5% of Gemma's clues or
-  "look where" hints used a word of their own answer (in the clue itself 6.7%). Code catches every one: such a clue is
-  dropped and such a hint is left off, so nothing is given away on a pass, but those clues are lost. (The check got
-  stricter in this round; see the Evals section.)
+- **Answers that name themselves: Gemma passes (2.3%), Llama 4 Maverick does not (9.4%)** (target 5% or lower). Before
+  the filter, 2.3% of Gemma's clues or "look where" hints used a word of their own answer (in the clue itself 2.1%).
+  Code catches every one: such a clue is dropped and such a hint is left off, so nothing is given away on a pass, but
+  those clues are lost.
 - **Kid check not done yet.** A grown-up reading 10 printed clues as a 7-year-old would ([`evals/results/human-check.md`](evals/results/human-check.md))
   is planned with a real walk on **Sat Oct 10, 2026**. Until then it is pending, not passed.
 - **Lucky Finds are not connected yet.** They are left off the kid's pass, the grown-up's part says "not available yet", and
   no photos are printed.
 - **Self-hosting is not measured.** The app talks to any OpenAI-compatible server (for example Ollama), but we have
   not measured a self-hosted run for this app.
-- **Llama 4 Maverick is too slow to be the default:** 39.2 s typical per model call in the eval (target 10 s), and
-  41.2% complete passes.
+- **Llama 4 Maverick is too slow to be the default:** 29.9 s typical per model call in the eval (target 10 s), with
+  94.1% complete passes.
 - **Find This Spot is not in the eval** (its map data was not recorded for the 20 test parks).
 - **Sparse data happens.** 3 of the 17 North Texas parks in the eval had no research-grade iNaturalist sightings in the
   last 14 days; the pass then says so instead of inventing Wild Finds.
@@ -125,37 +125,41 @@ Copied from the app's `/about` page ("What did not pass yet"), with the same num
 
 ## Evals
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
-with the real pass builder. Current numbers: [`evals/results/2026-10-05-4.md`](evals/results/2026-10-05-4.md)
-(what changed and why: [`2026-10-05-4-notes.md`](evals/results/2026-10-05-4-notes.md)). The earlier runs,
-[`2026-10-05.md`](evals/results/2026-10-05.md), [`2026-10-05-2.md`](evals/results/2026-10-05-2.md) and
-[`2026-10-05-3.md`](evals/results/2026-10-05-3.md), are kept for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
+with the real pass builder. Current numbers: [`evals/results/2026-10-06.md`](evals/results/2026-10-06.md)
+(what changed and why: [`2026-10-06-notes.md`](evals/results/2026-10-06-notes.md)). The earlier runs,
+[`2026-10-05.md`](evals/results/2026-10-05.md), [`2026-10-05-2.md`](evals/results/2026-10-05-2.md),
+[`2026-10-05-3.md`](evals/results/2026-10-05-3.md) and [`2026-10-05-4.md`](evals/results/2026-10-05-4.md), are kept
+for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
 Oct 5). Find This Spot is not in the eval.
 
-| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, run 3 | Gemma, first run |
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, run 4 | Gemma, first run |
 |---|---|---|---|---|---|
 | Blocked taxa printed | 0 | 0 | 0 | 0 | 0 |
-| Clues quoting their source word for word (target 85%) | 99.6% | 80.1% | 100% (by construction) | 99.5% | 99.2% |
-| Passes with >= n-1 items (target 90%) | 100% | 41.2% | 94.1% | 96.1% | 64.7% |
-| Reading level, FK grade median (target <= 3.5) | 1.7 | 1.9 | 5.8 | 2.3 | 2.3 |
-| Name leaks in clue or hint, before the filter (target <= 5%) | 10.5% (FAIL; clue only 6.7%) | 12.2% | 6.4% | 5.4% (6.1% with today's stricter check) | 17.5% |
-| Model call p50 / p95 (target 10 s / 20 s) | 8.9 s / 12.8 s | 39.2 s / 46.3 s | none | 9.4 s / 11.3 s | 13.8 s / 24.3 s |
-| Median answer length (tokens) | 460 | 455 | none | 456 | 583 |
-| Cost per pass | $0.00064 | $0.00116 | $0 | $0.00056 | $0.00086 |
-| Printed plant clues about flowers or fruit not seen this month (season check) | 0 | 0 | 0 | 6 (checked afterwards) | not checked |
-| Printed clues or hints that say "map" on a pass with no map | 0 | 0 | 0 | 6 (checked afterwards) | not checked |
+| Clues quoting their source word for word (target 85%) | 98.8% | 93.9% | 100% (by construction) | 99.6% | 99.2% |
+| Passes with >= n-1 items (target 90%) | 100% | 94.1% | 94.1% | 100% | 64.7% |
+| Reading level, FK grade median (target <= 3.5) | 1.0 | 1.0 | 5.8 | 1.7 | 2.3 |
+| Name leaks in clue or hint, before the filter (target <= 5%) | 2.3% (clue only 2.1%) | 9.4% (FAIL) | 5.0% | 10.5% (FAIL) | 17.5% |
+| Model call p50 / p95 (target 10 s / 20 s) | 9.4 s / 11.7 s | 29.9 s / 37.2 s | none | 8.9 s / 12.8 s | 13.8 s / 24.3 s |
+| Median answer length (tokens) | 450 | 480 | none | 460 | 583 |
+| Cost per pass | $0.00065 | $0.00128 | $0 | $0.00064 | $0.00086 |
+| Printed plant clues about flowers or fruit not seen this month (season check) | 0 | 0 | 0 | 0 | not checked |
+| Printed clues or hints that say "map" on a pass with no map | 0 | 0 | 0 | 0 | not checked |
 
 The last two rows are counted by `validate.ts` rules on the saved answers (the season evidence is the recorded
 iNaturalist "Flowers and Fruits" annotations for each park, this month, all years, within 50 km); they are not SPEC 6.4
 metrics. The season rule is cautious: a plant with fewer than 3 such records this month (for example autumn clematis
 near White Rock Lake, 2 of 3) is treated as not flowering, so the model describes its leaves instead.
 
-Why the name-leak number went up (10.5%, FAIL): the check is stricter (it now also catches words built on a name, like
-"Passifloraceae" for a passionflower; on run 3's saved answers that alone moves 5.4% to 6.1%), and the new "make the
-child look closely" rule for Park Finds led to clues like "Count the bridges" for the bridges. Code drops every leaky
-clue and blanks every leaky hint, so nothing is given away on a pass, and with the retry at n-1 every data-rich Gemma
-pass still kept at least n-1 finds. Llama 4 Maverick got worse in this run (80.1% grounded, 41.2% complete): it often
-copied the new code-written season note ("flowers seen in October") as its quote, which is not in the source text, so
-those clues were dropped.
+Why the name-leak number came back down (run 4: 10.5% FAIL, now 2.3%): in run 4 the new "make the child look
+closely" rule gave count clues that named the thing ("Count the bridges."), and some matches were false: a word of the
+feature kind's own label inside an OpenStreetMap name ("court" in "Taube Family Championship Court" for tennis courts)
+or a landscape word ("near a garden" for a shelter at the "Shadow Garden"). The prompt now says a count clue must not
+name the thing ("How many ways over the water can you find?"), lists plain "look where" places, and gives examples; the
+check no longer counts those false matches, but still counts real ones ("a dirt diamond" for baseball fields).
+The 9 Gemma clue leaks left are all real ("seeds that look like little balloons" for a balloon vine). Llama 4
+Maverick also recovered (run 4: 80.1% grounded, 41.2% complete): the season fact is now a code-written sentence in the
+plant's source text ("In October, iNaturalist photos from this area show it with flowers."), so quoting it is grounded
+and true; in run 4 it was a separate note that Llama kept copying as its quote.
 
 In run 2, 3 of 56 Gemma answers (all for one park) had the next JSON field stuck onto every quote; code now
 cuts it off at the field name and keeps a quote only if the rest is really in the source (it did not happen in the

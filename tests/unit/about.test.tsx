@@ -228,6 +228,8 @@ describe("/about", () => {
     expect(t).not.toContain("Our server only");
     expect(t).toContain("the park facts and the age band do leave your device");
     expect(t.toLowerCase()).not.toContain("never leaves your device");
+    // Accounts exist now (sign-in to make a new pass): no "no accounts" claim anywhere on the page.
+    expect(t).not.toMatch(/no accounts/i);
   });
 
   it("explains every results row in plain words, and keeps the numbers", () => {

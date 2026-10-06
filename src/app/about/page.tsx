@@ -93,7 +93,7 @@ export default function AboutPage() {
               <Pill>4 real data sources</Pill>
             </li>
             <li>
-              <Pill>No accounts, no tracking</Pill>
+              <Pill>No ads, no analytics</Pill>
             </li>
             <li>
               <Pill className="bg-sun text-sun-foreground">MIT open source</Pill>

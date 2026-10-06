@@ -135,7 +135,16 @@ export type BuildDeps = {
   exclude?: ReadonlySet<string>;
   /** Eval replay tooling only (evals/replay.ts): every item the checks drop, with its reason. */
   validateTrace?: ValidateOptions["trace"];
+  /**
+   * Eval self-host lane only (evals/run.ts with EVAL_LOCAL_PATIENT=1, 2026-10-06): a longer clock, to measure what a
+   * CPU-only model writes when it is not cut off. No route sets it, so the app always uses PASS_DEADLINE_MS,
+   * modelTimeoutMs(env) (at most 70 s) and REFILL_TIMEOUT_MS.
+   */
+  clock?: PassClock;
 };
+
+/** Eval-only time limits (see BuildDeps.clock). */
+export type PassClock = { passDeadlineMs: number; modelTimeoutMs: number; refillTimeoutMs: number };
 
 /** A pool without the items visitors' reports rule out (src/lib/reports). */
 export function withoutReported<T extends { items: PoolItem[] }>(pool: T, exclude: ReadonlySet<string> | undefined): T {
@@ -335,7 +344,7 @@ export function passMaxTokens(modelId: string): number {
 export const PASS_MAX_TOKENS = 1_200;
 
 export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<BuildOutcome> {
-  const left = () => deps.startedAt + PASS_DEADLINE_MS - deps.now();
+  const left = () => deps.startedAt + (deps.clock?.passDeadlineMs ?? PASS_DEADLINE_MS) - deps.now();
 
   // R1-M1: ONE deadline for every data stage (Overpass features + geometry, iNaturalist), so the
   // model always keeps MODEL_MIN_LEFT_MS and the whole pass answers inside PASS_DEADLINE_MS.
@@ -486,7 +495,11 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     // The paid call starts now: it counts, and it finishes (and is cached) even if every client leaves.
     ticket.commit();
     deps.pin();
-    const timeoutMs = Math.min(modelTimeoutMs(deps.env), refill ? REFILL_TIMEOUT_MS : Number.POSITIVE_INFINITY, remaining - 3_000);
+    const timeoutMs = Math.min(
+      deps.clock?.modelTimeoutMs ?? modelTimeoutMs(deps.env),
+      refill ? (deps.clock?.refillTimeoutMs ?? REFILL_TIMEOUT_MS) : Number.POSITIVE_INFINITY,
+      remaining - 3_000,
+    );
     try {
       const r = await callModel(
         { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope, maxTokens: passMaxTokens(modelId) },

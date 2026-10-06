@@ -19,6 +19,15 @@ Settings (environment variables; the DO key is read from `.env.local` and never 
 | `EVAL_RUNS` | per model (3 / 1) | Override runs per model (makes a partial run). |
 | `EVAL_CASES` | all 20 | Comma list of case numbers (makes a partial run). |
 | `EVAL_BUDGET_USD` | `1` | No new model call starts once measured spend reaches this. |
+| `EVAL_LOCAL_BASE_URL` | `http://localhost:11434/v1` | Where the self-hosted lane (`EVAL_MODELS=gemma4-e2b-8k`) finds Ollama. Plain http only for localhost / 127.0.0.1. |
+| `EVAL_LOCAL_PATIENT` | off | `1` = self-hosted lanes get a longer, eval-only clock (calls up to 270 s, refills 180 s, pass 600 s) instead of the app's 70 s / 20 s / 85 s. Results are named `<date>-selfhost-patient-<HHMM>`. |
+
+### Self-hosted lane (2026-10-06)
+
+`EVAL_MODELS=gemma4-e2b-8k` runs the same pass builder against a local Ollama (no key, $0, never in the default list):
+Gemma 4 E2B (`ollama pull gemma4:e2b-it-qat`, Apache-2.0) re-tagged with an 8,192-token context by
+`ollama create gemma4-e2b-8k -f evals/selfhost/Modelfile`, thinking off (`MODEL_REASONING_EFFORT=none`). Results are
+named `<date>-selfhost-<HHMM>`. Measured numbers and the exact commands: `results/2026-10-06-selfhost-notes.md`.
 
 Partial runs are written as `<date>-partial-<HHMM>.md` and are never the frozen numbers.
 

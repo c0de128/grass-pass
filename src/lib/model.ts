@@ -233,9 +233,30 @@ export type ModelRequest<T> = {
   temperature?: number;
 };
 
-export function buildRequestBody(req: Omit<ModelRequest<unknown>, "schema" | "task">, model: string) {
+/** Values MODEL_REASONING_EFFORT may take (OpenAI-compatible `reasoning_effort`). */
+export const REASONING_EFFORTS = ["none", "low", "medium", "high"] as const;
+export type ReasoningEffort = (typeof REASONING_EFFORTS)[number];
+
+/**
+ * Optional `reasoning_effort` for the request (self-host switch, 2026-10-06). Unset (the default, and
+ * production on DigitalOcean) sends nothing, so the hosted request body is unchanged. Ollama turns
+ * Gemma 4's thinking ON by default through its OpenAI API; `MODEL_REASONING_EFFORT=none` turns it off,
+ * which on a CPU is the difference between ~3 s and ~20 s for a tiny answer (measured 2026-10-06).
+ * Unknown values are ignored.
+ */
+export function reasoningEffort(env: Env = process.env): ReasoningEffort | null {
+  const v = env.MODEL_REASONING_EFFORT?.trim().toLowerCase();
+  return (REASONING_EFFORTS as readonly string[]).includes(v ?? "") ? (v as ReasoningEffort) : null;
+}
+
+export function buildRequestBody(
+  req: Omit<ModelRequest<unknown>, "schema" | "task">,
+  model: string,
+  extra: { reasoningEffort?: ReasoningEffort | null } = {},
+) {
   return {
     model,
+    ...(extra.reasoningEffort ? { reasoning_effort: extra.reasoningEffort } : {}),
     messages: req.messages,
     max_tokens: req.maxTokens ?? MAX_TOKENS,
     temperature: req.temperature ?? TEMPERATURE,
@@ -381,7 +402,7 @@ export async function callModel<T>(req: ModelRequest<T>, opts: CallOptions = {})
 
   const deadline = AbortSignal.timeout(timeoutMs);
   const signal = opts.signal ? AbortSignal.any([deadline, opts.signal]) : deadline;
-  const body = JSON.stringify(buildRequestBody(req, model));
+  const body = JSON.stringify(buildRequestBody(req, model, { reasoningEffort: reasoningEffort(env) }));
   const started = now();
   const base = { task: req.task, model };
 

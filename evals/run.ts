@@ -15,7 +15,7 @@
 import "@/lib/zod-config";
 import { existsSync, mkdirSync, writeFileSync, appendFileSync } from "node:fs";
 import path from "node:path";
-import { buildPass, type BuildDeps } from "@/lib/ai/build-pass";
+import { buildPass, type BuildDeps, type PassClock } from "@/lib/ai/build-pass";
 import { MemoryStore } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { resolveModelTarget, type ModelLogLine } from "@/lib/model";
@@ -53,14 +53,61 @@ import {
 
 export const RESULTS_DIR = path.join(APP_ROOT, "evals", "results");
 
-export type ModelSpec = { id: string; runs: number; timeoutMs: number; licence: string; where: string };
+export type ModelSpec = {
+  id: string;
+  runs: number;
+  timeoutMs: number;
+  licence: string;
+  where: string;
+  /**
+   * Self-hosted (2026-10-06): served by a local OpenAI-compatible server (Ollama) instead of DigitalOcean.
+   * Never in the default model list; costs $0; needs no key. `reasoningEffort` is sent as MODEL_REASONING_EFFORT.
+   */
+  local?: { defaultBaseUrl: string; reasoningEffort?: string };
+};
+
+/** Where the self-hosted lane looks for Ollama (override with EVAL_LOCAL_BASE_URL; plain http only for localhost). */
+export const LOCAL_BASE_URL = "http://localhost:11434/v1";
 
 /** SPEC 6.4 runs (K4 = B: open models only + the no-AI template). */
 export const MODEL_SPECS: Record<string, ModelSpec> = {
   "gemma-4-31B-it": { id: "gemma-4-31B-it", runs: 3, timeoutMs: 30_000, licence: "Apache-2.0", where: "DigitalOcean serverless (US); park name + public facts only" },
   // The app's documented Llama setting: MODEL_TIMEOUT_MS=60000 (measured 47 s on 2026-10-05).
   "llama-4-maverick": { id: "llama-4-maverick", runs: 1, timeoutMs: 60_000, licence: "Llama 4 Community Licence", where: "DigitalOcean serverless (US); park name + public facts only" },
+  // Self-host row (judge G1, 2026-10-06): Gemma 4 E2B (QAT Q4_0, `gemma4:e2b-it-qat`) on this laptop's CPU through Ollama,
+  // re-tagged with an 8,192-token context (evals/selfhost/Modelfile; Ollama's default 4,096 is shorter than our longest prompt).
+  // Thinking off (Ollama turns Gemma 4 thinking on by default). Timeout = the app's maximum (70 s).
+  "gemma4-e2b-8k": {
+    id: "gemma4-e2b-8k",
+    runs: 1,
+    timeoutMs: 70_000,
+    licence: "Apache-2.0",
+    where: "Your own computer (Ollama, CPU only); nothing leaves the machine",
+    local: { defaultBaseUrl: LOCAL_BASE_URL, reasoningEffort: "none" },
+  },
 };
+
+/** The models a plain `pnpm eval` runs (hosted only; the self-host lane is opt-in by EVAL_MODELS). */
+export const DEFAULT_MODELS = Object.values(MODEL_SPECS).filter((m) => !m.local).map((m) => m.id);
+
+/** The app env one model lane runs with (the same variables a person sets in .env.local). */
+export function modelEnv(spec: ModelSpec, env: Record<string, string | undefined>): Record<string, string | undefined> {
+  if (spec.local) {
+    return {
+      MODEL_BASE_URL: env.EVAL_LOCAL_BASE_URL?.trim() || spec.local.defaultBaseUrl,
+      MODEL_ID: spec.id,
+      MODEL_TIMEOUT_MS: String(spec.timeoutMs),
+      MODEL_REASONING_EFFORT: spec.local.reasoningEffort,
+      APP_CONTACT_URL: env.APP_CONTACT_URL,
+    };
+  }
+  return {
+    DO_INFERENCE_API_KEY: env.DO_INFERENCE_API_KEY,
+    MODEL_ID: spec.id,
+    MODEL_TIMEOUT_MS: String(spec.timeoutMs),
+    APP_CONTACT_URL: env.APP_CONTACT_URL,
+  };
+}
 
 export type EvalSettings = {
   models: ModelSpec[];
@@ -69,11 +116,20 @@ export type EvalSettings = {
   budgetUsd: number;
   /** Audit R3: an age band other than cases.json's (a smoke of the 10-13 band); null = the file's band. */
   ageBand?: AgeBand | null;
+  /** EVAL_LOCAL_PATIENT=1: self-hosted lanes get PATIENT_CLOCK instead of the app's own limits (never hosted lanes). */
+  localPatient?: boolean;
 };
+
+/**
+ * The longer clock for EVAL_LOCAL_PATIENT=1 (self-host row, 2026-10-06): what a CPU-only model writes when the app's
+ * 70 s model limit and 85 s pass deadline do not cut it off. Each call still stops at 4.5 min (under the 5 min
+ * "the machine is unusable" line). The app itself never uses this clock.
+ */
+export const PATIENT_CLOCK: PassClock = { passDeadlineMs: 600_000, modelTimeoutMs: 270_000, refillTimeoutMs: 180_000 };
 
 export function settingsFromEnv(env: Record<string, string | undefined>): EvalSettings {
   const list = envList(env.EVAL_MODELS);
-  const ids = list === null ? Object.keys(MODEL_SPECS) : list.includes("none") ? [] : list;
+  const ids = list === null ? DEFAULT_MODELS : list.includes("none") ? [] : list;
   const unknown = ids.filter((m) => !MODEL_SPECS[m]);
   if (unknown.length > 0) throw new Error(`EVAL_MODELS has models without a price/spec: ${unknown.join(", ")}`);
   const runs = Number(env.EVAL_RUNS);
@@ -84,6 +140,7 @@ export function settingsFromEnv(env: Record<string, string | undefined>): EvalSe
     cases: envList(env.EVAL_CASES)?.map(Number).filter((n) => Number.isInteger(n)) ?? null,
     budgetUsd: Number.isFinite(budget) && budget > 0 ? budget : 1,
     ageBand: ageBandFromEnv(env.EVAL_AGE_BAND),
+    localPatient: env.EVAL_LOCAL_PATIENT?.trim() === "1",
   };
 }
 
@@ -222,6 +279,7 @@ export async function runModelCase(
   band: AgeBand,
   env: Record<string, string | undefined>,
   meter: SpendMeter,
+  clock?: PassClock,
 ): Promise<RunRecord> {
   const replay = createReplayFetch(fx);
   const now = replayClock(fx);
@@ -231,12 +289,7 @@ export async function runModelCase(
   const t0 = performance.now();
   const deps: BuildDeps = {
     store: new MemoryStore(),
-    env: {
-      DO_INFERENCE_API_KEY: env.DO_INFERENCE_API_KEY,
-      MODEL_ID: spec.id,
-      MODEL_TIMEOUT_MS: String(spec.timeoutMs),
-      APP_CONTACT_URL: env.APP_CONTACT_URL,
-    },
+    env: modelEnv(spec, env),
     now,
     fetchImpl: replay.fetch,
     modelFetch: capturingModelFetch(data.pool, calls, meter, spec.id),
@@ -247,6 +300,7 @@ export async function runModelCase(
     reserveAiCall: async () => (meter.canStart() ? { commit: () => undefined, release: async () => undefined, committed: true } : null),
     startedAt: now(),
     modelLogger: (l) => modelLog.push(l),
+    ...(clock ? { clock } : {}),
   };
   const base = { caseN: c.n, slug: c.slug, model: spec.id, run, n: data.mix?.n ?? null, dataRich: data.dataRich, calls };
   const ref = parseParkId(c.parkId);
@@ -254,8 +308,9 @@ export async function runModelCase(
   // Harness guard (S8b): the 2026-10-06 full run hung for 10+ minutes inside one Llama case with no CPU use.
   // A case that outlives every app deadline is recorded as an error instead of stalling the whole eval.
   let guardTimer: ReturnType<typeof setTimeout> | undefined;
+  const guardMs = clock ? clock.passDeadlineMs + 60_000 : CASE_GUARD_MS;
   const hung = new Promise<"hung">((resolve) => {
-    guardTimer = setTimeout(() => resolve("hung"), CASE_GUARD_MS);
+    guardTimer = setTimeout(() => resolve("hung"), guardMs);
   });
   const built = await Promise.race([buildPass({ ref, band, day, variant: run, id: passIdFor(c.parkId, band, day, run) }, deps), hung]);
   clearTimeout(guardTimer);
@@ -266,7 +321,7 @@ export async function runModelCase(
       parkName: data.parkName,
       kind: "error",
       errorCode: "EVAL_CASE_HUNG",
-      message: `No answer from the pass builder after ${CASE_GUARD_MS / 1000} s (model calls finished: ${calls.length}).`,
+      message: `No answer from the pass builder after ${guardMs / 1000} s (model calls finished: ${calls.length}).`,
       sections: {},
       items: [],
       wallMs,
@@ -370,7 +425,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
   const chosen = casesFile.cases.filter((c) => !settings.cases || settings.cases.includes(c.n));
   const notes: string[] = [
     "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
-    "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+    `Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, ${settings.models.length > 0 && settings.models.every((m) => m.local) ? "a self-hosted Ollama server (no DigitalOcean call)" : "DigitalOcean serverless inference"}.`,
     "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens).",
   ];
 
@@ -410,17 +465,33 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
     const keyPresent = resolveModelTarget({ DO_INFERENCE_API_KEY: env.DO_INFERENCE_API_KEY }).ok;
     const meter = new SpendMeter(settings.budgetUsd);
     const runsPer: Record<string, number> = {};
-    if (!keyPresent && settings.models.length > 0) {
-      notes.push("No data available for the models: DO_INFERENCE_API_KEY is not set, so no model was run.");
-    } else {
+    // A hosted lane needs the DO key; a self-hosted lane needs only a valid local MODEL_BASE_URL.
+    const ready = settings.models.filter((spec) => (spec.local ? resolveModelTarget(modelEnv(spec, env)).ok : keyPresent));
+    for (const spec of settings.models) {
+      if (ready.includes(spec)) continue;
+      notes.push(
+        spec.local
+          ? `No data available for ${spec.id}: EVAL_LOCAL_BASE_URL is not a usable local server address, so it was not run.`
+          : `No data available for ${spec.id}: DO_INFERENCE_API_KEY is not set, so it was not run.`,
+      );
+    }
+    for (const spec of ready.filter((s) => s.local)) {
+      notes.push(
+        `Self-hosted lane ${spec.id}: served by Ollama at ${modelEnv(spec, env).MODEL_BASE_URL} on the machine that ran the eval (CPU only), thinking off (MODEL_REASONING_EFFORT=${spec.local?.reasoningEffort ?? "unset"}). Cost $0 (no paid call); electricity not counted.`,
+        settings.localPatient
+          ? `PATIENT CLOCK (EVAL_LOCAL_PATIENT=1, eval only): model calls up to ${PATIENT_CLOCK.modelTimeoutMs / 1000} s, refills up to ${PATIENT_CLOCK.refillTimeoutMs / 1000} s, whole pass up to ${PATIENT_CLOCK.passDeadlineMs / 1000} s. The app itself stops a model call at 70 s and a pass at 85 s, so these passes show what the model writes when not cut off, not what the app would print.`
+          : `App clock: the app's own limits (model call up to ${spec.timeoutMs / 1000} s, refill up to 20 s, whole pass 85 s), exactly what a person running the app with these settings gets.`,
+      );
+    }
+    if (ready.length > 0) {
       // One lane per model (models run side by side; inside a lane, one call at a time so latency is clean).
       await Promise.all(
-        settings.models.map(async (spec) => {
+        ready.map(async (spec) => {
           const n = settings.runsOverride ?? spec.runs;
           runsPer[spec.id] = n;
           for (let run = 1; run <= n; run++) {
             for (const l of usable) {
-              const r = await runModelCase(l.c, l.fx, l.data, spec, run, band, env, meter);
+              const r = await runModelCase(l.c, l.fx, l.data, spec, run, band, env, meter, spec.local && settings.localPatient ? PATIENT_CLOCK : undefined);
               runs.push(r);
               const lat = r.calls.map((x) => `${(x.latencyMs / 1000).toFixed(1)} s`).join(" + ");
               say(`${spec.id} run ${run} case ${l.c.n} ${l.c.name}: ${r.kind}${r.errorCode ? ` ${r.errorCode}` : ""} ${r.items.length}/${r.n ?? "-"} items${lat ? `, ${lat}` : ""}, spend so far $${meter.spentUsd.toFixed(4)}`);
@@ -435,7 +506,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
     const modelRuns = runs.filter((r) => r.model !== TEMPLATE_MODEL);
     const allCalls = modelRuns.flatMap((r) => r.calls);
     const partial =
-      settings.cases !== null || settings.runsOverride !== null || band !== casesFile.ageBand || settings.models.length < Object.keys(MODEL_SPECS).length || !keyPresent;
+      settings.cases !== null || settings.runsOverride !== null || band !== casesFile.ageBand || !DEFAULT_MODELS.every((id) => settings.models.some((m) => m.id === id)) || settings.models.some((m) => m.local) || ready.length < settings.models.length;
     return {
       meta: {
         startedAt: startedAt.toISOString(),
@@ -468,9 +539,13 @@ export function resultPaths(results: EvalResults, dir = RESULTS_DIR): { md: stri
   const hhmm = new Intl.DateTimeFormat("en-GB", { timeZone: "America/Chicago", hour: "2-digit", minute: "2-digit", hour12: false })
     .format(new Date(results.meta.startedAt))
     .replace(":", "");
-  let stem = results.meta.partial ? `${results.meta.day}-partial-${hhmm}` : results.meta.day;
+  // Self-hosted-only runs get their own name so they are never mistaken for a hosted partial run.
+  const selfhost = results.meta.modelSpecs.length > 0 && results.meta.modelSpecs.every((m) => m.local);
+  const patient = results.meta.notes.some((n) => n.startsWith("PATIENT CLOCK"));
+  const first = selfhost ? `${results.meta.day}-selfhost-${patient ? "patient-" : ""}${hhmm}` : results.meta.partial ? `${results.meta.day}-partial-${hhmm}` : results.meta.day;
+  let stem = first;
   let i = 2;
-  while (existsSync(path.join(dir, `${stem}.json`))) stem = `${results.meta.partial ? `${results.meta.day}-partial-${hhmm}` : results.meta.day}-${i++}`;
+  while (existsSync(path.join(dir, `${stem}.json`))) stem = `${first}-${i++}`;
   return { md: path.join(dir, `${stem}.md`), json: path.join(dir, `${stem}.json`) };
 }
 

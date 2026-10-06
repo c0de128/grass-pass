@@ -131,8 +131,8 @@ describe("KidPass (top of the printed sheet)", () => {
   });
 
   it("density: real passes print roomy; side slots print snug; near-maximum clues print tight", async () => {
-    // Celebration's 8 finds fit the roomy budget; Connemara prints 5 finds since builder M's R3-leftovers
-    // recording (17 estimated lines), so both are roomy.
+    // Celebration's 8 finds fit the roomy budget; Connemara prints 6 finds since PM decision 1B (builder N's
+    // refill recording), so both are roomy.
     for (const [park, alone] of [[PARKS.connemara, "roomy"], [PARKS.celebration, "roomy"]] as const) {
       const pass = await realPass(park.id);
       expect(estimatedLines(pass.items)).toBeLessThanOrEqual(alone === "roomy" ? SNUG_LINE_BUDGET : TIGHT_LINE_BUDGET);
@@ -145,12 +145,12 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // In between, with no padding: Connemara's 5 real finds plus Celebration's 3 real finds that take the most
-    // lines (25 estimated lines; before R3-leftovers Connemara's own 8 finds landed here).
+    // In between, with no padding: Connemara's 6 real finds plus Celebration's 2 real finds that take the most
+    // lines (an 8-find pass; before R3-leftovers Connemara's own 8 finds landed here).
     const connemara = await realPass(PARKS.connemara.id);
-    expect(connemara.items).toHaveLength(5);
+    expect(connemara.items).toHaveLength(6);
     const longest = [...pass.items].sort((x, y) => estimatedLines([y]) - estimatedLines([x]));
-    const mid = [...connemara.items, ...longest.slice(0, 3)];
+    const mid = [...connemara.items, ...longest.slice(0, 2)];
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);

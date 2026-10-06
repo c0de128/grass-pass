@@ -117,10 +117,11 @@ describe("R1-M4 season check: iNaturalist 'Flowers and Fruits' annotations (live
       pool,
       mix,
     );
-    // The pear's flower clue goes; the pear's leaf clue stays. R3 (builder M): the morning-glory's flower clue is
-    // in season but "white" is a word of its own name (White Morning-glory), so it goes as a name leak.
-    expect(out.drops).toEqual({ out_of_season: 1, name_leak: 1 });
-    expect(out.items.map((i) => i.clue)).toEqual(["Look for a tree with glossy dark green oval leaves."]);
+    // The pear's flower clue goes; the pear's leaf clue stays. R3 (builder M) + PM 1B: the morning-glory's flower
+    // clue is in season; "white" is a colour word of its own name, a style preference only, and no spare can replace it.
+    expect(out.drops).toEqual({ out_of_season: 1 });
+    expect(out.items.map((i) => i.clue)).toEqual(["Look for a tree with glossy dark green oval leaves.", "Find a vine with white flowers."]);
+    expect(out.items[1].style).toBe("name_trait");
   });
 
   it("when the lookup failed (null), no plant's flowers or fruit count: the sunflower clue is dropped too", () => {

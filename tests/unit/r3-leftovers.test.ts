@@ -119,7 +119,7 @@ const draftOf = (p: PoolItem, clue: string, quote: string) => {
 };
 const oneWild = { n: 1, min: { park: 0, wild: 1, lucky: 0 }, max: { park: 0, wild: 1, lucky: 0 }, hardMin: 0 };
 
-describe("R3-M2a: a colour or size word of the species' own name is a name leak (real example clues)", () => {
+describe("R3-M2a + PM 1B: a colour or size word of the species' own name is a preference (real example clues)", () => {
   it("name trait words: colours, patterns and sizes of the common name, and the colour a compound word starts with", () => {
     expect(nameTraitWords("White Morning-glory")).toEqual(["white"]);
     expect(nameTraitWords("Eastern Amberwing")).toEqual(["amber"]);
@@ -129,23 +129,65 @@ describe("R3-M2a: a colour or size word of the species' own name is a name leak 
     expect(nameTraitWords("Redbud")).toEqual([]); // "bud" is too short to be a compound
   });
 
-  it("White Rock: 'Hunt for a plant with white flowers.' (White Morning-glory) and '... orange or amber wings.' (Eastern Amberwing) are dropped", () => {
-    const glory = wildItem("white-rock-lake-park", /^White Morning-glory/);
-    const amber = wildItem("white-rock-lake-park", /^Eastern Amberwing/);
-    expect(glory.nameWords).toContain("white");
-    expect(amber.nameWords).toContain("amber");
-    const pool = data["white-rock-lake-park"].pool;
-    const a = validateDraft({ items: [draftOf(glory, "Hunt for a plant with white flowers.", "show it with flowers")] }, pool, oneWild);
-    expect(a.drops).toEqual({ name_leak: 1 });
-    const quote = amber.sourceText.match(/[^.]*orange[^.]*/i)?.[0].trim().split(/\s+/).slice(0, 8).join(" ") ?? "";
-    const b = validateDraft({ items: [draftOf(amber, "Explore for a tiny flyer with orange or amber wings.", quote)] }, pool, oneWild);
-    expect(b.drops).toEqual({ name_leak: 1 });
+  const pool = () => data["white-rock-lake-park"].pool;
+  const glory = () => wildItem("white-rock-lake-park", /^White Morning-glory/);
+  const amber = () => wildItem("white-rock-lake-park", /^Eastern Amberwing/);
+  const fork = () => wildItem("white-rock-lake-park", /^Rambur's Forktail/);
+  const gloryDraft = () => draftOf(glory(), "Hunt for a plant with white flowers.", "show it with flowers");
+  const forkDraft = () => draftOf(fork(), "Peek at a thin flyer with blue on segments 8 and 9.", "blue on abdominal segments 8 and 9");
+
+  it("the name's trait words are kept apart from the hard name words", () => {
+    expect(glory().nameWords).not.toContain("white");
+    expect(glory().nameTraits).toContain("white");
+    expect(amber().nameWords).not.toContain("amber");
+    expect(amber().nameTraits).toContain("amber");
+    // The full name words stay hard leaks.
+    expect(amber().nameWords).toContain("amberwing");
+  });
+
+  it("White Rock: 'Hunt for a plant with white flowers.' (White Morning-glory) is printed when no spare can replace it", () => {
+    const a = validateDraft({ items: [gloryDraft()] }, pool(), oneWild);
+    expect(a.drops).toEqual({});
+    expect(a.items.map((v) => v.item.id)).toEqual([glory().id]);
+    expect(a.items[0].style).toBe("name_trait");
+    expect(a.styleKept).toBe(1);
+    const quote = amber().sourceText.match(/[^.]*orange[^.]*/i)?.[0].trim().split(/\s+/).slice(0, 8).join(" ") ?? "";
+    const b = validateDraft({ items: [draftOf(amber(), "Explore for a tiny flyer with orange or amber wings.", quote)] }, pool(), oneWild);
+    expect(b.drops).toEqual({});
+    expect(b.items[0].style).toBe("name_trait");
+  });
+
+  it("... and is the one to go when a spare can replace it (the spare is printed, the drop is counted as name_trait)", () => {
+    const ask = { ...oneWild, n: 2, max: { park: 0, wild: 2, lucky: 0 } };
+    const out = validateDraft({ items: [gloryDraft(), forkDraft()] }, pool(), oneWild, { hasMap: false, ask });
+    expect(out.items.map((v) => v.item.id)).toEqual([fork().id]);
+    expect(out.drops).toEqual({ name_trait: 1 });
+    expect(out.styleKept).toBe(0);
+    expect(DROP_REASONS).toContain("name_trait");
+  });
+
+  it("the full name is still a hard leak, and a name trait word in the hint leaves the hint out", () => {
+    const leak = validateDraft({ items: [draftOf(glory(), "Hunt for a morning-glory with flowers.", "show it with flowers")] }, pool(), oneWild);
+    expect(leak.drops).toEqual({ name_leak: 1 });
+    const withHint = validateDraft({ items: [{ ...gloryDraft(), lookWhere: "by the white fence" }] }, pool(), oneWild);
+    expect(withHint.items).toHaveLength(1);
+    expect(withHint.items[0].lookWhere).toBe("");
+    expect(withHint.lookWhereCleared).toBe(1);
+  });
+
+  it("a clue that talks about the name with a name trait word stays a hard leak (builder N's live refill: American elm, 'white elm')", () => {
+    const elm = wildItem("connemara-meadow-preserve", /^American elm/);
+    expect(elm.nameTraits).toContain("white");
+    const pool = data["connemara-meadow-preserve"].pool;
+    const out = validateDraft({ items: [draftOf(elm, "Sneak up on a tree with a white name.", "less commonly, as the white elm")] }, pool, oneWild);
+    expect(out.drops).toEqual({ name_leak: 1 });
+    expect(out.items).toEqual([]);
   });
 
   it("a trait that is not a name word still passes (J's 10-13 smoke: Rambur's Forktail)", () => {
-    const fork = wildItem("white-rock-lake-park", /^Rambur's Forktail/);
-    expect(isGenericClue("Is its tail blue on segments 8 and 9?", fork.sourceText)).toBe(false);
-    expect(fork.nameWords).not.toContain("blue");
+    expect(isGenericClue("Is its tail blue on segments 8 and 9?", fork().sourceText)).toBe(false);
+    expect(fork().nameWords).not.toContain("blue");
+    expect(fork().nameTraits ?? []).not.toContain("blue");
   });
 });
 

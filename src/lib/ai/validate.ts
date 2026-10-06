@@ -8,6 +8,7 @@
  * is cut back at the field marker and must then be a real substring) -> name leak (common/scientific name or a
  * distinctive part of it, plural too, or a word built on a 5+ letter name word such as "Passifloraceae"
  * for Passiflora, in the clue; a leak only in `lookWhere` blanks that hint and keeps the item) -> map
+ * (PM 1B: a colour/pattern/size word of the species' own name is only a preference, `name_trait`) -> map
  * (R1-m4: a pass without a Find This Spot map never says "map"; in lookWhere the hint is blanked) ->
  * season (R1-M4: a plant's flowers or fruit only when iNaturalist records show them this month) ->
  * numbers not in the source -> (audit R2-M5) a wrong count (a count clue must count exactly what the
@@ -41,6 +42,7 @@ export const DROP_REASONS = [
   "danger",
   "not_grounded",
   "name_leak",
+  "name_trait",
   "mentions_map",
   "out_of_season",
   "number_not_in_source",
@@ -74,8 +76,11 @@ const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
   "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "copies_example", "repeats_clue",
 ]);
 
-/** Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening on every pass). */
-export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening">;
+/**
+ * Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening and
+ * name_trait on every pass).
+ */
+export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait">;
 
 export type ValidationResult = {
   items: ValidItem[];
@@ -229,6 +234,9 @@ export function nameLeak(text: string, words: readonly string[]): string | null 
   return null;
 }
 
+/** A clue that talks about the thing's name ("a white name", "named after", "is called"). */
+export const NAME_TALK_RE = /\b(?:names?|named|called|nicknamed?)\b/i;
+
 /** Numbers written with digits in `text` that do not appear in `source`. */
 export function numbersNotIn(text: string, source: string): string[] {
   const found = text.match(/\d+(?:[.,]\d+)?/g) ?? [];
@@ -364,10 +372,22 @@ export function validateDraft(
       drop("name_leak");
       continue;
     }
+    // PM decision 1B (2026-10-06): a colour, pattern or size word of the species' own name ("a plant with
+    // white flowers" for White Morning-glory) is a preference, not a hard leak: the item is the first to go
+    // when a spare can replace it (as a hard leak it cut complete first answers on low-data parks).
+    const traits = item.nameTraits ?? [];
+    const traitHit = traits.length > 0 && nameLeak(d.clue, traits) !== null;
+    // ... but a clue that says the trait word is in its NAME ("Sneak up on a tree with a white name." for
+    // American elm, also called white elm: builder N's live refill, 2026-10-06) gives the name away: a hard leak.
+    if (traitHit && NAME_TALK_RE.test(d.clue)) {
+      drop("name_leak");
+      continue;
+    }
     // A name word only in lookWhere ("at the pond" for a pond): the clue is fine, so keep the item and
     // leave the hint out (S8b). lookWhere is optional on the pass; the answer is never printed for the kid.
+    // A name trait word in the hint ("by the white flowers") is left out too.
     let lookWhere = d.lookWhere;
-    if (nameLeak(lookWhere, item.nameWords)) {
+    if (nameLeak(lookWhere, item.nameWords) || (traits.length > 0 && nameLeak(lookWhere, traits))) {
       lookWhere = "";
       lookWhereCleared++;
     }
@@ -432,11 +452,11 @@ export function validateDraft(
     // (Gemma kept copying in the refill too). The Park Finds facts now vary their words per park
     // (pool/park.ts chooseWords), so a copied phrase differs between parks. Near-repeats on the same
     // pass stay drops, except on a low-data pool.
-    let style: StyleReason | undefined;
+    let style: StyleReason | undefined = traitHit ? "name_trait" : undefined;
     const run = opts.allowSourceCopies ? null : copiedRun(d.clue, item.sourceText);
     if (run !== null) {
       copied.add(run);
-      style = "copies_source";
+      style ??= "copies_source";
     }
     const earlier = [...(opts.prior ?? []), ...kept];
     // R3: the same sentence frame twice on one pass ("Count them. There are 2." / "... There are 4.") is a repeat too.

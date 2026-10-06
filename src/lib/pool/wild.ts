@@ -235,11 +235,14 @@ export function wildPool(
         ...distinctiveWords(s.name),
         // Audit R3: Wikipedia's bolded other names ("mossycup oak" for bur oak) give the answer away too.
         ...(sum.names ?? []).flatMap((n) => distinctiveWords(n)),
-        // Audit R3: a colour, pattern or size word of its own common name ("white" for White Morning-glory).
-        ...(s.commonName ? nameTraitWords(s.commonName) : []),
-        ...(sum.names ?? []).flatMap((n) => nameTraitWords(n)),
       ]),
     ];
+    // Audit R3 + PM decision 1B: a colour, pattern or size word of its own names ("white" for White
+    // Morning-glory) is a style preference, not a hard leak (validate.ts `name_trait`): as a hard leak it cut
+    // the complete first answers of run 2026-10-06-3 on low-data parks.
+    const nameTraits = [
+      ...new Set([...(s.commonName ? nameTraitWords(s.commonName) : []), ...(sum.names ?? []).flatMap((n) => nameTraitWords(n))]),
+    ].filter((w) => !nameWords.includes(w));
     items.push({
       id: `inat-${s.taxonId}`,
       section: "wild",
@@ -249,7 +252,9 @@ export function wildPool(
       evidence: wildEvidence(s.count, sinceDay),
       source: "iNaturalist",
       nameWords,
-      looks: looksOutsideNames(leadSentences(sum.summary), nameWords),
+      ...(nameTraits.length > 0 ? { nameTraits } : {}),
+      // Name trait words are still "inside the names" here, so the pool order and low-data test are unchanged.
+      looks: looksOutsideNames(leadSentences(sum.summary), [...nameWords, ...nameTraits]),
       safety: safetyLineFor(taxon, sum.summary),
       stationary: isStationary(taxon),
       taxon,

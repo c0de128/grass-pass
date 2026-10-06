@@ -23,6 +23,13 @@ export type PoolItem = {
   source: "OpenStreetMap" | "iNaturalist" | "Google reviews via SerpApi";
   /** Words a clue must not contain (it would give the answer away). Lower case. */
   nameWords: string[];
+  /**
+   * Wild Finds only (PM decision 1B, 2026-10-06): colour, pattern and size words of the species' own
+   * names ("white" for White Morning-glory, "amber" for Eastern Amberwing), lower case. A clue that uses
+   * one is a style preference (`name_trait`), not a hard leak: it is printed only when no spare can
+   * replace it. A hint (lookWhere) that uses one is still left out. Never in `nameWords`.
+   */
+  nameTraits?: string[];
   /** Fixed safety line printed with the item, or null. */
   safety: string | null;
   /** True for things that stay put (landmarks, plants, fungi). */

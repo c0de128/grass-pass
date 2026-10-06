@@ -204,7 +204,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded for audit round 3): Celebration 8 of 8, Connemara 5 then a real refill that keeps none (R3 leftovers)", () => {
+  it("the real recorded Gemma answers (re-recorded for audit round 3): Celebration 8 of 8, Connemara 6 then a real refill that keeps none (PM 1B)", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { target, plan } = poolFor(p);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
@@ -232,23 +232,24 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 2 is near water: stay close.");
     // Every clue starts with a different first word (the per-park openers).
     expect(new Set(cel.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(8);
-    // Connemara (low data: 9 asked), re-recorded by builder M (R3 leftovers): two duplicate ids, a generic plant clue
-    // ("seeds or fruit in October" only) and a name leak are dropped: 5 of 8. The leak is the one the judge saw on
-    // the example passes: "Wander to find a plant with white flowers." for White Morning-glory ("white" is a word of
-    // its own name, although the prompt now says so in so many words).
-    expect(conn.items).toHaveLength(5);
-    expect(conn.drops).toEqual({ duplicate_id: 2, generic_clue: 1, name_leak: 1 });
-    expect(conn.failedIds).toEqual(["inat-135262", "inat-54504"]);
+    // Connemara (low data: 9 asked), first answer re-recorded by builder M (R3 leftovers): two duplicate ids and a
+    // generic plant clue ("seeds or fruit in October" only) are dropped: 6 of 8. "Wander to find a plant with white
+    // flowers." for White Morning-glory uses a colour word of its own name: since PM decision 1B that is a style
+    // preference (name_trait), and with no spare left to replace it, it prints, flagged.
+    expect(conn.items).toHaveLength(6);
+    expect(conn.drops).toEqual({ duplicate_id: 2, generic_clue: 1 });
+    expect(conn.items.find((i) => i.item.id === "inat-135262")?.style).toBe("name_trait");
+    expect(conn.failedIds).toEqual(["inat-54504"]);
     expect(conn.copied).toEqual(["a gentle rushing sound"]); // a style preference only: the creek clue still prints
     // Audit R3: Gemma put "?" after 8 of its 9 commands ("Explore for a tree ... that have spines?"); code made them full stops.
     expect(conn.questionsFixed).toBe(8);
     expect(conn.items.find((i) => i.item.id === "inat-119986")?.clue).toBe("Explore for a tree with thick, corky lumps on the bark that have spines.");
     expect(conn.items.length).toBeLessThan(retryThreshold(8));
-    // ... so the app makes its one retry as a refill. The real recorded refill was asked for the 3 missing items + 1
-    // spare from the 5 unused items (the 2 that failed are left out), and told what went wrong.
+    // ... so the app makes its one retry as a refill. The real refill (re-recorded by builder N for PM 1B) was asked
+    // for the 2 missing items + 1 spare from the 5 unused items (the one that failed is left out), and told what went wrong.
     const refill = modelRec(PARKS.connemara.slug).refill!;
     const rp = refillPlan(connPlan, conn.items, conn.failedIds)!;
-    expect([rp.mix.n, rp.ask.n]).toEqual([3, 4]);
+    expect([rp.mix.n, rp.ask.n]).toEqual([2, 3]);
     expect(rp.pool.map((x) => x.id)).toEqual(["inat-126257", "inat-51450", "inat-5206", "inat-143484", "inat-53547"]);
     expect(refill.request.response_format.json_schema.schema).toEqual(
       passJsonSchema({ n: rp.ask.n, itemIds: rp.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: null }),
@@ -262,12 +263,12 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       rp.mix,
       { ...rp.validate, prior: conn.items },
     );
-    // The refill keeps nothing: "Is there a medium-sized bird of prey?" (hawk) and "a vine with fruit or seeds" carry
-    // no trait of their own (R3 generic check), the snail's quote is only its name, and "hollow spots" for the
-    // hollow-spotted blepharomastix moth is a word of its (Wikipedia-bolded) name. The pass prints 5 of 8, honestly.
+    // The refill keeps nothing: "Track a medium-sized bird of prey." (hawk) and "Discover a plant with seeds?" carry
+    // no trait of their own (R3 generic check), and "Sneak up on a tree with a white name." for American elm (also
+    // called white elm) talks about its own name: a hard leak even under PM 1B. The pass prints 6 of 8, honestly.
     expect(rv.items).toEqual([]);
-    expect(rv.drops).toEqual({ generic_clue: 3, name_leak: 1 });
-    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(5);
+    expect(rv.drops).toEqual({ generic_clue: 2, name_leak: 1 });
+    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(6);
     // S5: Celebration's live answer has a riddle for the X at the picnic shelter, and it passes every riddle
     // check (the shelter fact's words vary per park now: "pillars"); Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);

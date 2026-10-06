@@ -58,3 +58,6 @@ Audit R3 builder J total (2026-10-06 CDT): 10-13 smoke 0859 $0.0029 + fixture re
 | 2026-10-06T15:06Z (approx) | Audit R3 leftovers (builder M): re-recording of the Connemara model fixture in tests/fixtures (the Wild Finds prompt rule changed; not an eval run): 1 first call + 1 refill call | 2 | 4377 | 796 | $0.0012 |
 
 Audit R3 leftovers builder M total (2026-10-06 CDT): fixture re-recording $0.0012 + 10-13 smoke 1015 $0.0037 = **about $0.0049** (7 calls).
+| 2026-10-06T15:33:01Z | PM decision 1B (builder N): re-recording of the Connemara REFILL call only in tests/fixtures (the first answer now keeps 6, so the refill request changed; not an eval run) | 1 | 1699 | 170 | $0.0004 |
+
+PM decision 1B builder N total (2026-10-06 CDT): **about $0.0004** (1 call).

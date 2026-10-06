@@ -66,8 +66,10 @@ describe("the season fact is a code-written sentence in the plant's SOURCE (Llam
     const glory = byAnswer(pool, /^White Morning-glory/);
     expect(isGrounded("photos from this area show it with flowers", glory.sourceText)).toBe(true);
     const ok = validateDraft({ items: [item(glory, "Find a vine with white flowers.", "photos from this area show it with flowers")] }, pool, mix);
-    // R3 (builder M): "white" is a word of its own name (White Morning-glory), so this clue is now a name leak.
-    expect(ok.drops).toEqual({ name_leak: 1 });
+    // R3 (builder M) + PM 1B: "white" is a colour word of its own name (White Morning-glory), so the clue is a
+    // style preference: kept and flagged when no spare can replace it (here there is none).
+    expect(ok.drops).toEqual({});
+    expect(ok.items.map((i) => i.style)).toEqual(["name_trait"]);
     const pearQuote = "do not show it with flowers or fruit";
     expect(isGrounded(pearQuote, pear.sourceText)).toBe(true);
     const bad = validateDraft({ items: [item(pear, "Find a tree with white flowers.", pearQuote)] }, pool, mix);

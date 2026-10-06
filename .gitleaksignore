@@ -1,0 +1,2 @@
+# Dummy test values flagged by the generic-api-key rule (not secrets).
+f9c8be322b5546dda1dd0febcd43305aab530696:tests/unit/limits.test.ts:generic-api-key:242

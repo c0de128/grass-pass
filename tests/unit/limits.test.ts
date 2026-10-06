@@ -239,7 +239,7 @@ describe("client keys", () => {
   const req = (h: Record<string, string>) => new Request("http://localhost/api/pass", { headers: h });
 
   it("uses the first x-forwarded-for entry, then x-real-ip, and never returns the raw address", () => {
-    const env = { LIMITER_KEY_SECRET: "test-secret-0123456789" };
+    const env = { LIMITER_KEY_SECRET: "test-secret-0123456789" }; // gitleaks:allow (dummy test value)
     const a = clientIp(req({ "x-forwarded-for": "203.0.113.9, 10.0.0.1" }), env);
     expect(a).toMatch(/^4:[A-Za-z0-9_-]{22}$/);
     expect(a).not.toContain("203.0.113");

@@ -175,6 +175,15 @@ export function reasonFor(code: ModelErrorCode, timeoutMs: number = MODEL_TIMEOU
 export type BadOutputReason = "finish_length" | "empty" | "not_json" | "schema" | "envelope";
 
 export class ModelError extends Error {
+  /**
+   * Matched by name, not by class identity: Next bundles instrumentation.ts (the S8b example warm-up)
+   * separately from pages and routes, and the globalThis singletons (queues, stores, in-flight builds)
+   * throw the class of whichever bundle created them first.
+   */
+  static [Symbol.hasInstance](x: unknown): boolean {
+    return x instanceof Error && x.name === "ModelError";
+  }
+
   readonly code: ModelErrorCode;
   readonly status: number;
   readonly reason: string;

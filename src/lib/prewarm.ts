@@ -1,0 +1,236 @@
+/**
+ * Pre-warmed example parks (SPEC S8, starter kit "pre-warmed example parks kept warm (SWR) with real
+ * times"; pattern prewarmed-examples-stale-while-revalidate). A judge clicks an example and sees a real
+ * pass in well under 3 s, because the pass was made earlier by the normal builder from live data.
+ *
+ * - The last good pass per example is remembered (`example-pass`, 60 days) and its page link shown with
+ *   the time it was really generated. Nothing is invented: no pass yet means the home page says so.
+ * - A pass belongs to one Chicago day. When the saved one is from an earlier day, the page still links it
+ *   (with its real date and time) and starts at most ONE background refresh per example per
+ *   REFRESH_LOCK_SEC across all instances (an atomic store counter), so visitors never wait for it.
+ * - Refreshes go through makePass({ internal: true }): the same builder, cache and in-flight dedup as a
+ *   visitor, never charged to a visitor and not subject to per-IP limits, but counted against every
+ *   global cap (AI_DAILY_CAP). A failed refresh keeps the old pass. No retry loop.
+ * - PREWARM_EXAMPLES=0 (or off/false/no) switches it off; the home page then says so.
+ * - In-process state lives on globalThis (Next bundles instrumentation.ts separately from pages;
+ *   pattern next-instrumentation-singletons-on-globalthis).
+ */
+import "server-only";
+import "@/lib/zod-config";
+import { z } from "zod";
+import { createJsonCache, getStore, type Store } from "@/lib/cache";
+import { log } from "@/lib/log";
+import { localDay } from "@/lib/time";
+import type { FetchLike } from "@/lib/sources/common";
+import { loadPass, makePass } from "@/lib/pass/make";
+import { DEFAULT_AGE_BAND, type AgeBand } from "@/lib/pass/schema";
+
+export type ExamplePark = {
+  slug: string;
+  /** OpenStreetMap id, confirmed in evals/cases.json (recorded 2026-10-05). */
+  parkId: string;
+  name: string;
+  place: string;
+  /** Why it is a good example (shown under the link). */
+  blurb: string;
+};
+
+/** Parks with good real data in the 2026-10-05 eval recordings (evals/cases.json). */
+export const EXAMPLE_PARKS: readonly ExamplePark[] = [
+  { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "a wild meadow: lots of plants and bugs" },
+  { slug: "celebration", parkId: "way/188145317", name: "Celebration Park", place: "Allen TX", blurb: "playgrounds, courts and a Find This Spot map" },
+  { slug: "arbor-hills", parkId: "way/38113837", name: "Arbor Hills Nature Preserve", place: "Plano TX", blurb: "trails, a creek and wildlife" },
+  { slug: "white-rock", parkId: "way/460905359", name: "White Rock Lake Park", place: "Dallas TX", blurb: "a big lake park" },
+];
+
+export const EXAMPLE_BAND: AgeBand = DEFAULT_AGE_BAND;
+/** At most one refresh attempt per example in this window, across instances. */
+export const REFRESH_LOCK_SEC = 2 * 3600;
+/**
+ * After a failure that never reached the model (OpenStreetMap busy, data too slow), the next try may
+ * come sooner: it costs no model call, and a short Overpass outage should not hide an example for 2 h.
+ */
+export const RETRY_NO_MODEL_SEC = 10 * 60;
+const NO_MODEL_CODES = new Set(["OSM_UNAVAILABLE", "DATA_TOO_SLOW", "NOT_A_PARK", "STORE_UNAVAILABLE", "RATE_LIMITED"]);
+const SAVED_TTL_SEC = 60 * 24 * 3600;
+
+const SavedSchema = z.object({ passId: z.string(), day: z.string(), generatedAt: z.string() });
+type Saved = z.infer<typeof SavedSchema>;
+const savedCache = createJsonCache({ name: "example-pass", schema: SavedSchema, ttlSec: SAVED_TTL_SEC, maxEntries: 50 });
+
+type Env = Record<string, string | undefined>;
+
+export function prewarmEnabled(env: Env = process.env): boolean {
+  const v = env.PREWARM_EXAMPLES?.trim().toLowerCase();
+  return !(v === "0" || v === "off" || v === "false" || v === "no");
+}
+
+export type WarmDeps = {
+  env?: Env;
+  now?: () => number;
+  store?: Store;
+  fetchImpl?: FetchLike;
+  modelFetch?: FetchLike;
+  examples?: readonly ExamplePark[];
+};
+
+type Holder = {
+  /** Refreshes running in this process. */
+  running: Map<string, Promise<void>>;
+  /** Lock decisions in progress (so concurrent page renders share one decision). */
+  deciding: Map<string, Promise<boolean>>;
+  lastError: Map<string, { at: number; message: string }>;
+  /** Refreshes run one after another in a process (polite to Overpass: one park's queries at a time). */
+  chain: Promise<void>;
+};
+const HOLDER = Symbol.for("grass-pass.prewarm");
+function holder(): Holder {
+  const g = globalThis as unknown as Record<symbol, Holder | undefined>;
+  return (g[HOLDER] ??= { running: new Map(), deciding: new Map(), lastError: new Map(), chain: Promise.resolve() });
+}
+
+/** Tests: forget in-process refresh state. */
+export function resetPrewarm(): void {
+  holder().running.clear();
+  holder().deciding.clear();
+  holder().lastError.clear();
+  holder().chain = Promise.resolve();
+}
+
+/** Tests: wait for every background refresh started so far. */
+export async function prewarmIdle(): Promise<void> {
+  const h = holder();
+  while (h.running.size > 0 || h.deciding.size > 0) await Promise.allSettled([...h.running.values(), ...h.deciding.values()]);
+}
+
+export type ExampleStatus = {
+  example: ExamplePark;
+  /** The last good pass (link target), or null when none was made yet. */
+  pass: Saved | null;
+  /** True when that pass is from today (Chicago day). */
+  fresh: boolean;
+  /** True when this server is making a new one right now. */
+  refreshing: boolean;
+  /** Why there is no pass yet (only when pass is null). */
+  missing: string | null;
+};
+
+const lockStore = (deps: WarmDeps) => deps.store ?? getStore("prewarm");
+
+/** Take the cross-instance refresh slot for one example (true = this caller may refresh now). */
+const lockKey = (slug: string, day: string) => `prewarm-lock:${slug}:${day}`;
+
+/** Shorten the lock after a failure that cost no model call (see RETRY_NO_MODEL_SEC). */
+async function shortenLock(slug: string, day: string, deps: WarmDeps): Promise<void> {
+  try {
+    const store = lockStore(deps);
+    await store.del(lockKey(slug, day));
+    await store.incr(lockKey(slug, day), 1, RETRY_NO_MODEL_SEC);
+  } catch {
+    // Store down: the long lock stays, which only means fewer retries.
+  }
+}
+
+async function takeLock(slug: string, day: string, deps: WarmDeps): Promise<boolean> {
+  try {
+    const n = await lockStore(deps).incr(lockKey(slug, day), 1, REFRESH_LOCK_SEC);
+    return n === 1;
+  } catch {
+    return false; // store down: never refresh blind
+  }
+}
+
+/** Make (or reuse) today's pass for one example and remember it. Never throws. */
+async function refreshOne(ex: ExamplePark, day: string, deps: WarmDeps): Promise<void> {
+  const now = deps.now ?? (() => Date.now());
+  const started = now();
+  try {
+    const out = await makePass(
+      { parkId: ex.parkId, ageBand: EXAMPLE_BAND },
+      { ip: "server-prewarm", internal: true, env: deps.env, now, fetchImpl: deps.fetchImpl, modelFetch: deps.modelFetch },
+    );
+    if (out.kind === "pass") {
+      await savedCache.set(ex.slug, { passId: out.pass.id, day: out.pass.day, generatedAt: out.pass.generatedAt }, { now: now() });
+      holder().lastError.delete(ex.slug);
+      log("prewarm_ok", { example: ex.slug, id: out.pass.id, items: out.pass.items.length, cached: out.cached, ms: now() - started });
+    } else {
+      const message = out.kind === "error" ? out.error.message : out.message;
+      holder().lastError.set(ex.slug, { at: now(), message });
+      if (out.kind === "error" && NO_MODEL_CODES.has(out.error.code)) await shortenLock(ex.slug, day, deps);
+      log("prewarm_failed", { example: ex.slug, kind: out.kind, code: out.kind === "error" ? out.error.code : "EMPTY", ms: now() - started }, "warn");
+    }
+  } catch (err) {
+    holder().lastError.set(ex.slug, { at: now(), message: "the pass builder stopped with an error" });
+    log("prewarm_failed", { example: ex.slug, kind: "exception", error: err instanceof Error ? err.name : "unknown" }, "error");
+  }
+}
+
+/** Start one background refresh for an example unless one is running here or another instance holds the slot. */
+function maybeRefresh(ex: ExamplePark, day: string, deps: WarmDeps): Promise<boolean> {
+  const h = holder();
+  if (h.running.has(ex.slug)) return Promise.resolve(true);
+  const pending = h.deciding.get(ex.slug);
+  if (pending) return pending;
+  const decision = (async () => {
+    if (!(await takeLock(ex.slug, day, deps))) return false;
+    const p = h.chain.then(() => refreshOne(ex, day, deps)).finally(() => h.running.delete(ex.slug));
+    h.chain = p.catch(() => undefined);
+    h.running.set(ex.slug, p);
+    return true;
+  })().finally(() => h.deciding.delete(ex.slug));
+  h.deciding.set(ex.slug, decision);
+  return decision;
+}
+
+/**
+ * Status of every example for the home page. Stale or missing examples get a background refresh
+ * (when enabled); the returned promise never waits for it. The page hands `prewarmIdle` to Next's
+ * after() so a serverless instance keeps the refresh alive after the response.
+ */
+export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatus[]> {
+  const env = deps.env ?? process.env;
+  const now = deps.now ?? (() => Date.now());
+  const today = localDay(now());
+  const enabled = prewarmEnabled(env);
+  const out: ExampleStatus[] = [];
+  for (const ex of deps.examples ?? EXAMPLE_PARKS) {
+    const hit = await savedCache.get(ex.slug, now());
+    // The link must still open: the pass itself lives 30 days in the pass cache.
+    const saved = hit && (await loadPass(hit.value.passId, now())) ? hit.value : null;
+    const fresh = saved !== null && saved.day === today;
+    let refreshing = holder().running.has(ex.slug);
+    if (!fresh && enabled && !refreshing) refreshing = await maybeRefresh(ex, today, deps);
+    const err = holder().lastError.get(ex.slug);
+    const missing =
+      saved !== null
+        ? null
+        : !enabled
+          ? "Example passes are switched off on this server."
+          : refreshing
+            ? "It is being made right now from live park data (about 15-30 seconds). Reload the page in a minute."
+            : err
+              ? `The last try didn't work (${err.message}). Pick the park yourself below.`
+              : "No pass has been made for it yet today. Pick the park yourself below.";
+    out.push({ example: ex, pass: saved, fresh, refreshing, missing });
+  }
+  return out;
+}
+
+/**
+ * Boot-time warm-up (instrumentation.ts): make today's example passes one park at a time (polite to
+ * Overpass and iNaturalist). Uses the same per-example lock as the page, so several instances booting
+ * together make each pass once.
+ */
+export async function warmExamples(deps: WarmDeps = {}): Promise<void> {
+  const env = deps.env ?? process.env;
+  if (!prewarmEnabled(env)) {
+    log("prewarm_off", { reason: "PREWARM_EXAMPLES" });
+    return;
+  }
+  const now = deps.now ?? (() => Date.now());
+  for (const ex of deps.examples ?? EXAMPLE_PARKS) {
+    const hit = await savedCache.get(ex.slug, now());
+    if (hit && hit.value.day === localDay(now()) && (await loadPass(hit.value.passId, now()))) continue;
+    if (await maybeRefresh(ex, localDay(now()), deps)) await holder().running.get(ex.slug);
+  }
+}

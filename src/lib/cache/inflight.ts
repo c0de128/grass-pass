@@ -10,6 +10,15 @@
  */
 
 export class WaiterAbortedError extends Error {
+  /**
+   * Matched by name, not by class identity: Next bundles instrumentation.ts (the S8b example warm-up)
+   * separately from pages and routes, and the globalThis singletons (queues, stores, in-flight builds)
+   * throw the class of whichever bundle created them first.
+   */
+  static [Symbol.hasInstance](x: unknown): boolean {
+    return x instanceof Error && x.name === "WaiterAbortedError";
+  }
+
   constructor() {
     super("The client went away.");
     this.name = "WaiterAbortedError";

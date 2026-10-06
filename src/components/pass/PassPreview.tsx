@@ -35,11 +35,11 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
     >
       <div className="flex flex-col gap-5">
         <header className="flex flex-col gap-1">
-          <p className="font-display text-sm font-bold uppercase tracking-wide">Grass Pass · your ticket to get outside</p>
-          <h1 id="pass-title" className="text-3xl font-bold">
+          <p className="text-xs font-bold tracking-widest text-primary uppercase">Grass Pass · your ticket to get outside</p>
+          <h1 id="pass-title" className="text-4xl leading-tight font-extrabold tracking-tight text-ink">
             {parkName}
           </h1>
-          <p className="text-base">
+          <p className="text-base text-muted-foreground">
             {AGE_BAND_INFO[pass.ageBand].label} · {formatDay(pass.day)} · {pass.items.length} {pass.items.length === 1 ? "find" : "finds"}
           </p>
         </header>
@@ -118,7 +118,7 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
   const removed = pass.removed.notGrounded;
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-xl">For the grown-up</h2>
+      <h2 className="text-xl font-extrabold text-ink">For the grown-up</h2>
       {pass.parentNote ? <p>{pass.parentNote}</p> : null}
       <details>
         <summary className="cursor-pointer font-semibold">Answer key (don&apos;t peek, kids!)</summary>

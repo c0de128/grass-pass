@@ -38,7 +38,7 @@ export function DifferentPassButton({ parkId, ageBand, variant }: { parkId: stri
       {state.kind === "working" ? <ProgressSteps steps={state.steps} /> : null}
       {state.kind === "failed" || state.kind === "empty" ? (
         <div ref={alertRef} tabIndex={-1} className="flex flex-col gap-2">
-          <div role="alert" className="rounded-ticket border-2 border-line bg-surface p-4">
+          <div role="alert" className="rounded-2xl bg-muted p-4">
             <p className="font-semibold">{state.message}</p>
           </div>
           {state.kind === "failed" && state.parkData ? <ParkDataList data={state.parkData} /> : null}

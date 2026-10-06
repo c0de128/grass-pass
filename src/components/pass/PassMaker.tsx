@@ -1,17 +1,17 @@
 "use client";
 
 /**
- * The main journey (SPEC §2 steps 2-5): pick a park (S2's FindAPark) -> "Who's hunting?" age band
- * (4-6, 6-10 default, 10-13; remembered in localStorage only) -> make the pass with the server's real
- * progress steps -> open the pass page. Failures show their exact copy; a model failure also shows
- * the real park data we found (never as a pass).
+ * The main journey (SPEC §2 steps 2-5): pick a park (S2's FindAPark) with the Explorer age chosen in the
+ * same search card (v3, Kevin's v0 design: 4-6, 6-10 default, 10-13; remembered in localStorage only) ->
+ * "Make a pass for <park>" (the age is already chosen, so it isn't asked again) -> make the pass with the
+ * server's real progress steps -> open the pass page. Failures show their exact copy; a model failure also
+ * shows the real park data we found (never as a pass).
  */
-import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FindAPark } from "@/components/parks/FindAPark";
 import { Button, buttonClassName } from "@/components/ui/Button";
-import { TicketCard } from "@/components/ui/TicketCard";
 import type { Park } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
 import {
@@ -65,7 +65,7 @@ export function PassFailure({
 }) {
   return (
     <>
-      <div role="alert" data-error-code={state.code} className="rounded-ticket border-2 border-line bg-surface p-4">
+      <div role="alert" data-error-code={state.code} className="rounded-2xl bg-muted p-4">
         <p className="font-semibold">{state.message}</p>
       </div>
       {secondsToRetry !== null ? (
@@ -108,10 +108,59 @@ function storeBand(b: AgeBand) {
   }
 }
 
+/** The remembered band as an external store: the server (and the first paint) use the default. */
+const noSubscribe = () => () => {};
+const serverBand = (): AgeBand => DEFAULT_AGE_BAND;
+
+/** v0's short hints, kept true to AGE_BAND_INFO (6 or 8 finds; 10-13 has 2 hard ones). */
+export const AGE_HINTS: Record<AgeBand, string> = {
+  "4-6": "6 finds, read aloud",
+  "6-10": "8 finds, the classic",
+  "10-13": "8 finds, 2 tricky",
+};
+
+/**
+ * "Explorer age" (v3 search card): three big radio tiles, the chosen one sunflower yellow with an ink border.
+ * Real radios (visually hidden) inside labels, so arrow keys and screen readers work as usual.
+ */
+export function AgePicker({ band, onChange, legendId }: { band: AgeBand; onChange: (b: AgeBand) => void; legendId: string }) {
+  return (
+    <fieldset className="flex flex-col" aria-describedby={`${legendId}-note`}>
+      <legend id={legendId} className="mb-2.5 text-xs font-bold tracking-widest text-muted-foreground uppercase">
+        Explorer age
+      </legend>
+      <div className="grid grid-cols-3 gap-2">
+        {AGE_BANDS.map((b) => (
+          <label
+            key={b}
+            className={`flex min-h-12 cursor-pointer flex-col items-center justify-center gap-0.5 rounded-2xl border-2 px-2 py-2.5 text-center transition-colors has-[:focus-visible]:outline-3 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ring has-[:focus-visible]:outline-solid ${
+              band === b ? "border-ink bg-sun text-sun-foreground" : "border-transparent bg-muted text-foreground hover:border-line"
+            }`}
+          >
+            <input type="radio" name="ageBand" value={b} checked={band === b} onChange={() => onChange(b)} className="sr-only" />
+            <span className="font-heading text-lg leading-none font-extrabold">
+              <span className="sr-only">Ages </span>
+              {b.replace("-", "–")}
+              {b === DEFAULT_AGE_BAND ? <span className="sr-only"> (most kids)</span> : null}
+            </span>
+            <span className="hidden text-[11px] leading-tight sm:block">{AGE_HINTS[b]}</span>
+          </label>
+        ))}
+      </div>
+      <p id={`${legendId}-note`} className="sr-only">
+        Only the park and this age range are sent to make the pass. We remember your choice on this device only.
+      </p>
+    </fieldset>
+  );
+}
+
 export function PassMaker() {
   const ids = useId();
   const [park, setPark] = useState<Park | null>(null);
-  const [band, setBand] = useState<AgeBand>(DEFAULT_AGE_BAND);
+  // The remembered band (localStorage) until the visitor picks one here.
+  const storedBand = useSyncExternalStore(noSubscribe, readStoredBand, serverBand);
+  const [pickedBand, setPickedBand] = useState<AgeBand | null>(null);
+  const band = pickedBand ?? storedBand;
   const headingRef = useRef<HTMLHeadingElement>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
@@ -121,7 +170,7 @@ export function PassMaker() {
   const secondsToRetry = useSecondsUntil(state.kind === "failed" ? state.autoRetryAt : undefined);
   const lastRequest = useRef<{ parkId: string; ageBand: AgeBand } | null>(null);
 
-  // After a park is picked, bring the age step into view and move focus to its heading (R1 UX m2):
+  // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):
   // with 10 parks listed it starts ~700 px further down on a phone.
   useEffect(() => {
     if (!park) return;
@@ -143,8 +192,11 @@ export function PassMaker() {
   function onPick(p: Park) {
     reset();
     setPark(p);
-    // The age step only appears after a pick, so the remembered band is read here (no effect needed).
-    setBand(readStoredBand());
+  }
+
+  function onBand(b: AgeBand) {
+    setPickedBand(b);
+    storeBand(b);
   }
 
   function onSubmit(e: FormEvent<HTMLFormElement>) {
@@ -160,42 +212,33 @@ export function PassMaker() {
     void run(lastRequest.current);
   }
 
+  function changeAge() {
+    const radio = document.querySelector<HTMLInputElement>(`input[name="ageBand"][value="${band}"]`);
+    radio?.focus();
+  }
+
   return (
-    <div className="flex flex-col gap-6">
-      <FindAPark onPick={onPick} />
+    <div className="flex flex-col gap-5">
+      <FindAPark onPick={onPick} ageSlot={<AgePicker band={band} onChange={onBand} legendId={`${ids}-age-legend`} />} />
 
       {park ? (
-        <TicketCard as="section" aria-labelledby={`${ids}-age`}>
+        <section
+          aria-labelledby={`${ids}-make`}
+          className="scroll-mt-24 rounded-3xl bg-card p-5 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-6"
+        >
           <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-label="Make a pass">
-            <h2 id={`${ids}-age`} ref={headingRef} tabIndex={-1} className="text-2xl">
-              Who&apos;s hunting at {safeParkName(park.name).name}?
+            <h2 id={`${ids}-make`} ref={headingRef} tabIndex={-1} className="text-2xl font-extrabold tracking-tight text-ink">
+              Make a pass for {safeParkName(park.name).name}
             </h2>
-            <fieldset className="flex flex-col gap-2">
-              <legend className="mb-1 text-lg font-semibold">Age</legend>
-              {AGE_BANDS.map((b) => (
-                <label
-                  key={b}
-                  className="flex min-h-11 cursor-pointer items-center gap-3 rounded-control border-2 border-line bg-surface px-4 py-2 has-[:checked]:bg-chip has-[:checked]:text-on-chip"
-                >
-                  <input
-                    type="radio"
-                    name="ageBand"
-                    value={b}
-                    checked={band === b}
-                    onChange={() => setBand(b)}
-                    className="h-5 w-5 shrink-0 accent-forest"
-                  />
-                  <span className="flex flex-col">
-                    <span className="font-display text-lg font-semibold">
-                      {AGE_BAND_INFO[b].label}
-                      {b === DEFAULT_AGE_BAND ? " (most kids)" : ""}
-                    </span>
-                    <span className="text-base">{AGE_BAND_INFO[b].hint}</span>
-                  </span>
-                </label>
-              ))}
-            </fieldset>
-            <p className="text-base text-muted">
+            <p className="flex flex-wrap items-center gap-x-3 gap-y-1 text-base" data-testid="chosen-age">
+              <span>
+                For <strong>{AGE_BAND_INFO[band].label}</strong>: {AGE_BAND_INFO[band].hint}.
+              </span>
+              <button type="button" onClick={changeAge} className="inline-flex min-h-11 items-center rounded-md font-semibold text-primary underline underline-offset-4">
+                Change age
+              </button>
+            </p>
+            <p className="text-sm text-muted-foreground">
               Only the park and this age range are sent to make the pass. We remember your choice on this device only.
             </p>
             <Button type="submit" className="self-start" aria-disabled={working || undefined}>
@@ -227,13 +270,13 @@ export function PassMaker() {
 
           {state.kind === "empty" ? (
             <div ref={resultRef} tabIndex={-1} className="mt-4 flex flex-col gap-3">
-              <div role="alert" className="rounded-ticket border-2 border-line bg-surface p-4">
+              <div role="alert" className="rounded-2xl bg-muted p-4">
                 <p className="font-semibold">{state.message}</p>
               </div>
               <SectionNotes sections={state.sections} />
             </div>
           ) : null}
-        </TicketCard>
+        </section>
       ) : null}
     </div>
   );

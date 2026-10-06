@@ -6,10 +6,10 @@
  * OpenStreetMap parks nearest first. Field errors follow the starter-kit pattern: focus the
  * field, aria-invalid, aria-describedby, role=alert, re-announced on every failed submit.
  */
+import { LoaderCircle, LocateFixed, MapPin, Search, ShieldCheck } from "lucide-react";
 import Link from "next/link";
-import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from "react";
-import { Button, buttonClassName } from "@/components/ui/Button";
-import { TicketCard } from "@/components/ui/TicketCard";
+import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
+import { buttonClassName } from "@/components/ui/Button";
 import { distanceLabel, roundCoord } from "@/lib/geo";
 import { safeParkName } from "@/lib/safety/contact";
 import {
@@ -48,6 +48,8 @@ type Phase =
 export type FindAParkProps = {
   /** Called when a park is chosen (the pass step, S3). Without it the list says what happens next. */
   onPick?: (park: Park) => void;
+  /** v3: the Explorer age picker, shown inside the search card between the search row and "Use my location". */
+  ageSlot?: ReactNode;
 };
 
 function formatChecked(iso: string): string {
@@ -68,7 +70,7 @@ function checkQuery(raw: string): string | null {
   return null;
 }
 
-export function FindAPark({ onPick }: FindAParkProps) {
+export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
   const ids = useId();
   const inputId = `${ids}-place`;
   const hintId = `${ids}-place-hint`;
@@ -242,76 +244,93 @@ export function FindAPark({ onPick }: FindAParkProps) {
 
   return (
     <section aria-labelledby={`${ids}-heading`} className="flex flex-col gap-4">
-      <h2 id={`${ids}-heading`} className="text-2xl">
-        Where?
+      <h2 id={`${ids}-heading`} className="sr-only">
+        Find a park
       </h2>
 
-      <form aria-label="Find a park" noValidate onSubmit={onSubmit} className="flex flex-col gap-2">
-        <label htmlFor={inputId} className="text-lg font-semibold">
-          Town, ZIP or park name
-        </label>
-        <p id={hintId} className="text-base text-muted">
-          For example: Allen TX, 75013 or Connemara Meadow Preserve.
-        </p>
-        <div className="flex flex-col gap-2 sm:flex-row">
-          <input
-            ref={inputRef}
-            id={inputId}
-            name="q"
-            type="text"
-            inputMode="search"
-            autoComplete="address-level2"
-            spellCheck={false}
-            value={q}
-            onChange={(e) => {
-              setQ(e.target.value);
-              if (fieldError) setFieldError(null);
-            }}
-            aria-invalid={fieldError ? true : undefined}
-            aria-describedby={fieldError ? `${hintId} ${errorId}` : hintId}
-            className="min-h-11 min-w-0 flex-1 rounded-control border-2 border-line bg-surface px-3 text-lg text-fg"
-          />
-          <Button type="submit" aria-disabled={busy || undefined}>
-            {phase.kind === "searching" ? "Searching…" : "Find parks"}
-          </Button>
-        </div>
-        {fieldError ? (
-          <p key={`q-${attempt}`} id={errorId} role="alert" className="font-semibold">
-            {fieldError}
+      {/* The v3 search card (Kevin's v0 design): search row, Explorer age, then "Use my location". */}
+      <div className="flex flex-col gap-5 rounded-3xl bg-card p-4 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-5">
+        <form aria-label="Find a park" noValidate onSubmit={onSubmit} className="flex flex-col gap-2">
+          <label htmlFor={inputId} className="sr-only">
+            Town, ZIP or park name
+          </label>
+          <p id={hintId} className="sr-only">
+            For example: Allen TX, 75013 or Connemara Meadow Preserve.
           </p>
-        ) : null}
-      </form>
+          <div className="flex flex-col gap-3 sm:flex-row">
+            <div className="relative min-w-0 flex-1">
+              <MapPin className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" aria-hidden="true" />
+              <input
+                ref={inputRef}
+                id={inputId}
+                name="q"
+                type="text"
+                inputMode="search"
+                autoComplete="address-level2"
+                spellCheck={false}
+                placeholder="Town, ZIP or park name"
+                value={q}
+                onChange={(e) => {
+                  setQ(e.target.value);
+                  if (fieldError) setFieldError(null);
+                }}
+                aria-invalid={fieldError ? true : undefined}
+                aria-describedby={fieldError ? `${hintId} ${errorId}` : hintId}
+                className="h-14 w-full rounded-2xl border border-line bg-background/60 pr-4 pl-12 text-base text-foreground placeholder:text-muted-foreground aria-invalid:border-2 aria-invalid:border-destructive"
+              />
+            </div>
+            <button type="submit" aria-disabled={busy || undefined} className={buttonClassName("primary", "h-14 shrink-0 px-7")}>
+              {phase.kind === "searching" ? (
+                <LoaderCircle className="size-5 motion-safe:animate-spin" aria-hidden="true" />
+              ) : (
+                <Search className="size-5" aria-hidden="true" />
+              )}
+              {phase.kind === "searching" ? "Searching…" : "Find parks"}
+            </button>
+          </div>
+          {fieldError ? (
+            <p key={`q-${attempt}`} id={errorId} role="alert" className="text-sm font-semibold text-destructive">
+              {fieldError}
+            </p>
+          ) : null}
+        </form>
 
-      <div className="flex flex-col gap-1">
-        <p aria-hidden="true" className="text-base">
-          or
-        </p>
-        <button
-          ref={locButtonRef}
-          type="button"
-          onClick={onUseLocation}
-          aria-disabled={busy || undefined}
-          aria-describedby={locError ? `${locNoteId} ${locErrorId}` : locNoteId}
-          className={buttonClassName("secondary", "self-start")}
-        >
-          Use my location
-        </button>
-        <p id={locNoteId} className="text-base text-muted">
-          Your location is rounded to about 1 km on this device before it is sent.
-        </p>
+        {ageSlot}
+
+        <div className="flex flex-col gap-1 border-t border-border pt-3 text-sm sm:flex-row sm:items-center sm:justify-between sm:gap-2">
+          <button
+            ref={locButtonRef}
+            type="button"
+            onClick={onUseLocation}
+            aria-disabled={busy || undefined}
+            aria-describedby={locError ? `${locNoteId} ${locErrorId}` : locNoteId}
+            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md font-semibold text-primary underline-offset-4 hover:underline aria-disabled:opacity-60"
+          >
+            {phase.kind === "locating" ? (
+              <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />
+            ) : (
+              <LocateFixed className="size-4" aria-hidden="true" />
+            )}
+            Use my location
+          </button>
+          <p id={locNoteId} className="inline-flex items-center gap-1.5 text-muted-foreground">
+            <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+            Rounded to about 1 km before it&apos;s sent
+          </p>
+        </div>
         {locError ? (
-          <p key={`loc-${attempt}`} id={locErrorId} role="alert" className="font-semibold">
+          <p key={`loc-${attempt}`} id={locErrorId} role="alert" className="-mt-2 text-sm font-semibold text-destructive">
             {locError}
           </p>
         ) : null}
       </div>
 
-      <p role="status" aria-live="polite" className="min-h-6 text-base">
+      <p role="status" aria-live="polite" className="text-base empty:hidden">
         {progress}
       </p>
 
       {phase.kind === "failed" ? (
-        <div role="alert" data-error-code={phase.code} className="flex flex-col gap-3 rounded-ticket border-2 border-line bg-surface p-4">
+        <div role="alert" data-error-code={phase.code} className="flex flex-col gap-3 rounded-3xl bg-card p-5 ring-1 ring-border">
           <p className="font-semibold">{phase.message}</p>
           {phase.example ? (
             <Link href={phase.example.href} prefetch={false} className={buttonClassName("secondary", "self-start")}>
@@ -342,18 +361,18 @@ function ParkList({
   const where = result.query.kind === "text" ? (result.query.matched ?? result.query.text) : "your location";
   const checked = formatChecked(result.checkedAt);
   return (
-    <TicketCard as="section" aria-labelledby="park-results-heading">
+    <section aria-labelledby="park-results-heading" className="rounded-3xl bg-card p-5 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-6">
       <div className="flex flex-col gap-3">
-      <h2 id="park-results-heading" ref={headingRef} tabIndex={-1} className="text-xl">
+      <h2 id="park-results-heading" ref={headingRef} tabIndex={-1} className="text-2xl font-extrabold tracking-tight text-ink">
         Parks near {where}
       </h2>
       {result.fallback ? (
-        <p data-testid="parks-fallback" className="rounded-ticket border-2 border-line bg-surface p-3 text-base">
+        <p data-testid="parks-fallback" className="rounded-2xl bg-muted p-3 text-base">
           {result.fallback.message}
         </p>
       ) : null}
       {result.parks.length === 0 ? (
-        <p className="rounded-ticket border-2 border-line bg-surface p-4 font-semibold">{result.empty?.message}</p>
+        <p className="rounded-2xl bg-muted p-4 font-semibold">{result.empty?.message}</p>
       ) : (
         <>
           <p className="text-base">
@@ -369,10 +388,10 @@ function ParkList({
                   type="button"
                   onClick={() => onPick(p)}
                   aria-pressed={picked?.id === p.id}
-                  className="flex min-h-11 w-full flex-col items-start rounded-control border-2 border-line bg-surface px-4 py-2 text-left text-fg hover:bg-secondary-hover aria-pressed:bg-primary aria-pressed:text-on-primary"
+                  className="flex min-h-11 w-full flex-col items-start rounded-2xl border-2 border-transparent bg-muted px-4 py-2.5 text-left text-foreground hover:border-line aria-pressed:border-ink aria-pressed:bg-sun aria-pressed:text-sun-foreground"
                 >
-                  <span className="font-display text-lg font-semibold">{safeParkName(p.name).name}</span>
-                  <span className="text-base">
+                  <span className="font-heading text-lg font-extrabold">{safeParkName(p.name).name}</span>
+                  <span className="text-sm">
                     {kindLabel(p.kind)} · {distanceLabel(p.distanceM)} away
                   </span>
                 </button>
@@ -382,11 +401,11 @@ function ParkList({
         </>
       )}
       {picked && !hasNextStep ? (
-        <p role="status" className="rounded-ticket border-2 border-line bg-surface p-4">
+        <p role="status" className="rounded-2xl bg-muted p-4">
           You picked <strong>{safeParkName(picked.name).name}</strong>. Making a pass for a park isn&apos;t switched on in this build yet.
         </p>
       ) : null}
-      <p className="text-sm">
+      <p className="text-sm text-muted-foreground">
         Park list from{" "}
         <a className="underline" href="https://www.openstreetmap.org/copyright">
           © OpenStreetMap contributors
@@ -396,6 +415,6 @@ function ParkList({
         {result.cached ? " (saved copy; park maps change slowly)" : ""}.
       </p>
       </div>
-    </TicketCard>
+    </section>
   );
 }

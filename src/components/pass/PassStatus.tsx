@@ -42,7 +42,7 @@ export function ProgressSteps({ steps }: { steps: { step: PassStep; text: string
       )}
     </div>
       {upcoming.length > 0 ? (
-        <ol className="flex flex-col gap-1 text-muted" aria-label="Still to come">
+        <ol className="flex flex-col gap-1 text-muted-foreground" aria-label="Still to come">
           {upcoming.map((u) => (
             <li key={u.step} className="flex items-start gap-2">
               <span aria-hidden="true" className="w-5 shrink-0 font-bold">

@@ -25,8 +25,8 @@ export function SiteFooter() {
                 </Link>
               </li>
               <li>
-                <Link className={link} href="/#how" prefetch={false}>
-                  How it works
+                <Link className={link} href="/how-it-works">
+                  How Grass Pass works
                 </Link>
               </li>
               <li>

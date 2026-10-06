@@ -6,14 +6,22 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 /** Home page section anchors (v0 nav). Plain links to "/#...", so they also work from /about and a pass page. */
 export const HOME_SECTIONS = [
   { href: "/#why", label: "Why it works" },
-  { href: "/#how", label: "How it works" },
   { href: "/#pass", label: "What's on a pass" },
   { href: "/#parks", label: "Sample parks" },
 ] as const;
 
 /**
+ * Page tabs shown at every width (Kevin, 2026-10-06: a "How it works" tab that explains the app and the AI
+ * process in detail, at /how-it-works; it replaces the "/#how" anchor in the header).
+ */
+export const PAGE_LINKS = [
+  { href: "/how-it-works", label: "How it works" },
+  { href: "/about", label: "About" },
+] as const;
+
+/**
  * v3 site header (Kevin's v0 design): sticky, translucent meadow background, the ticket logo (home link,
- * never prefetched: SEC-3-01), the section links (large screens), About, the dark mode switch and the dark
+ * never prefetched: SEC-3-01), the section links (large screens), How it works and About (every width), the dark mode switch and the dark
  * "Make a pass" pill that jumps to the park search on the home page.
  */
 export function SiteHeader() {
@@ -25,7 +33,7 @@ export function SiteHeader() {
         </Link>
         <div className="flex items-center gap-2 sm:gap-3 lg:gap-8">
           <nav aria-label="Site" className="flex items-center">
-            <ul className="flex items-center gap-8">
+            <ul className="flex items-center gap-2 sm:gap-4 lg:gap-8">
               {HOME_SECTIONS.map((link) => (
                 <li key={link.href} className="hidden lg:block">
                   <Link href={link.href} prefetch={false} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
@@ -33,14 +41,16 @@ export function SiteHeader() {
                   </Link>
                 </li>
               ))}
-              <li>
-                <Link
-                  href="/about"
-                  className="inline-flex min-h-11 items-center px-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground lg:min-h-0 lg:px-0"
-                >
-                  About
-                </Link>
-              </li>
+              {PAGE_LINKS.map((link) => (
+                <li key={link.href}>
+                  <Link
+                    href={link.href}
+                    className="inline-flex min-h-11 items-center px-1 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-1.5 lg:min-h-0 lg:px-0"
+                  >
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </nav>
           <div className="flex items-center gap-2 sm:gap-3">

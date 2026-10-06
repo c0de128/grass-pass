@@ -157,6 +157,25 @@ export const EVAL_THRESHOLDS = {
   wrongCounts: 0,
 } as const;
 
+/**
+ * The newest committed results file: a PARTIAL 10-13 smoke (3 parks, 1 Gemma run each), made after the R3
+ * reading rules for ages 10-13. Not the frozen numbers; quoted on /how-it-works next to the full run.
+ * tests/unit/how-it-works.test.tsx re-reads the JSON and fails if a number here drifts.
+ */
+export const SMOKE_10_13 = {
+  file: "evals/results/2026-10-06-partial-1015.json",
+  summary: "evals/results/2026-10-06-partial-1015.md",
+  day: "2026-10-06",
+  ageBand: "10-13",
+  parks: 3,
+  complete: 3,
+  fkGrade: 4.3,
+  nameLeakPct: 15.2,
+  p50s: 11.3,
+  p95s: 19.8,
+  costPerPass: 0.00122,
+} as const;
+
 export function evalColumn(model: string): EvalColumn {
   const c = EVAL_COLUMNS.find((x) => x.model === model);
   if (!c) throw new Error(`no eval column for ${model}`);

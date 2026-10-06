@@ -230,10 +230,24 @@ export default function AboutPage() {
             If a source has nothing for a park, the pass says <strong>&quot;No data available&quot;</strong> and why. It never
             pads the pass with generic items.
           </p>
+          <p>
+            The whole process, step by step (the data, the one model call, every check), is on{" "}
+            <Link className={ext} href="/how-it-works">
+              How Grass Pass works
+            </Link>
+            .
+          </p>
         </div>
       </TicketCard>
 
       <Section id="how" title="How a pass is made">
+        <p>
+          The short version is below; the detailed one, with a diagram and every check in plain words, is on{" "}
+          <Link className={ext} href="/how-it-works">
+            How Grass Pass works
+          </Link>
+          .
+        </p>
         <ol className="flex list-decimal flex-col gap-3 pl-6">
           <li>
             <strong>You pick a park.</strong> Parks come from{" "}

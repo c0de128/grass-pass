@@ -163,12 +163,17 @@ describe("v3 logo, header and footer", () => {
     expect(html(<Logo inverted />)).toContain("bg-sun text-sun-foreground");
   });
 
-  it("SiteHeader links home with a name (never prefetched), the section anchors, About and the dark mode switch", () => {
+  it("SiteHeader links home with a name (never prefetched), the section anchors, How it works, About and the dark mode switch", () => {
     const out = html(<SiteHeader />);
     expect(out).toContain("<header");
     expect(out).toContain('aria-label="Grass Pass home"');
     expect(out).toContain(">Switch to dark mode</span>");
-    for (const a of ["/#why", "/#how", "/#pass", "/#parks", "/#find", "/about"]) expect(out).toContain(`href="${a}"`);
+    for (const a of ["/#why", "/#pass", "/#parks", "/#find", "/how-it-works", "/about"]) expect(out).toContain(`href="${a}"`);
+    // Kevin 2026-10-06: the How it works tab is its own page, shown at every width (not a lg-only anchor).
+    expect(out).not.toContain('href="/#how"');
+    expect(out).toMatch(/<li><a [^>]*href="\/how-it-works"[^>]*>How it works<\/a><\/li>/);
+    // Shown at every width: the page tabs' list items carry no "hidden" class.
+    expect(out).not.toMatch(/<li class="hidden lg:block"><a [^>]*href="\/how-it-works"/);
     expect(out).toContain(">Make a pass");
   });
 
@@ -193,6 +198,7 @@ describe("v3 logo, header and footer", () => {
     }
     expect(out).toContain('href="https://github.com/c0de128/grass-pass"');
     expect(out).toContain('href="/about"');
+    expect(out).toContain('href="/how-it-works"');
   });
 });
 

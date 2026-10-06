@@ -1,4 +1,5 @@
-import { MapPinned, Printer, Smartphone, Sparkles, type LucideIcon } from "lucide-react";
+import { ArrowRight, MapPinned, Printer, Smartphone, Sparkles, type LucideIcon } from "lucide-react";
+import Link from "next/link";
 
 type Step = { icon: LucideIcon; title: string; body: string; ticker?: readonly string[] };
 
@@ -39,6 +40,12 @@ export function HowItWorks() {
           <h2 id="how-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
             Under a minute on screen. All afternoon outside.
           </h2>
+          <p>
+            <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">
+              The full story: the data, the AI and every check
+              <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+          </p>
         </div>
 
         <ol className="grid gap-5 md:grid-cols-2 lg:grid-cols-4">

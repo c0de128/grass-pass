@@ -40,6 +40,10 @@ search (for example "Allen TX" lists 10 of its 53 nearby parks, and Connemara is
 own name instead, or use "Use my location".
 
 ## How it works
+The app has its own **How it works** page (`/how-it-works`, the "How it works" tab at the top of every page): every
+step with a diagram, what the model is and isn't given, every reason a clue is removed in plain words, the refill
+rules, caching and limits, the measured numbers and the honest limits. The short version:
+
 ```mermaid
 flowchart LR
   S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries<br/>Google review counts (SerpApi)"] --> P["Pools, by code<br/>what is really in this park"]
@@ -349,6 +353,8 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   All six are SIL Open Font License 1.1.
 - Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
   [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
+- Accessibility checks in the e2e tests (dev only): [@axe-core/playwright](https://github.com/dequelabs/axe-core-npm)
+  (MPL-2.0).
 - Park names, locations and features: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,
   via [Nominatim](https://nominatim.org/) and the public Overpass API instances at overpass-api.de, maps.mail.ru
   (VK Maps) and overpass.private.coffee (used under their usage policies). The saved Dallas-area park list and example

@@ -27,7 +27,7 @@ import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
-import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy } from "@/lib/accounts/config";
+import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
@@ -393,7 +393,7 @@ export default function HowItWorksPage() {
             <li>Lucky Finds: {serp.daily} SerpApi searches a day, {serp.monthly} a month (free plan).</li>
             <li>A pass made while a source was down is rebuilt at most 3 times a day, not counted toward anyone&apos;s {ACCOUNT_PASSES_PER_DAY}.</li>
             <li>
-              A new pass needs a grown-up signed in with GitHub or Google: {ACCOUNT_PASSES_PER_DAY} new passes a day each. Judges
+              A new pass needs a grown-up signed in{signInWith()}: {ACCOUNT_PASSES_PER_DAY} new passes a day each. Judges
               can press &quot;Try as a judge&quot;: {judgeShareCopy()}
             </li>
           </ul>

@@ -1,5 +1,5 @@
 /**
- * Accounts (Kevin, 2026-10-06): sign in with GitHub or Google (OAuth, no passwords), or the one-click
+ * Accounts (Kevin, 2026-10-06): sign in with GitHub or Google (OAuth, no passwords; each only when its keys are set), or the one-click
  * "Try as a judge" demo account. Sign-in is only needed to make a NEW pass and to send item reports.
  *
  * Which sign-in buttons exist is decided here from the env, so a provider without its keys never shows
@@ -54,6 +54,22 @@ export function enabledOAuthProviders(env: Env = process.env): OAuthProviderId[]
   return OAUTH_PROVIDERS.filter((p) => has(env[`AUTH_${p.toUpperCase()}_ID`]) && has(env[`AUTH_${p.toUpperCase()}_SECRET`]));
 }
 
+/**
+ * The OAuth providers that really work on this server, in words: "GitHub", "GitHub or Google", or null when none is
+ * set up. Every sentence that names a provider is built from this, so copy never names a button that isn't there
+ * (audit R4 RULES-4-02).
+ */
+export function oauthProviderNames(env: Env = process.env): string | null {
+  const names = enabledOAuthProviders(env).map((p) => PROVIDER_LABELS[p]);
+  return names.length > 0 ? names.join(" or ") : null;
+}
+
+/** " with GitHub" / " with GitHub or Google" / "" (no OAuth provider set up), for `sign in${signInWith()}`. */
+export function signInWith(env: Env = process.env): string {
+  const names = oauthProviderNames(env);
+  return names ? ` with ${names}` : "";
+}
+
 /** The judge demo sign-in is on unless JUDGE_DEMO=0. */
 export function judgeDemoEnabled(env: Env = process.env): boolean {
   return env.JUDGE_DEMO?.trim() !== "0";
@@ -97,7 +113,9 @@ export function judgeShareCopy(env: Env = process.env): string {
 
 /** SEC-4-02: the limit messages, with the honest number left. */
 export function judgeLimitMessage(scope: "global" | "key", env: Env = process.env): string {
-  const after = "Saved passes and the examples still work, or sign in with GitHub or Google. New demo passes again after midnight (Dallas time).";
+  // RULES-4-02: name only the providers set up on this server.
+  const names = oauthProviderNames(env);
+  const after = `Saved passes and the examples still work${names ? `, or sign in with ${names}` : ""}. New demo passes again after midnight (Dallas time).`;
   if (scope === "global") return `0 of ${judgeDailyCap(env)} judge passes left today: the judge demo account has made all its new passes (shared by every judge). ${after}`;
   return `0 judge passes left today for your connection: it has made its ${JUDGE_PASSES_PER_IP_PER_DAY} judge demo passes (other judges have their own). ${after}`;
 }

@@ -5,7 +5,7 @@
  * one list, and tests can check every fact without rendering. Every number comes from the app's own constants
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeShareCopy } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
 import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
@@ -116,53 +116,57 @@ export const PRIVACY_POINTS: readonly string[] = [
 /** The full privacy table: everything that leaves your device, where it goes and why. */
 export type PrivacyRow = { what: string; where: string; why: string };
 
-export const PRIVACY_ROWS: readonly PrivacyRow[] = [
-  {
-    what: "The place you type (for example \"Allen TX\")",
-    where: "Our server (never in the web address), then OpenStreetMap's Nominatim. Cached 30 days by the text, not by who typed it.",
-    why: "To find the town or park.",
-  },
-  {
-    what: "\"Use my location\"",
-    where: "Rounded in your browser to about 1 km, then our server, then OpenStreetMap's Overpass.",
-    why: "To list parks near you.",
-  },
-  {
-    what: "The park you pick (a public place)",
-    where: "Our server, then OpenStreetMap, iNaturalist and SerpApi (name and map position only).",
-    why: "For the park map, sightings, monarch counts and review counts.",
-  },
-  {
-    what: "The age band (for example 6-10)",
-    where: "Our server, then the model on DigitalOcean, in the prompt.",
-    why: "To set how many finds and how easy the words are.",
-  },
-  {
-    what: "Your IP address",
-    where: "Our server. Our storage (Upstash Redis) keeps only a keyed hash, never the address itself, in rate-limit counters that expire within a day.",
-    why: "To stop abuse and keep the free model budget fair.",
-  },
-  {
-    what: "Every request (IP address, web address, time)",
-    where: "Our hosting provider's request logs (Vercel), kept about 1 hour. They never show what you typed or where you are.",
-    why: "Running the website.",
-  },
-  {
-    what: "Signing in with GitHub or Google (grown-ups only)",
-    where: "The provider sends an account number and a name. We store only a scrambled ID made from the number: no email, no name, no picture. The name stays in your own encrypted cookie. Sign-in lasts 7 days (judge demo: 1 day).",
-    why: "To count your 2 new passes a day and your reports.",
-  },
-  {
-    what: "Your reports (Found it, Didn't find it, Not safe)",
-    where: "Our storage: your latest report per find and its day, under an ID made for that park only. Deleted after 90 days.",
-    why: "To learn what is findable and catch anything unsafe.",
-  },
-  {
-    what: "The finished pass (park, age band, finds, clues, times)",
-    where: "Saved in our storage (Upstash Redis) for 30 days, so the link and print page work.",
-    why: "Nothing in it is about you or your child.",
-  },
-];
+/** Built per call: the sign-in row names only the providers set up on this server (RULES-4-02). */
+export function privacyRows(): PrivacyRow[] {
+  const names = oauthProviderNames();
+  return [
+    {
+      what: "The place you type (for example \"Allen TX\")",
+      where: "Our server (never in the web address), then OpenStreetMap's Nominatim. Cached 30 days by the text, not by who typed it.",
+      why: "To find the town or park.",
+    },
+    {
+      what: "\"Use my location\"",
+      where: "Rounded in your browser to about 1 km, then our server, then OpenStreetMap's Overpass.",
+      why: "To list parks near you.",
+    },
+    {
+      what: "The park you pick (a public place)",
+      where: "Our server, then OpenStreetMap, iNaturalist and SerpApi (name and map position only).",
+      why: "For the park map, sightings, monarch counts and review counts.",
+    },
+    {
+      what: "The age band (for example 6-10)",
+      where: "Our server, then the model on DigitalOcean, in the prompt.",
+      why: "To set how many finds and how easy the words are.",
+    },
+    {
+      what: "Your IP address",
+      where: "Our server. Our storage (Upstash Redis) keeps only a keyed hash, never the address itself, in rate-limit counters that expire within a day.",
+      why: "To stop abuse and keep the free model budget fair.",
+    },
+    {
+      what: "Every request (IP address, web address, time)",
+      where: "Our hosting provider's request logs (Vercel), kept about 1 hour. They never show what you typed or where you are.",
+      why: "Running the website.",
+    },
+    {
+      what: `Signing in ${[names ? `with ${names}` : null, judgeDemoEnabled() ? `with "Try as a judge"` : null].filter(Boolean).join(" or ")} (grown-ups only)`.replace("Signing in  (", "Signing in ("),
+      where: "The provider sends an account number and a name. We store only a scrambled ID made from the number: no email, no name, no picture. The name stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.",
+      why: "To count your 2 new passes a day and your reports.",
+    },
+    {
+      what: "Your reports (Found it, Didn't find it, Not safe)",
+      where: "Our storage: your latest report per find and its day, under an ID made for that park only. Deleted after 90 days.",
+      why: "To learn what is findable and catch anything unsafe.",
+    },
+    {
+      what: "The finished pass (park, age band, finds, clues, times)",
+      where: "Saved in our storage (Upstash Redis) for 30 days, so the link and print page work.",
+      why: "Nothing in it is about you or your child.",
+    },
+  ];
+}
 
 /** The paragraph under the privacy table. */
 export const PRIVACY_NOTES: readonly string[] = [
@@ -174,7 +178,7 @@ export const PRIVACY_NOTES: readonly string[] = [
 /** Accounts and visitor reports (Builder O, 2026-10-06): the rules, from the same constants the code uses. */
 export function accountNotes(): string[] {
   return [
-    `Anyone can search, open examples and shared links, and print. A NEW pass is a real model call, so a grown-up signs in with GitHub or Google: ${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time. No password is stored.`,
+    `Anyone can search, open examples and shared links, and print. A NEW pass is a real model call, so a grown-up signs in${signInWith()} (judges: "Try as a judge"): ${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time. No password is stored.`,
     `Judges: "Try as a judge" is one click, no sign-up. ${judgeShareCopy()}`,
     `Signed-in grown-ups can report each find (Found it, Didn't find it, Not safe). ${REPORT_COPY.rule}`,
   ];

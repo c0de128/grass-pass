@@ -30,7 +30,7 @@ import {
   PRIVACY_NOTES,
   accountNotes,
   PRIVACY_POINTS,
-  PRIVACY_ROWS,
+  privacyRows,
   WHY_OPEN_POINTS,
   aboutLimitPoints,
   aboutLimits,
@@ -343,7 +343,7 @@ export default function AboutPage() {
                   </tr>
                 </thead>
                 <tbody>
-                  {PRIVACY_ROWS.map((r) => (
+                  {privacyRows().map((r) => (
                     <tr key={r.what} className="border-b border-line last:border-b-0">
                       <th scope="row" className="px-4 py-2 font-semibold">
                         {r.what}

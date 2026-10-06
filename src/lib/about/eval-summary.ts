@@ -100,7 +100,7 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
   },
   {
     model: "llama-4-maverick",
-    label: "Llama 4 Maverick (open, the slow fallback)",
+    label: "Llama 4 Maverick (open, a slower alternative you can switch to)",
     licence: "Llama 4 Community Licence",
     runs: 20,
     blockedPrinted: 0,

@@ -5,7 +5,7 @@ import { describe, expect, it } from "vitest";
 import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
-import { PRIVACY_ROWS, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
+import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
 import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
@@ -167,7 +167,7 @@ describe("/about", () => {
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {
-    for (const r of PRIVACY_ROWS) {
+    for (const r of privacyRows()) {
       expect(t).toContain(text(r.what));
       expect(t).toContain(text(r.where));
     }

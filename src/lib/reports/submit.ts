@@ -5,7 +5,10 @@
  * can send it) + the SameSite=Lax session cookie.
  *
  * Store commands (measured in tests/unit/store-cost.test.ts): 2 rate-limit EVALs, at most 1 pass GET
- * (memoized), 1 report EVAL, and 1 INCR when the item gets hidden: <= 5 (COSTS.apiReport).
+ * (memoized), 1 report EVAL (the judge demo: 1 dedupe INCR instead), and 1 INCR when the item gets hidden:
+ * <= 5 (COSTS.apiReport).
+ * SEC-4-01/03: the judge demo's reports are only logged ("logged"); they never count toward a threshold
+ * or the counts. UX-4-05: they are deduped per judge sign-in (browser), not for the whole shared account.
  */
 import "server-only";
 import "@/lib/zod-config";
@@ -18,7 +21,7 @@ import { jsonError, storeUnavailable, waitText } from "@/lib/http/respond";
 import { clientIp, hitRateLimit } from "@/lib/limits";
 import { loadPass } from "@/lib/pass/make";
 import { PASS_ID_PATTERN } from "@/lib/pass/schema";
-import { ITEM_REF_PATTERN, recordItemReport, REPORT_COPY, ReportKindSchema } from "./index";
+import { ITEM_REF_PATTERN, recordItemReport, REPORT_COPY, REPORT_STATUSES, ReportKindSchema, type ReportStatus } from "./index";
 import { forgetReportStats } from "./stats";
 
 export const ReportRequestSchema = z.object({
@@ -28,7 +31,13 @@ export const ReportRequestSchema = z.object({
 });
 export type ReportRequest = z.infer<typeof ReportRequestSchema>;
 
-export const ReportResponseSchema = z.object({ status: z.enum(["counted", "duplicate"]), message: z.string() });
+export const ReportResponseSchema = z.object({ status: z.enum(REPORT_STATUSES), message: z.string() });
+
+function messageFor(status: ReportStatus, judge: boolean): string {
+  if (status === "counted") return REPORT_COPY.thanks;
+  if (status === "logged") return REPORT_COPY.judgeLogged;
+  return judge ? REPORT_COPY.judgeDuplicate : REPORT_COPY.duplicate;
+}
 
 export async function submitReport(req: Request, now: () => number = () => Date.now()): Promise<Response> {
   const g = await guardJsonPost(req, ReportRequestSchema);
@@ -55,12 +64,15 @@ export async function submitReport(req: Request, now: () => number = () => Date.
     if (!pass || !pass.items.some((it) => it.ref === g.data.ref)) {
       return jsonError(404, { code: "NOT_FOUND", message: "That item isn't on a saved pass anymore, so it can't be reported." });
     }
-    const r = await recordItemReport(store, { parkId: pass.park.id, ref: g.data.ref, kind: g.data.kind, account: account.key, now: now() });
+    const r = await recordItemReport(store, {
+      parkId: pass.park.id,
+      ref: g.data.ref,
+      kind: g.data.kind,
+      account: { key: account.key, judge: account.judge, session: account.session },
+      now: now(),
+    });
     if (r.status === "counted") forgetReportStats(pass.park.id);
-    return Response.json(
-      { status: r.status, message: r.status === "counted" ? REPORT_COPY.thanks : REPORT_COPY.duplicate },
-      { headers: { "Cache-Control": "no-store" } },
-    );
+    return Response.json({ status: r.status, message: messageFor(r.status, account.judge) }, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {
     if (err instanceof StoreError) return storeUnavailable();
     throw err;

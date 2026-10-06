@@ -43,12 +43,13 @@ export function countingUpstash() {
           dedupeTtlSec: Number(a[0]),
           field: a[1],
           unsafe: a[2] === "1",
-          account: a[3],
+          member: a[3],
           hideAt: Number(a[4]),
           hideField: a[5],
           day: Number(a[6]),
           cutoff: Number(a[7]),
           ttlSec: Number(a[8]),
+          otherField: a[9] ?? "",
         });
         return [r.counted ? 1 : 0, r.unsafeAccounts, r.newlyHidden ? 1 : 0];
       }

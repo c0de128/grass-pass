@@ -4,13 +4,13 @@
  * Report buttons under one find on the SCREEN pass (never on the printed one): "Found it", "Didn't find it",
  * "Not safe" (asks once more first). Signed-in grown-ups only; one report per item per day. The state is
  * honest: "Sending…" until the server answers, then its answer ("Thanks — counted." / "already reported
- * today") or the real error. The result is announced to screen readers (role=status).
+ * today" / for the judge demo "logged for us to review, but they don't change passes") or the real error. The result is announced to screen readers (role=status).
  */
 import { useState } from "react";
 import { z } from "@/lib/zod-config";
 import type { ReportKind } from "@/lib/reports/kinds";
 
-const AnswerSchema = z.object({ status: z.enum(["counted", "duplicate"]), message: z.string().max(200) });
+const AnswerSchema = z.object({ status: z.enum(["counted", "duplicate", "logged"]), message: z.string().max(200) });
 const ErrorSchema = z.object({ error: z.object({ code: z.string(), message: z.string().max(300) }) });
 
 const LABELS: Record<ReportKind, string> = { found: "Found it", notfound: "Didn't find it", unsafe: "Not safe" };

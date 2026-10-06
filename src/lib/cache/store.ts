@@ -47,31 +47,38 @@ export interface Store {
   /** Optional (item reports): every field of a hash (Upstash HGETALL = 1 command); {} when there is none. */
   hashGetAll?(key: string): Promise<Record<string, string>>;
   /**
-   * Optional, one round trip (item reports, src/lib/reports): count one report unless this account already
-   * reported this item today, keep the "not safe" accounts, hide the item once enough distinct accounts said
-   * so, and drop counts older than the keep window. See REPORT_SCRIPT.
+   * Optional, one round trip (item reports, src/lib/reports): note one account's report unless it already
+   * reported this item today (one field per account per kind, so thresholds count distinct accounts), keep
+   * the "not safe" accounts, hide the item once enough distinct accounts said so, and drop fields older than
+   * the keep window. See REPORT_SCRIPT.
    */
   recordReport?(w: ReportWrite): Promise<ReportWritten>;
 }
 
-/** One item report (keys are built by src/lib/reports/store-keys.ts). */
+/** One item report (keys are built in src/lib/reports/index.ts `reportKeys`). */
 export type ReportWrite = {
   /** Set once per account + item + day (NX); its existence makes a repeat a no-op. */
   dedupeKey: string;
   dedupeTtlSec: number;
-  /** The park's report hash: `<ref>|<kind>|<yyyymmdd>` -> count, `<ref>|hide` -> yyyymmdd it was hidden. */
+  /**
+   * The park's report hash: `<ref>|<kind>|<reporter id>` -> yyyymmdd of that account's latest report of that
+   * kind (SEC-4-01: one field per account, so counts are distinct accounts), `<ref>|hide` -> yyyymmdd it was hidden.
+   */
   hashKey: string;
   field: string;
-  /** The set of accounts that said "not safe" about this item (only touched for `unsafe`). */
+  /** The same account's opposite opinion (found <-> notfound), deleted so one account holds one; "" = none. */
+  otherField: string;
+  /** The set of reporter ids that said "not safe" about this item (only touched for `unsafe`). */
   unsafeKey: string;
   unsafe: boolean;
-  account: string;
+  /** The reporter id (a per-park HMAC of the account, never the account key itself). */
+  member: string;
   /** Distinct "not safe" accounts that hide the item. */
   hideAt: number;
   hideField: string;
   /** yyyymmdd (today). */
   day: number;
-  /** Fields of days before this yyyymmdd are deleted (and a hide older than it). */
+  /** Fields whose day (their value) is before this yyyymmdd are deleted (a hide too). */
   cutoff: number;
   ttlSec: number;
 };
@@ -202,13 +209,14 @@ export class MemoryStore implements Store {
     const h = this.liveHash(w.hashKey) ?? { fields: new Map<string, string>(), expiresAt };
     h.expiresAt = expiresAt;
     this.hashes.set(w.hashKey, h);
-    h.fields.set(w.field, String((Number(h.fields.get(w.field)) || 0) + 1));
+    h.fields.set(w.field, String(w.day));
+    if (w.otherField) h.fields.delete(w.otherField);
     let unsafeAccounts = 0;
     let newlyHidden = false;
     if (w.unsafe) {
       let s = this.sets.get(w.unsafeKey);
       if (!s || this.now() >= s.expiresAt) s = { members: new Set(), expiresAt };
-      s.members.add(w.account);
+      s.members.add(w.member);
       s.expiresAt = expiresAt;
       this.sets.set(w.unsafeKey, s);
       unsafeAccounts = s.members.size;
@@ -218,7 +226,7 @@ export class MemoryStore implements Store {
       }
     }
     for (const [f, v] of [...h.fields]) {
-      const d = f.endsWith("|hide") ? Number(v) : Number(/\|(\d+)$/.exec(f)?.[1]);
+      const d = Number(v);
       if (Number.isFinite(d) && d < w.cutoff) h.fields.delete(f);
     }
     return { counted: true, unsafeAccounts, newlyHidden };
@@ -260,20 +268,23 @@ const RESERVE_SCRIPT =
 
 /**
  * One item report (src/lib/reports). KEYS = dedupe, report hash, not-safe set. ARGV = dedupe ttl, field,
- * unsafe (1/0), account, hide threshold, hide field, today (yyyymmdd), cutoff (yyyymmdd), keep ttl.
- * Returns {counted, distinct not-safe accounts, newly hidden}. Fields of days before the cutoff (and a hide
- * older than it) are deleted, so a park's hash never holds more than the keep window.
+ * unsafe (1/0), reporter id, hide threshold, hide field, today (yyyymmdd), cutoff (yyyymmdd), keep ttl, the
+ * opposite-opinion field ('' = none). The field's value is today's date (one field per account per kind:
+ * SEC-4-01, thresholds count distinct accounts). Returns {counted, distinct not-safe accounts, newly hidden}.
+ * Every field's value is a yyyymmdd, so fields older than the cutoff (and a hide older than it, and the old
+ * per-day count fields, whose small values are below any date) are deleted: a park's hash never holds more
+ * than the keep window.
  */
 export const REPORT_SCRIPT =
   "if not redis.call('SET', KEYS[1], '1', 'NX', 'EX', ARGV[1]) then return {0, 0, 0} end " +
-  "redis.call('HINCRBY', KEYS[2], ARGV[2], 1) redis.call('EXPIRE', KEYS[2], ARGV[9]) " +
+  "redis.call('HSET', KEYS[2], ARGV[2], ARGV[7]) if ARGV[10] ~= '' then redis.call('HDEL', KEYS[2], ARGV[10]) end " +
+  "redis.call('EXPIRE', KEYS[2], ARGV[9]) " +
   "local n = 0 local hid = 0 " +
   "if ARGV[3] == '1' then redis.call('SADD', KEYS[3], ARGV[4]) redis.call('EXPIRE', KEYS[3], ARGV[9]) n = redis.call('SCARD', KEYS[3]) " +
   "if n >= tonumber(ARGV[5]) then hid = redis.call('HSETNX', KEYS[2], ARGV[6], ARGV[7]) end end " +
   "local all = redis.call('HGETALL', KEYS[2]) local cut = tonumber(ARGV[8]) " +
-  "for i = 1, #all, 2 do local f = all[i] local d = nil " +
-  "if string.sub(f, -5) == '|hide' then d = tonumber(all[i + 1]) else d = tonumber(string.match(f, '|(%d+)$')) end " +
-  "if d and d < cut then redis.call('HDEL', KEYS[2], f) end end " +
+  "for i = 1, #all, 2 do local d = tonumber(all[i + 1]) " +
+  "if d and d < cut then redis.call('HDEL', KEYS[2], all[i]) end end " +
   "return {1, n, hid}";
 
 /**
@@ -562,12 +573,13 @@ export class UpstashStore implements Store {
       Math.max(1, Math.ceil(w.dedupeTtlSec)),
       w.field,
       w.unsafe ? 1 : 0,
-      w.account,
+      w.member,
       Math.trunc(w.hideAt),
       w.hideField,
       Math.trunc(w.day),
       Math.trunc(w.cutoff),
       Math.max(1, Math.ceil(w.ttlSec)),
+      w.otherField,
     ]);
     const a = Array.isArray(r) ? r.map(Number) : [];
     if (a.length !== 3 || !a.every(Number.isFinite)) throw new StoreError("The shared store returned a bad report answer.");

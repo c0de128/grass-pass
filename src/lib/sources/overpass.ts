@@ -309,5 +309,22 @@ export async function runOverpass(query: string, deps: OverpassDeps): Promise<Ov
   if (deps.signal?.aborted) throw aborted();
   const last = attempts.at(-1);
   if (!last) throw new SourceError(OVERPASS_SOURCE, "timeout", { started, message: "overpass: the time budget ran out" });
-  throw new SourceError(OVERPASS_SOURCE, last.code, { status: last.status, retryAfter: last.retryAfter, started: true });
+  throw new SourceError(OVERPASS_SOURCE, last.code, {
+    status: last.status,
+    retryAfter: last.retryAfter,
+    started: true,
+    attempts: attempts.map((a) => ({ endpoint: a.endpoint, code: a.code })),
+  });
+}
+
+/**
+ * Audit Q-3-01 (option 3): true only when every mirror we tried timed out, and we tried at least two
+ * different mirrors (or the only one configured). One dead mirror also shows up as a timeout (and its
+ * breaker already sends the next try elsewhere), so a single timeout says nothing about the park.
+ */
+export function everyMirrorTimedOut(err: SourceError, configured: number = OVERPASS_DEFAULT_URLS.length): boolean {
+  if (err.source !== OVERPASS_SOURCE || err.code !== "timeout") return false;
+  const tried = err.attempts ?? [];
+  if (tried.length === 0 || tried.some((a) => a.code !== "timeout")) return false;
+  return new Set(tried.map((a) => a.endpoint)).size >= Math.min(2, Math.max(1, configured));
 }

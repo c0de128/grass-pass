@@ -69,11 +69,20 @@ export class SourceError extends Error {
   readonly retryAfter?: number;
   /** True when at least one request reached the network (it counts against our budgets). */
   readonly started: boolean;
+  /** Overpass failover (audit Q-3-01): the code of each mirror tried, in order (absent for other sources). */
+  readonly attempts?: readonly { endpoint: string; code: SourceErrorCode }[];
 
   constructor(
     source: string,
     code: SourceErrorCode,
-    opts: { status?: number; retryAfter?: number; started: boolean; cause?: unknown; message?: string },
+    opts: {
+      status?: number;
+      retryAfter?: number;
+      started: boolean;
+      cause?: unknown;
+      message?: string;
+      attempts?: readonly { endpoint: string; code: SourceErrorCode }[];
+    },
   ) {
     super(opts.message ?? `${source}: ${code}${opts.status ? ` (HTTP ${opts.status})` : ""}`, { cause: opts.cause });
     this.name = "SourceError";
@@ -82,6 +91,7 @@ export class SourceError extends Error {
     this.status = opts.status;
     this.retryAfter = opts.retryAfter;
     this.started = opts.started;
+    if (opts.attempts) this.attempts = opts.attempts;
   }
 }
 

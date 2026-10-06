@@ -29,7 +29,7 @@ import { PARKS_COPY } from "@/lib/parks/schema";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import { savedDfwFeatures, savedFeatures, type SavedAnswer } from "@/lib/sources/osm-snapshot";
 import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
-import { breakerName, overpassEndpoints } from "@/lib/sources/overpass";
+import { breakerName, everyMirrorTimedOut, overpassEndpoints } from "@/lib/sources/overpass";
 import { parkFeatures, ParkFeaturesSchema, parkIdOf, type ParkFeatures, type ParkRef } from "@/lib/sources/overpass-features";
 import { PASS_COPY } from "./schema";
 
@@ -232,11 +232,14 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps, plan?: Feat
     if (!(err instanceof SourceError)) throw err;
     log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
     if (err.code === "too_heavy") await heavyCache.set(key, true, { now: deps.now() });
-    if (err.code === "timeout") await slowCache.set(key, true, { now: deps.now() });
+    // Audit Q-3-01 option 3: the park is "slow" (negative-cached) only when every mirror tried timed out;
+    // one dead mirror is the mirror's problem (its breaker sends the next try to another one).
+    const parkSlow = everyMirrorTimedOut(err, overpassEndpoints(deps.env).length);
+    if (parkSlow) await slowCache.set(key, true, { now: deps.now() });
     const dfw = savedDfwFeatures(key);
     if (dfw) return fromSavedDfw(ref, key, dfw, deps, err.code);
     // Audit Q-3-01: a timeout was just negative-cached for SLOW_TTL_SEC, so say that wait, not "a minute".
-    if (err.code === "timeout") return slowFailure(SLOW_TTL_SEC);
+    if (parkSlow) return slowFailure(SLOW_TTL_SEC);
     return { ok: false, outcome: featuresFailure(err) };
   }
 }

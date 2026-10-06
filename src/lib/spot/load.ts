@@ -18,6 +18,7 @@ import { createCachePair, createJsonCache, type Store } from "@/lib/cache";
 import { log } from "@/lib/log";
 import type { FetchLike } from "@/lib/sources/common";
 import { SourceError } from "@/lib/sources/common";
+import { everyMirrorTimedOut, overpassEndpoints } from "@/lib/sources/overpass";
 import { savedDfwGeometry, savedGeometry } from "@/lib/sources/osm-snapshot";
 import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
@@ -137,7 +138,10 @@ export async function loadGeometry(ref: ParkRef, deps: GeometryDeps): Promise<Ge
     // Optional section: any failure (busy server, bad answer, store hiccup) means "no map today", never a failed pass.
     const code = err instanceof SourceError ? err.code : err instanceof Error ? err.name : "unknown";
     // R2-m2: a client timeout on this park's map query is negative-cached like "too heavy" (15 min).
-    if (err instanceof SourceError && (err.code === "too_heavy" || err.code === "timeout")) await heavyCache.set(key, true, { now: deps.now() });
+    // Audit Q-3-01 option 3: only when every mirror tried timed out (one dead mirror is not the park's fault).
+    if (err instanceof SourceError && (err.code === "too_heavy" || everyMirrorTimedOut(err, overpassEndpoints(deps.env).length))) {
+      await heavyCache.set(key, true, { now: deps.now() });
+    }
     log("spot_geometry_failed", { park: key, code }, err instanceof SourceError ? "warn" : "error");
     const message =
       err instanceof SourceError && err.code === "aborted"

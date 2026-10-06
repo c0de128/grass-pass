@@ -81,3 +81,7 @@ Eval r5 builder S total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10
 
 Builder T total (2026-10-06 CDT): **14 calls, about $0.0088** (prices from evals/score.ts; a timed-out call may still be billed by the provider). SerpApi: 0 searches.
 | 2026-10-06T20:43:12.393Z | Site copy rewrite by Gemma (Builder G, not an eval run): docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json | 19 | 39228 | 6075 | $0.0101 |
+| 2026-10-06T21:04:38.139Z | 2026-10-06-6.md | 112 | 258576 | 40317 | $0.0739 |
+| 2026-10-06T21:21:48.834Z | 2026-10-06-partial-1621.md | 4 | 12980 | 1751 | $0.0032 |
+
+Builder U (eval r6, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 11.5 s, 15.6 answer tokens/s) + full run `2026-10-06-6` 112 calls $0.0739 + 10-13 smoke `partial-1621` 4 calls $0.0032 = **117 calls, about $0.0772**. SerpApi: 0 searches.

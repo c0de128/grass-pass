@@ -76,3 +76,7 @@ Builder R2 total (2026-10-06 CDT): **12 calls, about $0.0084** (prices from eval
 | 2026-10-06T19:19Z (approx) | Eval r5 (builder S): 1 provider speed probe before the full run (not an eval run; 5.0 s, 173 answer tokens, about 34 tokens/s) | 1 | 30 | 173 | about $0.0001 |
 
 Eval r5 builder S total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10-06-5 $0.0578 (cap $0.15) + 10-13 smoke partial-1439 $0.0025 (cap $0.0032) = **about $0.0604** (102 calls). SerpApi: 0 searches (key blank, SERPAPI_DAILY_CAP=0; the eval replays recorded data).
+| 2026-10-06T20:20Z (approx) | Builder T (completeness): model fixtures re-recorded (recorded park data, live model): Connemara 3 calls (first + 2 refills), Celebration 1 | 4 | 9079 | 1401 | about $0.0023 |
+| 2026-10-06T20:43Z (approx) | Builder T (completeness): small live check, recorded park data + live Gemma, hard cap 10 calls: Cedar Ridge 10-13 (2), White Rock 10-13 (1), Arbor Hills 6-10 (1), Klyde Warren 6-10 (3: a first call timed out at 30 s, unknown tokens, counted as 0), Central Park 6-10 (2), Allen Station 6-10 (1) | 10 | 25796 | 3717 | about $0.0065 |
+
+Builder T total (2026-10-06 CDT): **14 calls, about $0.0088** (prices from evals/score.ts; a timed-out call may still be billed by the provider). SerpApi: 0 searches.

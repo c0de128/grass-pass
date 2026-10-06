@@ -7,7 +7,7 @@
 import { AGE_BAND_INFO, type AgeBand } from "@/lib/pass/schema";
 import { monthName } from "@/lib/pool/season";
 import type { PoolItem, Section } from "@/lib/pool/types";
-import { ASK_EXTRA, CLUE_MAX, LOOK_WHERE_MAX, MIN_PASS_ITEMS, QUOTE_WIRE_MAX, RIDDLE_MAX } from "./schema";
+import { ASK_EXTRA, CLUE_MAX, LOOK_WHERE_MAX, MIN_PASS_ITEMS, QUOTE_WIRE_MAX, REFILL_SPARES, RIDDLE_MAX } from "./schema";
 
 /** The Find This Spot target as the model sees it (S5): its id, kind label and code-written fact sheet. */
 export type PromptSpot = { id: string; label: string; sourceText: string };
@@ -158,11 +158,20 @@ export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed =
 }
 
 /**
+ * Spare items a refill asks for (completeness, run 2026-10-06-5): with one spare, 7 of 22 refills ended
+ * short (they lost 2 or more items again). A refill that must fill 2 or more items now asks for 2 spares.
+ */
+export function refillSparesFor(need: number): number {
+  return need >= 2 ? REFILL_SPARES : ASK_EXTRA;
+}
+
+/**
  * The second call (SPEC 6.3's one retry) as a refill (content tuning): only the pool items the first
  * answer did not get a valid clue for (so it can't repeat an id: Klyde Warren's answers used one
- * warbler 4 times), asking for the missing items plus one spare, inside what each section still needs
- * and may still take. A refill answer is a few items (a few seconds), not a whole pass. The openers
- * already used go last. Null when nothing is left to ask for.
+ * warbler 4 times), asking for the missing items plus spares (`refillSparesFor`), inside what each
+ * section still needs and may still take. A refill answer is a few items (a few seconds), not a whole
+ * pass. The openers already used go last. Null when nothing is left to ask for. Also used for the
+ * second refill (build-pass.ts), with the kept items of both earlier calls.
  */
 export function refillPlan(
   plan: RequestPlan,
@@ -200,12 +209,14 @@ export function refillPlan(
   if (room === 0) return null;
   const n = Math.min(need, room);
   const mix: Mix = { n, min, max, hardMin: Math.min(n, Math.max(0, plan.mix.hardMin - kept.filter((k) => k.difficulty === "hard").length)) };
-  const ask = askMix(mix, left, ASK_EXTRA);
+  const ask = askMix(mix, left, refillSparesFor(need));
   const usedOpeners = new Set(kept.map((k) => openingWord(k.clue)));
   const fresh = plan.openers.filter((o) => !usedOpeners.has(o.toLowerCase()));
   const openers = [...fresh, ...plan.openers.filter((o) => usedOpeners.has(o.toLowerCase()))].slice(0, Math.max(ask.n, 1));
   return { pool, mix, ask, lowData: plan.lowData, openers, validate: { hasMap: plan.validate.hasMap, ask, lowData: plan.lowData } };
 }
+
+const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
 
 /** The first word of a clue, lower case ("Peek around the ..." -> "peek"). */
 export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[0] ?? "").toLowerCase();
@@ -229,10 +240,23 @@ export const OPENER_BANK = [
   "Spot", "Hunt", "Watch", "Check", "Notice", "Point", "Peek", "Who", "What", "Which", "Where", "Somewhere",
 ] as const;
 
+/**
+ * Completeness + M10 (run 2026-10-06-5): 21 of the 36 clues that repeated across parks repeated their
+ * first 5 words, frames Gemma built on the opener bank's "Somewhere" and "Where": "Somewhere you will see
+ * a" (6 parks), "Where can you hear water" (4), "Somewhere you can hear water" (3), "Where can you find a"
+ * (3), "Hunt for a tree with" (3). The prompt names them as starts to avoid (`STOCK_FRAMES`), and a clue
+ * that starts with one is a stock opening (a preference, below).
+ */
+export const STOCK_FRAMES = [
+  "Somewhere you will see", "Somewhere you can see", "Somewhere you can hear", "Somewhere you will find", "Somewhere you can find",
+  "Somewhere there is", "Where can you hear", "Where can you find", "Where can you see", "Where can you spot", "Hunt for a tree",
+] as const;
+
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
 export const STOCK_OPENINGS = [
   "can you find", "can you spot", "can you see", "can you hear", "find a", "find an", "find the", "look for", "i dare you",
   "do you see", "try to find", "try to spot", "search for", "see if you",
+  ...STOCK_FRAMES.map((f) => f.toLowerCase()),
 ] as const;
 
 /** `k` different first words for a park, picked by a hash of its name (stable). */
@@ -292,6 +316,11 @@ export type RefillNotes = {
   copied: readonly string[];
   /** Some Wild Find clues were dropped as generic (only "has fruit or seeds", or nothing from its source). */
   generic: boolean;
+  /**
+   * Completeness (run 2026-10-06-5): first words of the clues already on the pass. A refill clue that
+   * starts with one is dropped (`repeats_opening`), which cost 7 refill items in that run.
+   */
+  taken?: readonly string[];
 };
 
 /** The refill's extra rules: the copied phrases, quoted, and the generic-clue reminder (at most 6 phrases). */
@@ -301,6 +330,10 @@ export function refillRules(notes: RefillNotes): string[] {
     out.push(`- The first try copied these words from a SOURCE. Never use them in a clue: ${notes.copied.slice(0, 6).map((c) => `"${c}"`).join(", ")}.`);
   }
   if (notes.generic) out.push("- Some first-try clues were generic. Each Wild Find clue needs a colour, shape, size or part written in its SOURCE; if its SOURCE has none, choose another item.");
+  const taken = [...new Set((notes.taken ?? []).filter(Boolean))];
+  if (taken.length > 0) {
+    out.push(`- Clues already on the pass start with: ${taken.slice(0, 10).map((w) => `"${cap(w)}"`).join(", ")}. Never start a clue with any of these words.`);
+  }
   return out;
 }
 
@@ -407,7 +440,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
     ...(ctx?.openers && ctx.openers.length > 0
       ? [
-          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see".`,
+          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see", and never with these worn-out starts: ${STOCK_FRAMES.map((f) => `"${f}"`).join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
         ]
       : ["- Start each clue with a different first word."]),
     // Audit R3-C1: filler openers and sound clues for silent things.
@@ -417,6 +450,10 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
     "- Write every clue to the child. At most ONE clue on the pass may be a riddle in which the thing talks as itself (I, me, my).",
     '- A count clue is a task ("Count the ..."), never a "Which ...?" or "What ...?" question with the number in it, and never a question followed by "Count ...".',
+    // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." on 4 parks.
+    '- Put a count inside the clue\'s own sentence, with its number and what to count. Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".',
+    // Quick win (run 2026-10-06-5): "Watch for a plant with white blooms. I am poisonous!" switched voice mid-clue.
+    "- A clue that talks to the child never switches to the thing talking (I, me, my) in a later sentence.",
     ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.

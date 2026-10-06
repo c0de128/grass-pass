@@ -47,10 +47,16 @@ export const MAX_PASS_ITEMS = 8;
  */
 export const ASK_EXTRA = 1;
 /**
- * The most spares any request asks for (the request schema's size check). Content tuning (2026-10-06):
- * only low-data pools get ASK_EXTRA spares now; other pools ask for exactly n (prompt.ts `sparesFor`).
+ * Spares a refill asks for when it must fill 2 or more items (completeness, run 2026-10-06-5: with one
+ * spare, 7 of 22 refills ended short). prompt.ts `refillSparesFor`.
  */
-export const ASK_EXTRA_MAX = ASK_EXTRA;
+export const REFILL_SPARES = 2;
+/**
+ * The most spares any request asks for (the request schema's size check). Content tuning (2026-10-06):
+ * only low-data pools get ASK_EXTRA spares on the first call; other pools ask for exactly n (prompt.ts
+ * `sparesFor`). A refill may ask for REFILL_SPARES.
+ */
+export const ASK_EXTRA_MAX = Math.max(ASK_EXTRA, REFILL_SPARES);
 
 export const PassItemDraft = z.object({
   itemId: z.string().min(1).max(64), // must exist in the pool

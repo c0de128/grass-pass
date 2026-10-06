@@ -17,8 +17,17 @@ export const PARKS = {
 
 type Rec = { _recording: Record<string, unknown> & { status?: number; recordedAtMs?: number }; body: unknown };
 type ModelRequest = { messages: { role: string; content: string }[]; response_format: { json_schema: { schema: unknown } } };
-/** `refill` (content tuning, Connemara): the real second call, the refill of what the first answer did not fill. */
-type ModelRec = { _recording: { recordedAtMs: number }; request: ModelRequest; response: unknown; refill?: { request: ModelRequest; response: unknown } };
+/**
+ * `refill` (content tuning, Connemara): the real second call, the refill of what the first answer did not fill.
+ * `refill2` (completeness, 2026-10-06): the real third call, a second refill when the first one still left the pass short.
+ */
+type ModelRec = {
+  _recording: { recordedAtMs: number };
+  request: ModelRequest;
+  response: unknown;
+  refill?: { request: ModelRequest; response: unknown };
+  refill2?: { request: ModelRequest; response: unknown };
+};
 
 /** The refill call's system prompt says so (prompt.ts refillRules). */
 export const REFILL_MARK = "- This is a second try:";
@@ -68,8 +77,14 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
       for (const p of Object.values(PARKS)) {
         if (!user.includes(`kind="park name">${p.name}</source>`)) continue;
         const m = modelRec(p.slug);
-        // A refill gets the recorded refill answer when there is one (else the first answer, as before).
-        return json(isRefill && m.refill ? m.refill.response : m.response);
+        // A refill gets the recorded refill whose request is exactly the one sent (the second refill differs
+        // from the first: other ids, the taken first words); else the first recorded refill, else the first answer.
+        if (isRefill) {
+          const same = [m.refill, m.refill2].find((r) => r && JSON.stringify(r.request.messages) === JSON.stringify(sent.messages));
+          if (same) return json(same.response);
+          if (m.refill) return json(m.refill.response);
+        }
+        return json(m.response);
       }
       throw new Error("no model recording for this prompt");
     }

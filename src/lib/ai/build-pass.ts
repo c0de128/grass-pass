@@ -56,9 +56,9 @@ import {
 } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
 import type { SpotTarget } from "@/lib/spot/pick-target";
-import { buildMessages, mixFor, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
+import { buildMessages, mixFor, openingWord, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
+import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -73,8 +73,31 @@ export const TAXA_TTL_SEC = 7 * DAY;
 export const PASS_DEADLINE_MS = 85_000;
 /** Don't start a model call with less than this left (a normal answer is 7-10 s). */
 export const MODEL_MIN_LEFT_MS = 15_000;
-/** Don't start the one retry with less than this left. */
+/** Don't start a retry or a refill with less than this left. */
 export const RETRY_MIN_LEFT_MS = 20_000;
+/**
+ * Completeness (run 2026-10-06-5): at most this many model calls per pass. The first call; then either
+ * one whole-request retry after a failed first call (timeout, provider error, bad output) or a refill;
+ * and one more refill when the pass is still short. Only a short or failed answer ever makes another
+ * call, so a typical pass stays at one call (M8).
+ */
+export const MAX_MODEL_CALLS = 3;
+/**
+ * A whole-request retry (after a failed first call) needs about a first call's time: run -5's first-call
+ * p95 was 24 s. With less left it would only time out again (a Llama call that took its full 60 s).
+ */
+export const WHOLE_RETRY_MIN_LEFT_MS = 25_000;
+/**
+ * A refill answer is a few items (run -5: p50 6.3 s, slowest answered 14.6 s), so it gets a shorter
+ * timeout than a whole pass: a hung refill (White Rock run 3 waited the full 30 s) leaves time for the
+ * second refill.
+ */
+export const REFILL_TIMEOUT_MS = 20_000;
+
+/** Failed first calls worth one whole-request retry inside the pass deadline (never quota, rate limit or a missing key). */
+const RETRYABLE_FIRST: ReadonlySet<string> = new Set(["MODEL_TIMEOUT", "MODEL_PROVIDER", "MODEL_BAD_OUTPUT", "MODEL_NETWORK"]);
+/** Failed refills after which another refill may still be tried (an answer that never came). */
+const RETRYABLE_REFILL: ReadonlySet<string> = new Set(["MODEL_TIMEOUT", "MODEL_PROVIDER", "MODEL_BAD_OUTPUT", "MODEL_NETWORK"]);
 
 const speciesCache = createJsonCache({ name: "inat-species", schema: SpeciesListSchema, ttlSec: SPECIES_TTL_SEC, maxEntries: 2_000 });
 const taxaCache = createJsonCache({ name: "inat-taxon", schema: TaxonSummarySchema, ttlSec: TAXA_TTL_SEC, maxEntries: 20_000 });
@@ -110,6 +133,8 @@ export type BuildDeps = {
    * `excludedRefs`); they are left out of the pool, so the model never sees them.
    */
   exclude?: ReadonlySet<string>;
+  /** Eval replay tooling only (evals/replay.ts): every item the checks drop, with its reason. */
+  validateTrace?: ValidateOptions["trace"];
 };
 
 /** A pool without the items visitors' reports rule out (src/lib/reports). */
@@ -414,9 +439,14 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   /** The last answer's own check result (the refill is told what went wrong in it). */
   let lastCheck: ValidationResult | null = null;
 
-  for (let call = 1; call <= 2; call++) {
+  /** Whole-request retries used (at most one, after a failed first call). */
+  let wholeRetries = 0;
+  /** Ids whose clue failed a content check in ANY earlier call (a second refill skips them too). */
+  const failedSoFar = new Set<string>();
+  for (let call = 1; call <= MAX_MODEL_CALLS; call++) {
     const remaining = left();
-    if (remaining < (call === 1 ? MODEL_MIN_LEFT_MS : RETRY_MIN_LEFT_MS)) {
+    const isRefill: boolean = call > 1 && best !== null && best.items.length > 0;
+    if (remaining < (call === 1 ? MODEL_MIN_LEFT_MS : isRefill ? RETRY_MIN_LEFT_MS : WHOLE_RETRY_MIN_LEFT_MS)) {
       if (call === 1) {
         return {
           kind: "error",
@@ -427,35 +457,46 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       }
       break;
     }
-    // Content tuning: the second call refills only what the first answer could not fill (unused ids only).
-    // When the first answer kept nothing (or failed), the retry is the whole request again (SPEC 6.3).
-    const refill: boolean = call === 2 && best !== null && best.items.length > 0;
-    const callPlan = refill && best ? refillPlan(plan, best.items, lastCheck?.failedIds ?? []) : plan;
+    // Content tuning: a later call refills only what the earlier answers could not fill (unused ids only).
+    // When no answer kept anything yet (or the first call failed), it is the whole request again (SPEC 6.3).
+    const refill: boolean = isRefill;
+    if (call > 1 && !refill) {
+      if (wholeRetries >= 1) break;
+      wholeRetries++;
+    }
+    const callPlan = refill && best ? refillPlan(plan, best.items, [...failedSoFar]) : plan;
     if (!callPlan) break;
     const callSpot = target && riddle === null ? promptSpot : null;
     const notes: RefillNotes | undefined =
-      refill && lastCheck ? { copied: lastCheck.copied ?? [], generic: (lastCheck.drops.generic_clue ?? 0) > 0 } : undefined;
+      refill && best
+        ? {
+            copied: lastCheck?.copied ?? [],
+            generic: (lastCheck?.drops.generic_clue ?? 0) > 0,
+            taken: best.items.map((k) => openingWord(k.clue)),
+          }
+        : undefined;
     const { messages, jsonSchema } = requestFor(callPlan, callSpot, notes);
     const ticket = await deps.reserveAiCall();
     if (!ticket) {
       if (call === 1) return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 }, parkData };
       break;
     }
-    if (call === 2) deps.emit("retry", stepText("retry", deps.env));
+    if (call > 1) deps.emit("retry", stepText("retry", deps.env));
     else deps.emit("clues", stepText("clues", deps.env));
     // The paid call starts now: it counts, and it finishes (and is cached) even if every client leaves.
     ticket.commit();
     deps.pin();
+    const timeoutMs = Math.min(modelTimeoutMs(deps.env), refill ? REFILL_TIMEOUT_MS : Number.POSITIVE_INFINITY, remaining - 3_000);
     try {
       const r = await callModel(
         { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope, maxTokens: passMaxTokens(modelId) },
-        { env: deps.env, fetch: deps.modelFetch, timeoutMs: Math.min(modelTimeoutMs(deps.env), remaining - 3_000), logger: deps.modelLogger },
+        { env: deps.env, fetch: deps.modelFetch, timeoutMs, logger: deps.modelLogger },
       );
       attempts += r.attempts;
       modelLatency += r.latencyMs;
       answered = r.modelLabel;
       deps.emit("check", stepText("check", deps.env));
-      const v = validateDraft(r.data, callPlan.pool, callPlan.mix, { ...callPlan.validate, hasMap: target !== null, prior: refill && best ? best.items : [] });
+      const v = validateDraft(r.data, callPlan.pool, callPlan.mix, { ...callPlan.validate, hasMap: target !== null, prior: refill && best ? best.items : [], ...(deps.validateTrace ? { trace: deps.validateTrace } : {}) });
       if (callSpot && target && riddle === null) {
         const sv = validateSpot(r.data.spot, target);
         if (sv.ok) riddle = sv.riddle;
@@ -478,19 +519,24 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         quotesRepaired: v.quotesRepaired,
         styleKept: v.styleKept,
         openersTrimmed: v.openersTrimmed,
+        trailersTrimmed: v.trailersTrimmed,
         questionsFixed: v.questionsFixed,
         hardMin: callPlan.mix.hardMin,
       });
       lastCheck = v;
+      for (const id of v.failedIds ?? []) failedSoFar.add(id);
       best = refill && best ? withRefill(best, v, mix) : better(best, v, mix);
       if (best && best.items.length >= retryThreshold(mix.n)) break;
     } catch (err) {
       if (!(err instanceof ModelError)) throw err;
       attempts += 1;
       lastError = err;
-      // Only bad/under-filled output gets this second call (SPEC §6.3). Network and 5xx were already
-      // retried once inside callModel; a timeout is never retried automatically.
-      if (err.code !== "MODEL_BAD_OUTPUT") break;
+      log("pass_call_failed", { call, refill, code: err.code, upstreamStatus: err.upstreamStatus ?? null, timeoutMs });
+      // Completeness (run 2026-10-06-5, Cedar Ridge 10-13: the first call timed out at 30 s and the pass was
+      // lost): a failed first call gets ONE whole-request retry while the deadline allows it; a failed refill
+      // may be followed by one more refill. Quota, rate limits and a missing key are never retried.
+      // (Network errors and 5xx were already retried once inside callModel.)
+      if (!(refill ? RETRYABLE_REFILL : RETRYABLE_FIRST).has(err.code)) break;
     }
   }
 

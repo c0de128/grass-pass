@@ -67,10 +67,10 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     vi.stubEnv("PASS_PER_IP_PER_DAY", "1");
     const now = Date.now();
     await warmExamples({ examples: EXAMPLES, now: () => now });
-    // One pass per example: Celebration is one model call; Connemara is its first call + the refill (content tuning).
-    expect(modelCalls()).toBe(3);
+    // One pass per example: Celebration is one model call; Connemara is its first call + two refills (completeness recording).
+    expect(modelCalls()).toBe(4);
     const statuses = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
-    expect(modelCalls()).toBe(3); // the page never calls upstream for a fresh example
+    expect(modelCalls()).toBe(4); // the page never calls upstream for a fresh example
     for (const s of statuses) {
       expect(s.pass).not.toBeNull();
       expect(s.fresh).toBe(true);
@@ -83,7 +83,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     }
     // A second warm-up the same day makes nothing new.
     await warmExamples({ examples: EXAMPLES, now: () => now + 2000 });
-    expect(modelCalls()).toBe(3);
+    expect(modelCalls()).toBe(4);
   });
 
   it("next day: serves yesterday's pass with its real time and starts ONE background refresh per example", async () => {
@@ -103,7 +103,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
       });
     }
     await prewarmIdle();
-    expect(modelCalls()).toBe(6); // 3 on day 1 + exactly 1 refresh per example on day 2 (Connemara's is 2 calls)
+    expect(modelCalls()).toBe(8); // 4 on day 1 + exactly 1 refresh per example on day 2 (Connemara's is 3 calls)
     const after = await exampleStatuses({ examples: EXAMPLES, now: () => day2 + 1000 });
     for (const s of after) {
       expect(s.fresh).toBe(true);

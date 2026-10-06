@@ -275,7 +275,11 @@ export function wildPool(
         // Audit R3: Wikipedia's bolded other names ("mossycup oak" for bur oak) give the answer away too.
         ...(sum.names ?? []).flatMap((n) => distinctiveWords(n)),
       ]),
-    ];
+    ].filter((w) => !NAME_TRAIT_WORDS.has(w));
+    // Run 2026-10-06-5 drop review: GENERIC_WORDS (types.ts) leaves out "white" or "red" but not "scarlet",
+    // "gold" or "banded", so "a plant with scarlet flowers" (Scarlet spiderling) was a hard name leak while
+    // "white flowers" (White Morning-glory) is the PM 1B preference. Every NAME_TRAIT_WORDS word is now the
+    // preference (it moves to nameTraits below); the whole name ("scarlet spiderling") stays a hard leak.
     // Audit R3 + PM decision 1B: a colour, pattern or size word of its own names ("white" for White
     // Morning-glory) is a style preference, not a hard leak (validate.ts `name_trait`): as a hard leak it cut
     // the complete first answers of run 2026-10-06-3 on low-data parks.

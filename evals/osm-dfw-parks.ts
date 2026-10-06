@@ -218,6 +218,19 @@ export async function recordDfwParks(parts: Set<"features" | "geometry">, opts: 
           return !rec || (!rec[kind] && !hasNote(rec, kind));
         })
         .slice(0, opts.limit ?? Infinity);
+      // Most useful first: OSM_SNAPSHOT_NEAR="lat,lng" records the nearest parks first (a partial run then
+      // covers the busiest area); OSM_SNAPSHOT_SHARD="i/n" lets n recorders on different mirrors split it.
+      const near = (process.env.OSM_SNAPSHOT_NEAR ?? "").split(",").map(Number);
+      if (near.length === 2 && near.every(Number.isFinite)) {
+        const at = new Map(index.parks.map((r) => [r[0], (r[3] - near[0]) ** 2 + ((r[4] - near[1]) * Math.cos((near[0] * Math.PI) / 180)) ** 2]));
+        todo.sort((a, b) => (at.get(a) ?? 0) - (at.get(b) ?? 0));
+      }
+      const shard = /^(\d+)\/(\d+)$/.exec(process.env.OSM_SNAPSHOT_SHARD ?? "");
+      if (shard) {
+        const [i, n] = [Number(shard[1]), Number(shard[2])];
+        const mine = todo.filter((_, k) => k % n === i);
+        todo.splice(0, todo.length, ...mine);
+      }
       // A second recorder (another mirror first) can work from the other end: OSM_SNAPSHOT_REVERSE=1.
       if (process.env.OSM_SNAPSHOT_REVERSE === "1") todo.reverse();
       note(`${new Date().toISOString()} ${kind} ${type}: ${todo.length} parks to record`);

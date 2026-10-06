@@ -843,11 +843,15 @@ export const BLOCKS: readonly CopyBlock[] = [
     id: "how.open.2.body",
     page: HOW,
     file: "src/app/how-it-works/page.tsx",
-    role: "card body, 2 short sentences; must say it is not measured yet",
+    role: "card body, 2 short sentences; must give the measured self-host result",
     maxChars: 110,
     text: "Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.",
-    facts: ["Any OpenAI-compatible server works, for example Ollama on your own computer.", "A self-hosted run has NOT been measured yet."],
-    keep: ["OpenAI-compatible", "Ollama", "Not measured yet"],
+    // Fact fix after the self-host measurement (Builder W, 2026-10-06, evals/results/2026-10-06-selfhost-notes.md).
+    facts: [
+      "Any OpenAI-compatible server works, for example Ollama on your own computer.",
+      "Measured: Gemma 4 E2B on a laptop CPU costs $0 but takes 1-3 minutes a pass, too slow for the app's 70 s limit.",
+    ],
+    keep: ["OpenAI-compatible", "Ollama", "$0"],
   },
   {
     id: "how.open.3.title",
@@ -1045,11 +1049,12 @@ export const BLOCKS: readonly CopyBlock[] = [
     id: "about.whyopen.3",
     page: ABOUT,
     file: "src/lib/about/content.ts",
-    role: "check-mark bullet, 1 sentence; must say not measured yet",
+    role: "check-mark bullet, 1 sentence; must give the measured self-host result",
     maxChars: 70,
     text: "Self-hosting is possible, but not measured yet.",
-    facts: ["Self-hosting is possible; a self-hosted run has NOT been measured yet."],
-    keep: ["not measured yet"],
+    // Fact fix after the self-host measurement (Builder W, 2026-10-06, evals/results/2026-10-06-selfhost-notes.md).
+    facts: ["Measured: self-hosted on a laptop CPU, a pass costs $0 but is slow (too slow for the app's 70 s limit)."],
+    keep: ["$0", "slow"],
   },
   {
     id: "about.data.title",

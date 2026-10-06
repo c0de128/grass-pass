@@ -537,7 +537,7 @@ export default function HowItWorksPage() {
             {
               icon: Hammer,
               title: "It can be self-hosted.",
-              body: "Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.",
+              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 1-3 minutes a pass.",
             },
             {
               icon: ShieldCheck,

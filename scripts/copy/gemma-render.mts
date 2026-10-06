@@ -76,7 +76,11 @@ test("render docs/COPY-BY-GEMMA.md (pnpm copy:render)", () => {
   );
   out.push("");
   out.push(
-    `**Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (\`MAX_MODEL_CALLS = 3\`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old \"one retry\" facts. ${review.decisions.filter((d) => d.factFixAfterRun).length} blocks were fixed by hand for that (marked \"Fact fix after the rebase\" below): two accepted Gemma drafts became \"edited\", and two kept old lines were corrected. Their FACTS sheets below show the new rule.`,
+    `**Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (\`MAX_MODEL_CALLS = 3\`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old \"one retry\" facts. ${review.decisions.filter((d) => d.factFixAfterRun && d.reason.includes("rebase")).length} blocks were fixed by hand for that (marked \"Fact fix after the rebase\" below): two accepted Gemma drafts became \"edited\", and two kept old lines were corrected. Their FACTS sheets below show the new rule.`,
+  );
+  out.push("");
+  out.push(
+    `**Fact fixes after the self-host measurement (not Gemma, 2026-10-06):** a self-hosted Gemma 4 E2B run on a laptop CPU was measured (\`evals/results/2026-10-06-selfhost-notes.md\`), so \"not measured yet\" became untrue. ${review.decisions.filter((d) => d.factFixAfterRun && d.reason.includes("self-host measurement")).length} blocks were fixed by hand (marked \"Fact fix after the self-host measurement\" below): one accepted Gemma draft became \"edited\", and one kept line was corrected. Their FACTS sheets below show the measured result.`,
   );
   out.push("");
   out.push("The code check catches new facts, lost facts and hype. It cannot catch a sentence that is true word by word but wrong as a whole: those were caught in step 4 (look for **UNTRUE** below). It also had one false positive: \"No one\" counted as the number word \"one\".");

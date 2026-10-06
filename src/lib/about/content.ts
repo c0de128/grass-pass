@@ -6,10 +6,10 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
-import { MODEL_TIMEOUT_MS } from "@/lib/model";
+import { MAX_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS } from "@/lib/model";
 import { MILKWEED_RADIUS_KM, MONARCH_RADIUS_KM, OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { MIN_MENTIONS } from "@/lib/pool/lucky";
 import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
@@ -27,14 +27,14 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1397, files: 50, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1409, files: 52, day: "Oct 6, 2026" } as const;
 
 /**
  * The Gemma copy rewrite (docs/COPY-BY-GEMMA.md, 2026-10-06): blocks sent, drafts shipped (accepted + edited),
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 12 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 13 } as const;
 
 export type StatTile = {
   value: string;
@@ -70,7 +70,7 @@ export function aboutStatTiles(): StatTile[] {
 export const WHY_OPEN_POINTS: readonly string[] = [
   "Anyone can download, run and build on the weights.",
   "Our safety rules are in our code, not a vendor's.",
-  "Self-hosting is possible, but not measured yet.",
+  "Self-hosted on a laptop CPU: $0, but slow.",
 ];
 
 /** The four data sources: what they give, and the licence or rule we follow. */
@@ -265,10 +265,16 @@ export function aboutLimits(): Limit[] {
       detail: "3 of 17 North Texas test parks had no research-grade sightings in 14 days; their passes say so.",
     },
     {
-      title: "Self-hosting is not measured.",
-      detail: "The app talks to any OpenAI-compatible server, such as Ollama. We have not measured a self-hosted run for this app yet.",
+      title: "Self-hosting works, but slowly on a laptop.",
+      detail: selfHostDetail(),
     },
   ];
+}
+
+/** The measured self-host result in one paragraph (judge G1; numbers from SELFHOST, checked against the JSON by tests). */
+export function selfHostDetail(): string {
+  const s = SELFHOST;
+  return `We ran the small Gemma 4 E2B (${s.model}, ${s.licence}) with Ollama on ${s.hardware}, on ${s.parks} test parks, for $0. With the app's own ${MAX_MODEL_TIMEOUT_MS / 1000} s limit, ${s.app.lost} of ${s.parks} passes ran out of time and the other ${s.app.passes} came out short. Given more time (an eval-only setting), ${s.patient.complete} of ${s.parks} were complete, ${pct(s.patient.groundedPct)} of clues quoted their source, reading grade ${s.patient.fkGrade.toFixed(1)}, ${s.patient.blockedPrinted} risky species printed, at ${secs(s.patient.p50s)} a typical call (hosted Gemma 4 31B: ${secs(evalColumn("gemma-4-31B-it").p50s)}). The model used about ${s.ramGb} GB of RAM.`;
 }
 
 /**
@@ -305,8 +311,12 @@ export function howLimits(): Limit[] {
       detail: "Mostly US evenings: search falls back to a saved Dallas-area list.",
     },
     {
-      title: "Find This Spot is not in the eval, and self-hosting is not measured.",
+      title: "Find This Spot is not in the eval.",
       detail: "No map data was recorded for the test parks.",
+    },
+    {
+      title: "Self-hosting on a laptop CPU is slow.",
+      detail: selfHostDetail(),
     },
     {
       title: "A new pass needs a grown-up to sign in.",

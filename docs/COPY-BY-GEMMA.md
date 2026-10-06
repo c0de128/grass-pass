@@ -7,8 +7,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 - **Model:** `gemma-4-31B-it` on DigitalOcean serverless inference, through the app's own model client (`src/lib/model.ts`, strict JSON schema output).
 - **Calls:** 19 (batches of 10), 39,228 prompt + 6,075 completion tokens, **$0.0101** at DigitalOcean list prices (logged in `evals/results/SPEND.md`). Failures: none.
 - **Blocks sent:** 184.
-  - **Accepted** as Gemma wrote them: 78
-  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): 12
+  - **Accepted** as Gemma wrote them: 77
+  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): 13
   - **Rejected** (old text kept): 76 (1 by the code check, 75 by people)
   - **Unchanged** (Gemma returned the old text): 18
 - **Reviewed by:** Builder G (Claude Code), 2026-10-06. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
@@ -32,6 +32,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 **Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) is 17. The sheet below is corrected. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.
 
 **Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (`MAX_MODEL_CALLS = 3`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old "one retry" facts. 4 blocks were fixed by hand for that (marked "Fact fix after the rebase" below): two accepted Gemma drafts became "edited", and two kept old lines were corrected. Their FACTS sheets below show the new rule.
+
+**Fact fixes after the self-host measurement (not Gemma, 2026-10-06):** a self-hosted Gemma 4 E2B run on a laptop CPU was measured (`evals/results/2026-10-06-selfhost-notes.md`), so "not measured yet" became untrue. 2 blocks were fixed by hand (marked "Fact fix after the self-host measurement" below): one accepted Gemma draft became "edited", and one kept line was corrected. Their FACTS sheets below show the measured result.
 
 The code check catches new facts, lost facts and hype. It cannot catch a sentence that is true word by word but wrong as a whole: those were caught in step 4 (look for **UNTRUE** below). It also had one false positive: "No one" counted as the number word "one".
 
@@ -999,16 +1001,16 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Why:** 'Self-hosting works' claims something we have not measured.
 - **FACTS:** The app can talk to a self-hosted model server.
 
-#### `how.open.2.body`: accepted
+#### `how.open.2.body`: edited
 
-`src/app/how-it-works/page.tsx:540` · card body, 2 short sentences; must say it is not measured yet · max 110 characters
+`src/app/how-it-works/page.tsx:540` · card body, 2 short sentences; must give the measured self-host result · max 110 characters
 
 - **Old:** Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.
 - **Gemma:** Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.
 - **Code check:** passed
-- **Shipped:** Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.
-- **Why:** True, on tone, at least as clear as before.
-- **FACTS:** Any OpenAI-compatible server works, for example Ollama on your own computer. / A self-hosted run has NOT been measured yet. · KEEP: "OpenAI-compatible", "Ollama", "Not measured yet"
+- **Shipped:** Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 1-3 minutes a pass. _(Gemma draft, edited)_
+- **Why:** True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became "edited".
+- **FACTS:** Any OpenAI-compatible server works, for example Ollama on your own computer. / Measured: Gemma 4 E2B on a laptop CPU costs $0 but takes 1-3 minutes a pass, too slow for the app's 70 s limit. · KEEP: "OpenAI-compatible", "Ollama", "$0"
 
 #### `how.open.3.title`: rejected
 
@@ -1124,7 +1126,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.meta.title`: rejected
 
-`src/app/about/page.tsx:49` · browser tab / share title, 12 words or fewer, starts with "About Grass Pass" · max 70 characters
+`src/app/about/page.tsx:50` · browser tab / share title, 12 words or fewer, starts with "About Grass Pass" · max 70 characters
 
 - **Old:** About Grass Pass: an open model, a real park and a pencil
 - **Gemma:** About Grass Pass: an open AI model, a park and a pencil
@@ -1135,7 +1137,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.meta.description`: rejected
 
-`src/app/about/page.tsx:51` · meta description, 2-3 sentences · max 280 characters
+`src/app/about/page.tsx:52` · meta description, 2-3 sentences · max 280 characters
 
 - **Old:** Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). Code checks every clue. What we measured (misses included), what leaves your device, and every credit.
 - **Gemma:** Gemma 4, an open-weight model, writes each pass using OpenStreetMap, iNaturalist, Wikipedia and SerpApi. Code checks every clue against its source. We show what we measured, what leaves your device, and every credit.
@@ -1146,7 +1148,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.h1`: rejected
 
-`src/app/about/page.tsx:82` · page headline, 9 words or fewer, ends with a full stop · max 50 characters
+`src/app/about/page.tsx:83` · page headline, 9 words or fewer, ends with a full stop · max 50 characters
 
 - **Old:** An open model, a real park and a pencil.
 - **Gemma:** An open AI model, a park and a pencil.
@@ -1157,7 +1159,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.lead`: rejected
 
-`src/app/about/page.tsx:85` · lead paragraph, 3-4 short sentences · max 220 characters
+`src/app/about/page.tsx:86` · lead paragraph, 3-4 short sentences · max 220 characters
 
 - **Old:** A one-page treasure hunt for a real park. Gemma 4, an open-weight model, writes clues from its map and recent wildlife sightings. Code checks each one. The finding happens on paper.
 - **Gemma:** A one-page hunt for a real park. Gemma 4 writes clues from maps and wildlife sightings. Code checks every clue for accuracy. The finding happens on paper.
@@ -1168,7 +1170,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.howlink`: accepted
 
-`src/app/about/page.tsx:104` · primary button to /how-it-works, 8 words or fewer · max 45 characters
+`src/app/about/page.tsx:105` · primary button to /how-it-works, 8 words or fewer · max 45 characters
 
 - **Old:** See how a pass is made, step by step
 - **Gemma:** See how a pass is made
@@ -1179,7 +1181,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.measured.title`: unchanged
 
-`src/app/about/page.tsx:121` · section headline, 5 words or fewer · max 30 characters
+`src/app/about/page.tsx:122` · section headline, 5 words or fewer · max 30 characters
 
 - **Old:** Measured, not promised.
 - **Gemma:** Measured, not promised.
@@ -1190,7 +1192,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.inside.title`: rejected
 
-`src/app/about/page.tsx:172` · section headline, 7 words or fewer · max 45 characters
+`src/app/about/page.tsx:173` · section headline, 7 words or fewer · max 45 characters
 
 - **Old:** Open model. Real data. Rules in code.
 - **Gemma:** Open model. Real data. Coded rules.
@@ -1201,7 +1203,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.model.title`: unchanged
 
-`src/app/about/page.tsx:183` · card title, 6 words or fewer · max 35 characters
+`src/app/about/page.tsx:184` · card title, 6 words or fewer · max 35 characters
 
 - **Old:** Gemma 4 writes the clues
 - **Gemma:** Gemma 4 writes the clues
@@ -1234,18 +1236,18 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.3`: unchanged
 
-`src/lib/about/content.ts:73` · check-mark bullet, 1 sentence; must say not measured yet · max 70 characters
+`src/lib/about/content.ts:73` · check-mark bullet, 1 sentence; must give the measured self-host result · max 70 characters
 
 - **Old:** Self-hosting is possible, but not measured yet.
 - **Gemma:** Self-hosting is possible, but not measured yet.
 - **Code check:** passed
-- **Shipped:** Self-hosting is possible, but not measured yet.
-- **Why:** Gemma returned the current text unchanged.
-- **FACTS:** Self-hosting is possible; a self-hosted run has NOT been measured yet. · KEEP: "not measured yet"
+- **Shipped:** Self-hosted on a laptop CPU: $0, but slow.
+- **Why:** Gemma returned the current text unchanged. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true.
+- **FACTS:** Measured: self-hosted on a laptop CPU, a pass costs $0 but is slow (too slow for the app's 70 s limit). · KEEP: "$0", "slow"
 
 #### `about.data.title`: rejected
 
-`src/app/about/page.tsx:220` · card title, 5 words or fewer · max 30 characters
+`src/app/about/page.tsx:221` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** Four real sources, dated
 - **Gemma:** Four dated data sources
@@ -1300,7 +1302,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.nodata`: accepted
 
-`src/app/about/page.tsx:236` · small note, 2 short sentences; must keep the quoted words · max 80 characters
+`src/app/about/page.tsx:237` · small note, 2 short sentences; must keep the quoted words · max 80 characters
 
 - **Old:** No data? The pass says "No data available" and why. Never padded.
 - **Gemma:** No data? We say "No data available" and why. We never pad the list.
@@ -1311,7 +1313,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.safety.title`: rejected
 
-`src/app/about/page.tsx:244` · card title, 4 words or fewer · max 25 characters
+`src/app/about/page.tsx:245` · card title, 4 words or fewer · max 25 characters
 
 - **Old:** Safety by code
 - **Gemma:** Safety via code
@@ -1333,7 +1335,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.safety.2`: accepted
 
-`src/app/about/page.tsx:248` · bullet, 1 sentence · max 60 characters
+`src/app/about/page.tsx:249` · bullet, 1 sentence · max 60 characters
 
 - **Old:** Every clue must quote its source word for word.
 - **Gemma:** Every clue quotes its source word for word.
@@ -1344,7 +1346,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.safety.3`: accepted
 
-`src/app/about/page.tsx:249` · bullet, 1 sentence · max 60 characters
+`src/app/about/page.tsx:250` · bullet, 1 sentence · max 60 characters
 
 - **Old:** Every number, date and safety line is written by code.
 - **Gemma:** Code writes every number, date and safety line.
@@ -1443,7 +1445,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.details.title`: rejected
 
-`src/app/about/page.tsx:295` · section headline, 5 words or fewer · max 35 characters
+`src/app/about/page.tsx:296` · section headline, 5 words or fewer · max 35 characters
 
 - **Old:** Details, one click away.
 - **Gemma:** More details one click away

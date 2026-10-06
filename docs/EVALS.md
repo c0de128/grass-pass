@@ -54,6 +54,36 @@ Gemma, Arbor Hills, White Rock Lake and Cedar Ridge, one run each, the same park
 3), 4 calls, reading grade 3.8 (aim 5-6; 3.1 before), 14.5 s / 25.7 s per call, 3.4% name leaks before the checks
 (removed), **$0.00107 per pass, over the $0.001 mark** ($0.00123 per finished pass before).
 
+## Self-hosted Gemma 4 E2B on a laptop CPU (2026-10-06, two partial runs, $0)
+
+"Run it yourself", measured (judge item G1). Gemma 4 E2B (`gemma4:e2b-it-qat`, Apache-2.0, 4.3 GB, served as
+`gemma4-e2b-8k` with an 8,192-token context) on Ollama 0.32.15, on a Windows laptop with **no GPU** (Intel Core Ultra 7
+155H, 32 GB RAM), thinking off. Same pass builder, same fixtures, same scorer; 5 parks (Connemara Meadow, Celebration,
+Arbor Hills, White Rock Lake, Cedar Ridge), one run each, ages 6-10. Notes, hardware and how to repeat:
+[`2026-10-06-selfhost-notes.md`](../evals/results/2026-10-06-selfhost-notes.md).
+
+| | App clock: [`selfhost-1656`](../evals/results/2026-10-06-selfhost-1656.md) (70 s per call, 85 s per pass) | Patient clock, eval only: [`selfhost-patient-1704`](../evals/results/2026-10-06-selfhost-patient-1704.md) | Hosted Gemma 4 31B, 20 parks (`-6`) |
+|---|---|---|---|
+| Passes made | **2 of 5** (3 ran out of time) | 5 of 5 | no pass lost |
+| M3 Complete passes | **0 of 5** (both 6/8) | 4 of 5 (80%, FAIL) | 94.1% |
+| M1 Blocked taxa printed | 0 | 0 | 0 |
+| M2 Grounded, before the filter | 100% (16/16) | 96.7% (59/61) | 99.6% |
+| M6 Name leaks, before the filter | 0% | 4.9% (3/61, all removed) | 2.6% |
+| M11 Wrong counts printed | 0 (no count clues) | 0 of 1 (1 removed) | 0 of 96 |
+| M5 Reading grade (median) | 2.5 | 2.9 | 2.5 |
+| M7 Model call p50 / p95 | 68.0 s / 70.0 s | **59.3 s / 84.8 s** | 12.0 s / 22.7 s |
+| Model time per pass (p50) | 70.0 s | 104.1 s | 14.5 s |
+| Speed | | 17.9 answer tokens/s writing, 99.6 tokens/s reading the prompt (measured once, Arbor Hills); end to end 8.7 tok/s median | 36.8 answer tokens/s |
+| RAM | | model runner 4.9-5.2 GB (working set); free system RAM 11.4 -> 5.2 GB at the lowest | hosted |
+| Cost | $0 | $0 | $0.00097 a pass |
+
+**What it means:** the open weights really run on a laptop with no GPU, for $0, and the code-side safety and grounding
+checks hold. With the app's own time limits (set for the hosted route's 90 s cap) this CPU is too slow: 3 of 5 first
+calls hit 70 s. Given time, the 2B-class model writes usable passes (4 of 5 complete, grade 2.9) at 1-3 minutes a pass.
+M10 is 0% in both runs but is not comparable: 5 parks x 1 run, not 20 x 3. The patient clock (`EVAL_LOCAL_PATIENT=1`)
+is an eval setting only; the app never waits more than 70 s for a model call. The CPU was shared with other programs
+during the runs, so the timing is a real-laptop figure, not a clean benchmark.
+
 ## Run `2026-10-06-5` (previous, kept for history)
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-4`) | Gemma, first run |

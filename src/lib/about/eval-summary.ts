@@ -204,6 +204,53 @@ export const SMOKE_10_13 = {
   costPerFinishedPass: 0.00107,
 } as const;
 
+/**
+ * Self-hosted row (judge G1, Builder W, 2026-10-06): Gemma 4 E2B (`gemma4:e2b-it-qat`, Apache-2.0) served by Ollama on
+ * a laptop CPU with no GPU, 5 parks x 1 run, 6-10 band, $0. Two PARTIAL runs: `app` with the app's own limits (70 s per
+ * call, 85 s per pass), `patient` with the eval-only longer clock (EVAL_LOCAL_PATIENT=1). Notes:
+ * `evals/results/2026-10-06-selfhost-notes.md`. tests/unit/selfhost-summary.test.ts re-reads both JSON files.
+ */
+export const SELFHOST = {
+  notes: "evals/results/2026-10-06-selfhost-notes.md",
+  model: "gemma4:e2b-it-qat",
+  modelId: "gemma4-e2b-8k",
+  licence: "Apache-2.0",
+  hardware: "a Windows laptop CPU (Intel Core Ultra 7 155H, 32 GB RAM, no GPU)",
+  parks: 5,
+  /** The model runner's RAM, GB (1 decimal), at most. */
+  ramGb: 5.2,
+  /** Measured once on the real Arbor Hills request: prompt reading and answer writing speed (tokens/s). */
+  promptTokensPerS: 99.6,
+  answerTokensPerS: 17.9,
+  app: {
+    file: "evals/results/2026-10-06-selfhost-1656.json",
+    passes: 2,
+    complete: 0,
+    /** Passes lost to the 70 s model limit. */
+    lost: 3,
+    groundedPct: 100,
+    nameLeakPct: 0,
+    fkGrade: 2.5,
+    p50s: 68,
+    p95s: 70,
+  },
+  patient: {
+    file: "evals/results/2026-10-06-selfhost-patient-1704.json",
+    passes: 5,
+    complete: 4,
+    lost: 0,
+    groundedPct: 96.7,
+    nameLeakPct: 4.9,
+    fkGrade: 2.9,
+    p50s: 59.3,
+    p95s: 84.8,
+    /** Model time per pass, median (s). */
+    perPassP50s: 104.1,
+    blockedPrinted: 0,
+    wrongCounts: 0,
+  },
+} as const;
+
 export function evalColumn(model: string): EvalColumn {
   const c = EVAL_COLUMNS.find((x) => x.model === model);
   if (!c) throw new Error(`no eval column for ${model}`);

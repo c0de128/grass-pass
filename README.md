@@ -110,6 +110,37 @@ without it, examples, search, shared passes and printing work, but new passes ca
 Measured cold start (laptop: build 17.2 s, first page 0.98 s, first example pass 30.9 s), abuse limits, the storage
 quota, the optional firewall rule, accounts and report moderation: [`docs/OPERATIONS.md`](docs/OPERATIONS.md).
 
+### Run it yourself (self-hosted Gemma, measured)
+The app talks to any OpenAI-compatible server. Measured on Oct 6, 2026 with the smallest Gemma 4 on a laptop with
+**no GPU** (Intel Core Ultra 7 155H, 32 GB RAM, Ollama 0.32.15), 5 test parks, $0:
+- **With the app's own limits (70 s per model call), it is too slow on this CPU:** 3 of 5 passes ran out of time and
+  the other 2 came out short (6 of 8 finds).
+- **Given more time (an eval-only setting), it works:** 4 of 5 passes complete, 96.7% of clues quoted their source,
+  reading grade 2.9, 0 risky species printed, 59.3 s a typical model call (hosted Gemma 4 31B: 12.0 s), about 1-3
+  minutes a pass, about 5.2 GB of RAM. It writes about 18 answer tokens a second here.
+
+Every number, the hardware and the caveats: [`evals/results/2026-10-06-selfhost-notes.md`](evals/results/2026-10-06-selfhost-notes.md).
+A computer with a GPU should be much faster (not measured).
+
+```bash
+# 1. Get the model: Gemma 4 E2B, 4-bit QAT, Apache-2.0, 4.3 GB
+ollama pull gemma4:e2b-it-qat
+# 2. Same weights with an 8,192-token context (Ollama's default 4,096 is shorter than our longest prompt)
+ollama create gemma4-e2b-8k -f evals/selfhost/Modelfile
+# 3. Point the app at it: put these in .env.local (no DigitalOcean key needed)
+#    MODEL_BASE_URL=http://localhost:11434/v1
+#    MODEL_ID=gemma4-e2b-8k
+#    MODEL_REASONING_EFFORT=none     # Gemma 4 "thinking" off; Ollama turns it on by default
+#    MODEL_TIMEOUT_MS=70000          # the app's maximum
+#    AUTH_SECRET=...                 # npx auth secret (a new pass needs a sign-in; "Try as a judge" works)
+pnpm dev
+# 4. Or measure it yourself, free, on the recorded parks (about 6 + 10 minutes on the laptop above)
+EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 pnpm eval                        # the app's limits
+EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 EVAL_LOCAL_PATIENT=1 pnpm eval   # eval-only longer clock
+```
+
+The eval runs the app's own pass builder and checks; the browser flow with these settings was not clicked through.
+
 ## Limitations
 The same list as the app's `/about` page, from eval run [`2026-10-06-6.md`](evals/results/2026-10-06-6.md):
 - **Clues repeat across parks: Gemma 5.1%** of printed clues share 5 words in a row with clues on at least 2 other
@@ -141,8 +172,9 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-6.md`](eval
   today (or this month). A count means visitors wrote about it, not that it is there today, so the pass prints
   "Maybe!". A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
   least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed.
-- **Self-hosting is not measured.** The app talks to any OpenAI-compatible server (for example Ollama), but no
-  self-hosted run has been measured.
+- **Self-hosting is slow on a laptop CPU.** Measured with Gemma 4 E2B on Ollama, no GPU, 5 parks, $0: with the app's
+  70 s model limit, 3 of 5 passes ran out of time and 2 came out short; given more time (eval only), 4 of 5 were
+  complete at about 1-3 minutes a pass. See [Run it yourself](#run-it-yourself-self-hosted-gemma-measured).
 - **Find This Spot and Lucky Finds are not in the eval.** No map geometry or SerpApi answers were recorded for the 20
   test parks, and SerpApi was off for the run (`SERPAPI_DAILY_CAP=0`, no key) to save the free searches for the live
   site.
@@ -195,7 +227,9 @@ checked against the results JSON by a unit test).
 - **Safety rules live in our code, not a vendor's:** the same checks run on any model, switching is one setting
   (`MODEL_ID`), and Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
-  server, such as Ollama. A self-hosted run has **not** been measured yet.
+  server, such as Ollama. **Measured** on a laptop with no GPU (Gemma 4 E2B, 5 parks, $0): the checks hold (0 risky
+  species printed, 96.7% of clues grounded), but at about 1-3 minutes a pass it is too slow for the app's 70 s limit
+  ([details](#run-it-yourself-self-hosted-gemma-measured)).
 
 ## Accounts and reports
 Anyone can search, open the example passes and any shared link, and print. **A NEW pass needs a grown-up to sign in**
@@ -250,7 +284,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Site design (v3, Oct 6, 2026):** designed by Kevin in [v0 by Vercel](https://v0.app/) and ported by hand (no v0
   runtime code, no analytics). Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (12 with small edits) after code and people fact-checked them, and the rest kept
+  text; 90 of its drafts shipped (13 with small edits) after code and people fact-checked them, and the rest kept
   their old text. Every block, old and new, with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.
 - **Home page pictures:** the hero is an AI illustration generated with v0 by Vercel (labelled "AI illustration"; it

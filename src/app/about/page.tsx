@@ -36,9 +36,10 @@ import {
   aboutLimitPoints,
   aboutLimits,
   aboutStatTiles,
+  selfHostDetail,
   dataSources,
 } from "@/lib/about/content";
-import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, evalColumn } from "@/lib/about/eval-summary";
+import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, SELFHOST, evalColumn } from "@/lib/about/eval-summary";
 import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { configuredModelId } from "@/lib/model";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
@@ -311,6 +312,14 @@ export default function AboutPage() {
             <p>
               No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
               answered &quot;403 Forbidden&quot; on {CLOSED_MODELS_403_DAY}. Switching models is one setting (<code>MODEL_ID</code>).
+            </p>
+            <p>
+              <strong>Run it yourself (measured, a separate small test):</strong> {selfHostDetail()} Setup, every number and how to
+              repeat it:{" "}
+              <a className={ext} href={`${REPO_URL}/blob/main/${SELFHOST.notes}`}>
+                self-host notes
+              </a>
+              .
             </p>
           </Disclosure>
 

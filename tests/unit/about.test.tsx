@@ -255,7 +255,10 @@ describe("/about", () => {
     expect(t).toContain("Lucky Finds: Google Maps review counts via SerpApi");
     expect(t).not.toContain("not available yet");
     expect(t).not.toContain("known bug we are fixing");
-    expect(t).toContain("We have not measured a self-hosted run for this app yet.");
+    // Judge G1 (2026-10-06): self-hosting is measured now; the page gives the result, not "not measured".
+    expect(t).not.toMatch(/not measured/i);
+    expect(t).toContain("Self-hosting works, but slowly on a laptop.");
+    expect(t).toContain("Self-hosted on a laptop CPU: $0, but slow.");
   });
 
   it("lists every blocked group from the safety code", () => {

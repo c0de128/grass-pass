@@ -2,8 +2,8 @@
   "reviewedBy": "Builder G (Claude Code), 2026-10-06",
   "run": "run-2026-10-06T20-43-12-393Z.json",
   "counts": {
-    "accepted": 78,
-    "edited": 12,
+    "accepted": 77,
+    "edited": 13,
     "rejected": 76,
     "unchanged": 18
   },
@@ -594,10 +594,11 @@
     },
     {
       "id": "how.open.2.body",
-      "decision": "accepted",
+      "decision": "edited",
       "stage": "people",
-      "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet."
+      "reason": "True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became \"edited\".",
+      "shipped": "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 1-3 minutes a pass.",
+      "factFixAfterRun": true
     },
     {
       "id": "how.open.3.title",
@@ -743,8 +744,9 @@
       "id": "about.whyopen.3",
       "decision": "unchanged",
       "stage": "gemma",
-      "reason": "Gemma returned the current text unchanged.",
-      "shipped": "Self-hosting is possible, but not measured yet."
+      "reason": "Gemma returned the current text unchanged. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true.",
+      "shipped": "Self-hosted on a laptop CPU: $0, but slow.",
+      "factFixAfterRun": true
     },
     {
       "id": "about.data.title",

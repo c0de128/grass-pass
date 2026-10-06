@@ -6,7 +6,7 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { MAX_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS } from "@/lib/model";
@@ -28,6 +28,14 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * a live one: update it when you re-run the suite for a page change.
  */
 export const UNIT_TESTS = { passed: 1480, files: 53, day: "Oct 6, 2026" } as const;
+/** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
+export const AUDIT_ROUNDS = { done: 5, day: "Oct 6, 2026" } as const;
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
+/** "Five rounds so far (Oct 6, 2026)." */
+export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS): string {
+  const n = COUNT_WORDS[r.done] ?? String(r.done);
+  return `${n} ${r.done === 1 ? "round" : "rounds"} so far (${r.day}).`;
+}
 
 /**
  * The Gemma copy rewrite (docs/COPY-BY-GEMMA.md, 2026-10-06): blocks sent, drafts shipped (accepted + edited),
@@ -51,7 +59,7 @@ export function aboutStatTiles(): StatTile[] {
   const t = EVAL_THRESHOLDS;
   return [
     { value: pct(g.groundedPct), label: "of clues quote their source exactly", target: `${t.groundedPct}% or more`, met: g.groundedPct >= t.groundedPct },
-    { value: String(g.blockedPrinted), label: `risky species printed (${g.runs} passes)`, target: "0, always", met: g.blockedPrinted === 0 },
+    { value: String(g.blockedPrinted), label: `risky species printed (${g.runs} runs)`, target: "0, always", met: g.blockedPrinted === 0 },
     { value: usd(g.costPerPass), label: "per pass (list price)", target: `${usd(t.costPerPass)} or less`, met: g.costPerPass <= t.costPerPass },
     { value: `Grade ${g.fkGrade.toFixed(1)}`, label: "reading level (median)", target: `${t.fkGrade} or lower`, met: g.fkGrade <= t.fkGrade },
     { value: pct(g.completePct), label: "of passes complete", target: `${t.completePct}% or more`, met: g.completePct >= t.completePct },
@@ -230,11 +238,11 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: `Speed: Gemma misses (${secs(g.p50s)} typical, ${secs(g.p95s)} slow-case; target ${t.p50s} s / ${t.p95s} s).`,
-      detail: `The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second (${GEMMA_TOKENS_PER_S.before} in the run before; 46.2 two runs before). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit and were retried. Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test passes ended at its 60 s limit, ${pct(l.completePct)} complete passes.`,
+      detail: `The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second (${GEMMA_TOKENS_PER_S.before} in the run before; 46.2 two runs before). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit and were retried. Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test runs ended at its 60 s limit, ${pct(l.completePct)} complete passes.`,
     },
     {
       title: `Short passes: ${GEMMA_SHORT_PASSES.passes} of ${g.dataRichRuns} still came out short.`,
-      detail: `Complete passes now meet the goal (Gemma ${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more), up from ${pct(PREVIOUS_RUN.completePct)} in the run before. A failed first call now gets one whole retry (${GEMMA_FAILED_FIRST_CALLS.rescued} passes saved: ${GEMMA_FAILED_FIRST_CALLS.timeouts} timeouts, ${GEMMA_FAILED_FIRST_CALLS.http403} HTTP 403), and a refill asks for 2 spares. The short ones were on the ${GEMMA_SHORT_PASSES.parks} parks with the least data; a short pass says how many finds are missing.`,
+      detail: `Complete passes now meet the goal (Gemma ${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more), up from ${pct(PREVIOUS_RUN.completePct)} in the run before. A failed first call now gets one whole retry (${GEMMA_FAILED_FIRST_CALLS.rescued} passes saved: ${GEMMA_FAILED_FIRST_CALLS.timeouts} timeouts, ${GEMMA_FAILED_FIRST_CALLS.http403} HTTP 403), and a refill asks for 2 spares. The short ones were on ${GEMMA_SHORT_PASSES.parks} parks with small pools of finds; a short pass says how many finds are missing.`,
     },
     {
       title: `Cost is close to the goal: Gemma ${usd(g.costPerPass)} a pass.`,
@@ -292,7 +300,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "Model calls are slower than the target.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit in ${g.runs} test passes; their retries saved both passes.`,
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit in ${g.runs} test runs (${GEMMA_RUN_COUNTS.passes} passes; ${GEMMA_RUN_COUNTS.noDataRuns} runs on the ${GEMMA_RUN_COUNTS.noDataParks} no-data parks made none); their retries saved both passes.`,
     },
     {
       title: "Some passes come out short.",

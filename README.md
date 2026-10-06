@@ -153,12 +153,12 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-6.md`](eval
 - **Speed misses: 12.0 s typical, 22.7 s slow (target 10 s / 20 s).** First calls alone took 13.2 s typical. The
   median Gemma call ran at 36.8 answer tokens a second (34.3 in the run before, 46.2 two runs before), and prompts
   are about 7% longer. 2 first calls hit the 30 s limit; both were retried and their passes finished. A pass with a
-  retry takes longer (slowest pass 48.9 s). Llama 4 Maverick is too slow to be the default: 4 of its 20 test passes
+  retry takes longer (slowest pass 48.9 s). Llama 4 Maverick is too slow to be the default: 4 of its 20 test runs
   ended at its 60 s limit, and 6 of its refills hit the 20 s refill limit; 41.2% complete passes.
 - **Complete passes now meet the goal: Gemma 94.1% (48 of 51; target 90%),** up from 84.3% in the run before. A pass
   now makes 1 to 3 model calls: a failed first call gets one whole retry (3 passes saved: 2 timeouts, 1 HTTP 403), a
   refill asks for the missing finds + 2 spares, and a pass still short gets one more refill. The 3 short passes were
-  on the 2 parks with the least data (Connemara Meadow twice, Klyde Warren once). A short pass says how many finds are
+  on 2 parks with small pools of finds (Connemara Meadow twice, Klyde Warren once). A short pass says how many finds are
   missing.
 - **Cost is close to the goal: Gemma $0.00097 a pass (target $0.001),** up from $0.00089 because more passes make 2
   or 3 calls. A finished 10-13 pass cost $0.00107 in the small check below, over the goal.
@@ -209,7 +209,8 @@ commit `b5a862b`), not re-run. Open models only: the closed models on our Digita
 | M10 Printed clues repeated across parks (target <= 5%) | **5.1% (20/395), FAIL** | 3.8% (3/80) | 24.4% (FAIL) | 9.6% (FAIL) |
 | M11 Printed clues with a wrong count (target 0) | 0 of 96 (12 removed by the check) | 0 of 11 (12 removed) | 0 of 6 | 0 of 81 (13 removed) |
 
-Gemma calls: 80 for 60 test passes (33 passes used 1 call, 16 used 2, 5 used 3; 6 parks with no data made none).
+Gemma calls: 80 for 60 test runs (54 passes: 33 used 1 call, 16 used 2, 5 used 3; 6 runs on the 2 no-data parks made
+none).
 The no-AI template is now exempt from the repeated-opening drop (its masked Wikipedia sentences all open "____ is a
 ..."), which brings its M3 back from 17.6% to 76.5%; every safety, grounding, name and count check still applies.
 

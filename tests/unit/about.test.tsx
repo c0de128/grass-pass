@@ -6,7 +6,7 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
 
@@ -64,7 +64,14 @@ describe("about page numbers come from the committed eval run", () => {
     expect(r1(beforeGemma.m10.rate!)).toBe(PREVIOUS_RUN.repeatPct); // "down from 9.6%"
     expect(r1(beforeGemma.m3.rate)).toBe(PREVIOUS_RUN.completePct); // "up from 84.3%"
     expect(Math.round(beforeGemma.m8.costPerPass * 1e5) / 1e5).toBe(PREVIOUS_RUN.costPerPass); // "up from $0.00089"
-    // "3 of 51 test passes came out short ... on the 2 parks with the least data"
+    // RULES-5-03: "60 test runs (54 passes; 6 runs on the 2 no-data parks made none)"
+    const gRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");
+    expect(gRuns.filter((r) => r.kind === "pass")).toHaveLength(GEMMA_RUN_COUNTS.passes);
+    const none = gRuns.filter((r) => r.kind !== "pass");
+    expect(none).toHaveLength(GEMMA_RUN_COUNTS.noDataRuns);
+    expect(none.every((r) => !r.dataRich)).toBe(true);
+    expect(new Set(none.map((r) => r.slug)).size).toBe(GEMMA_RUN_COUNTS.noDataParks);
+    // "3 of 51 test passes came out short ... on 2 parks with small pools of finds"
     const gemmaRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");
     const short = gemmaRuns.filter((r) => r.dataRich && !(r.kind === "pass" && r.items.length >= (r.n ?? 0) - 1));
     expect(short).toHaveLength(GEMMA_SHORT_PASSES.passes);
@@ -224,7 +231,7 @@ describe("/about", () => {
       "2.5",
       "3.8",
       "41.2% complete passes",
-      "4 of its 20 test passes ended at its 60 s limit",
+      "4 of its 20 test runs ended at its 60 s limit",
       "Gemma passes (2.6% of its clues",
       "Llama 4 Maverick does not (16.7%)",
       "Short passes: 3 of 51 still came out short.",
@@ -387,5 +394,15 @@ describe("fonts are self-hosted", () => {
     for (const f of walk(join(ROOT, "src")).filter((x) => /\.(ts|tsx|css)$/.test(x))) {
       expect(readFileSync(f, "utf8"), f).not.toMatch(/from\s+["']next\/font\/google["']|@import[^;]*fonts\.googleapis/);
     }
+  });
+});
+
+describe("audit rounds line (one constant)", () => {
+  it("says five rounds, from AUDIT_ROUNDS", async () => {
+    const { AUDIT_ROUNDS, auditRoundsLine } = await import("@/lib/about/content");
+    expect(AUDIT_ROUNDS.done).toBe(5);
+    expect(auditRoundsLine()).toBe("Five rounds so far (Oct 6, 2026).");
+    expect(auditRoundsLine({ done: 1, day: "x" })).toBe("One round so far (x).");
+    expect(auditRoundsLine({ done: 12, day: "x" })).toBe("12 rounds so far (x).");
   });
 });

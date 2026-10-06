@@ -39,7 +39,7 @@ import {
   selfHostDetail,
   dataSources,
 } from "@/lib/about/content";
-import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, SELFHOST, evalColumn } from "@/lib/about/eval-summary";
+import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_RUN_COUNTS, SELFHOST, evalColumn } from "@/lib/about/eval-summary";
 import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { configuredModelId } from "@/lib/model";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
@@ -123,7 +123,7 @@ export default function AboutPage() {
               </h2>
             </div>
             <p className="max-w-[55ch] text-band-muted">
-              Gemma 4 on {EVAL_PARKS} real parks, {gemma.runs} passes, run <code>{EVAL_RUN_ID}</code> ({EVAL_DAY}). Misses
+              Gemma 4 on {EVAL_PARKS} real parks, {gemma.runs} runs ({GEMMA_RUN_COUNTS.passes} passes), run <code>{EVAL_RUN_ID}</code> ({EVAL_DAY}). Misses
               stay on the page.{" "}
               <a className={bandLink} href={resultsUrl}>
                 Full results

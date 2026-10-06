@@ -74,6 +74,11 @@ export const PREVIOUS_RUN = { id: "2026-10-06-5", file: "evals/results/2026-10-0
  * how many hit the 30 s limit, how many were HTTP 403, and how many of those passes still came out complete.
  */
 export const GEMMA_FAILED_FIRST_CALLS = { timeouts: 2, http403: 1, rescued: 3 } as const;
+/**
+ * RULES-5-03: Gemma's test runs vs passes. Of its runs, how many made a pass, and how many runs (on how many parks)
+ * made none because the park had no usable data (checked against the JSON by tests/unit/about.test.tsx).
+ */
+export const GEMMA_RUN_COUNTS = { passes: 54, noDataRuns: 6, noDataParks: 2 } as const;
 /** Gemma test passes (data-rich) that ended short, and on how many different parks. */
 export const GEMMA_SHORT_PASSES = { passes: 3, parks: 2 } as const;
 

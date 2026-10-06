@@ -45,6 +45,14 @@ export const SPOT_WAIT_MS = 25_000;
  * geometry keeps loading and is cached for the next pass.
  */
 export const SPOT_STAGE_END_MS = 40_000;
+/**
+ * Audit Q-3-02: the model no longer waits for a map that is still loading. Before the first model call
+ * the pass waits at most this long (a cached or saved outline answers in milliseconds); if the map is
+ * not ready, the model writes the clues without it and the map keeps loading alongside the model call.
+ */
+export const SPOT_EARLY_WAIT_MS = 2_000;
+/** After the model answered, a late map gets at most this much more time before the pass goes out without it. */
+export const SPOT_LATE_GRACE_MS = 3_000;
 /** Time we keep after the map wait for the model and its checks (build-pass's MODEL_MIN_LEFT_MS + 5 s). */
 const SPOT_KEEP_FOR_MODEL_MS = 20_000;
 
@@ -151,6 +159,39 @@ export async function loadGeometry(ref: ParkRef, deps: GeometryDeps): Promise<Ge
           : SPOT_COPY.busy;
     return { status: "none", message };
   }
+}
+
+/** The geometry when it settles within `ms`, else null (the fetch keeps going and fills the cache). */
+export async function settleWithin(p: Promise<GeometryResult>, ms: number): Promise<GeometryResult | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined;
+  const late = new Promise<null>((resolve) => {
+    timer = setTimeout(() => resolve(null), Math.max(0, ms));
+  });
+  try {
+    return await Promise.race([p, late]);
+  } finally {
+    clearTimeout(timer);
+  }
+}
+
+/**
+ * Audit Q-3-02: the plan for a map that arrived while the model was writing. The clues were written
+ * without it, so a target that is the same thing as a printed Park Find (the park's only shelter) is
+ * swapped for the next candidate when there is one (`keptIds`: the pool ids on the pass).
+ */
+export function planLateSpot(
+  geo: GeometryResult,
+  opts: { parkName: string; features: ParkFeatures | null; variant: number; keptIds: ReadonlySet<string> },
+): SpotPlan {
+  const first = planSpot(geo, opts);
+  if (first.status !== "target") return first;
+  const clash = (p: SpotPlan) => p.status === "target" && p.target.poolKind !== null && opts.keptIds.has(`osm-${p.target.poolKind.replace(/_/g, "-")}`);
+  if (!clash(first)) return first;
+  for (let v = opts.variant + 1; v < opts.variant + 3; v++) {
+    const next = planSpot(geo, { ...opts, variant: v });
+    if (next.status === "target" && !clash(next)) return next;
+  }
+  return first;
 }
 
 /** The geometry, or "too slow" after `ms` (the fetch keeps going and fills the cache for the next pass). */

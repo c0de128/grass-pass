@@ -35,7 +35,7 @@ import {
   type LatLng,
   type ParkGeometry,
 } from "@/lib/spot/geometry";
-import { finishSpot, geometryWithin, loadGeometry, planSpot } from "@/lib/spot/load";
+import { finishSpot, geometryWithin, loadGeometry, planLateSpot, planSpot, SPOT_EARLY_WAIT_MS, SPOT_LATE_GRACE_MS } from "@/lib/spot/load";
 import { candidates, pickTarget, roundWalk } from "@/lib/spot/pick-target";
 import { drawMap, LAYER_STYLE, STROKE_MIN } from "@/lib/spot/render-map";
 import { MAP_H, MAP_W, MAX_MAP_POINTS, SPOT_COPY, SpotMapSchema, SpotSchema, type SpotOk } from "@/lib/spot/types";
@@ -368,6 +368,60 @@ describe("makePass with Find This Spot (live recordings)", () => {
     const p = await pass(CEL.id, { model: () => new Response(JSON.stringify(leaked), { status: 200, headers: { "content-type": "application/json" } }) });
     expect(p.spot).toMatchObject({ status: "ok", riddleBy: "code", riddle: SPOT_COPY.codeRiddle(true) });
   });
+
+  /** Q-3-02: the replay with the map (geometry) answer held back `geoMs`, and the model answer `modelMs`; logs when the model was asked. */
+  function slowMap(geoMs: number, modelMs: number) {
+    const r = passReplay();
+    const t0 = Date.now();
+    const at: { geo?: number; model?: number } = {};
+    const fetchImpl = async (url: string, init?: RequestInit) => {
+      const q = new URLSearchParams(String(init?.body ?? "")).get("data") ?? "";
+      if (q.includes("out geom")) {
+        at.geo = Date.now() - t0;
+        await new Promise((res) => setTimeout(res, geoMs));
+      }
+      if (new URL(url).host === "inference.do-ai.run") {
+        at.model ??= Date.now() - t0;
+        await new Promise((res) => setTimeout(res, modelMs));
+      }
+      return r.fetchImpl(url, init);
+    };
+    return { fetchImpl, at };
+  }
+
+  it("Q-3-02: a map that is slow to load does not hold the model; it is added after the answer when it arrives", async () => {
+    const s = slowMap(5_000, 3_500); // the map needs 5 s; the model waits at most SPOT_EARLY_WAIT_MS (2 s) for it and takes 3.5 s
+    const out = await makePass({ parkId: CEL.id, ageBand: "6-10" }, { ip: "192.0.2.84", fetchImpl: s.fetchImpl, modelFetch: s.fetchImpl, env });
+    if (out.kind !== "pass") throw new Error(out.kind);
+    // The model was asked before the map answered (before: it waited for it, up to SPOT_WAIT_MS = 25 s).
+    expect(s.at.model!).toBeLessThan(s.at.geo! + 5_000);
+    const spot = out.pass.spot as SpotOk;
+    expect(spot.status).toBe("ok");
+    expect(spot.riddleBy).toBe("code"); // the clues were written without the map, so the fixed riddle line is printed
+    expect(spot.target.osmId).toBe("way/536185861");
+    expect(out.pass.items.length).toBeGreaterThanOrEqual(7);
+  }, 30_000);
+
+  it("Q-3-02: a late map whose X is a printed Park Find (Celebration's only shelter) moves the X to the next candidate", () => {
+    const g = { status: "ok" as const, geometry: geo(CEL), checkedAt: Date.UTC(2026, 9, 6) };
+    const base = { parkName: "Celebration Park", features: feats(CEL), variant: 1 };
+    const first = planSpot(g, base);
+    if (first.status !== "target") throw new Error("expected a target");
+    expect(first.target.poolKind).toBe("shelter");
+    expect(planLateSpot(g, { ...base, keptIds: new Set(["osm-playground"]) })).toEqual(first);
+    const moved = planLateSpot(g, { ...base, keptIds: new Set(["osm-shelter"]) });
+    if (moved.status !== "target") throw new Error("expected a target");
+    expect(moved.target.osmId).not.toBe(first.target.osmId);
+  });
+
+  it("Q-3-02: a map later than the model plus SPOT_LATE_GRACE_MS is left out with the honest 'too slow' line", async () => {
+    const s = slowMap(9_000, 500);
+    const t0 = Date.now();
+    const out = await makePass({ parkId: CEL.id, ageBand: "6-10" }, { ip: "192.0.2.85", fetchImpl: s.fetchImpl, modelFetch: s.fetchImpl, env });
+    if (out.kind !== "pass") throw new Error(out.kind);
+    expect(out.pass.spot).toEqual({ status: "none", message: SPOT_COPY.slow });
+    expect(Date.now() - t0).toBeLessThan(SPOT_EARLY_WAIT_MS + 500 + SPOT_LATE_GRACE_MS + 2_000);
+  }, 30_000);
 
   it("Overpass busy for the map only (built 504 for the geometry query): the pass is still made and says why", async () => {
     const r = passReplay();

@@ -42,7 +42,19 @@ import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
 import { DATA_TOO_SLOW_COPY, loadFeatures, type FeaturesPlan } from "@/lib/pass/park-data";
 import { explainShortSections, shortPassMessage } from "@/lib/pass/short-copy";
-import { finishSpot, geometryWithin, loadGeometry, planSpot, spotWaitMs, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
+import {
+  finishSpot,
+  loadGeometry,
+  planLateSpot,
+  planSpot,
+  settleWithin,
+  SPOT_EARLY_WAIT_MS,
+  SPOT_LATE_GRACE_MS,
+  spotWaitMs,
+  type GeometryResult,
+  type SpotPlan,
+} from "@/lib/spot/load";
+import { SPOT_COPY } from "@/lib/spot/types";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
@@ -344,9 +356,12 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const lucky: SectionState = luckyResult.state;
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
-  // R2-M2: the optional map wait is cut short once the pass has used SPOT_STAGE_END_MS (slow features step).
-  const geoWait = spotWaitMs(deps.now() - deps.startedAt, left());
-  const spotPlan: SpotPlan = planSpot(await geometryWithin(geometry, geoWait), { parkName: f.park.name, features: f, variant: input.variant });
+  // Audit Q-3-02: the model waits at most SPOT_EARLY_WAIT_MS for the optional map (a cached or saved
+  // outline is ready at once). A map still loading keeps loading while the model writes; it is added
+  // after the answer if it arrived (with the code-written riddle), else the pass says it was too slow.
+  const geoWait = Math.min(SPOT_EARLY_WAIT_MS, spotWaitMs(deps.now() - deps.startedAt, left()));
+  const early = await settleWithin(geometry, geoWait);
+  let spotPlan: SpotPlan = early ? planSpot(early, { parkName: f.park.name, features: f, variant: input.variant }) : { status: "none", message: SPOT_COPY.slow };
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
   const basePool = poolForSpot([...park.items, ...wild.items], target, band);
@@ -481,6 +496,13 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       },
       parkData,
     };
+  }
+
+  if (!early) {
+    // Audit Q-3-02: the map that was still loading when the model started.
+    const late = await settleWithin(geometry, Math.min(SPOT_LATE_GRACE_MS, Math.max(0, left() - 3_000)));
+    if (late) spotPlan = planLateSpot(late, { parkName: f.park.name, features: f, variant: input.variant, keptIds: new Set(best.items.map((v) => v.item.id)) });
+    log("spot_late", { park: f.park.id, ready: late !== null, status: spotPlan.status, ms: deps.now() - deps.startedAt });
   }
 
   const items: PassItem[] = [...best.items]

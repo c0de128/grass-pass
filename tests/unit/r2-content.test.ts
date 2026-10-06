@@ -128,7 +128,7 @@ describe("prompt examples are not copied, and clues don't repeat on one pass", (
   });
   it("one writing voice per park name, stable", () => {
     expect(voiceFor("Celebration Park")).toBe(voiceFor("Celebration Park"));
-    const voices = new Set(["Celebration Park", "Connemara Meadow Preserve", "Arbor Hills Nature Preserve", "White Rock Lake Park", "Zilker Metropolitan Park", "Golden Gate Park"].map(voiceFor));
+    const voices = new Set(["Celebration Park", "Connemara Meadow Preserve", "Arbor Hills Nature Preserve", "White Rock Lake Park", "Zilker Metropolitan Park", "Golden Gate Park"].map((p) => voiceFor(p)));
     expect(voices.size).toBeGreaterThanOrEqual(3);
   });
 });

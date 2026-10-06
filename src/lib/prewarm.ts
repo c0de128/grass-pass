@@ -11,8 +11,9 @@
  * - Refreshes go through makePass({ internal: true }): the same builder, cache and in-flight dedup as a
  *   visitor, never charged to a visitor and not subject to per-IP limits, but counted against every
  *   global cap (AI_DAILY_CAP). A failed refresh keeps the old pass. No retry loop.
- * - A pass made while a source was down ("degraded", R1-m2) counts as fresh only for
- *   DEGRADED_RETRY_SEC; then one refresh tries for a better one (the old one stays linked meanwhile).
+ * - A pass made while a source was down ("degraded", R1-m2) gets a rebuild only when makePass's cap
+ *   allows it (R2-M1: once an hour per key at most, 3 a day, longer after the same failure, never
+ *   for a reason that would just repeat), so examples can't spend a model call every 15 minutes.
  * - The example parks' OpenStreetMap data is saved (src/data/osm, R1-B1), so a refresh needs no live
  *   Overpass; only iNaturalist and the model are live.
  * - PREWARM_EXAMPLES=0 (or off/false/no) switches it off; the home page then says so.
@@ -26,10 +27,10 @@ import { createJsonCache, getStore, type Store } from "@/lib/cache";
 import { log } from "@/lib/log";
 import { localDay } from "@/lib/time";
 import type { FetchLike } from "@/lib/sources/common";
-import { DEGRADED_RETRY_SEC, isDegraded, loadPass, makePass } from "@/lib/pass/make";
+import { DEGRADED_RETRY_SEC, isDegraded, loadPass, makePass, mayRebuildDegraded, passKey } from "@/lib/pass/make";
 import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
 import type { ExampleLink } from "@/lib/parks/schema";
-import { DEFAULT_AGE_BAND, type AgeBand } from "@/lib/pass/schema";
+import { DEFAULT_AGE_BAND, type AgeBand, type Pass } from "@/lib/pass/schema";
 
 export type ExamplePark = {
   slug: string;
@@ -41,12 +42,17 @@ export type ExamplePark = {
   blurb: string;
 };
 
-/** Parks with good real data in the 2026-10-05 eval recordings (evals/cases.json). */
+/**
+ * Parks with good real data in the 2026-10-05 eval recordings (evals/cases.json). R2-m9: shown (and
+ * offered as "a ready example") in this order, a COMPLETE pass first: Arbor Hills has Park Finds, Wild
+ * Finds and a Find This Spot map (judge + UX round 2); Connemara (no single map landmark, few mapped
+ * features) is last.
+ */
 export const EXAMPLE_PARKS: readonly ExamplePark[] = [
-  { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "a wild meadow: lots of plants and bugs" },
-  { slug: "celebration", parkId: "way/188145317", name: "Celebration Park", place: "Allen TX", blurb: "playgrounds, courts and a Find This Spot map" },
-  { slug: "arbor-hills", parkId: "way/38113837", name: "Arbor Hills Nature Preserve", place: "Plano TX", blurb: "trails, a creek and wildlife" },
+  { slug: "arbor-hills", parkId: "way/38113837", name: "Arbor Hills Nature Preserve", place: "Plano TX", blurb: "trails, a creek, wildlife and a Find This Spot map" },
   { slug: "white-rock", parkId: "way/460905359", name: "White Rock Lake Park", place: "Dallas TX", blurb: "a big lake park" },
+  { slug: "celebration", parkId: "way/188145317", name: "Celebration Park", place: "Allen TX", blurb: "playgrounds, courts and a Find This Spot map" },
+  { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "a wild meadow: lots of plants and bugs" },
 ];
 
 export const EXAMPLE_BAND: AgeBand = DEFAULT_AGE_BAND;
@@ -144,7 +150,7 @@ export type ExampleStatus = {
   example: ExamplePark;
   /** The last good pass (link target), or null when none was made yet. */
   pass: Saved | null;
-  /** True when that pass is from today (Chicago day) and not a degraded one past DEGRADED_RETRY_SEC. */
+  /** True when that pass is from today (Chicago day) and not a degraded one that may be rebuilt now. */
   fresh: boolean;
   /** True when this server is making a new one right now. */
   refreshing: boolean;
@@ -208,6 +214,12 @@ async function refreshOne(ex: ExamplePark, day: string, deps: WarmDeps): Promise
   }
 }
 
+/** True when today's degraded example pass may be rebuilt now (makePass's cap decides, R2-M1). */
+function rebuildDue(ex: ExamplePark, pass: Pass, nowMs: number): Promise<boolean> {
+  if (!isDegraded(pass)) return Promise.resolve(false);
+  return mayRebuildDegraded(passKey(ex.parkId, EXAMPLE_BAND, nowMs), pass, (nowMs - Date.parse(pass.generatedAt)) / 1000, nowMs).catch(() => false);
+}
+
 /** Start one background refresh for an example unless one is running here or another instance holds the slot. */
 function maybeRefresh(ex: ExamplePark, day: string, deps: WarmDeps): Promise<boolean> {
   const h = holder();
@@ -241,8 +253,7 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
     // The link must still open: the pass itself lives 30 days in the pass cache.
     const pass = hit ? await loadPass(hit.value.passId, now()) : null;
     const saved = hit && pass ? hit.value : null;
-    const degradedOld = pass !== null && isDegraded(pass) && now() - Date.parse(pass.generatedAt) >= DEGRADED_RETRY_SEC * 1000;
-    const fresh = saved !== null && saved.day === today && !degradedOld;
+    const fresh = saved !== null && pass !== null && saved.day === today && !(await rebuildDue(ex, pass, now()));
     let refreshing = holder().running.has(ex.slug);
     if (!fresh && enabled && !refreshing) refreshing = await maybeRefresh(ex, today, deps);
     const err = holder().lastError.get(ex.slug);
@@ -289,7 +300,7 @@ export async function warmExamples(deps: WarmDeps = {}): Promise<void> {
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
     const pass = hit && hit.value.day === localDay(now()) ? await loadPass(hit.value.passId, now()) : null;
-    if (pass && !isDegraded(pass)) continue;
+    if (pass && !(await rebuildDue(ex, pass, now()))) continue;
     if (await maybeRefresh(ex, localDay(now()), deps)) await holder().running.get(ex.slug);
   }
 }

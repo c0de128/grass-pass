@@ -1,10 +1,14 @@
 /**
  * October monarch box data (SPEC F10, ADR 0002 D3): real iNaturalist counts, never estimated.
  *
- * - Monarchs (taxon 48662) reported within 25 km of the park in the last 14 days (the same window as
- *   Wild Finds: Oct 5 -> since Sep 21), and in the same calendar days last year. ONE histogram call
- *   (`observations/histogram`, interval=day, from last year's first day to today) gives both sums.
+ * - Monarchs (taxon 48662) reported within 25 km of the park in the last 14 days (Oct 5 -> since Sep 21),
+ *   and in the same calendar days last year. ONE histogram call (`observations/histogram`,
+ *   interval=day, from last year's first day to today) gives both sums.
  *   Live 2026-10-05 near Connemara: 9 since Sep 21 vs 63 in 2025 (the ADR's numbers).
+ * - R2-M1: "today" is today in PACIFIC time (iNaturalist's server day; measured 2026-10-06: at 00:30 CDT
+ *   the answer ends at the Pacific day, yesterday in Chicago). And iNaturalist zero-fills only between
+ *   the first and last day that HAS a sighting (an all-zero range answers `{}`), so a day missing
+ *   from the answer is a real 0, never an error.
  * - Milkweed (genus 47906) reported within 1.5 km of the park, all years: one `per_page=0` count.
  *
  * Every request goes through the S3 iNat client's polite fetch (`getJson`): daily budget, circuit
@@ -18,7 +22,6 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { createCachePair } from "@/lib/cache";
 import { log } from "@/lib/log";
-import { localDay } from "@/lib/time";
 import type { LatLng } from "@/lib/geo";
 import {
   MILKWEED_RADIUS_KM,
@@ -31,7 +34,7 @@ import {
   type WindowCount,
 } from "@/lib/october";
 import { SourceError } from "./common";
-import { getJson, INAT_API, windowStart, type InatDeps } from "./inat";
+import { getJson, INAT_API, WILD_WINDOW_DAYS, type InatDeps } from "./inat";
 
 export const MONARCH_CACHE_SEC = 6 * 3600;
 export const MILKWEED_CACHE_SEC = 7 * 24 * 3600;
@@ -50,10 +53,28 @@ export function sameDayLastYear(day: string): string {
 
 export type MonarchWindows = { thisYear: { d1: string; d2: string }; lastYear: { d1: string; d2: string } };
 
-/** Oct 5, 2026 (Chicago) -> this year Sep 21..Oct 5 2026, last year Sep 21..Oct 5 2025. */
+/** iNaturalist's server day (the histogram's "today"). */
+export const INAT_DAY_TIME_ZONE = "America/Los_Angeles";
+const pacificFmt = new Intl.DateTimeFormat("en-CA", { timeZone: INAT_DAY_TIME_ZONE, year: "numeric", month: "2-digit", day: "2-digit" });
+
+/** "YYYY-MM-DD" in Pacific time (en-CA formats as ISO). */
+export function pacificDay(nowMs: number): string {
+  return pacificFmt.format(new Date(nowMs));
+}
+
+/** "2026-10-05" minus `days` days, as "YYYY-MM-DD". */
+function minusDays(day: string, days: number): string {
+  const [y, m, d] = day.split("-").map(Number);
+  return new Date(Date.UTC(y, m - 1, d - days)).toISOString().slice(0, 10);
+}
+
+/**
+ * Oct 5, 2026 (Pacific) -> this year Sep 21..Oct 5 2026, last year Sep 21..Oct 5 2025.
+ * At 00:30 CDT on Oct 6 it is still Oct 5 in Pacific time, so the window still ends on Oct 5.
+ */
 export function monarchWindows(nowMs: number): MonarchWindows {
-  const d1 = windowStart(nowMs);
-  const d2 = localDay(nowMs);
+  const d2 = pacificDay(nowMs);
+  const d1 = minusDays(d2, WILD_WINDOW_DAYS);
   return { thisYear: { d1, d2 }, lastYear: { d1: sameDayLastYear(d1), d2: sameDayLastYear(d2) } };
 }
 
@@ -95,12 +116,16 @@ const HistogramBody = z.object({
 });
 
 /**
- * Sum the days of each window. The answer must cover both ends of the asked range (iNat zero-fills
- * every day), otherwise it isn't the answer we asked for and we say so instead of guessing.
+ * Sum the days of each window. A day missing from the answer is 0 (iNaturalist zero-fills only between
+ * the first and last day with a sighting, and answers `{}` when there are none: N=0 is a real answer).
+ * Only the shape is checked, and that no day lies outside the asked range (that would not be the
+ * answer we asked for).
  */
 export function parseMonarchHistogram(json: unknown, w: MonarchWindows): { thisYear: WindowCount; lastYear: WindowCount } {
   const days = HistogramBody.parse(json).results.day;
-  if (!(w.lastYear.d1 in days) || !(w.thisYear.d2 in days)) throw new RangeError("histogram does not cover the asked range");
+  for (const day of Object.keys(days)) {
+    if (day < w.lastYear.d1 || day > w.thisYear.d2) throw new RangeError("histogram has a day outside the asked range");
+  }
   const sum = (d1: string, d2: string) => {
     let n = 0;
     for (const [day, c] of Object.entries(days)) if (day >= d1 && day <= d2) n += c;

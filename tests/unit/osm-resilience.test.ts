@@ -12,7 +12,8 @@ import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { breakerRetryAfter } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
-import { DEGRADED_RETRY_SEC, isDegraded, makePass, resetPassMaking } from "@/lib/pass/make";
+import { DEGRADED_RETRY_SEC, degradedReasons, isDegraded, makePass, MAX_DEGRADED_REBUILDS, mayRebuildDegraded, REPEAT_RETRY_SEC, resetPassMaking } from "@/lib/pass/make";
+import { OCTOBER_REASONS } from "@/lib/october";
 import { PASS_DEADLINE_MS, WILD_SLOW_COPY } from "@/lib/ai/build-pass";
 import { EXAMPLE_PARKS } from "@/lib/prewarm";
 import { PARKS_COPY } from "@/lib/parks/schema";
@@ -28,7 +29,7 @@ import {
   savedParksNear,
 } from "@/lib/sources/osm-snapshot";
 import { osmRefreshIdle, refreshLater, setBackgroundRefreshForTests } from "@/lib/sources/osm-refresh";
-import { breakerName, OVERPASS_DEFAULT_URLS, overpassSlots, runOverpass } from "@/lib/sources/overpass";
+import { breakerName, OVERPASS_DEFAULT_URLS, overpassSlots, runOverpass, withoutMaxsize } from "@/lib/sources/overpass";
 import { featuresQuery, PARK_FILTER, parseParkId } from "@/lib/sources/overpass-features";
 import { loadGeometry } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
@@ -212,11 +213,11 @@ describe("R1-M2 / SEC-1-01: Overpass abuse hardening", () => {
   it("a non-park id (relation/114690, the State of Texas): the filtered query selects nothing (live recording), NOT_A_PARK, no geometry query, negative-cached", async () => {
     const recd = fixture("overpass-features-not-a-park-texas");
     const meta = recd._recording as unknown as { overpassQuery: string };
-    expect(featuresQuery({ type: "relation", id: 114690 })).toBe(meta.overpassQuery);
+    expect(withoutMaxsize(featuresQuery({ type: "relation", id: 114690 }))).toBe(meta.overpassQuery);
     expect(meta.overpassQuery).toContain(`rel(114690)${PARK_FILTER}->.p;`);
     const r = replayWith((c) => {
       if (!isOverpass(c)) return undefined;
-      const q = new URLSearchParams(c.body ?? "").get("data");
+      const q = withoutMaxsize(new URLSearchParams(c.body ?? "").get("data") ?? "");
       if (q !== meta.overpassQuery) throw new Error(`no recording for ${q?.slice(0, 80)}`);
       return Response.json(recd.body);
     });
@@ -347,8 +348,8 @@ describe("R1-M1: one deadline for every data stage (fake clock)", () => {
   });
 });
 
-describe("R1-m2: degraded passes are re-made sooner", { timeout: 60_000 }, () => {
-  it("iNaturalist down -> degraded pass, shown for 15 min, then a better one with the same id", async () => {
+describe("R1-m2 / R2-M1: degraded passes are re-made, but capped", { timeout: 60_000 }, () => {
+  it("iNaturalist down -> degraded pass, shown for an hour, one rebuild try, a longer wait after the same failure, then a better one", async () => {
     // A clock that starts on Dec 5 and moves with real time (the 1 req/s slots wait for the next second).
     const start = Date.now();
     let t = DEC_5;
@@ -375,8 +376,18 @@ describe("R1-m2: degraded passes are re-made sooner", { timeout: 60_000 }, () =>
     expect(kept).toMatchObject({ kind: "pass", cached: true });
     expect(kept.kind === "pass" && kept.pass.id).toBe(first.pass.id);
 
-    // Model back: a better pass replaces it under the same id.
+    // R2-M1: the rebuild just tried (and failed) is not tried again a minute later (no model call).
     t += 60_000;
+    const capped = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, d());
+    expect(capped).toMatchObject({ kind: "pass", cached: true });
+    expect(r.calls.filter(isModel).length).toBe(modelCalls);
+    // Same reasons as last time: the next try waits REPEAT_RETRY_SEC, not just an hour.
+    t += DEGRADED_RETRY_SEC * 1000;
+    expect(await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, d())).toMatchObject({ kind: "pass", cached: true });
+    expect(r.calls.filter(isModel).length).toBe(modelCalls);
+
+    // Model back, after the longer wait: a better pass replaces it under the same id.
+    t += REPEAT_RETRY_SEC * 1000;
     const better = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, d());
     if (better.kind !== "pass") throw new Error("expected a pass");
     expect(better.cached).toBe(false);
@@ -399,5 +410,38 @@ describe("R1-m2: degraded passes are re-made sooner", { timeout: 60_000 }, () =>
     expect(isDegraded({ ...p, spot: { status: "none", message: SPOT_COPY.slow } })).toBe(true);
     expect(isDegraded({ ...p, spot: { status: "none", message: SPOT_COPY.noLandmark } })).toBe(false);
     expect(isDegraded({ ...p, october: { status: "unavailable", reason: "iNaturalist was too slow when this pass was made, so there are no monarch counts to show." } })).toBe(true);
+    // R2-M1: a reason that would just repeat (our side couldn't read the answer) never triggers a rebuild.
+    expect(isDegraded({ ...p, october: { status: "unavailable", reason: OCTOBER_REASONS.badOutput } })).toBe(false);
+    expect(OCTOBER_REASONS.badOutput).not.toMatch(/^iNaturalist sent/);
+  });
+
+  it("R2-M1: a source that stays down all day costs at most 1 + MAX_DEGRADED_REBUILDS model calls, even if asked every 15 min", async () => {
+    const start = Date.now();
+    let t = DEC_5;
+    const now = () => t + (Date.now() - start);
+    // Built failure: iNaturalist answers 503 all day; the model is fine.
+    const logs: string[] = [];
+    setLogSink((_l, line) => logs.push(line));
+    const r = replayWith((c) => (isInat(c) ? new Response("down", { status: 503 }) : undefined));
+    const d = () => ({ ip: ip(), fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env: ENV, now });
+    for (let m = 0; m < 20 * 60; m += 15) {
+      t = DEC_5 + m * 60_000;
+      const out = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, d());
+      expect(out.kind).toBe("pass");
+    }
+    // The 20 h cross Chicago midnight, so there are two pass days (two ids): count builds per id.
+    const made = new Map<string, number>();
+    for (const l of logs) {
+      const m = /"event":"pass_made","id":"([^"]+)"/.exec(l);
+      if (m) made.set(m[1], (made.get(m[1]) ?? 0) + 1);
+    }
+    expect(r.calls.filter(isModel).length).toBe([...made.values()].reduce((a, b) => a + b, 0)); // one model call per build
+    expect([...made.values()].some((n) => n > 1)).toBe(true); // it did try again
+    for (const n of made.values()) expect(n).toBeLessThanOrEqual(1 + MAX_DEGRADED_REBUILDS);
+    // A pass that isn't degraded, or is too young, is never rebuilt.
+    const fresh = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, { ...d(), fetchImpl: passReplay().fetchImpl, modelFetch: passReplay().fetchImpl });
+    if (fresh.kind !== "pass") throw new Error("expected a pass");
+    expect(await mayRebuildDegraded("k", { ...fresh.pass, october: undefined, sections: { ...fresh.pass.sections, wild: { status: "unavailable", message: WILD_DOWN_COPY } } }, 15 * 60, t)).toBe(false);
+    expect(degradedReasons({ ...fresh.pass, october: { status: "unavailable", reason: OCTOBER_REASONS.down } })).toContain("october");
   });
 });

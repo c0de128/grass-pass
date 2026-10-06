@@ -14,7 +14,7 @@ import { PARKS, passReplay, type Call } from "./support/pass-replay";
 // Park data and model answers are the LIVE recordings in tests/fixtures (see support/pass-replay.ts).
 // The only built responses are the model 500s in the "failed refresh" tests, which say so.
 
-const EXAMPLES: ExamplePark[] = EXAMPLE_PARKS.filter((e) => e.slug === "connemara" || e.slug === "celebration");
+const EXAMPLES: ExamplePark[] = ["connemara", "celebration"].map((slug) => EXAMPLE_PARKS.find((e) => e.slug === slug)!);
 const DAY_MS = 24 * 3600 * 1000;
 
 let replay: ReturnType<typeof passReplay>;
@@ -50,9 +50,10 @@ afterEach(async () => {
 
 describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
   it("the examples are real eval parks with confirmed OSM ids", () => {
-    expect(EXAMPLE_PARKS.map((e) => e.parkId)).toEqual(["way/306191453", "way/188145317", "way/38113837", "way/460905359"]);
-    expect(PARKS.connemara.id).toBe(EXAMPLE_PARKS[0].parkId);
-    expect(PARKS.celebration.id).toBe(EXAMPLE_PARKS[1].parkId);
+    // R2-m9: a complete pass (Arbor Hills: Park + Wild Finds + map) first, thin Connemara last.
+    expect(EXAMPLE_PARKS.map((e) => e.parkId)).toEqual(["way/38113837", "way/460905359", "way/188145317", "way/306191453"]);
+    expect(PARKS.connemara.id).toBe(EXAMPLES[0].parkId);
+    expect(PARKS.celebration.id).toBe(EXAMPLES[1].parkId);
   });
 
   it("PREWARM_EXAMPLES switch", () => {

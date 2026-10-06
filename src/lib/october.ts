@@ -85,7 +85,8 @@ export const OCTOBER_REASONS = {
   down: "iNaturalist didn't answer when this pass was made, so there are no monarch counts to show.",
   slow: "iNaturalist was too slow when this pass was made, so there are no monarch counts to show.",
   rateLimited: "we've used our polite share of iNaturalist requests for now, so there are no monarch counts to show.",
-  badOutput: "iNaturalist sent an answer we couldn't read, so there are no monarch counts to show.",
+  // R2-M1: our side couldn't read the answer; never worded as iNaturalist's fault.
+  badOutput: "Grass Pass couldn't read iNaturalist's answer this time, so there are no monarch counts to show.",
   notChecked: "monarch counts weren't checked when this pass was made. Make a different pass to check them.",
   milkweedDown: "iNaturalist didn't answer",
 } as const;

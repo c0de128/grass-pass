@@ -28,6 +28,7 @@ import {
   OCTOBER_NEGATIVE_SEC,
   octoberBox,
   parseMonarchHistogram,
+  pacificDay,
   parseTotal,
   sameDayLastYear,
 } from "@/lib/sources/inat-monarch";
@@ -79,14 +80,19 @@ function ticking(start: number): () => number {
 const within = (iso: string, from: number, ms = 60_000) => Date.parse(iso) >= from && Date.parse(iso) < from + ms;
 
 describe("monarch windows and URLs", () => {
-  it("Oct 5 (Chicago) -> the Wild Finds 14-day window, and the same days last year", () => {
+  it("Oct 5 (Pacific, iNaturalist's day) -> the last 14 days, and the same days last year", () => {
     expect(monarchWindows(AT)).toEqual({
       thisYear: { d1: "2026-09-21", d2: "2026-10-05" },
       lastYear: { d1: "2025-09-21", d2: "2025-10-05" },
     });
-    // 11:30 PM CDT on Oct 5 is 04:30 UTC Oct 6: still Oct 5 in Chicago.
+    // 11:30 PM CDT on Oct 5 is 04:30 UTC Oct 6: still Oct 5 in Chicago and in Pacific time.
     expect(monarchWindows(Date.UTC(2026, 9, 6, 4, 30)).thisYear.d2).toBe("2026-10-05");
-    expect(monarchWindows(Date.UTC(2026, 9, 6, 5, 30)).thisYear).toEqual({ d1: "2026-09-22", d2: "2026-10-06" });
+    // R2-M1: 00:30 CDT on Oct 6 (05:30 UTC) is 10:30 PM PDT on Oct 5. iNaturalist's histogram ends at
+    // its own (Pacific) day, so the window still ends Oct 5 (it asked for Oct 6 before and broke).
+    expect(pacificDay(Date.UTC(2026, 9, 6, 5, 30))).toBe("2026-10-05");
+    expect(monarchWindows(Date.UTC(2026, 9, 6, 5, 30)).thisYear).toEqual({ d1: "2026-09-21", d2: "2026-10-05" });
+    // 00:30 PDT on Oct 6 (07:30 UTC): Oct 6 in Pacific time too.
+    expect(monarchWindows(Date.UTC(2026, 9, 6, 7, 30)).thisYear).toEqual({ d1: "2026-09-22", d2: "2026-10-06" });
   });
 
   it("same day last year clamps Feb 29 and rejects junk", () => {
@@ -126,11 +132,33 @@ describe("parsing the live recordings", () => {
     expect(parseTotal(milk(PARKS.celebration.slug).body)).toBe(7);
   });
 
-  it("an answer that doesn't cover the asked days, or has the wrong shape, is refused (never guessed)", () => {
+  it("R2-M1: a day missing from the answer is a real 0 (iNat zero-fills only between sighting days)", () => {
     const w = monarchWindows(AT);
     const body = hist(PARKS.connemara.slug).body as { results: { day: Record<string, number> } };
-    const cut = { ...body, results: { day: Object.fromEntries(Object.entries(body.results.day).filter(([d]) => d !== "2026-10-05")) } };
-    expect(() => parseMonarchHistogram(cut, w)).toThrow(/cover/);
+    const days = body.results.day;
+    const without = (pred: (d: string) => boolean) => ({ ...body, results: { day: Object.fromEntries(Object.entries(days).filter(([d]) => !pred(d))) } });
+    // The recorded answer: the last asked day is there only because it had sightings.
+    const full = parseMonarchHistogram(body, w);
+    // Missing trailing days (no sightings yet today / the Pacific day hasn't started): same sums minus those days.
+    const trailing = parseMonarchHistogram(without((d) => d === "2026-10-05"), w);
+    expect(trailing.thisYear.count).toBe(full.thisYear.count - (days["2026-10-05"] ?? 0));
+    expect(trailing.lastYear).toEqual(full.lastYear);
+    // Missing leading days (no sightings early in last year's window): still read, those days count 0.
+    const leading = parseMonarchHistogram(without((d) => d < "2025-09-25"), w);
+    expect(leading.thisYear).toEqual(full.thisYear);
+    const lead = Object.entries(days).filter(([d]) => d >= w.lastYear.d1 && d < "2025-09-25").reduce((n, [, c]) => n + c, 0);
+    expect(leading.lastYear.count).toBe(full.lastYear.count - lead);
+    // No sighting at all in the asked range: iNaturalist answers {} (live, western Texas point), N=0 both years.
+    expect(parseMonarchHistogram({ total_results: 0, page: 1, per_page: 0, results: { day: {} } }, w)).toEqual({
+      thisYear: { ...w.thisYear, count: 0 },
+      lastYear: { ...w.lastYear, count: 0 },
+    });
+  });
+
+  it("a day outside the asked range, or the wrong shape, is refused (never guessed)", () => {
+    const w = monarchWindows(AT);
+    expect(() => parseMonarchHistogram({ results: { day: { "2026-10-06": 1 } } }, w)).toThrow(/outside/);
+    expect(() => parseMonarchHistogram({ results: { day: { "2025-09-20": 1 } } }, w)).toThrow(/outside/);
     expect(() => parseMonarchHistogram({ results: { month: {} } }, w)).toThrow();
     expect(() => parseMonarchHistogram({ results: { day: { "2026-10-05": -1 } } }, w)).toThrow();
     expect(() => parseTotal({})).toThrow();
@@ -222,6 +250,29 @@ describe("octoberBox() (replaying the live recordings)", () => {
     expect(await octoberBox(CENTER.connemara, { store, fetchImpl, queue: noWait, now: stepping(AT) })).toEqual({ status: "unavailable", reason: OCTOBER_REASONS.down });
     expect(calls).toHaveLength(0);
     expect((await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl, queue: noWait, now: stepping(AT) })).status).toBe("ok");
+  });
+
+  it("R2-M1: at 00:30 CDT on Oct 6 the box asks for iNaturalist's (Pacific) day and reads the real answer", async () => {
+    const at = Date.UTC(2026, 9, 6, 5, 30); // 00:30 CDT, Oct 6 = 10:30 PM PDT, Oct 5
+    const r = passReplay();
+    clockAt(at);
+    const box = await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl: r.fetchImpl, queue: noWait, now: stepping(at) });
+    expect(new URL(r.calls[0].url).searchParams.get("d2")).toBe("2026-10-05");
+    expect(box).toMatchObject({ status: "ok", thisYear: { d1: "2026-09-21", d2: "2026-10-05", count: 9 }, lastYear: { count: 63 } });
+    expect(logs.some((l) => l.includes("october_source_failed"))).toBe(false);
+  });
+
+  it("R2-M1: no sighting at all (iNaturalist's live {} answer) prints N=0 honestly, never 'couldn't read'", async () => {
+    const empty = rec("inat-monarch-histogram-empty-west-texas");
+    const r = passReplay();
+    const fetchImpl = async (u: string, i?: RequestInit) =>
+      new URL(u).pathname === "/v1/observations/histogram" ? json(empty.body) : r.fetchImpl(u, i);
+    clockAt(AT);
+    const box = await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl, queue: noWait, now: stepping(AT) });
+    if (box.status !== "ok") throw new Error(`expected ok, got ${JSON.stringify(box)}`);
+    expect([box.thisYear.count, box.lastYear.count]).toEqual([0, 0]);
+    expect(octoberDetail(box, "Oct 5")).toMatch(/^No monarch sightings reported within 25 km in the last 14 days/);
+    expect(octoberCompare(box)).toMatch(/rare find/);
   });
 
   it("monarchs ok but milkweed fails (built 503) -> the box still shows counts; milkweed says No data available", async () => {

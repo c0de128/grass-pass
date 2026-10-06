@@ -53,22 +53,69 @@ export const OCTOBER_WAIT_MS = 6_000;
 
 /**
  * R1-m2 (Q-1-05): a pass made while a source was down or slow (Wild Finds unavailable, the plant season
- * check unavailable, no Find This Spot because OpenStreetMap was busy/slow, October box down/slow) is "degraded". It is still saved
- * and shown, but after this long the next request tries to make a better one with the same id
- * (and keeps showing the degraded one if that fails). The example warm-up treats it the same way.
+ * check unavailable, no Find This Spot because OpenStreetMap was busy/slow, October box down/slow) is
+ * "degraded". It is still saved and shown, and a later request may try to make a better one with the
+ * same id (the degraded one stays if that fails). The example warm-up treats it the same way.
+ *
+ * R2-M1 (Q-2-01) caps that, because each rebuild is a model call: at most once per DEGRADED_RETRY_SEC
+ * per pass key, at most MAX_DEGRADED_REBUILDS per key per day, after REPEAT_RETRY_SEC when the last
+ * rebuild failed for the very same reasons, and never for a reason that will just repeat (our side
+ * couldn't read an answer: `badOutput` is not a "degraded" reason at all).
  */
-export const DEGRADED_RETRY_SEC = 15 * 60;
+export const DEGRADED_RETRY_SEC = 60 * 60;
+export const REPEAT_RETRY_SEC = 3 * 60 * 60;
+export const MAX_DEGRADED_REBUILDS = 3;
 
-const DEGRADED_OCTOBER: readonly string[] = [OCTOBER_REASONS.down, OCTOBER_REASONS.slow, OCTOBER_REASONS.rateLimited, OCTOBER_REASONS.badOutput];
+/** October reasons a later try can fix (iNaturalist down, slow, or our polite share used up). */
+const RETRYABLE_OCTOBER: readonly string[] = [OCTOBER_REASONS.down, OCTOBER_REASONS.slow, OCTOBER_REASONS.rateLimited];
+
+export type DegradedReason = "wild" | "season" | "spot" | "october";
+
+/** Why this pass is degraded (a source that was down or slow and may answer later); [] = not degraded. */
+export function degradedReasons(pass: Pass): DegradedReason[] {
+  const out: DegradedReason[] = [];
+  if (pass.sections.wild.status === "unavailable") out.push("wild");
+  // R1 follow-up: the plant season check could not run (iNaturalist phenology failed or was too slow).
+  if (pass.seasonUnknown === true) out.push("season");
+  if (pass.spot?.status === "none" && SPOT_DEGRADED_MESSAGES.includes(pass.spot.message)) out.push("spot");
+  if (pass.october?.status === "unavailable" && RETRYABLE_OCTOBER.includes(pass.october.reason)) out.push("october");
+  return out;
+}
 
 /** True when a source was down or slow when this pass was made (see DEGRADED_RETRY_SEC). */
 export function isDegraded(pass: Pass): boolean {
-  if (pass.sections.wild.status === "unavailable") return true;
-  // R1 follow-up: the plant season check could not run (iNaturalist phenology failed or was too slow).
-  if (pass.seasonUnknown === true) return true;
-  if (pass.spot?.status === "none" && SPOT_DEGRADED_MESSAGES.includes(pass.spot.message)) return true;
-  if (pass.october?.status === "unavailable" && DEGRADED_OCTOBER.includes(pass.october.reason)) return true;
-  return false;
+  return degradedReasons(pass).length > 0;
+}
+
+const RebuildSchema = z.object({
+  tries: z.number().int().min(0),
+  lastAt: z.number(),
+  /** The reasons of the pass the last rebuild replaced. */
+  reasons: z.array(z.enum(["wild", "season", "spot", "october"])),
+});
+const rebuildCache = createJsonCache({ name: "pass-rebuild", schema: RebuildSchema, ttlSec: 2 * DAY, maxEntries: 5_000 });
+
+const sameReasons = (a: readonly string[], b: readonly string[]) => a.length === b.length && a.every((r) => b.includes(r));
+
+/**
+ * May this degraded pass (saved `ageSec` ago under pass key `key`) be rebuilt now? False for a pass
+ * that isn't degraded, is younger than DEGRADED_RETRY_SEC, already had MAX_DEGRADED_REBUILDS today,
+ * or was rebuilt within the wait (REPEAT_RETRY_SEC when the last rebuild hit the same reasons again).
+ */
+export async function mayRebuildDegraded(key: string, pass: Pass, ageSec: number, nowMs: number): Promise<boolean> {
+  const reasons = degradedReasons(pass);
+  if (reasons.length === 0 || ageSec < DEGRADED_RETRY_SEC) return false;
+  const last = (await rebuildCache.get(key, nowMs))?.value;
+  if (!last) return true;
+  if (last.tries >= MAX_DEGRADED_REBUILDS) return false;
+  const waitSec = sameReasons(last.reasons, reasons) ? REPEAT_RETRY_SEC : DEGRADED_RETRY_SEC;
+  return nowMs - last.lastAt >= waitSec * 1000;
+}
+
+/** Count one rebuild of this degraded pass (before it starts, so concurrent visitors don't all try). */
+async function noteRebuild(key: string, pass: Pass, nowMs: number): Promise<void> {
+  const last = (await rebuildCache.get(key, nowMs))?.value;
+  await rebuildCache.set(key, { tries: (last?.tries ?? 0) + 1, lastAt: nowMs, reasons: degradedReasons(pass) }, { now: nowMs });
 }
 
 /** Every request, cached or not, per IP per minute. */
@@ -187,8 +234,12 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     if (!req.fresh && latest > 0) {
       const id = passId(req.parkId, req.ageBand, day, latest);
       const hit = await passCache.get(id, now());
-      if (hit && (hit.ageSec < DEGRADED_RETRY_SEC || !isDegraded(hit.value))) return { kind: "pass", pass: hit.value, cached: true };
-      if (hit) fallback = hit.value;
+      if (hit && !(await mayRebuildDegraded(key, hit.value, hit.ageSec, now()))) return { kind: "pass", pass: hit.value, cached: true };
+      if (hit) {
+        fallback = hit.value;
+        await noteRebuild(key, hit.value, now());
+        log("pass_rebuild_degraded", { id, reasons: degradedReasons(hit.value), ageSec: Math.round(hit.ageSec) });
+      }
     }
     const orFallback = (out: MakeOutcome): MakeOutcome => (fallback && out.kind !== "pass" ? { kind: "pass", pass: fallback, cached: true } : out);
     if (req.fresh && latest >= MAX_VARIANTS) {

@@ -34,6 +34,8 @@
   --chip: var(--mint);
   --on-chip: var(--ink); /* 10.39:1 */
   --notch-bg: var(--bg);
+  /* Header/footer lawn strip (option C), one static SVG per theme (scripts/render-brand.mjs writes both). */
+  --grass-strip: url("/brand/grass-strip.svg");
 }
 
 /* Dark mode: system preference unless the user picked light; or an explicit dark pick. */
@@ -54,6 +56,7 @@
     --secondary-hover: var(--forest-deep);
     --chip: var(--mint);
     --on-chip: var(--ink);
+    --grass-strip: url("/brand/grass-strip-dark.svg");
   }
 }
 
@@ -73,6 +76,20 @@
   --secondary-hover: var(--forest-deep);
   --chip: var(--mint);
   --on-chip: var(--ink);
+  --grass-strip: url("/brand/grass-strip-dark.svg");
+}
+
+/*
+ * Lawn strip under the header and above the footer (GrassDivider). A CSS background, so it is never announced and
+ * the ~12 KB (gzipped) SVG is fetched once per theme and cached. The bank sits on the bottom edge.
+ */
+.grass-strip {
+  height: 34px;
+  background: var(--grass-strip) left bottom / auto 34px repeat-x;
+}
+/* Footer copy starts further along the lawn, so header and footer never show the same flowers on a short page. */
+.grass-strip-alt {
+  background-position: -560px bottom;
 }
 
 /* Show the right logo for the active theme (the dark logo is the reversed, cream version). */

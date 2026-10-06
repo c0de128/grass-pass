@@ -24,6 +24,7 @@ import {
   viewBox,
 } from "./brand/art.mjs";
 import { f, loadBrandFonts, taglinePath, wordmarkPath } from "./brand/fonts.mjs";
+import { GRASS_STRIP_FILES, grassStripSvg } from "../src/components/art/grass.ts";
 
 const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const NAME = "Grass Pass";
@@ -119,6 +120,9 @@ export function buildSvgs(fonts = loadBrandFonts()) {
       "brand/explorer-scene.svg": sceneDoc,
       "brand/explorer-scene-dark.svg": sceneDarkDoc,
       "brand/ticket-mark.svg": markDoc("color"),
+      // Header/footer lawn strip (option C), one static file per theme, picked by --grass-strip in tokens.css.
+      [GRASS_STRIP_FILES.light]: grassStripSvg("light"),
+      [GRASS_STRIP_FILES.dark]: grassStripSvg("dark"),
     },
     raster: {
       "icon-32.png": { svg: appIconSvg(32, { simple: true }), size: 32 },

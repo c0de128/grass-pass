@@ -9,7 +9,7 @@ import { REPO_URL } from "@/lib/site-url";
 export function SiteFooter() {
   return (
     <footer className="mt-auto w-full print:hidden">
-      <GrassDivider />
+      <GrassDivider className="grass-strip-alt" />
       <div className="mx-auto flex w-full max-w-5xl flex-col gap-3 px-5 py-6 text-sm text-muted">
         <p>
           Park map data ©{" "}

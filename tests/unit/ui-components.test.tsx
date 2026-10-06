@@ -1,7 +1,15 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ExplorerScene, Logo, TicketMark } from "@/components/art/BrandArt";
-import { DIVIDER_TILE_WIDTH, DIVIDER_TUFTS, GRASS_BACK, dividerPath } from "@/components/art/grass";
+import { readFileSync } from "node:fs";
+import {
+  DIVIDER_HEIGHT,
+  GRASS_LAYERS,
+  GRASS_STRIP_FILES,
+  GRASS_TILES,
+  TILE,
+  grassStripSvg,
+} from "@/components/art/grass";
 import { Hero } from "@/components/Hero";
 import { SiteHeader } from "@/components/SiteHeader";
 import { parseTheme } from "@/components/theme";
@@ -80,51 +88,78 @@ describe("TicketCard", () => {
 });
 
 describe("GrassDivider", () => {
-  it("is decorative: hidden from screen readers, two greens in one repeating pattern", () => {
+  it("is decorative: an empty aria-hidden box drawn by the --grass-strip background, no inline SVG or text", () => {
     const out = html(<GrassDivider />);
-    expect(out).toMatch(/^<svg aria-hidden="true" focusable="false"/);
-    const id = out.match(/<pattern id="([^"]+)"/)?.[1];
-    expect(id).toMatch(/^grass-[a-zA-Z0-9_-]+$/);
-    expect(out).toContain(`width="${DIVIDER_TILE_WIDTH}"`);
-    expect(out).toContain(`fill="url(#${id})"`);
-    expect(out).toContain(`fill="${GRASS_BACK}"`);
-    expect(out).toContain('fill="currentColor"');
-    expect(out).toContain("text-lawn");
+    expect(out).toBe('<div aria-hidden="true" data-testid="grass-divider" class="grass-strip w-full"></div>');
   });
 
-  it("grows in soft tufts of 2-3 blades per root, heights 6-14 px (SPEC §8.3), never a fan", () => {
-    expect(DIVIDER_TUFTS.length).toBeGreaterThanOrEqual(6);
-    const roots = DIVIDER_TUFTS.map((t) => t.blades.reduce((s, [x]) => s + x, 0) / t.blades.length);
-    for (const [i, t] of DIVIDER_TUFTS.entries()) {
-      // A cannabis-style leaf fans 5-9 pointed leaflets out of one point; the logo grass has at most 3 per tuft.
-      expect(t.blades.length, `tuft ${i}`).toBeGreaterThanOrEqual(2);
-      expect(t.blades.length, `tuft ${i}`).toBeLessThanOrEqual(3);
-      for (const [, h, lean] of t.blades) {
-        expect(h).toBeGreaterThanOrEqual(6);
-        expect(h).toBeLessThanOrEqual(14);
-        expect(Math.abs(lean)).toBeLessThan(h / 2); // leans well under 45 degrees
-      }
-      // Each root has its own spot (tufts of the same layer never share a root).
-      for (const [j, r] of roots.entries()) {
-        if (j !== i && DIVIDER_TUFTS[j].layer === t.layer) expect(Math.abs(r - roots[i]), `tufts ${i}/${j}`).toBeGreaterThan(4);
+  it("tokens.css picks the light strip by default and the dark strip in both dark-mode blocks, 34 px tall", () => {
+    const css = readFileSync(new URL("../../src/styles/tokens.css", import.meta.url), "utf8");
+    const urls = [...css.matchAll(/--grass-strip:\s*url\("\/([^"]+)"\)/g)].map((m) => m[1]);
+    expect(urls).toEqual([GRASS_STRIP_FILES.light, GRASS_STRIP_FILES.dark, GRASS_STRIP_FILES.dark]);
+    const rule = css.match(/\.grass-strip\s*\{([^}]+)\}/)?.[1] ?? "";
+    expect(rule).toContain(`height: ${DIVIDER_HEIGHT}px`);
+    expect(rule).toContain(`background: var(--grass-strip) left bottom / auto ${DIVIDER_HEIGHT}px repeat-x;`);
+    expect(DIVIDER_HEIGHT).toBe(34); // option C, Kevin's pick
+    // The footer strip shows a different stretch of lawn than the header.
+    expect(css).toMatch(/\.grass-strip-alt\s*\{\s*background-position: -\d+px bottom;/);
+    expect(html(<GrassDivider className="grass-strip-alt" />)).toContain('class="grass-strip w-full grass-strip-alt"');
+  });
+
+  it("every blade is a single soft blade with its own root, never a fan (at most 3 blades per spot)", () => {
+    let total = 0;
+    for (const [name, blades] of Object.entries(GRASS_LAYERS)) {
+      for (const b of blades) {
+        const [x, h, dx, w] = b;
+        total++;
+        expect(h, name).toBeGreaterThan(3);
+        expect(h, name).toBeLessThanOrEqual(DIVIDER_HEIGHT - 3); // the tip stays inside the strip
+        expect(Math.abs(dx), name).toBeLessThan(h * 0.6); // leans well under 45 degrees
+        expect(w, name).toBeGreaterThanOrEqual(2);
+        expect(w, name).toBeLessThanOrEqual(6);
+        // A cannabis-style leaf fans 5-9 pointed leaflets out of one point; the logo grass has at most 3 per tuft.
+        const sharing = blades.filter((o) => o !== b && Math.abs(o[0] - x) < 1).length;
+        expect(sharing, `${name} blade at x=${x}`).toBeLessThanOrEqual(2);
       }
     }
+    expect(total).toBeGreaterThan(250); // a real meadow, not a handful of comb teeth
   });
 
   it("repeats seamlessly: blades poking past a tile edge are also drawn on the other side", () => {
+    const widths = { paleFront: TILE.front, paleTall: TILE.tall, middle: TILE.middle, front: TILE.front, tall: TILE.tall };
     let wrapped = 0;
-    for (const layer of ["back", "front"] as const) {
-      const starts = [...dividerPath(layer).matchAll(/M(-?[\d.]+) /g)].map((m) => Number(m[1]));
-      const blades = DIVIDER_TUFTS.filter((t) => t.layer === layer).flatMap((t) => t.blades);
-      for (const [x, , dx] of blades) {
-        const left = Math.min(x - 1.45, x + dx - 0.3);
-        const right = Math.max(x + 1.45, x + dx + 0.3);
-        if (left < 0 || right > DIVIDER_TILE_WIDTH) wrapped++;
-        if (left < 0) expect(starts.some((s) => Math.abs(s - (x + DIVIDER_TILE_WIDTH - 1.45)) < 0.01)).toBe(true);
-        if (right > DIVIDER_TILE_WIDTH) expect(starts.some((s) => Math.abs(s - (x - DIVIDER_TILE_WIDTH - 1.45)) < 0.01)).toBe(true);
+    for (const [name, blades] of Object.entries(GRASS_LAYERS)) {
+      const W = widths[name as keyof typeof widths];
+      for (const [x, h, dx, w] of blades) {
+        const left = Math.min(x - w, x + dx - 1);
+        const right = Math.max(x + w, x + dx + 1);
+        const twin = (s: number) => blades.some((o) => Math.abs(o[0] - (x + s)) < 0.01 && o[1] === h && o[2] === dx);
+        if (left < 0) {
+          wrapped++;
+          expect(twin(W), `${name} x=${x}`).toBe(true);
+        }
+        if (right > W) {
+          wrapped++;
+          expect(twin(-W), `${name} x=${x}`).toBe(true);
+        }
       }
     }
-    expect(wrapped).toBeGreaterThan(0); // the tile really has edge-crossing blades, so this test checks something
+    expect(wrapped).toBeGreaterThan(0); // the tiles really have edge-crossing blades, so this test checks something
+  });
+
+  it("stacks tiles of different widths (no visible repeat) with a rolling bank and 4 tiny finds per 1031 px", () => {
+    expect(GRASS_TILES.map((t) => t.w)).toEqual([377, 787, 293, 377, 377, 787, 1031]);
+    for (const theme of ["light", "dark"] as const) {
+      const svg = grassStripSvg(theme);
+      expect(svg).toMatch(/^<svg xmlns="http:\/\/www.w3.org\/2000\/svg" aria-hidden="true" focusable="false" width="3840" height="34"/);
+      expect(svg).not.toMatch(/<text|<script|<animate|<set|<image|href=|style=/);
+      const finds = svg.match(/<pattern id="g6"[^>]*>([\s\S]*?)<\/pattern>/)?.[1] ?? "";
+      expect(finds.match(/<ellipse/g)).toHaveLength(10); // two 5-petal flowers
+      expect(finds.match(/stroke-width="0.5"><circle/g)).toHaveLength(1); // one clover (3 round leaflets)
+      expect(finds.match(/r="0.75"/g)).toHaveLength(12); // one dandelion clock
+      // The bank (pattern g3) is one closed path along the bottom edge.
+      expect(svg).toMatch(/<pattern id="g3"[^>]*><path fill="#[0-9A-F]{6}" d="M-1 35L[^"]+Z"\/><\/pattern>/);
+    }
   });
 });
 

@@ -3,7 +3,7 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ART, ART_DARK, GRASS, TOKENS } from "../../scripts/brand/art.mjs";
-import { GRASS_BACK, bladePath } from "../../src/components/art/grass";
+import { GRASS_PALETTE, bladeOutline } from "../../src/components/art/grass";
 import { buildSvgs } from "../../scripts/render-brand.mjs";
 
 const APP = fileURLToPath(new URL("../..", import.meta.url));
@@ -113,7 +113,6 @@ describe("design tokens", () => {
     walk(path.join(APP, "src"));
     for (const f of files) {
       const src = readFileSync(f, "utf8");
-      // text-lawn is allowed only on aria-hidden decoration (GrassDivider fills with currentColor).
       const bad = src.match(/\b(?:text|border|outline)-(?:sage|sun)\b/g) ?? [];
       expect(bad, path.relative(APP, f)).toEqual([]);
     }
@@ -179,15 +178,28 @@ describe("brand assets", () => {
     }
   });
 
-  it("divider grass blades are soft curved single blades like the logo's (no straight comb teeth)", () => {
-    const d = bladePath(10, 16, 12, 2, 3);
+  it("strip grass blades are soft curved single blades like the logo's (no straight comb teeth)", () => {
+    const d = bladeOutline([10, 12, 2, 3, 0], 16);
     // Base on the ground line, two curved edges and a small round over the tip: only Q curves, no straight L sides.
-    expect(d).toMatch(/^M8\.5 16 Q[^QLA]+Q[^QLA]+Q[^QLA]+ 11\.5 16 Z$/);
+    expect(d).toMatch(/^M8\.5 16Q[^QLA]+Q[^QLA]+Q[^QLA]+ 11\.5 16Z$/);
     const nums = d.match(/-?[\d.]+/g)!.map(Number);
     const ys = nums.filter((_, i) => i % 2 === 1);
     expect(Math.min(...ys)).toBeGreaterThan(16 - 12 - 0.5); // tip stays at the asked height
-    // The divider's back green is the logo's darker grass green.
-    expect(GRASS_BACK).toBe((ART as Record<string, string>).gDark);
+  });
+
+  it("the lawn strip uses logo B's grass greens and the brand's sun colours in both themes", () => {
+    const A = ART as Record<string, string>;
+    const D = ART_DARK as Record<string, string>;
+    const T = TOKENS as Record<string, string>;
+    for (const theme of ["light", "dark"] as const) {
+      const p = GRASS_PALETTE[theme];
+      expect([p.deep, p.mid, p.light, p.band], theme).toEqual([A.gDark, A.gMid, A.gLight, A.gMid]);
+      expect([p.petal, p.petalDark], theme).toEqual([T.sunflower.toUpperCase(), T.sun.toUpperCase()]);
+    }
+    // Dark mode: the glow blades use the dark logo's pale green, the dandelion is paper and mint.
+    expect(GRASS_PALETTE.dark.pale).toBe(D.gPale);
+    expect(GRASS_PALETTE.dark.puff).toBe(T.paper.toUpperCase());
+    expect(GRASS_PALETTE.dark.puffLine).toBe(T.mint.toUpperCase());
   });
 
   it("PNG files have the sizes the spec asks for", () => {

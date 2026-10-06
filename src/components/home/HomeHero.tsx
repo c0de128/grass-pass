@@ -35,9 +35,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            We turn your local park into a real-world treasure hunt in about 30 seconds. Gemma 4, an open AI model, reads
-            the park&apos;s real map and the last two weeks of wildlife sightings, then writes the clues. No screens required
-            after you press print.
+            Grass Pass turns your local park into an interactive adventure. Our AI analyzes real-world maps and recent
+            wildlife sightings to craft a custom scavenger hunt in seconds. Just hit print, grab a pencil, and head
+            outside&mdash;no screens required.
           </p>
 
           <ExampleChips examples={examples} />

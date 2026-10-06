@@ -5,10 +5,12 @@ import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { tripBreaker } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import {
+  isOctoberBoxDay,
   isOctoberDay,
   milkweedLine,
   OCTOBER_REASONS,
   OCTOBER_TIP,
+  OCTOBER_WINDOW_LABEL,
   octoberCompare,
   octoberDetail,
   octoberHeadline,
@@ -274,11 +276,26 @@ describe("October copy (code-written, honest when low)", () => {
     );
   });
 
-  it("October only, in Chicago days", () => {
-    expect(isOctoberDay("2026-10-01")).toBe(true);
-    expect(isOctoberDay("2026-10-31")).toBe(true);
-    expect(isOctoberDay("2026-09-30")).toBe(false);
-    expect(isOctoberDay("2026-11-01")).toBe(false);
+  it("shown Sep 15 - Nov 15 inclusive (SPEC F10), in Chicago days, every year", () => {
+    for (const d of ["2026-09-15", "2026-09-30", "2026-10-01", "2026-10-05", "2026-10-31", "2026-11-01", "2026-11-15", "2027-09-15", "2025-11-15"]) {
+      expect(isOctoberBoxDay(d), d).toBe(true);
+    }
+    for (const d of ["2026-09-14", "2026-11-16", "2026-12-31", "2026-01-01", "2026-08-31", "2026-06-15", "2027-09-14"]) {
+      expect(isOctoberBoxDay(d), d).toBe(false);
+    }
+    expect(OCTOBER_WINDOW_LABEL).toBe("September 15 to November 15");
+  });
+
+  it("rejects anything that is not a YYYY-MM-DD day", () => {
+    for (const d of ["", "2026-10", "2026-10-5", "10/05/2026", "2026-13-01", "2026-10-00", "2026-10-32", "x2026-10-05", "2026-10-05T00:00"]) {
+      expect(isOctoberBoxDay(d), d).toBe(false);
+    }
+  });
+
+  it("isOctoberDay (the callers' name) is the same window check", () => {
+    expect(isOctoberDay).toBe(isOctoberBoxDay);
+    expect(isOctoberDay("2026-09-20")).toBe(true);
+    expect(isOctoberDay("2026-11-16")).toBe(false);
   });
 });
 
@@ -324,9 +341,14 @@ describe("<OctoberBox> (screen and print)", () => {
     expect(octoberStubText({ day: "2026-09-14", october: box })).toBeNull();
   });
 
-  it("not October -> nothing at all", () => {
-    expect(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-09-30", october: okBox(9, 63) }} />)).toBe("");
-    expect(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-11-01" }} variant="print" />)).toBe("");
+  it("outside Sep 15 - Nov 15 -> nothing at all", () => {
+    expect(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-09-14", october: okBox(9, 63) }} />)).toBe("");
+    expect(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-11-16" }} variant="print" />)).toBe("");
+  });
+
+  it("inside the window but outside October (Sep 30, Nov 1) -> the box is shown", () => {
+    expect(text(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-09-30", october: okBox(9, 63) }} />))).toContain("9 monarchs");
+    expect(renderToStaticMarkup(<OctoberBox pass={{ day: "2026-11-01", october: okBox(9, 63) }} variant="print" />)).not.toBe("");
   });
 
   it("October but no counts -> the exact 'No data available' line with why", () => {
@@ -338,7 +360,7 @@ describe("<OctoberBox> (screen and print)", () => {
   });
 });
 
-describe("makePass() adds the box only in October (clock set to the recording time, live recordings)", () => {
+describe("makePass() adds the box only Sep 15 - Nov 15 (clock set to the recording time, live recordings)", () => {
   const env = { DO_INFERENCE_API_KEY: "test-key-not-real" };
 
   it("Oct 5: the Connemara pass carries 9 vs 63 and the milkweed count, fetched in parallel with the model", async () => {
@@ -352,9 +374,9 @@ describe("makePass() adds the box only in October (clock set to the recording ti
     expect(order.indexOf("/v1/observations/histogram")).toBeLessThan(order.length - 1);
   }, 20_000);
 
-  it("Nov 2: no box, and no monarch or milkweed request", async () => {
+  it("Nov 16 (the day after the window): no box, and no monarch or milkweed request", async () => {
     const r = passReplay();
-    const nov = Date.UTC(2026, 10, 2, 18, 0);
+    const nov = Date.UTC(2026, 10, 16, 18, 0); // noon CST, Chicago day 2026-11-16
     const out = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, { ip: "192.0.2.71", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, now: ticking(nov) });
     if (out.kind !== "pass") throw new Error(out.kind);
     expect(out.pass.october).toBeUndefined();

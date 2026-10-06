@@ -17,10 +17,30 @@ export const MILKWEED_RADIUS_KM = 1.5;
 
 const Day = z.string().regex(/^\d{4}-\d{2}-\d{2}$/);
 
-/** The box is shown only for passes made in October, Chicago time (the pass `day` is a Chicago day). */
-export function isOctoberDay(day: string): boolean {
-  return /^\d{4}-10-\d{2}$/.test(day);
+/**
+ * SPEC F10: the box is shown only for passes made Sep 15 - Nov 15 (inclusive, every year), Chicago time.
+ * The pass `day` is already a Chicago day ("YYYY-MM-DD"), so this is a plain month/day compare.
+ */
+export const OCTOBER_WINDOW = { from: { month: 9, day: 15 }, to: { month: 11, day: 15 } } as const;
+export const OCTOBER_WINDOW_LABEL = "September 15 to November 15";
+
+/** True when a Chicago day ("2026-10-05") is inside the October-special window (Sep 15 - Nov 15). */
+export function isOctoberBoxDay(day: string): boolean {
+  const m = /^(\d{4})-(\d{2})-(\d{2})$/.exec(day);
+  if (!m) return false;
+  const month = Number(m[2]);
+  const d = Number(m[3]);
+  if (month < 1 || month > 12 || d < 1 || d > 31) return false;
+  const md = month * 100 + d;
+  const { from, to } = OCTOBER_WINDOW;
+  return md >= from.month * 100 + from.day && md <= to.month * 100 + to.day;
 }
+
+/**
+ * Kept under its first name for the existing callers (pass maker, OctoberBox, print page): it now means
+ * "inside the October-special window" (Sep 15 - Nov 15, SPEC F10), not "a day in October".
+ */
+export const isOctoberDay = isOctoberBoxDay;
 
 export const WindowCountSchema = z.object({
   /** First and last day of the window, inclusive ("2026-09-21".."2026-10-05"). */

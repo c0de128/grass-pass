@@ -47,6 +47,25 @@ export const clientNow = () => Date.now();
  */
 export const AUTO_RETRY_MIN_MS = 10_000;
 export const AUTO_RETRY_MAX_MS = 60_000;
+/**
+ * Audit Q-3-01: the wait before the one automatic retry, or null for none: only for the map-data codes,
+ * and never when the server's Retry-After is longer than AUTO_RETRY_MAX_MS (a park in the 15-min slow
+ * cache would just fail again at once; the copy then says the real wait).
+ */
+export function plannedAutoRetryMs(code: string, retryAfterSec: number | undefined): number | null {
+  if (!AUTO_RETRY_CODES.includes(code)) return null;
+  if (retryAfterSec !== undefined && retryAfterSec * 1000 > AUTO_RETRY_MAX_MS) return null;
+  return autoRetryWaitMs(retryAfterSec);
+}
+
+/**
+ * Audit Q-3-01: a map-data failure whose Retry-After is longer than an auto-retry would wait (a park in
+ * the slow cache): pressing "Try again" before then fails at once, so the page offers no such button.
+ */
+export function retryFailsNow(code: string, retryAfterSec: number | undefined): boolean {
+  return AUTO_RETRY_CODES.includes(code) && retryAfterSec !== undefined && retryAfterSec * 1000 > AUTO_RETRY_MAX_MS;
+}
+
 export function autoRetryWaitMs(retryAfterSec: number | undefined): number {
   const ms = Math.round((retryAfterSec ?? 15) * 1000);
   return Math.min(AUTO_RETRY_MAX_MS, Math.max(AUTO_RETRY_MIN_MS, Number.isFinite(ms) ? ms : AUTO_RETRY_MIN_MS));
@@ -118,8 +137,8 @@ export function usePassRequest() {
     const finish = (result: PassState) => {
       clearTimeout(timer);
       let s = result;
-      if (abortRef.current === ac && opts.autoRetry && s.kind === "failed" && AUTO_RETRY_CODES.includes(s.code)) {
-        const wait = autoRetryWaitMs(s.retryAfter);
+      const wait = s.kind === "failed" ? plannedAutoRetryMs(s.code, s.retryAfter) : null;
+      if (abortRef.current === ac && opts.autoRetry && s.kind === "failed" && wait !== null) {
         s = { ...s, autoRetryAt: clientNow() + wait };
         // One retry only: the second run doesn't ask for another.
         retryRef.current = setTimeout(() => void runRef.current(body), wait);

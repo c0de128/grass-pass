@@ -9,7 +9,8 @@
  * - Spend guard: EVAL_BUDGET_USD (default 1.00). No new model call starts once the measured spend
  *   (tokens x DO price) reaches it; those runs are reported as skipped.
  * - Settings (env): EVAL_MODELS (default "gemma-4-31B-it,llama-4-maverick"; "none" = baseline only),
- *   EVAL_RUNS (override runs per model), EVAL_CASES (comma case numbers), EVAL_BUDGET_USD.
+ *   EVAL_RUNS (override runs per model), EVAL_CASES (comma case numbers), EVAL_BUDGET_USD,
+ *   EVAL_AGE_BAND (audit R3: "4-6" | "6-10" | "10-13", overrides cases.json's band; the run is then partial).
  */
 import "@/lib/zod-config";
 import { existsSync, mkdirSync, writeFileSync, appendFileSync } from "node:fs";
@@ -18,7 +19,7 @@ import { buildPass, type BuildDeps } from "@/lib/ai/build-pass";
 import { MemoryStore } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { resolveModelTarget, type ModelLogLine } from "@/lib/model";
-import type { AgeBand } from "@/lib/pass/schema";
+import { AGE_BANDS, AgeBandSchema, type AgeBand } from "@/lib/pass/schema";
 import type { FetchLike } from "@/lib/sources/common";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import { localDay } from "@/lib/time";
@@ -66,6 +67,8 @@ export type EvalSettings = {
   runsOverride: number | null;
   cases: number[] | null;
   budgetUsd: number;
+  /** Audit R3: an age band other than cases.json's (a smoke of the 10-13 band); null = the file's band. */
+  ageBand?: AgeBand | null;
 };
 
 export function settingsFromEnv(env: Record<string, string | undefined>): EvalSettings {
@@ -80,7 +83,17 @@ export function settingsFromEnv(env: Record<string, string | undefined>): EvalSe
     runsOverride: Number.isInteger(runs) && runs > 0 ? runs : null,
     cases: envList(env.EVAL_CASES)?.map(Number).filter((n) => Number.isInteger(n)) ?? null,
     budgetUsd: Number.isFinite(budget) && budget > 0 ? budget : 1,
+    ageBand: ageBandFromEnv(env.EVAL_AGE_BAND),
   };
+}
+
+/** EVAL_AGE_BAND, checked (an unknown band is an error, never silently the default). */
+export function ageBandFromEnv(v: string | undefined): AgeBand | null {
+  const t = v?.trim();
+  if (!t) return null;
+  const r = AgeBandSchema.safeParse(t);
+  if (!r.success) throw new Error(`EVAL_AGE_BAND must be one of ${AGE_BANDS.join(", ")}`);
+  return r.data;
 }
 
 // ---------- spend guard ----------
@@ -353,7 +366,7 @@ const say = (s: string) => process.stdout.write(`${s}\n`);
 export async function runEval(settings: EvalSettings, env: Record<string, string | undefined>): Promise<EvalResults> {
   const startedAt = new Date();
   const casesFile = loadCases();
-  const band = casesFile.ageBand;
+  const band = settings.ageBand ?? casesFile.ageBand;
   const chosen = casesFile.cases.filter((c) => !settings.cases || settings.cases.includes(c.n));
   const notes: string[] = [
     "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
@@ -422,7 +435,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
     const modelRuns = runs.filter((r) => r.model !== TEMPLATE_MODEL);
     const allCalls = modelRuns.flatMap((r) => r.calls);
     const partial =
-      settings.cases !== null || settings.runsOverride !== null || settings.models.length < Object.keys(MODEL_SPECS).length || !keyPresent;
+      settings.cases !== null || settings.runsOverride !== null || band !== casesFile.ageBand || settings.models.length < Object.keys(MODEL_SPECS).length || !keyPresent;
     return {
       meta: {
         startedAt: startedAt.toISOString(),

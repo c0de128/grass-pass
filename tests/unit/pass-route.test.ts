@@ -108,7 +108,7 @@ describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
 });
 
 describe("POST /api/pass: Connemara (live recordings)", () => {
-  it("streams the real steps, then a 7-item pass from the real first answer and its real refill", async () => {
+  it("streams the real steps, then an 8-item pass from the real first answer and its real refill", async () => {
     const res = await route.POST(post(connemara));
     expect(res.status).toBe(200);
     const ls = await lines(res);
@@ -120,19 +120,21 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    // Content-tuning recording: 9 asked (low-data pool: 8 + 1 spare). One duplicate id and two generic plant
-    // clues ("fruit or seeds" only) leave 6, so the refill asks for 2 + 1 spare from the 4 unused items. It
-    // keeps 1 (a "round shell" the snail's source never says is dropped, and one name leak): 7 of 8.
-    expect(p.items).toHaveLength(7);
+    // Audit R3 recording: 9 asked (low-data pool: 8 + 1 spare). One duplicate id and two generic plant
+    // clues ("seeds in October" only) leave 6, so the refill asks for 2 + 1 spare from the 4 unused items. It
+    // keeps 2 (the elm's "a name like a color" is dropped as generic): 8 of 8.
+    expect(p.items).toHaveLength(8);
     expect(p.target).toBe(8);
-    expect(p.removed).toEqual({ notGrounded: 0, other: 5 });
+    expect(p.removed).toEqual({ notGrounded: 0, other: 4 });
     expect(p.model.attempts).toBe(2);
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: LUCKY_COPY.notConnected });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
-    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    // Audit R3: no printed clue opens with filler or ends a command with "?".
+    for (const i of p.items) expect(i.clue).not.toMatch(/^(Quick|Psst|Shh|Wow|Hmm|Ready|Stop)|^(Scan|Seek|Explore|Notice|Wander|Sneak|Discover|Track)[^.!?]*?$/);
     // R2-M5: the grown-up's line is code-written from these items. In this answer the only easy find that stays
     // put is the creek (find 1), so the tip names it and says to stay close.
     expect(p.parentNote).toMatch(/^Start with find 1: it's easy and it stays put, but it's near water, so stay close./);
@@ -175,7 +177,7 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     // The pass page reads it back from the cache only.
     expect(await loadPass(p.id)).toEqual(p);
     expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":6') && l.includes('"refill":false'))).toBe(true);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":1') && l.includes('"refill":true'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":2') && l.includes('"refill":true'))).toBe(true);
   });
 
   it("the same park + age today is answered from the cache: one line, cached:true, no upstream call", async () => {
@@ -297,6 +299,12 @@ describe("POST /api/pass: honest empties and failures", () => {
     if (f.type !== "empty") throw new Error(f.type);
     expect(f.sections.wild).toEqual({ status: "unavailable", message: WILD_DOWN_COPY });
     expect(f.message).toMatch(/^Not enough real data for a pass at Connemara Meadow Preserve right now/);
+    // Audit R3-T1: the section with some data says why too (it used to stay "ok" and say nothing).
+    expect(f.message).toMatch(/a pass needs at least 3 finds, and we found 1\. Each section below says why\.$/);
+    expect(f.sections.park).toEqual({
+      status: "empty",
+      message: "No data available: OpenStreetMap has only 1 kind of mapped thing (creek or stream) inside Connemara Meadow Preserve, and a pass needs at least 3 finds.",
+    });
     expect(modelCalls(replay.calls)).toHaveLength(0);
   });
 

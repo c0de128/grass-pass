@@ -198,7 +198,7 @@ describe("Wild Finds pool", () => {
   it("copy and evidence helpers", () => {
     expect(wildEmptyCopy(2)).toBe("No data available: only 2 research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(wildEmptyCopy(9)).toMatch(/^No data available: 9 research-grade sightings .* but fewer than 3 are safe/);
-    expect(WILD_DOWN_COPY).toBe("No data available: iNaturalist didn't answer.");
+    expect(WILD_DOWN_COPY).toBe("No data available: iNaturalist (the wildlife sightings service) didn't answer when this pass was made. Trying again in a minute may help.");
     expect(wildEvidence(1, "2026-09-21")).toBe("seen once since Sep 21 · iNaturalist");
   });
 

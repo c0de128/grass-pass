@@ -141,7 +141,8 @@ describe("Park Finds facts vary their words per park (M10: copied fact phrases o
     const texts = new Set(Array.from({ length: 20 }, (_, i) => chooseWords(t, `way/${1000 + i * 7919}|shelter|0`)));
     expect(texts.size).toBeGreaterThanOrEqual(5);
     // Real parks: Celebration's bench fact reads differently from the old one fixed sentence.
-    expect(byId("osm-bench").sourceText).toContain("Each one is a long outdoor seat for a rest.");
+    // Audit R3-C1: the old fixed words "long outdoor seat" now have choices too.
+    expect(byId("osm-bench").sourceText).toContain("Each one is a long seat outdoors for resting.");
     const sheets = new Set(Array.from({ length: 20 }, (_, i) => factsFor("playground", `way/${3000 + i * 104729}`, 1).join(" ")));
     expect(sheets.size).toBeGreaterThanOrEqual(8);
   });
@@ -185,7 +186,7 @@ describe("the checks (style is a preference, truth and safety are not)", () => {
     const bench = byId("osm-bench");
     const fountain = byId("osm-fountain");
     const bridge = byId("osm-bridge");
-    const copy = draftItem(bench, "Psst, find a long outdoor seat for a rest.", "a long outdoor seat for a rest");
+    const copy = draftItem(bench, "Psst, find a long seat outdoors for resting.", "a long seat outdoors for resting");
     const items = [copy, draftItem(fountain, "Listen! Do you hear water splashing?", "water"), draftItem(bridge, "Wander over a path that crosses a dip.", "cross over water")];
     // test input: the fountain/bridge quotes are checked like any other (short ones fail grounding), so use real source text
     items[1].sourceQuote = fountain.sourceText.slice(-30);
@@ -195,7 +196,7 @@ describe("the checks (style is a preference, truth and safety are not)", () => {
     const withSpare = validateDraft({ items }, celebration, mix2, { hasMap: false, ask: ask3 });
     expect(withSpare.items.map((i) => i.item.id)).toEqual(["osm-fountain", "osm-bridge"]);
     expect(withSpare.drops).toEqual({ copies_source: 1 });
-    expect(withSpare.copied).toEqual(["a long outdoor seat"]);
+    expect(withSpare.copied).toEqual(["a long seat outdoors"]);
     const noSpare = validateDraft({ items: items.slice(0, 2) }, celebration, mix2, { hasMap: false });
     expect(noSpare.items.map((i) => i.item.id)).toEqual(["osm-bench", "osm-fountain"]);
     expect(noSpare.items[0].style).toBe("copies_source");

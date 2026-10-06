@@ -167,6 +167,8 @@ export const TaxonSummarySchema = z.object({
   /** Plain-text Wikipedia summary, sentence-cut to 600 chars; null when iNat has none. */
   summary: z.string().max(TAXON_SUMMARY_MAX).nullable(),
   ancestorIds: z.array(z.number().int()).max(80),
+  /** Audit R3: the names Wikipedia bolds in the summary (its other common names); absent on older cache entries. */
+  names: z.array(z.string().max(80)).max(8).optional(),
 });
 export type TaxonSummary = z.infer<typeof TaxonSummarySchema>;
 
@@ -180,10 +182,22 @@ const TaxaBody = z.object({
   ),
 });
 
+/**
+ * Audit R3 (10-13 smoke, 2026-10-06): Wikipedia bolds an article's own names, other common names
+ * included ("This plant is also called <b>mossycup oak</b>" for bur oak). Gemma wrote "a plant ... that
+ * is called mossycup", which gives the answer away but used no word of the iNaturalist names. The
+ * bolded names (plain text, at most 8 of up to 80 characters) become name words in the Wild Finds pool.
+ */
+export function boldNames(html: string): string[] {
+  const out = [...html.matchAll(/<b>([^<]{2,80})<\/b>/gi)].map((m) => stripHtml(m[1]).trim()).filter((n) => n.length > 1 && n.length <= 80);
+  return [...new Set(out)].slice(0, 8);
+}
+
 export function parseTaxa(json: unknown): TaxonSummary[] {
   return TaxaBody.parse(json).results.map((t) => {
     const text = t.wikipedia_summary ? sentencePrefix(stripHtml(t.wikipedia_summary), TAXON_SUMMARY_MAX) : "";
-    return { id: t.id, summary: text.length > 0 ? text : null, ancestorIds: t.ancestor_ids.slice(0, 80) };
+    const names = t.wikipedia_summary ? boldNames(t.wikipedia_summary) : [];
+    return { id: t.id, summary: text.length > 0 ? text : null, ancestorIds: t.ancestor_ids.slice(0, 80), ...(names.length > 0 ? { names } : {}) };
   });
 }
 

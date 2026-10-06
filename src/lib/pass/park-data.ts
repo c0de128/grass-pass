@@ -43,7 +43,8 @@ export const SAVED_PARK_TTL_SEC = 30 * DAY;
 export const HEAVY_TTL_SEC = 15 * 60;
 
 /** Copy for a data stage stopped by the pass deadline (SPEC §5.4, existing DATA_TOO_SLOW wording). */
-export const DATA_TOO_SLOW_COPY = "The park data took too long to load, so there was no time left to write clues. Try again in a minute.";
+// Audit Q-3-06: "Try again shortly", not "in a minute" (the page's own countdown says the real wait).
+export const DATA_TOO_SLOW_COPY = "The park data took too long to load, so there was no time left to write clues. Try again shortly.";
 
 const featuresCache = createCachePair({
   name: "park-features",
@@ -95,6 +96,23 @@ export function featuresFailure(err: SourceError): FeaturesFailure {
       return { kind: "error", status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: err.retryAfter ?? 60 } };
   }
 }
+
+/** Audit Q-3-01: whole minutes, rounded up (a wait of 1-60 s is "1 minute"). */
+const minutesOf = (sec: number) => Math.max(1, Math.ceil(sec / 60));
+
+/**
+ * Audit Q-3-01: the failure while a park is in the slow cache (its live query ran into our timeout).
+ * Code OSM_UNAVAILABLE (an example pass is offered), with the real seconds left as retryAfter and copy
+ * that says the real wait. The page does not auto-retry a wait this long (usePassRequest).
+ */
+function slowOutcome(retryAfterSec: number): FeaturesFailure {
+  return { kind: "error", status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.parkSlow(minutesOf(retryAfterSec)), retryAfter: retryAfterSec } };
+}
+function slowFailure(retryAfterSec: number): FeaturesResult {
+  return { ok: false, outcome: slowOutcome(retryAfterSec) };
+}
+/** Seconds left in the slow cache for an entry this old (at least 1). */
+const slowSecondsLeft = (ageSec: number) => Math.max(1, SLOW_TTL_SEC - ageSec);
 
 async function liveFeatures(ref: ParkRef, deps: ParkDataDeps, priority: "normal" | "low"): Promise<ParkFeatures | null> {
   return parkFeatures(ref, {
@@ -154,9 +172,10 @@ export async function peekFeatures(ref: ParkRef, deps: Pick<ParkDataDeps, "store
     return dfw ? { kind: "known", hit: null, heavy: true, slow: false } : { kind: "fail", outcome: failure(503, { code: "PARK_TOO_BIG", message: PARKS_COPY.parkTooBig, retryAfter: HEAVY_TTL_SEC }) };
   }
   if (savedFeatures(key)) return { kind: "known", hit: null, heavy: false, slow: false };
-  const slow = slowCache.decode(slowRaw, now) !== null;
+  const slow = slowCache.decode(slowRaw, now);
   if (slow) {
-    return dfw ? { kind: "known", hit: null, heavy: false, slow: true } : { kind: "fail", outcome: failure(503, { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: SLOW_TTL_SEC }) };
+    // Audit Q-3-01: the real seconds left and copy that says the wait.
+    return dfw ? { kind: "known", hit: null, heavy: false, slow: true } : { kind: "fail", outcome: slowOutcome(slowSecondsLeft(slow.ageSec)) };
   }
   // A live query is next. With every mirror resting and nothing saved, it could only fail.
   const waits = breakers.map((b) => breakerWaitFrom(b, now));
@@ -190,10 +209,14 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps, plan?: Feat
     return { ok: true, value: saved.value, at: saved.fetchedAt, from: "saved" };
   }
 
-  if (known ? known.slow : await slowCache.get(key, deps.now())) {
+  // SEC-3-02: with a peek plan, known.slow is only set when a saved DFW answer exists (else the peek failed).
+  const slow = known ? null : await slowCache.get(key, deps.now());
+  if (known?.slow || slow) {
     const dfw = savedDfwFeatures(key);
     if (dfw) return fromSavedDfw(ref, key, dfw, deps, "slow_cached");
-    return fail(503, { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: SLOW_TTL_SEC });
+    // Audit Q-3-01: the REAL time left before this park is asked again (not a fixed 15 min, and never
+    // "try again in a minute": every try before then fails at once).
+    return slowFailure(slowSecondsLeft(slow?.ageSec ?? 0));
   }
 
   try {
@@ -212,6 +235,8 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps, plan?: Feat
     if (err.code === "timeout") await slowCache.set(key, true, { now: deps.now() });
     const dfw = savedDfwFeatures(key);
     if (dfw) return fromSavedDfw(ref, key, dfw, deps, err.code);
+    // Audit Q-3-01: a timeout was just negative-cached for SLOW_TTL_SEC, so say that wait, not "a minute".
+    if (err.code === "timeout") return slowFailure(SLOW_TTL_SEC);
     return { ok: false, outcome: featuresFailure(err) };
   }
 }

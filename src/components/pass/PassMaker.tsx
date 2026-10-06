@@ -23,7 +23,7 @@ import {
   type AgeBand,
 } from "@/lib/pass/schema";
 import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
-import { clientNow, PASS_WAIT_COPY, usePassRequest, type PassState } from "./usePassRequest";
+import { clientNow, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
 const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT"]);
@@ -75,7 +75,7 @@ export function PassFailure({
         </p>
       ) : null}
       <div className="flex flex-wrap gap-3">
-        {NO_RETRY.has(state.code) ? null : (
+        {NO_RETRY.has(state.code) || retryFailsNow(state.code, state.retryAfter) ? null : (
           <Button type="button" variant="secondary" onClick={onTryAgain}>
             {secondsToRetry !== null ? "Try again now" : "Try again"}
           </Button>

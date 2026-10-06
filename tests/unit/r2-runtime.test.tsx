@@ -8,7 +8,8 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { PassFailure } from "@/components/pass/PassMaker";
-import { AUTO_RETRY_MAX_MS, AUTO_RETRY_MIN_MS, autoRetryWaitMs } from "@/components/pass/usePassRequest";
+import { AUTO_RETRY_MAX_MS, AUTO_RETRY_MIN_MS, autoRetryWaitMs, plannedAutoRetryMs, retryFailsNow } from "@/components/pass/usePassRequest";
+import { PARKS_COPY } from "@/lib/parks/schema";
 import { runAfterResponse } from "@/lib/after";
 import { MODEL_NOT_CONFIGURED_TAIL, modelFailure, PASS_DEADLINE_MS } from "@/lib/ai/build-pass";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
@@ -241,12 +242,59 @@ describe("R2-m2: a park whose live query ran into our client timeout is not sent
     const deps = { store, env: {}, now: () => Date.now(), fetchImpl: hang(calls), timeoutMs: 50 };
     const first = await loadFeatures({ type: "way", id: 1 }, deps);
     expect(first.ok).toBe(false);
+    // Audit Q-3-01: the first failure already says the real 15-minute wait (it was just negative-cached).
+    if (!first.ok) expect(first.outcome.error).toEqual({ code: "OSM_UNAVAILABLE", message: PARKS_COPY.parkSlow(15), retryAfter: 15 * 60 });
     const sent = calls.length;
     expect(sent).toBeGreaterThan(0);
     const second = await loadFeatures({ type: "way", id: 1 }, { ...deps, store });
     expect(second.ok).toBe(false);
     if (!second.ok) expect(second.outcome.error).toMatchObject({ code: "OSM_UNAVAILABLE", retryAfter: 15 * 60 });
     expect(calls.length).toBe(sent);
+  });
+
+  it("audit Q-3-01: a later try gets the REAL time left, and the copy says it", async () => {
+    const store = new MemoryStore();
+    const calls: string[] = [];
+    let t = Date.UTC(2026, 9, 6, 14, 0, 0);
+    const deps = { store, env: {}, now: () => t, fetchImpl: hang(calls), timeoutMs: 50 };
+    await loadFeatures({ type: "way", id: 2 }, deps);
+    t += 10 * 60 * 1000 + 30_000; // 10.5 min later: 4.5 min left
+    const later = await loadFeatures({ type: "way", id: 2 }, deps);
+    if (later.ok) throw new Error("expected a failure");
+    expect(later.outcome.error).toEqual({ code: "OSM_UNAVAILABLE", message: PARKS_COPY.parkSlow(5), retryAfter: 270 });
+    expect(PARKS_COPY.parkSlow(5)).toBe(
+      "No data available: this park's map took too long to load from OpenStreetMap a moment ago, so we won't ask for it again for about 5 minutes. Meanwhile, open an example pass or pick another park.",
+    );
+    expect(PARKS_COPY.parkSlow(1)).toContain("about 1 minute.");
+  });
+
+  it("audit Q-3-01: the page never auto-retries into that wait, and offers no 'Try again' that would fail at once", () => {
+    // The server error body of the slow cache, run through the client's decision.
+    expect(plannedAutoRetryMs("OSM_UNAVAILABLE", 900)).toBeNull();
+    expect(plannedAutoRetryMs("OSM_UNAVAILABLE", 270)).toBeNull();
+    expect(plannedAutoRetryMs("OSM_UNAVAILABLE", 19)).toBe(19_000);
+    expect(plannedAutoRetryMs("OSM_UNAVAILABLE", undefined)).toBe(15_000);
+    expect(plannedAutoRetryMs("DATA_TOO_SLOW", 60)).toBe(60_000);
+    expect(plannedAutoRetryMs("MODEL_TIMEOUT", 5)).toBeNull();
+    expect(retryFailsNow("OSM_UNAVAILABLE", 900)).toBe(true);
+    expect(retryFailsNow("OSM_UNAVAILABLE", 60)).toBe(false);
+    expect(retryFailsNow("MODEL_RATE_LIMITED", 900)).toBe(false);
+    const html = renderToStaticMarkup(
+      <PassFailure
+        state={{ kind: "failed", code: "OSM_UNAVAILABLE", message: PARKS_COPY.parkSlow(15), retryAfter: 900, example: { name: "Arbor Hills Nature Preserve", href: "/pass/w38113837-6to10-20261006-1?example=1" } }}
+        secondsToRetry={null}
+        onTryAgain={() => undefined}
+      />,
+    );
+    expect(html).toContain("about 15 minutes");
+    expect(html).not.toContain("Try again");
+    expect(html).not.toContain("Trying once more");
+    expect(html).toContain("See a ready example pass: Arbor Hills Nature Preserve");
+  });
+
+  it("audit Q-3-06: the busy copy no longer promises 'a minute' next to the page's own countdown", () => {
+    expect(PARKS_COPY.overpassDown).not.toMatch(/in a minute/);
+    expect(PARKS_COPY.overpassDown).toBe("No data available: the OpenStreetMap server is busy. Try again shortly, or pick an example park.");
   });
 
   it("a DFW park still gets its saved answer while it is negative-cached", async () => {

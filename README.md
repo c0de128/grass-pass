@@ -2,6 +2,10 @@
 
 > Pick a park. Print a pass. Phone away.
 
+**Try it live:** TODO (PM): put the production URL here at deploy (Fri Oct 9). No login.
+
+TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with its date).
+
 Grass Pass makes a one-page, printable scavenger pass for a real park and a child's age (4-6, 6-10 or 10-13). The
 goal is about **30 seconds on a screen**: pick a park, pick an age, print. Then the phone goes away. The child ticks
 boxes with a pencil, and the grown-up keeps a tear-off stub with the answers, safety notes and sources.
@@ -25,8 +29,8 @@ Built for the DEV Hacktoberfest 2026 Open-Source AI Challenge, Week 1 "Touch Gra
 Live demo: (link added at deploy, Fri Oct 9)
 
 No login, no account. To try it:
-1. On the home page, tap one of the **example parks** (for example Connemara Meadow Preserve). Its pass for today is
-   already made, so it opens right away.
+1. On the home page, tap one of the **example parks** (for example Arbor Hills Nature Preserve, the first one). Its pass
+   for today is already made, so it opens right away.
 2. Press **Print pass** (at the top of the pass page). One Letter page: the kid's pass on top, the grown-up's stub below.
 3. To make your own: search a park by name (for example "Connemara Meadow Preserve") or a town, pick a park from the
    list, pick an age band and press **Make my pass**. A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map servers are slow.
@@ -58,7 +62,11 @@ flowchart LR
 4. **One call to an open model** (`gemma-4-31B-it` on DigitalOcean serverless inference by default) picks items by
    id and writes the clues. The JSON schema allows only the real pool ids.
 5. **Code checks every clue.** Its `sourceQuote` must appear word for word in that item's source; it must not name
-   its answer, add a number or contain a link. A failing clue is dropped (never rewritten). Too few left: one retry.
+   its answer, add a number or contain a link, a "how many" question must not give its own number, and a "listen"
+   clue is only allowed for something its source says makes a sound (never a plant, fungus, butterfly or dragonfly).
+   A failing clue is dropped, never rewritten. The only edits code makes: it takes a filler opener ("Quick!",
+   "Psst,") off the front, and turns the "?" after a command ("Track 3 fields?") into a full stop. Too few left: one
+   retry.
    Every number and date on the pass is written by code, and the pass names the model that actually answered.
 6. **You print it.** Black and white, one Letter page (A4 works too).
 

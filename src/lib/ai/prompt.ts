@@ -203,10 +203,16 @@ export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[
  * 5-word run across parks repeated it in their first five words ("I dare you to find" 16 times, "Find
  * a place with a" on 8 parks). Each park gets its own mix of first words from this bank (hash of the
  * park name), and the prompt asks for a different one per clue.
+ * Audit R3-C1: the bank used to hold fillers ("Psst", "Quick", "Shh", "Wow", "Hmm", "Ready", "Stop") and
+ * "Listen"/"Guess": in run 2026-10-06-3 they opened 139 of 366 printed clues, gave "Listen for a bug!"
+ * for a silent damselfly and "Guess how many 25 ...". Only words that start a real instruction or
+ * question are left; validate.ts `trimFillerOpening` takes off any filler the model still writes.
+ * The 10-13 smoke of 2026-10-06 dropped "Here" ("Here is a place to sit."), "Near" (it wrote a fragment:
+ * "Near a plant with fruit or seeds ...") and "Follow" ("Follow a bug ...": too close to "chase").
  */
 export const OPENER_BANK = [
-  "Peek", "Spy", "Listen", "Hunt", "Psst", "Quick", "Somewhere", "Tiptoe", "Wander", "Track", "Hmm", "Ready",
-  "Who", "What", "Which", "Guess", "Shh", "Sneak", "Point", "Stop", "Wow", "Squint", "Scan", "Here",
+  "Peek", "Spy", "Hunt", "Somewhere", "Tiptoe", "Wander", "Track", "Who", "What", "Which", "Sneak",
+  "Point", "Squint", "Scan", "Watch", "Notice", "Seek", "Explore", "Glance", "Discover", "Check",
 ] as const;
 
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
@@ -322,8 +328,9 @@ export const CLUE_VOICES = [
   "Voice for this park: a nature detective's notes, the trait first.",
   // Content tuning: "playful dares" wrote "I dare you to find" on 16 clues of run 2026-10-06-2.
   "Voice for this park: tiny one-sentence stories.",
-  "Voice for this park: a park ranger sharing a secret.",
-  "Voice for this park: start with what the child will see or hear first.",
+  // Audit R3-C1: "sharing a secret" wrote "Psst!" / "Shh,"; "see or hear first" wrote "Listen!" for silent things.
+  "Voice for this park: a park ranger pointing things out.",
+  "Voice for this park: start with what the child will see first.",
 ] as const;
 
 /** FNV-1a 32-bit (stable: the same park name always gets the same voice). */
@@ -361,6 +368,9 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
           `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see".`,
         ]
       : ["- Start each clue with a different first word."]),
+    // Audit R3-C1: filler openers and sound clues for silent things.
+    '- Never open with a filler word or cry such as Quick, Psst, Shh, Wow, Hmm, Hey, Ooh, Ready or Stop: start with the clue itself.',
+    "- Ask the child to listen or hear ONLY when that item's SOURCE says it makes a sound. Plants, fungi, spiders, snails, butterflies, moths, dragonflies and damselflies make no sound.",
     '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
     ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
@@ -379,7 +389,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
       ? [
           `- Park Finds: make the child look closely at a fact in that SOURCE: a detail to find, or a count to check. Bad: ${bad(2)}.`,
-          `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
+          `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. A count clue tells the child to count and says the number to check; it never asks "how many" (a question that also says the number answers itself). Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
         ]
       : []),
     // R1-m4: a pass with no Find This Spot map must not send the child to one.

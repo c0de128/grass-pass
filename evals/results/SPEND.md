@@ -50,3 +50,7 @@ Post-R2 eval sync total (builder, 2026-10-06 CDT): probes $0.0001 + fixture re-r
 | 2026-10-06T11:05Z-11:15Z | Content tuning: re-recording of the two model fixtures in tests/fixtures (the request changed; not an eval run): Celebration 1 call, Connemara 2 first calls (only the second is stored) + 1 refill call | 4 | 8336 | 1751 | $0.0024 |
 
 Content tuning total (builder, 2026-10-06 CDT): smokes 0544 + 0550 + 0552 + 0602 = $0.0301 (target $0.03 or less: $0.0001 over) + probes about $0.0001 + fixture re-recording $0.0024 + full run $0.0508 (cap $0.08) = **about $0.0834**.
+| 2026-10-06T13:59:30.938Z | 2026-10-06-partial-0859.md | 4 | 11667 | 1676 | $0.0029 |
+| 2026-10-06T14:08Z (approx) | Audit R3 (builder J): re-recording of the two model fixtures in tests/fixtures (the prompt changed; not an eval run): Celebration 1 call, Connemara 1 first call + 1 refill call | 3 | 6105 | 1195 | $0.0017 |
+
+Audit R3 builder J total (2026-10-06 CDT): 10-13 smoke 0859 $0.0029 + fixture re-recording $0.0017 = **about $0.0046** (7 calls).

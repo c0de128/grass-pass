@@ -41,6 +41,9 @@ export type DropReason =
   | "out_of_season"
   | "number_not_in_source"
   | "wrong_count"
+  | "broken_count"
+  | "silent_sound"
+  | "filler_only"
   | "generic_clue"
   | "copies_example"
   | "copies_source"
@@ -61,7 +64,7 @@ export type ValidItem = {
 /** Drops that say the model could not write a valid clue for THAT item (not an id or shape problem, not style). */
 const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
   "cut_off", "url_or_markup", "danger", "not_grounded", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
-  "wrong_count", "generic_clue", "copies_example", "repeats_clue",
+  "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "copies_example", "repeats_clue",
 ]);
 
 /** Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening on every pass). */
@@ -88,6 +91,10 @@ export type ValidationResult = {
   spares?: number;
   /** Content tuning: printed items that failed a style preference (no spare was left to replace them). */
   styleKept?: number;
+  /** Audit R3-C1: clues whose filler opening ("Quick!", "Psst,", "Ready to count?") code took off. */
+  openersTrimmed?: number;
+  /** Audit R3: commands whose "?" code turned into "." ("Track 3 areas for sports?"). */
+  questionsFixed?: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -283,6 +290,8 @@ export function validateDraft(
   const kept: ValidItem[] = [];
   let lookWhereCleared = 0;
   let quotesRepaired = 0;
+  let openersTrimmed = 0;
+  let questionsFixed = 0;
   /** Content tuning: the source runs clues copied (the refill call is told not to use them). */
   const copied = new Set<string>();
 
@@ -293,8 +302,18 @@ export function validateDraft(
       drop(typeof id === "string" && !byId.has(id) ? "unknown_id" : "schema");
       continue;
     }
-    const d = parsed.data;
-    current = d.itemId;
+    current = parsed.data.itemId;
+    // Audit R3-C1: a filler opening ("Quick!", "Psst,", "Shh.", "Ready to count?") is taken off by code;
+    // a clue that was nothing but filler is dropped.
+    const trimmed = trimFillerOpening(parsed.data.clue);
+    if (trimmed === null) {
+      drop("filler_only");
+      continue;
+    }
+    if (trimmed !== parsed.data.clue) openersTrimmed++;
+    const punctuated = fixCommandQuestion(trimmed);
+    if (punctuated !== trimmed) questionsFixed++;
+    const d = { ...parsed.data, clue: punctuated };
     // Content tuning: a clue cut off mid-sentence ("Hunt for a ", seen 4 times in one answer of the
     // 2026-10-06 smoke) is broken output, whatever else it says.
     if (isCutOff(d.clue)) {
@@ -370,6 +389,17 @@ export function validateDraft(
       drop("wrong_count");
       continue;
     }
+    // Audit R3-C1: "Guess how many 25 big grass areas have goals?" / "How many seats ...? There are 9."
+    // A "how many" question that states a number gives its own answer away (and often reads broken).
+    if (brokenCountQuestion(d.clue) !== null) {
+      drop("broken_count");
+      continue;
+    }
+    // Audit R3-C1: "Listen for a bug! Is there one that is green with blue on its end?" (a damselfly).
+    if (silentSoundProblem(`${d.clue} ${lookWhere}`, item) !== null) {
+      drop("silent_sound");
+      continue;
+    }
     // R2-M5: "Look for a tree with seeds or fruit." fits hundreds of species; "white flowers" proved by
     // "show it with flowers" was never checked.
     // Content tuning: on a low-data pool, a clue whose describing word is in its own quote, and that
@@ -410,7 +440,10 @@ export function validateDraft(
       style ??= "repeats_clue";
     }
     // A stock opening ("Can you find ...") or the same first words as an earlier clue: always only a preference.
-    if (style === undefined && (stockOpening(d.clue) !== null || earlier.some((k) => sameOpening(k.clue, d.clue)))) style = "repeats_opening";
+    // Audit R3-C1: the same FIRST word as an earlier clue on this pass counts as a repeated opening too.
+    if (style === undefined && (stockOpening(d.clue) !== null || earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue)))) {
+      style = "repeats_opening";
+    }
     used.add(item.id);
     kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote, ...(style ? { style } : {}) });
   }
@@ -461,6 +494,8 @@ export function validateDraft(
     failedIds: [...failed].filter((id) => !used.has(id)),
     spares,
     styleKept,
+    openersTrimmed,
+    questionsFixed,
   };
 }
 
@@ -732,6 +767,10 @@ const TRAIT_STOP = new Set([
   // The code-written season sentence ("In October, iNaturalist photos from this area show it with flowers") is no trait.
   "january", "february", "march", "april", "june", "july", "august", "september", "october", "november", "december",
   "month", "season", "year", "inaturalist", "photo", "show", "time", "day", "fall", "autumn", "spring", "summer", "winter",
+  // Audit R3-C1: trivia, not something to see ("Who is the bird of prey that is common in North America?").
+  "common", "native", "north", "south", "east", "west", "america", "american", "found", "known", "widespread", "species",
+  "genus", "family", "range", "prey", "region", "world", "united", "state", "europe", "asia", "africa", "mexico", "canada",
+  "continent", "country", "throughout", "worldwide",
 ]);
 
 const traitStem = (w: string) => (w.length >= 5 ? w.slice(0, 4) : w);
@@ -817,6 +856,145 @@ export function stockOpening(clue: string): string | null {
 export function sameOpening(a: string, b: string): boolean {
   const fa = firstWords(a, 3);
   return fa.split(" ").length === 3 && fa === firstWords(b, 3);
+}
+
+/** Audit R3-C1: two clues that start with the same first word ("Peek ...", "Peek ..."). */
+export function sameFirstWord(a: string, b: string): boolean {
+  const fa = firstWords(a, 1);
+  return fa.length > 0 && fa === firstWords(b, 1);
+}
+
+// ---------- Audit R3-C1: filler openers, broken count questions, sounds from silent things ----------
+
+/**
+ * Filler words a clue opened with in run 2026-10-06-3 (printed openers of 366 Gemma clues: "quick" 24,
+ * "ready" 24, "wow" 20, "guess" 16, "shh" 13, "stop" 12, "listen" 12, "psst" 10, "hmm" 8). They only
+ * count as filler when punctuation follows them ("Quick!", "Psst,", "Listen closely."), so "Look at the
+ * bark" or "Listen for a gurgle" stay.
+ */
+const FILLER_WORDS =
+  "quick|quickly|psst+|pst|shh+|sh|hush|hey|hi|hello|ooh+|oh+|wow+|whoa|hmm+|yay|aha|ahoy|look|stop|listen|okay|ok|alright|ready|attention|guess what";
+const FILLER_HEAD_RE = new RegExp(
+  `^(?:(?:${FILLER_WORDS})(?:\\s+(?:closely|carefully|up|now|there|everyone|here))?\\s*[!?.,…:;]+\\s*)`,
+  "iu",
+);
+/** "Ready to count? How many ...", "Ready to hear feet thump on planks? Count ...": a warm-up question before the clue. */
+const READY_QUESTION_RE = /^ready\b[^.!?]{0,60}\?\s+(?=\S)/iu;
+/** "Stop and listen for running water ..." -> "Listen for running water ...". */
+const STOP_AND_RE = /^stop,?\s+and\s+(?=\p{L})/iu;
+/** A clue left with fewer words than this after the filler is taken off is not a clue. */
+const MIN_CLUE_WORDS = 3;
+
+/**
+ * Audit R3-C1: the clue without its filler opening ("Quick! Spot a bird ..." -> "Spot a bird ..."),
+ * the first letter upper case. The clue unchanged when it has none; null when nothing but filler is
+ * left (fewer than MIN_CLUE_WORDS words). Code only removes words, so no check is weakened.
+ */
+export function trimFillerOpening(clue: string): string | null {
+  let t = clue.trim();
+  for (let i = 0; i < 4; i++) {
+    const next = t.replace(FILLER_HEAD_RE, "").replace(READY_QUESTION_RE, "").replace(STOP_AND_RE, "").trim();
+    if (next === t) break;
+    t = next;
+  }
+  if (t === clue.trim()) return clue;
+  const words = t.match(/[\p{L}\p{N}]+/gu) ?? [];
+  if (words.length < MIN_CLUE_WORDS) return null;
+  return t.charAt(0).toUpperCase() + t.slice(1);
+}
+
+/** First words of a command ("Track ...", "Squint to see if ..."): such a sentence is not a question. */
+const COMMAND_WORDS = new Set([
+  "peek", "spy", "hunt", "tiptoe", "wander", "track", "sneak", "point", "squint", "scan", "watch", "follow", "notice", "seek",
+  "explore", "glance", "discover", "check", "guess", "look", "find", "spot", "search", "count", "listen", "walk",
+]);
+
+/**
+ * Audit R3 (10-13 smoke, 2026-10-06): a command that ends in a question mark ("Track 3 areas for
+ * sports?", "Squint to see if any trees have a rounded crown?") reads machine-made. Its "?" becomes ".".
+ * Only the punctuation changes; a real question ("Which tree has glossy leaves?") is left alone.
+ */
+export function fixCommandQuestion(clue: string): string {
+  return clue
+    .split(/(?<=[.!?])\s+/u)
+    .map((s) => {
+      const first = (s.match(/^[\p{L}']+/u)?.[0] ?? "").toLowerCase();
+      return COMMAND_WORDS.has(first) && /\?$/u.test(s) ? `${s.slice(0, -1)}.` : s;
+    })
+    .join(" ");
+}
+
+/** Words after "how many" that show nothing is being counted ("Guess how many can you find?"). */
+const NOT_A_COUNTED_THING = new Set(["can", "could", "do", "does", "did", "are", "is", "were", "was", "you", "there", "here", "will", "would", "more", "times"]);
+
+/**
+ * Audit R3-C1: a broken "how many" question, or null. Broken = the clue asks "how many" AND writes a
+ * number anywhere ("Guess how many 25 big grass areas have goals?", "How many seats can you find?
+ * There are 9.": it answers itself), or nothing countable follows "how many" ("Guess how many can you
+ * find?"). A count TASK with its number ("Count the 4 walkways.") is not a question and stays.
+ */
+export function brokenCountQuestion(clue: string): string | null {
+  const sentences = sentencesOf(clue);
+  let asks = false;
+  for (const t of sentences) {
+    for (let i = 0; i + 1 < t.length; i++) {
+      if (t[i] !== "how" || t[i + 1] !== "many") continue;
+      asks = true;
+      const next = t[i + 2];
+      if (next === undefined || NOT_A_COUNTED_THING.has(next)) return `"how many" with nothing to count`;
+    }
+  }
+  if (!asks) return null;
+  const n = sentences.flat().find((w) => numberOf(w) !== null || /^\d/.test(w));
+  return n === undefined ? null : `asks "how many" and also says ${n}`;
+}
+
+/** iNaturalist taxa that never make a sound a child can hear (verified on api.inaturalist.org 2026-10-06). */
+const SILENT_TAXA: ReadonlySet<number> = new Set([
+  47126, // kingdom Plantae
+  47170, // kingdom Fungi (and lichens)
+  47115, // phylum Mollusca (snails, slugs)
+  47119, // class Arachnida (spiders and relatives)
+  47178, // class Actinopterygii (ray-finned fish)
+]);
+/** class Insecta: silent unless in one of the SOUNDING_INSECTS groups. */
+const INSECTA = 47158;
+/** Insects a child may hear: Orthoptera (crickets, katydids), Cicadoidea (cicadas), Hymenoptera (bees buzz), Diptera (flies buzz). */
+const SOUNDING_INSECTS: ReadonlySet<number> = new Set([47651, 50190, 47201, 47822]);
+/** Pool kinds (wild.ts KIND_BY_ICONIC) that are silent, for an item whose taxon has no ancestor list. */
+const SILENT_KINDS: ReadonlySet<string> = new Set(["plant", "fungus or lichen", "snail or slug", "spider or relative", "fish", "insect"]);
+
+/**
+ * True when the item's iNaturalist taxon is silent (a plant, fungus, snail, spider, fish, or an insect
+ * that isn't a cricket, katydid, cicada, bee/wasp or fly: damselflies, dragonflies, butterflies and
+ * beetles are silent). Uses the taxon's ancestor ids from iNaturalist; falls back to the pool kind.
+ */
+export function isSilentTaxon(item: Pick<PoolItem, "taxon" | "kind">): boolean {
+  if (!item.taxon) return false;
+  const lineage = new Set([item.taxon.taxonId, ...item.taxon.ancestorIds]);
+  if ([...SILENT_TAXA].some((id) => lineage.has(id))) return true;
+  if (lineage.has(INSECTA)) return ![...SOUNDING_INSECTS].some((id) => lineage.has(id));
+  if (item.taxon.ancestorIds.length === 0) return SILENT_KINDS.has(item.kind);
+  return false;
+}
+
+/** A clue that asks the child to listen ("Listen for ...", "Can you hear ...", "makes a sound"). */
+const SOUND_ASK_RE =
+  /\b(?:listen\w*|hear|hears|heard|hearing|sounds?|noises?|noisy|buzz\w*|sing|sings|singing|songs?|chirp\w*|croak\w*|whistl\w*|quack\w*|hoot\w*|squawk\w*|honk\w*|trill\w*|hum|hums|humming)\b/iu;
+/** A source that says the thing makes a sound (Wikipedia song/call; the Park Finds' code-written sound facts). */
+const SOUND_SOURCE_RE =
+  /\b(?:sound\w*|noise\w*|noisy|hear\w*|listen\w*|songs?|songbirds?|sing|sings|singing|singer|call|calls|calling|buzz\w*|chirp\w*|croak\w*|whistl\w*|quack\w*|hoot\w*|squawk\w*|honk\w*|trill\w*|drum\w*|vocal\w*|voice|hum|hums|humming|splash\w*|splish\w*|gurgl\w*|bubbl\w*|rushing|roar\w*|thump\w*|clomp\w*|barking|flaps?|snaps?|whoosh\w*|rustl\w*)\b/iu;
+
+/**
+ * Audit R3-C1: why a sound clue is wrong for this item, or null. A clue (or hint) that asks the child to
+ * listen is dropped when the item is a silent taxon (`isSilentTaxon`), or when its SOURCE never says it
+ * makes a sound ("Listen! I am a large wading bird." for a heron whose source is about its size).
+ */
+export function silentSoundProblem(text: string, item: Pick<PoolItem, "taxon" | "kind" | "sourceText">): string | null {
+  if (!SOUND_ASK_RE.test(text)) return null;
+  if (isSilentTaxon(item)) return "a sound clue for a silent living thing";
+  if (!SOUND_SOURCE_RE.test(item.sourceText)) return "a sound clue, but its source names no sound";
+  return null;
 }
 
 /**

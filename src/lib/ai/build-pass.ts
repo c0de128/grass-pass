@@ -41,6 +41,7 @@ import {
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
 import { DATA_TOO_SLOW_COPY, loadFeatures, type FeaturesPlan } from "@/lib/pass/park-data";
+import { explainShortSections, shortPassMessage } from "@/lib/pass/short-copy";
 import { finishSpot, geometryWithin, loadGeometry, planSpot, spotWaitMs, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
@@ -157,7 +158,7 @@ function parkDataOf(parkName: string, pool: readonly PoolItem[]): ParkData {
 // ---------- data ----------
 
 /** Wild Finds copy when iNaturalist was stopped by the pass deadline (R1-M1). */
-export const WILD_SLOW_COPY = "No data available: iNaturalist was too slow when this pass was made.";
+export const WILD_SLOW_COPY = "No data available: iNaturalist was too slow when this pass was made. Trying again in a minute may help.";
 
 type WildResult = {
   items: PoolItem[];
@@ -270,7 +271,9 @@ export function withRefill(first: ValidationResult, refill: ValidationResult, mi
   const merged = mergeResults(first, refill, mix);
   const drops: ValidationResult["drops"] = { ...first.drops };
   for (const [k, n] of Object.entries(refill.drops) as [DropReason, number][]) drops[k] = (drops[k] ?? 0) + n;
-  return { ...merged, drops, returned: first.returned + refill.returned };
+  return { ...merged, drops, returned: first.returned + refill.returned, openersTrimmed: (first.openersTrimmed ?? 0) + (refill.openersTrimmed ?? 0),
+    questionsFixed: (first.questionsFixed ?? 0) + (refill.questionsFixed ?? 0),
+  };
 }
 
 /**
@@ -355,10 +358,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     return {
       kind: "empty",
       parkName: f.park.name,
-      message: bothEmpty
-        ? PASS_COPY.allEmpty(f.park.name)
-        : `Not enough real data for a pass at ${f.park.name} right now. Each section below says why.`,
-      sections,
+      // Audit R3-T1: the headline gives the real count, and every section with some data says why it isn't enough.
+      message: bothEmpty ? PASS_COPY.allEmpty(f.park.name) : shortPassMessage(f.park.name, fullPool.length),
+      sections: explainShortSections(f.park.name, sections, { park: park.items, wild: wild.items }),
     };
   }
 
@@ -448,6 +450,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         lookWhereCleared: v.lookWhereCleared,
         quotesRepaired: v.quotesRepaired,
         styleKept: v.styleKept,
+        openersTrimmed: v.openersTrimmed,
+        questionsFixed: v.questionsFixed,
         hardMin: callPlan.mix.hardMin,
       });
       lastCheck = v;

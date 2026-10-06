@@ -131,10 +131,12 @@ describe("KidPass (top of the printed sheet)", () => {
   });
 
   it("density: real passes print roomy; side slots print snug; near-maximum clues print tight", async () => {
-    for (const park of [PARKS.connemara, PARKS.celebration]) {
+    // Audit R3 recordings: Celebration's 8 finds fit the roomy budget; Connemara now prints 8 finds (was 7),
+    // 25 estimated lines, so it is set snug (still inside the tight budget).
+    for (const [park, alone] of [[PARKS.connemara, "snug"], [PARKS.celebration, "roomy"]] as const) {
       const pass = await realPass(park.id);
-      expect(estimatedLines(pass.items)).toBeLessThanOrEqual(SNUG_LINE_BUDGET);
-      expect(passDensity(pass.items, false)).toBe("roomy");
+      expect(estimatedLines(pass.items)).toBeLessThanOrEqual(alone === "roomy" ? SNUG_LINE_BUDGET : TIGHT_LINE_BUDGET);
+      expect(passDensity(pass.items, false)).toBe(alone);
       expect(passDensity(pass.items, true)).toBe("snug");
     }
     const pass = await realPass(PARKS.celebration.id);
@@ -143,11 +145,11 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // Connemara (7 finds: 6 from the first answer + 1 from the real refill, content-tuning recording) with every
-    // clue just over one printed line and three long hints lands in between.
+    // Connemara (8 finds: 6 from the first answer + 2 from the real refill, audit R3 recording) lands in
+    // between as it is, with no padding.
     const connemara = await realPass(PARKS.connemara.id);
-    expect(connemara.items).toHaveLength(7);
-    const mid = connemara.items.map((it, i) => ({ ...it, clue: it.clue.padEnd(70, " x"), ...(i < 3 ? { lookWhere: it.lookWhere.padEnd(60, " x") } : {}) }));
+    expect(connemara.items).toHaveLength(8);
+    const mid = connemara.items;
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);
@@ -184,9 +186,9 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // The content-tuning live answer prints the pond (a water find) as find 3, so that find carries a safety
+    // The audit R3 live answer prints the pond (a water find) as find 2, so that find carries a safety
     // line and the stub points to it; nothing was filtered, so there is still no safety footnote.
-    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(2);
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(1);
     expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });

@@ -285,7 +285,10 @@ export default function AboutPage() {
             (Google&apos;s Gemma 4, open weights, Apache-2.0) on DigitalOcean serverless inference. It picks items from the
             list by id, writes a short clue for each and a riddle for the X on the map. Code then checks every clue: its
             quote must appear word for word in that item&apos;s source, it must not name the answer, it must not add numbers
-            or links. Clues that fail are dropped (a &quot;look where&quot; hint that names the answer is left off). Every
+            or links, a &quot;how many&quot; question must not give its own number, and only something its source says makes
+            a sound may get a &quot;listen&quot; clue. Clues that fail are dropped (a &quot;look where&quot; hint that names the
+            answer is left off). The only edits code makes: it takes a filler opener (&quot;Quick!&quot;, &quot;Psst,&quot;) off the
+            front of a clue, and turns the question mark after a command into a full stop. Every
             number and date on a pass is written by code. Each pass names the model that actually answered.
           </li>
           <li>

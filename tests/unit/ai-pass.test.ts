@@ -10,7 +10,7 @@ import {
   passRequestSchema,
   QUOTE_WIRE_MAX,
 } from "@/lib/ai/schema";
-import { isGrounded, mergeResults, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
+import { brokenCountQuestion, isGrounded, mergeResults, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
 import { mixFor, passMaxTokens, poolForSpot, PROMPT_SPARES, promptPool, withRefill } from "@/lib/ai/build-pass";
 import { parseGeometry } from "@/lib/spot/geometry";
 import { pickTarget } from "@/lib/spot/pick-target";
@@ -204,7 +204,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded after the content tuning): Celebration 8 of 8, Connemara 6 then a real refill to 8", () => {
+  it("the real recorded Gemma answers (re-recorded for audit round 3): Celebration 8 of 8, Connemara 6 then a real refill", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { target, plan } = poolFor(p);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
@@ -217,24 +217,31 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       return { out, plan };
     });
     const [{ out: conn, plan: connPlan }, { out: cel }] = results;
-    // Celebration (11 Park Finds, not low data: exactly 8 asked): all 8 pass every check. 4 copy a 4-word
+    // Re-recorded for audit round 3 (2026-10-06): no filler openers, no "how many ... There are N." questions.
+    // Celebration (11 Park Finds, not low data: exactly 8 asked): all 8 pass every check. 3 copy a 4-word
     // run of their fact sheet; with no spare to replace them they print, flagged (a style preference only).
     expect(cel.items).toHaveLength(8);
     expect(cel.drops).toEqual({});
     expect(cel.spares).toBe(0);
-    expect(cel.styleKept).toBe(4);
-    expect(cel.items.filter((i) => i.style === "copies_source").map((i) => i.item.id)).toEqual(["osm-water", "osm-tennis", "osm-playground", "osm-baseball"]);
-    expect(cel.items.find((i) => i.item.id === "osm-basketball")?.clue).toBe("Guess how many flat hard courts have a ring on a pole? There are 2.");
-    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 3 is near water: stay close.");
+    expect(cel.styleKept).toBe(3);
+    expect(cel.items.filter((i) => i.style === "copies_source").map((i) => i.item.id)).toEqual(["osm-water", "osm-baseball", "osm-tennis"]);
+    // The R3 recording's count clue is a count task with its number (the R2 one was "Guess how many ... There are 2.").
+    expect(cel.items.find((i) => i.item.id === "osm-basketball")?.clue).toBe("Notice 2 flat hard areas with rings on tall poles.");
+    expect(cel.items.map((i) => brokenCountQuestion(i.clue))).toEqual(Array(8).fill(null));
+    expect([cel.openersTrimmed, cel.questionsFixed]).toEqual([0, 0]);
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 2 is near water: stay close.");
     // Every clue starts with a different first word (the per-park openers).
     expect(new Set(cel.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(8);
-    // Connemara (low data: 9 asked): a duplicate id and two generic plant clues ("fruit or seeds" only) are dropped: 6 of 8.
+    // Connemara (low data: 9 asked): a duplicate id and two generic plant clues ("seeds in October" only) are dropped: 6 of 8.
     expect(conn.items).toHaveLength(6);
     expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 2 });
     expect(conn.failedIds).toEqual(["inat-51450", "inat-54504"]);
-    expect(conn.copied).toEqual(["a gentle rushing sound"]);
+    expect(conn.copied).toEqual([]);
+    // Audit R3: Gemma put "?" after 8 of its 9 commands ("Scan for a tree ... that have spines?"); code made them full stops.
+    expect(conn.questionsFixed).toBe(8);
+    expect(conn.items.find((i) => i.item.id === "inat-119986")?.clue).toBe("Scan for a tree with thick, corky lumps on the bark that have spines.");
     expect(conn.items.length).toBeLessThan(retryThreshold(8));
-    // ... so the app makes its one retry as a refill. The real recorded refill (2026-10-06) was asked for the
+    // ... so the app makes its one retry as a refill. The real recorded refill (2026-10-06, R3) was asked for the
     // 2 missing items + 1 spare from the 4 unused items (the 2 that failed are left out), and told what went wrong.
     const refill = modelRec(PARKS.connemara.slug).refill!;
     const rp = refillPlan(connPlan, conn.items, conn.failedIds)!;
@@ -244,7 +251,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       passJsonSchema({ n: rp.ask.n, itemIds: rp.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: null }),
     );
     const sys = refill.request.messages[0].content;
-    expect(sys).toContain('Never use them in a clue: "a gentle rushing sound".');
+    expect(sys).not.toContain("Never use them in a clue"); // nothing was copied this time
     expect(sys).toContain("Some first-try clues were generic.");
     const rv = validateDraft(
       PassDraftEnvelope.parse(JSON.parse((refill.response as { choices: { message: { content: string } }[] }).choices[0].message.content)),
@@ -252,17 +259,19 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       rp.mix,
       { ...rp.validate, prior: conn.items },
     );
-    // The snail's "round shell" is not in its source (only the name says globular): dropped as generic, not rescued.
-    expect(rv.items.map((i) => i.item.id)).toEqual(["inat-5206"]);
-    expect(rv.drops).toEqual({ generic_clue: 1, name_leak: 1 });
-    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(retryThreshold(8));
+    // The R3 refill: the hawk ("medium-sized") and the snail ("land", from "species of land snail") keep a word of
+    // their source; the elm's "a name like a color" has none and is dropped as generic. The pass is full: 8 of 8.
+    expect(rv.items.map((i) => i.item.id)).toEqual(["inat-5206", "inat-126257"]);
+    expect(rv.items[0].clue).toBe("Sneak up on a medium-sized bird of prey."); // "?" after a command made a full stop
+    expect(rv.drops).toEqual({ generic_clue: 1 });
+    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(8);
     // S5: Celebration's live answer has a riddle for the X at the picnic shelter, and it passes every riddle
     // check (the shelter fact's words vary per park now: "pillars"); Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "A roof with pillars keeps you dry and cool while you eat." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "A roof and pillars keep you dry and cool while you eat a snack." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });

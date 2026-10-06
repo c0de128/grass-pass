@@ -144,7 +144,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "People sit on both sides of it to {eat a meal|have a snack|share food} outside.",
   ],
   bench: [
-    "It is a long outdoor seat for {resting|taking a break|a rest}.",
+    // Audit R3-C1: "long outdoor seats" and "metal box on a post" were printed on several example parks.
+    "It is a {long outdoor seat|long seat out in the open|wide seat outside|long seat outdoors} for {resting|taking a break|a rest}.",
     "Many face a {path|trail|walkway} or a {nice|pretty} view.",
     "Some have a back to lean on and {arms|armrests} at the ends.",
     "They can be made of {wood, metal or stone|stone, wood or metal|metal, stone or wood}.",
@@ -160,7 +161,7 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "Some have a {low|short} spout for kids or a bowl for dogs.",
   ],
   bbq: [
-    "It is a metal box on a {post|pole|stand} where people cook food.",
+    "It is a {metal box|metal cooker|low metal box|metal fire box} {on|up on|set on} a {post|pole|stand} where people cook food.",
     "It has a metal {grate|rack} on top where food sits over hot coals.",
     "It is often {black|dark} from smoke and old fires.",
   ],

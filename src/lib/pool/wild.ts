@@ -67,7 +67,9 @@ export function wildEmptyCopy(totalObservations: number): string {
   return `No data available: ${totalObservations} research-grade sightings within 1.5 km in the last 14 days on iNaturalist, but fewer than ${WILD_MIN_ELIGIBLE} are safe, kid-friendly finds with a description we can check.`;
 }
 
-export const WILD_DOWN_COPY = "No data available: iNaturalist didn't answer.";
+/** Audit R3-T1: says which service and that a retry may help (the short-pass screen shows it as the reason). */
+export const WILD_DOWN_COPY =
+  "No data available: iNaturalist (the wildlife sightings service) didn't answer when this pass was made. Trying again in a minute may help.";
 
 const taxonOf = (s: Species) => ({ taxonId: s.taxonId, ancestorIds: s.ancestorIds });
 
@@ -202,6 +204,8 @@ export function wildPool(
         ...(s.commonName ? [s.commonName.toLowerCase(), ...distinctiveWords(s.commonName)] : []),
         s.name.toLowerCase(),
         ...distinctiveWords(s.name),
+        // Audit R3: Wikipedia's bolded other names ("mossycup oak" for bur oak) give the answer away too.
+        ...(sum.names ?? []).flatMap((n) => distinctiveWords(n)),
       ]),
     ];
     items.push({

@@ -10,13 +10,16 @@
  * for Passiflora, in the clue; a leak only in `lookWhere` blanks that hint and keeps the item) -> map
  * (R1-m4: a pass without a Find This Spot map never says "map"; in lookWhere the hint is blanked) ->
  * season (R1-M4: a plant's flowers or fruit only when iNaturalist records show them this month) ->
- * numbers not in the source. Then the mix limits computed by
- * code are re-applied (extras beyond a section's max are dropped, in answer order).
+ * numbers not in the source -> (audit R2-M5) a wrong count (a count clue must count exactly what the
+ * map counts, with the map's number) -> a generic Wild Find clue (no trait from its own source) -> a
+ * copy of a prompt example -> a near-repeat of a clue already kept on this pass. Then the mix limits
+ * computed by code are re-applied (extras beyond a section's max are dropped, in answer order).
+ * The grown-up's note is code-written from the kept items (`parentNoteFor`), never the model's.
  */
 import { seasonProblem } from "@/lib/pool/season";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { PoolItem, Section } from "@/lib/pool/types";
-import type { Mix } from "./prompt";
+import { PROMPT_EXAMPLE_TEXTS, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
 export type DropReason =
@@ -31,6 +34,10 @@ export type DropReason =
   | "mentions_map"
   | "out_of_season"
   | "number_not_in_source"
+  | "wrong_count"
+  | "generic_clue"
+  | "copies_example"
+  | "repeats_clue"
   | "over_section_max";
 
 export type ValidItem = {
@@ -54,6 +61,8 @@ export type ValidationResult = {
   lookWhereCleared: number;
   /** S8c: items whose quote had the next JSON field glued on and was cut back to its real source part. */
   quotesRepaired: number;
+  /** R2-M5: valid spare items not printed (the model is asked for up to ASK_EXTRA more than n). */
+  spares?: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -245,6 +254,8 @@ function withCodeSection(o: Record<string, unknown>, byId: ReadonlyMap<string, P
 export type ValidateOptions = {
   /** The pass prints a Find This Spot map (R1-m4). Without one, no clue or hint may mention a map. */
   hasMap: boolean;
+  /** R2-M5: the mix the model was asked for (with spares). Defaults to `mix` (no spares asked). */
+  ask?: Mix;
 };
 
 export function validateDraft(
@@ -335,26 +346,50 @@ export function validateDraft(
       drop("number_not_in_source");
       continue;
     }
+    // R2-M5: "Count the goals ... There are 25." when the map counts 25 FIELDS; "There is 1." counts.
+    if (countProblem(d.clue, item) !== null) {
+      drop("wrong_count");
+      continue;
+    }
+    // R2-M5: "Look for a tree with seeds or fruit." fits hundreds of species; "white flowers" proved by
+    // "show it with flowers" was never checked.
+    if (item.section === "wild" && (isGenericClue(d.clue, item.sourceText) || quoteIsOnlyName(sourceQuote, item.answer))) {
+      drop("generic_clue");
+      continue;
+    }
+    // R2-M5: the prompt's example sentences came back word for word on every park.
+    if (copiesPromptExample(d.clue) !== null) {
+      drop("copies_example");
+      continue;
+    }
+    if (kept.some((k) => trigramOverlap(k.clue, d.clue) >= COPY_OVERLAP)) {
+      drop("repeats_clue");
+      continue;
+    }
     used.add(item.id);
     kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote });
   }
 
-  // Re-check the mix limits computed by code.
+  // Re-check the mix limits computed by code (against what was asked, spares included).
+  const ask = opts.ask ?? mix;
   const perSection: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
-  const items: ValidItem[] = [];
+  const asked: ValidItem[] = [];
   for (const v of kept) {
     const s = v.item.section;
-    if (perSection[s] >= mix.max[s]) {
+    if (perSection[s] >= ask.max[s]) {
       drop("over_section_max");
       continue;
     }
     perSection[s]++;
-    items.push(v);
+    asked.push(v);
   }
+  // R2-M5: then keep at most mix.n of them inside the printed mix (spares that weren't needed are not drops).
+  const { items, spares } = fitToMix(asked, mix);
+  for (const s of Object.keys(perSection) as Section[]) perSection[s] = items.filter((v) => v.item.section === s).length;
   const belowMin = (Object.keys(perSection) as Section[]).filter((s) => perSection[s] < mix.min[s]);
 
-  let parentNote = typeof draft.parentNote === "string" ? tidy(draft.parentNote).slice(0, PARENT_NOTE_MAX) : "";
-  if (/\d/.test(parentNote) || hasUrlOrMarkup(parentNote) || blockedWordIn(parentNote)) parentNote = "";
+  // R2-M5: the model's parentNote (if an old-style answer carries one) is ignored; code writes the tip.
+  const parentNote = parentNoteFor(items);
 
   return {
     items,
@@ -365,7 +400,32 @@ export function validateDraft(
     hardCount: items.filter((i) => i.difficulty === "hard").length,
     lookWhereCleared,
     quotesRepaired,
+    spares,
   };
+}
+
+/**
+ * R2-M5: the valid items that fit the printed mix: at most mix.max per section (answer order), then,
+ * while there are more than mix.n, the last item of a section that is above its minimum goes.
+ * `spares` = valid items left over (the model was asked for spares; they are not counted as removed).
+ */
+export function fitToMix<T extends { item: { section: Section } }>(valid: readonly T[], mix: Mix): { items: T[]; spares: number } {
+  const per: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  const items: T[] = [];
+  for (const v of valid) {
+    if (per[v.item.section] >= mix.max[v.item.section]) continue;
+    per[v.item.section]++;
+    items.push(v);
+  }
+  for (let i = items.length - 1; i >= 0 && items.length > mix.n; i--) {
+    const s = items[i].item.section;
+    if (per[s] > mix.min[s]) {
+      per[s]--;
+      items.splice(i, 1);
+    }
+  }
+  while (items.length > mix.n) items.pop();
+  return { items, spares: valid.length - items.length };
 }
 
 /**
@@ -426,8 +486,230 @@ export function mergeResults(primary: ValidationResult, other: ValidationResult,
   return {
     ...primary,
     items,
-    parentNote: primary.parentNote || other.parentNote,
+    parentNote: parentNoteFor(items),
     belowMin: (Object.keys(perSection) as Section[]).filter((s) => perSection[s] < mix.min[s]),
     hardCount: items.filter((i) => i.difficulty === "hard").length,
   };
+}
+
+// ---------- R2-M5: clue variety and count accuracy ----------
+
+/** Lower-case word tokens of one sentence-split text (normalized like the grounding check). */
+function sentencesOf(text: string): string[][] {
+  return normalizeForMatch(text)
+    .split(/[.!?;:]+/)
+    .map((s) => s.match(/[\p{L}\p{N}]+(?:'[\p{L}]+)?/gu) ?? [])
+    .filter((t) => t.length > 0);
+}
+
+/** Word n-grams inside sentences (never across a sentence end). */
+export function ngrams(text: string, n: number): Set<string> {
+  const out = new Set<string>();
+  for (const t of sentencesOf(text)) for (let i = 0; i + n <= t.length; i++) out.add(t.slice(i, i + n).join(" "));
+  return out;
+}
+
+/** Share of `a`'s trigrams that are also in `b` (0..1); 0 when either has none. */
+export function trigramShare(a: string, b: string): number {
+  const ga = ngrams(a, 3);
+  const gb = ngrams(b, 3);
+  if (ga.size === 0 || gb.size === 0) return 0;
+  let shared = 0;
+  for (const g of ga) if (gb.has(g)) shared++;
+  return shared / ga.size;
+}
+
+/** The larger share of either text's trigrams found in the other (0..1): two clues that are near repeats. */
+export function trigramOverlap(a: string, b: string): number {
+  return Math.max(trigramShare(a, b), trigramShare(b, a));
+}
+
+/** A clue this close to a prompt example (or to another clue on the same pass) is a copy. */
+export const COPY_OVERLAP = 0.6;
+
+/**
+ * R2-M5: the clue copies one of the prompt's quoted examples: at least COPY_OVERLAP of the clue's
+ * trigrams are in the example. (Only the clue side: "Find a plant with purple blooms." shares its
+ * opener with the bad example "Find a plant with flowers." but is not a copy of it.)
+ */
+export function copiesPromptExample(clue: string, examples: readonly string[] = PROMPT_EXAMPLE_TEXTS): string | null {
+  for (const ex of examples) if (trigramShare(clue, ex) >= COPY_OVERLAP) return ex;
+  return null;
+}
+
+/** Singular form for noun matching ("benches" -> "bench", "ways" -> "way", "berries" -> "berry"). */
+export function singularWord(word: string): string {
+  const w = word.toLowerCase();
+  if (w.length > 4 && w.endsWith("ies")) return `${w.slice(0, -3)}y`;
+  if (/(?:ch|sh|x|ss|z)es$/.test(w)) return w.slice(0, -2);
+  if (w.length > 3 && w.endsWith("s") && !w.endsWith("ss") && !w.endsWith("us")) return w.slice(0, -1);
+  return w;
+}
+
+/** Number words a clue may use for a count ("one" is left out: "each one", "the one with ..."). */
+const NUMBER_WORDS: Record<string, number> = {
+  two: 2, three: 3, four: 4, five: 5, six: 6, seven: 7, eight: 8, nine: 9, ten: 10, eleven: 11, twelve: 12,
+  thirteen: 13, fourteen: 14, fifteen: 15, sixteen: 16, seventeen: 17, eighteen: 18, nineteen: 19, twenty: 20,
+};
+const numberOf = (tok: string): number | null => (/^\d+$/.test(tok) ? Number(tok) : (NUMBER_WORDS[tok] ?? null));
+
+/** Words that end a counted-noun run ("how many long seats CAN you find"). */
+const RUN_STOP = new Set([
+  "a", "an", "the", "of", "at", "in", "on", "for", "with", "to", "by", "from", "or", "and", "near", "into", "over", "under",
+  "across", "around", "along", "beside", "behind", "next", "inside", "outside", "it", "its", "is", "are", "was", "were", "be",
+  "can", "could", "do", "does", "did", "you", "your", "have", "has", "had", "there", "here", "that", "which", "who", "this",
+  "these", "those", "them", "they", "all", "each", "every", "how", "many", "count", "up", "more", "than", "about", "i", "my",
+  "me", "we", "will", "see", "spot", "find", "where", "what", "when", "so", "if", "but", "just", "only", "too",
+]);
+
+/**
+ * The counted words after position i: the run of non-stop words (at most 4), singular, or null.
+ * "how many seats hang from chains" -> [seat, hang]; "how many hoops on tall poles" -> [hoop].
+ */
+function headAfter(tokens: readonly string[], i: number): string[] | null {
+  const run: string[] = [];
+  for (let j = i; j < tokens.length && run.length < 4; j++) {
+    if (RUN_STOP.has(tokens[j]) || numberOf(tokens[j]) !== null) break;
+    run.push(singularWord(tokens[j]));
+  }
+  return run.length > 0 ? run : null;
+}
+
+/** Whole-thing words any count may use ("How many places to cook food...", "spots for resting"). */
+const ANY_COUNT_NOUNS = new Set(["place", "spot", "way", "area", "thing", "one"]);
+
+/** Counted nouns a clue names: after "how many", after "count (the|all the)", and after each number. */
+function countedHeads(text: string): { heads: string[][]; numbers: { n: number; head: string[] | null }[]; isCount: boolean } {
+  const heads: string[][] = [];
+  const numbers: { n: number; head: string[] | null }[] = [];
+  let isCount = false;
+  for (const t of sentencesOf(text)) {
+    for (let i = 0; i < t.length; i++) {
+      if (t[i] === "how" && t[i + 1] === "many") {
+        isCount = true;
+        const h = headAfter(t, i + 2);
+        if (h) heads.push(h);
+      } else if (t[i] === "count" || t[i] === "counting") {
+        isCount = true;
+        let j = i + 1;
+        while (j < t.length && (t[j] === "the" || t[j] === "all" || t[j] === "up" || t[j] === "of")) j++;
+        const h = headAfter(t, j);
+        if (h) heads.push(h);
+      }
+      const n = numberOf(t[i]);
+      if (n !== null) {
+        const h = headAfter(t, i + 1);
+        numbers.push({ n, head: h });
+        if (h) heads.push(h);
+      }
+    }
+  }
+  return { heads, numbers, isCount: isCount || numbers.length > 0 };
+}
+
+/** The words within 4 places after each time `n` (digits or a number word) appears in the source, singular, no stop words. */
+function sourceWordsAfter(source: string, n: number): Set<string> {
+  const out = new Set<string>();
+  for (const t of sentencesOf(source)) {
+    for (let i = 0; i < t.length; i++) {
+      if (numberOf(t[i]) !== n) continue;
+      for (const w of t.slice(i + 1, i + 5)) if (!RUN_STOP.has(w)) out.add(singularWord(w));
+    }
+  }
+  return out;
+}
+
+/**
+ * R2-M5 count accuracy. Returns why a clue's count is wrong, or null.
+ * - Park Finds (the source carries `count`): a count clue needs a map count of 2 or more; every number
+ *   must be that count; every counted noun must be one the map count counts (fields, not goals).
+ * - Other items: a number in the clue must be in the source (digits or a number word), and a noun
+ *   right after it must also follow that number in the source ("5 petals" vs "5 cm").
+ */
+export function countProblem(clue: string, item: Pick<PoolItem, "section" | "sourceText" | "count">): string | null {
+  const { heads, numbers, isCount } = countedHeads(clue);
+  if (item.count) {
+    if (!isCount) return null;
+    if (item.count.n === null) return "count clue but the map has no count of 2 or more";
+    const wrongN = numbers.find((x) => x.n !== item.count!.n);
+    if (wrongN) return `says ${wrongN.n}, the map count is ${item.count.n}`;
+    const allowed = new Set([...item.count.of.map(singularWord), ...ANY_COUNT_NOUNS]);
+    const wrongHead = heads.find((h) => !h.some((w) => allowed.has(w)));
+    if (wrongHead) return `counts "${wrongHead.join(" ")}", the map counts ${item.count.of.join("/")}`;
+    return null;
+  }
+  for (const { n, head } of numbers) {
+    const after = sourceWordsAfter(item.sourceText, n);
+    const inSource = after.size > 0 || sentencesOf(item.sourceText).some((t) => t.some((w) => numberOf(w) === n));
+    if (!inSource) return `${n} is not in the source`;
+    if (head && !head.some((w) => after.has(w))) return `"${n} ${head.join(" ")}" is not in the source`;
+  }
+  return null;
+}
+
+/** Words that fit almost any find: a Wild Find clue needs at least one word beyond these that is also in its source. */
+const TRAIT_STOP = new Set([
+  "look", "find", "spot", "search", "see", "hunt", "notice", "check", "spy", "eye", "plant", "tree", "flower", "bloom", "blossom",
+  "seed", "fruit", "berry", "pod", "petal", "leaf", "leave", "bush", "shrub", "grass", "vine", "weed", "herb", "stem", "bird", "bug",
+  "insect", "animal", "creature", "critter", "thing", "kind", "type", "one", "small", "big", "little", "large", "tiny", "tall",
+  "short", "pretty", "nice", "cool", "green", "near", "grow", "growing", "live", "living", "life", "park", "place", "area",
+  "ground", "path", "nature", "here", "there", "where", "what", "who", "have", "with", "that", "this", "some", "many", "like",
+  "color", "colour", "can", "you", "your", "its", "wild", "around", "outside", "today", "also", "very", "really", "sky", "the",
+  "and", "for", "are", "has", "had", "was", "not", "but", "out", "get", "got", "how", "may", "might", "will", "make", "made",
+  "lot", "lots", "watch", "sitting", "sit", "hide", "hiding", "hidden", "secret", "special", "trait", "detective", "ranger",
+  "whisper", "dare", "riddle", "clue", "friend", "hello", "hey", "guess", "name", "called", "come", "comes", "from", "about",
+  "into", "onto", "over", "under", "up", "down", "them", "they", "their", "she", "her", "him", "his", "our", "now", "when",
+  // The code-written season sentence ("In October, iNaturalist photos from this area show it with flowers") is no trait.
+  "january", "february", "march", "april", "june", "july", "august", "september", "october", "november", "december",
+  "month", "season", "year", "inaturalist", "photo", "show", "time", "day", "fall", "autumn", "spring", "summer", "winter",
+]);
+
+const traitStem = (w: string) => (w.length >= 5 ? w.slice(0, 4) : w);
+
+/**
+ * R2-M5: a Wild Find clue with no detail from its own source ("Look for a tree with seeds or fruit.",
+ * "Do you see a plant with flowers that are a purple color?" when the source never says purple) fits
+ * hundreds of species, or can't be checked. Generic = no word of the clue beyond the generic ones is
+ * also in the item's source (same first 4 letters for longer words: "spiny" ~ "spines").
+ */
+export function isGenericClue(clue: string, sourceText: string): boolean {
+  const content = (text: string) =>
+    sentencesOf(text)
+      .flat()
+      .map(singularWord)
+      .filter((w) => w.length >= 3 && !TRAIT_STOP.has(w) && !RUN_STOP.has(w) && !/^\d+$/.test(w));
+  const src = new Set(content(sourceText).map(traitStem));
+  return !content(clue).some((w) => src.has(traitStem(w)));
+}
+
+/**
+ * R2-M5: a quote that is only the species' name ("Maximilian sunflower") proves no trait: the clue's
+ * detail ("bright yellow flowers") was not checked against anything.
+ */
+export function quoteIsOnlyName(quote: string, answer: string): boolean {
+  const q = trimQuote(normalizeForMatch(quote));
+  return q.length > 0 && normalizeForMatch(answer).includes(q);
+}
+
+/** The order the pass prints its items in (build-pass.ts sorts by section, stable). */
+const PRINT_ORDER: Record<Section, number> = { park: 0, wild: 1, lucky: 2 };
+
+const listOf = (nums: number[]) => (nums.length === 1 ? `${nums[0]}` : `${nums.slice(0, -1).join(", ")} and ${nums[nums.length - 1]}`);
+
+/**
+ * R2-M5: the grown-up's line is written by code from the pass's real items (the model's notes were
+ * filler: "Have fun exploring nature with your child!"). Up to two tips: which find to start with (an
+ * easy one that stays put), and which finds are near water (or, if none, which ones can move away).
+ * Numbers are the find numbers printed on the pass. Empty when no tip applies.
+ */
+export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[]): string {
+  const ordered = items.map((v, i) => ({ v, i })).sort((a, b) => PRINT_ORDER[a.v.item.section] - PRINT_ORDER[b.v.item.section] || a.i - b.i);
+  const tips: string[] = [];
+  const easy = ordered.findIndex(({ v }) => v.difficulty === "easy" && v.item.stationary);
+  if (easy >= 0) tips.push(`Start with find ${easy + 1}: it's easy and it stays put.`);
+  const water = ordered.flatMap(({ v }, k) => (v.item.safety && /water/i.test(v.item.safety) ? [k + 1] : []));
+  const movers = ordered.flatMap(({ v }, k) => (!v.item.stationary ? [k + 1] : []));
+  if (water.length > 0) tips.push(`${water.length === 1 ? "Find" : "Finds"} ${listOf(water)} ${water.length === 1 ? "is" : "are"} near water: stay close.`);
+  else if (movers.length > 0) tips.push(`${movers.length === 1 ? "Find" : "Finds"} ${listOf(movers)} can move away, so tick ${movers.length === 1 ? "it" : "them"} off when you see ${movers.length === 1 ? "it" : "them"}.`);
+  return tips.join(" ").slice(0, PARENT_NOTE_MAX);
 }

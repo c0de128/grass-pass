@@ -31,6 +31,12 @@ export type PoolItem = {
   taxon?: { taxonId: number; ancestorIds: number[] };
   /** Plants only (R1-M4): whether flowers / fruit are in season this month, from iNaturalist annotations. */
   season?: Season;
+  /**
+   * Park Finds only (audit R2-M5): what the map count counts. `of` = the singular nouns a count clue may
+   * count (the whole thing, never a part: fields, not goals); `n` = the count in the source, or null when
+   * the source states no count of 2 or more (one thing, or a creek), so no count clue is allowed.
+   */
+  count?: { of: string[]; n: number | null };
 };
 
 export type SectionState =

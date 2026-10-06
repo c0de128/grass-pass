@@ -39,6 +39,13 @@ export const PARENT_NOTE_MAX = 200;
 /** Smallest pass we print (a tiny park with 3 real finds is still honest; fewer is "all empty"). */
 export const MIN_PASS_ITEMS = 3;
 export const MAX_PASS_ITEMS = 8;
+/**
+ * Audit R2-M5: the request asks for up to this many items MORE than the pass prints, and code keeps the
+ * first n that pass every check. The stricter clue checks (generic, wrong count, copies) drop more
+ * items; asking for spares costs about 120 answer tokens, a second call costs a whole call (the smoke
+ * run before this change needed a second call on 3 of 6 passes).
+ */
+export const ASK_EXTRA = 2;
 
 export const PassItemDraft = z.object({
   itemId: z.string().min(1).max(64), // must exist in the pool
@@ -73,7 +80,7 @@ export const PhotoCheck = z.object({
 
 /** First parse of the model's JSON: right overall shape, items checked one by one later. */
 export const PassDraftEnvelope = z.object({
-  items: z.array(z.unknown()).max(20),
+  items: z.array(z.unknown()).max(20), // >= MAX_PASS_ITEMS + ASK_EXTRA
   spot: z.unknown().optional(),
   parentNote: z.unknown().optional(),
 });
@@ -92,7 +99,7 @@ export type RequestSchemaOptions = {
 
 /** The strict zod schema for one request (source of the JSON Schema sent to the model). */
 export function passRequestSchema(o: RequestSchemaOptions) {
-  if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS) throw new RangeError("n out of range");
+  if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS + ASK_EXTRA) throw new RangeError("n out of range");
   const item = z.object({
     itemId: z.enum(o.itemIds),
     clue: z.string().min(CLUE_MIN).max(CLUE_MAX),
@@ -100,9 +107,10 @@ export function passRequestSchema(o: RequestSchemaOptions) {
     sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_WIRE_MAX),
     difficulty: Difficulty,
   });
+  // R2-M5: no parentNote in the request: the model's notes were filler ("Have fun exploring nature with
+  // your child!"); code writes the grown-up's tip from the pass's real items (validate.ts parentNoteFor).
   const base = {
     items: z.array(item).length(o.n),
-    parentNote: z.string().max(PARENT_NOTE_MAX),
   };
   if (o.spotTargetId === null) return z.object(base);
   return z.object({

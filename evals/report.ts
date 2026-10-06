@@ -30,6 +30,16 @@ export const METRIC_ROWS: Row[] = [
     cell: (s) => (s.model === TEMPLATE_MODEL ? "no model call" : `${secs(s.m7.p50Ms)} ${verdict(s.m7.passP50)} / ${secs(s.m7.p95Ms)} ${verdict(s.m7.passP95)} (${s.m7.calls} calls)`),
   },
   { label: "M8 Cost per pass", threshold: `<= $${THRESHOLDS.m8}`, cell: (s) => `${usd(s.m8.costPerPass)} ${verdict(s.m8.pass)}` },
+  {
+    label: "M10 Cross-park repetition (printed clues)",
+    threshold: `<= ${THRESHOLDS.m10 * 100}%`,
+    cell: (s) => (s.m10 ? `${pct(s.m10.rate)} (${s.m10.repeated}/${s.m10.clues}) ${verdict(s.m10.pass)}` : "n/a (older run)"),
+  },
+  {
+    label: "M11 Wrong counts (printed)",
+    threshold: `${THRESHOLDS.m11}`,
+    cell: (s) => (s.m11 ? `${s.m11.printedWrong} of ${s.m11.printedCountClues} count clues (${s.m11.rawWrong} of ${s.m11.returned} model items before the check) ${verdict(s.m11.pass)}` : "n/a (older run)"),
+  },
 ];
 
 function runCell(r: RunRecord | undefined): string {
@@ -84,7 +94,7 @@ export function renderMarkdown(results: EvalResults, jsonName: string): string {
   for (const row of METRIC_ROWS) L.push(`| ${row.label} | ${row.threshold} | ${scores.map((s) => row.cell(s)).join(" | ")} |`);
   L.push(`| M9 Kid check (human) | >= 8/10 | ${models.map(() => "human check: see human-check.md").join(" | ")} |`);
   L.push("");
-  L.push("How each is measured: M1 = printed items whose answer is a hard-blocked iNaturalist taxon in the recorded data, or carry a blocked word. M2 = model items whose `sourceQuote` is a normalized substring of the item's source (every call, before any item is dropped). M3 = data-rich cases (pool can fill the whole pass) whose final pass keeps >= n-1 items. M4 = data-poor sections showing the exact SPEC 5.4 copy and printing nothing, and no-pass cases making no model call. M5 = Flesch-Kincaid grade of each printed clue (code formula, evals/score.ts), median. M6 = model items whose clue or lookWhere contains a name word of the item, before filtering (the app drops both; 'in the clue itself' counts the clue only, the SPEC wording; FAIL is judged on the stricter clue-or-lookWhere count). M7 = wall time of each HTTP call to the model. M8 = (prompt tokens x input price + completion tokens x output price) per pass, DO list prices.");
+  L.push("How each is measured: M1 = printed items whose answer is a hard-blocked iNaturalist taxon in the recorded data, or carry a blocked word. M2 = model items whose `sourceQuote` is a normalized substring of the item's source (every call, before any item is dropped). M3 = data-rich cases (pool can fill the whole pass) whose final pass keeps >= n-1 items. M4 = data-poor sections showing the exact SPEC 5.4 copy and printing nothing, and no-pass cases making no model call. M5 = Flesch-Kincaid grade of each printed clue (code formula, evals/score.ts), median. M6 = model items whose clue or lookWhere contains a name word of the item, before filtering (the app drops both; 'in the clue itself' counts the clue only, the SPEC wording; FAIL is judged on the stricter clue-or-lookWhere count). M7 = wall time of each HTTP call to the model. M8 = (prompt tokens x input price + completion tokens x output price) per pass, DO list prices. M10 (audit R2-M5) = printed clues holding a 5-word run (inside one sentence) that is also printed on passes of at least 2 other parks, over all printed clues; runs of the same park never count against each other. M11 (audit R2-M5) = printed clues whose count is wrong (a count clue must count exactly what the source counts, with its number; a Park Find needs a map count of 2 or more), plus how many model items the check removed before printing.");
   L.push("");
   L.push("## Open models vs the no-AI template (SPEC 6.5)");
   L.push("");
@@ -123,6 +133,8 @@ export function renderMarkdown(results: EvalResults, jsonName: string): string {
   if (fails.length === 0) L.push("- No failed or skipped runs.");
   for (const r of fails) L.push(`- ${r.model} run ${r.run}, case ${r.caseN} (${r.parkName ?? r.slug}): ${r.kind} ${r.errorCode ?? ""}: ${esc(r.message ?? "")}`);
   for (const s of scores) {
+    for (const d of s.m11?.details ?? []) L.push(`- ${s.model} M11: ${esc(d)}`);
+    if (s.m10 && s.m10.top.length > 0) L.push(`- ${s.model} M10 most repeated 5-word runs: ${s.m10.top.map((t) => `"${esc(t.gram)}" (${t.parks} parks)`).join(", ")}`);
     for (const d of s.m1.details) L.push(`- ${s.model} M1: ${esc(d)}`);
     for (const p of s.m4.problems) L.push(`- ${s.model} M4: ${esc(p)}`);
     const errs = Object.entries(s.errors);

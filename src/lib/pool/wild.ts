@@ -124,6 +124,25 @@ export type WildSeasonInput = { month: number; phenology: { taxa: Record<string,
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
+ * Words that tell a child what to LOOK for: colours, textures, shapes, sizes and visible parts
+ * (audit R2-M5). A summary without any ("X is a species of flowering plant native to ...") can only
+ * give a generic clue ("Do you see a plant with flowers?"), which the server now drops.
+ */
+const LOOKS_RE =
+  /\b(?:white|yellow|red|orange|purple|pink|blue|black|brown|grey|gray|golden|gold|silver|violet|scarlet|crimson|bright|dark|pale|glossy|shiny|hairy|fuzzy|woolly|spiny|spined|spines|thorny|thorns|prickly|striped|stripes?|spotted|spots|banded|round|rounded|oval|spherical|heart-shaped|lobed|lobes|toothed|feathery|bumpy|corky|tall|cm|mm|centimetres|centimeters|metres|meters|inches|wingspan|petals?|leaves|leaflets?|bark|wings?|tail|bill|beak|crest|cap|gills|shell|fur|feathers?|antennae|operculum|lumps)\b/gi;
+
+/** How many different looks-like words a source text has (0 = nothing a clue can describe). */
+export function looksScore(text: string): number {
+  return new Set((text.match(LOOKS_RE) ?? []).map((w) => w.toLowerCase())).size;
+}
+
+/** 0 = two or more looks-like words, 1 = one, 2 = none: describable species go first in the prompt (R2-M5). */
+const looksTier = (text: string) => {
+  const n = looksScore(text);
+  return n >= 2 ? 0 : n === 1 ? 1 : 2;
+};
+
+/**
  * Step 2: build pool items from candidates that have a usable summary. The danger check runs
  * again with the ancestor list from the taxa call (it can be longer than the species_counts one).
  */
@@ -146,6 +165,9 @@ export function wildPool(
       continue;
     }
     if (!sum?.summary || sum.summary.length < MIN_SUMMARY_CHARS) continue;
+    // R2-M5: a summary with nothing a child can look for ("a species of flowering plant native to ...")
+    // only makes generic clues, which the server drops. Such a species is not a find.
+    if (looksScore(leadSentences(sum.summary)) === 0) continue;
     const label = s.commonName ? `${cap(s.commonName)} (${s.name})` : s.name;
     const plantSeason =
       season && s.iconic === "Plantae" ? seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) : undefined;
@@ -176,5 +198,9 @@ export function wildPool(
   if (eligible < WILD_MIN_ELIGIBLE) {
     return { items: [], state: { status: "empty", message: wildEmptyCopy(list.totalObservations) }, blocked };
   }
-  return { items: items.slice(0, WILD_PROMPT_MAX), state: { status: "ok" }, blocked };
+  // R2-M5: species whose summary says how they look go first (stable: most sightings first inside a tier),
+  // so the model's pool (n + spares) holds things a clue can describe, not only "a species of ... native to ...".
+  const tier = new Map(items.map((it) => [it, looksTier(it.sourceText.slice(it.answer.length))]));
+  const ordered = items.map((it, i) => ({ it, i })).sort((a, b) => tier.get(a.it)! - tier.get(b.it)! || a.i - b.i).map((x) => x.it);
+  return { items: ordered.slice(0, WILD_PROMPT_MAX), state: { status: "ok" }, blocked };
 }

@@ -42,7 +42,7 @@ import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
 import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
 import { finishSpot, geometryWithin, loadGeometry, planSpot, SPOT_WAIT_MS, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
-import { buildMessages, computeMix, type Mix } from "./prompt";
+import { askMix, buildMessages, computeMix, type Mix } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
 import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
 
@@ -337,11 +337,13 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const parkData = parkDataOf(f.park.name, fullPool);
   deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
-  const messages = buildMessages(f.park.name, pool, band, mix, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null, {
+  // R2-M5: ask for up to ASK_EXTRA spare items; validateDraft keeps at most mix.n that pass every check.
+  const ask = askMix(mix, { park: pool.filter((p) => p.section === "park").length, wild: pool.filter((p) => p.section === "wild").length, lucky: pool.filter((p) => p.section === "lucky").length });
+  const messages = buildMessages(f.park.name, pool, band, ask, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null, {
     month: monthOfDay(input.day),
   });
   const jsonSchema = passJsonSchema({
-    n: mix.n,
+    n: ask.n,
     itemIds: pool.map((p) => p.id) as [string, ...string[]],
     spotTargetId: target?.id ?? null,
   });
@@ -387,7 +389,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       modelLatency += r.latencyMs;
       answered = r.modelLabel;
       deps.emit("check", stepText("check", deps.env));
-      const v = validateDraft(r.data, pool, mix, { hasMap: target !== null });
+      const v = validateDraft(r.data, pool, mix, { hasMap: target !== null, ask });
       if (target && riddle === null) {
         const sv = validateSpot(r.data.spot, target);
         if (sv.ok) riddle = sv.riddle;

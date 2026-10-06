@@ -1,8 +1,9 @@
 /**
- * Scoring for SPEC 6.4 (M1-M8; M9 is a human check). Pure functions over run records + the pool
+ * Scoring for SPEC 6.4 (M1-M8; M9 is a human check) plus audit R2-M5's M10 (cross-park repetition)
+ * and M11 (count accuracy). Pure functions over run records + the pool
  * each case really had, so they are unit-tested without any network.
  */
-import { isGrounded, nameLeak } from "@/lib/ai/validate";
+import { countProblem, isGrounded, nameLeak, ngrams } from "@/lib/ai/validate";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { CaseData } from "./fixture";
@@ -227,6 +228,79 @@ export function runCost(run: RunRecord): number {
   return run.calls.reduce((a, c) => a + callCost(run.model, c.promptTokens ?? 0, c.completionTokens ?? 0), 0);
 }
 
+// ---------- R2-M5: cross-park repetition (M10) and count accuracy (M11) ----------
+
+/** M10 n-gram size: a run of 5 words inside one sentence. */
+export const REPEAT_N = 5;
+
+export type Repetition = { repeated: number; clues: number; rate: number | null; top: { gram: string; parks: number }[] };
+
+/**
+ * M10: share of printed clues that hold a 5-word run (inside one sentence) also printed on the passes
+ * of at least 2 OTHER parks. Runs of the same park (3 Gemma runs) never count against each other.
+ */
+export function crossParkRepetition(runs: readonly RunRecord[], model: string): Repetition {
+  const passes = runs.filter((r) => r.model === model && r.kind === "pass");
+  const parksBy = new Map<string, Set<number>>();
+  const clues: { caseN: number; grams: Set<string> }[] = [];
+  for (const r of passes) {
+    for (const it of r.items) {
+      const grams = ngrams(it.clue, REPEAT_N);
+      clues.push({ caseN: r.caseN, grams });
+      for (const g of grams) {
+        const set = parksBy.get(g) ?? new Set<number>();
+        set.add(r.caseN);
+        parksBy.set(g, set);
+      }
+    }
+  }
+  let repeated = 0;
+  for (const c of clues) {
+    if ([...c.grams].some((g) => [...(parksBy.get(g) ?? [])].filter((n) => n !== c.caseN).length >= 2)) repeated++;
+  }
+  const top = [...parksBy.entries()]
+    .filter(([, set]) => set.size >= 3)
+    .map(([gram, set]) => ({ gram, parks: set.size }))
+    .sort((a, b) => b.parks - a.parks || a.gram.localeCompare(b.gram))
+    .slice(0, 10);
+  return { repeated, clues: clues.length, rate: rate(repeated, clues.length), top };
+}
+
+/** The pool item a printed item came from (answers are unique per section in a pool). */
+function poolItemFor(it: PrintedItem, ctx: CaseContext): PoolItem | undefined {
+  return ctx.pool.find((p) => p.section === it.section && p.answer === it.answer);
+}
+
+export type CountChecks = { printedWrong: number; printedCountClues: number; rawWrong: number; details: string[] };
+
+/**
+ * M11: printed clues with a wrong count (the app's count check, plus an independent one: a digit in a
+ * printed Park Find clue must equal that park's map count). `rawWrong` counts the model's items before
+ * any filter (what the check removed).
+ */
+export function countChecks(run: RunRecord, ctx: CaseContext): CountChecks {
+  const out: CountChecks = { printedWrong: 0, printedCountClues: 0, rawWrong: 0, details: [] };
+  const byId = new Map(ctx.pool.map((p) => [p.id, p]));
+  for (const c of run.calls) {
+    for (const raw of c.rawItems ?? []) {
+      const item = typeof raw.itemId === "string" ? byId.get(raw.itemId) : undefined;
+      if (item && typeof raw.clue === "string" && countProblem(raw.clue, item) !== null) out.rawWrong++;
+    }
+  }
+  for (const it of run.items) {
+    const item = poolItemFor(it, ctx);
+    if (!item) continue;
+    const digits = it.clue.match(/\d+/g) ?? [];
+    if (/\bhow many\b|\bcount/i.test(it.clue) || digits.length > 0) out.printedCountClues++;
+    const why = countProblem(it.clue, item) ?? (item.count && digits.some((d) => Number(d) !== item.count?.n) ? `digit is not the map count ${item.count.n}` : null);
+    if (why) {
+      out.printedWrong++;
+      out.details.push(`${it.answer}: "${it.clue}" (${why})`);
+    }
+  }
+  return out;
+}
+
 // ---------- aggregate ----------
 
 export const THRESHOLDS = {
@@ -239,6 +313,10 @@ export const THRESHOLDS = {
   m7p50: 10_000,
   m7p95: 20_000,
   m8: 0.001,
+  /** R2-M5: at most 5% of printed clues repeat a 5-word run seen on 2+ other parks. */
+  m10: 0.05,
+  /** R2-M5: no printed clue with a wrong count. */
+  m11: 0,
 } as const;
 
 export type ModelScore = {
@@ -256,6 +334,8 @@ export type ModelScore = {
   m6: { leaks: number; clueLeaks: number; returned: number; rate: number | null; clueRate: number | null; pass: boolean | null };
   m7: { calls: number; p50Ms: number | null; p95Ms: number | null; passP50: boolean | null; passP95: boolean | null; perPassP50Ms: number | null };
   m8: { costPerPass: number | null; totalUsd: number; promptTokens: number; completionTokens: number; pass: boolean | null };
+  m10: Repetition & { pass: boolean | null };
+  m11: { printedWrong: number; printedCountClues: number; rawWrong: number; returned: number; details: string[]; pass: boolean | null };
   retries: number;
 };
 
@@ -275,6 +355,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   let honestOk = 0;
   let honestChecked = 0;
   const honestProblems: string[] = [];
+  const counts = { printedWrong: 0, printedCountClues: 0, rawWrong: 0, details: [] as string[] };
   for (const r of done) {
     const ctx = contexts.get(r.caseN);
     if (!ctx) continue;
@@ -288,7 +369,13 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     honestOk += h.ok;
     honestChecked += h.checked;
     honestProblems.push(...h.problems.map((p) => `case ${r.caseN} run ${r.run}: ${p}`));
+    const cc = countChecks(r, ctx);
+    counts.printedWrong += cc.printedWrong;
+    counts.printedCountClues += cc.printedCountClues;
+    counts.rawWrong += cc.rawWrong;
+    counts.details.push(...cc.details.map((d) => `case ${r.caseN} run ${r.run}: ${d}`));
   }
+  const rep10 = crossParkRepetition(done, model);
 
   const rich = done.filter((r) => r.dataRich);
   const complete = rich.filter(isComplete).length;
@@ -333,6 +420,8 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
       completionTokens: calls.reduce((a, c) => a + (c.completionTokens ?? 0), 0),
       pass: usesModel ? (costPerPass === null ? null : costPerPass <= THRESHOLDS.m8) : true,
     },
+    m10: { ...rep10, pass: rep10.rate === null ? null : rep10.rate <= THRESHOLDS.m10 },
+    m11: { ...counts, returned, pass: done.some((r) => r.kind === "pass") ? counts.printedWrong <= THRESHOLDS.m11 : null },
     retries: done.filter((r) => r.calls.length > 1).length,
   };
 }

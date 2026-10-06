@@ -11,7 +11,6 @@
 import { Gavel, LogIn } from "lucide-react";
 import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
-import { z } from "@/lib/zod-config";
 import { signInAction } from "@/app/actions/auth";
 import { buttonClassName } from "@/components/ui/Button";
 import { ACCOUNT_COPY, judgeLeftCopy, PROVIDER_LABELS, type SignInOptions } from "@/lib/accounts/config";
@@ -35,20 +34,16 @@ function ProviderButton({ provider, label, judge, onClick }: { provider: string;
   );
 }
 
-const LeftSchema = z.object({
-  cap: z.number().int().nonnegative(),
-  perConnection: z.number().int().nonnegative(),
-  left: z.number().int().nonnegative(),
-  leftForYou: z.number().int().nonnegative(),
-});
+/** UX-4-02: the answer's zod schema loads with the request, not in the first JavaScript. */
+const loadLeftSchema = () => import("./judge-left-schema");
 
 /** "N of 60 judge passes left today": read when the card shows; nothing made up when it can't be read. */
 export function JudgePassesLeft() {
   const [text, setText] = useState<string | null>(null);
   useEffect(() => {
     let live = true;
-    fetch("/api/judge-passes", { cache: "no-store", credentials: "same-origin" })
-      .then(async (r) => {
+    Promise.all([fetch("/api/judge-passes", { cache: "no-store", credentials: "same-origin" }), loadLeftSchema()])
+      .then(async ([r, { LeftSchema }]) => {
         const parsed = LeftSchema.safeParse(r.ok ? await r.json() : null);
         if (live) setText(parsed.success ? judgeLeftCopy(parsed.data) : "We couldn't check how many judge passes are left today right now.");
       })

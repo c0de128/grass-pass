@@ -356,9 +356,13 @@ describe("POST /api/pass: honest empties and failures", () => {
 
   it("store down -> 503 and nothing upstream", async () => {
     const broken = new MemoryStore();
-    broken.incr = async () => {
+    // Every counting command fails (MemoryStore's rateHit/reserve no longer go through incr: accounts made them atomic).
+    const down = async (): Promise<never> => {
       throw new StoreError("down");
     };
+    broken.incr = down;
+    broken.rateHit = down;
+    broken.reserve = down;
     const out = await makePass(connemara, { ip: "192.0.2.1", store: broken, fetchImpl: replay.fetchImpl });
     expect(out).toMatchObject({ kind: "error", status: 503, error: { code: "STORE_UNAVAILABLE" } });
     expect(replay.calls).toHaveLength(0);

@@ -22,7 +22,13 @@
  * FAILURE (not a park, too heavy, too slow, every Overpass mirror resting) 4, because one MGET reads every
  * features cache and breaker before anything is reserved (SEC-3-02; before: 9 and 14-15); an uncached park
  * search 15 with bookkeeping, a cached one 3; a saved-pass page 1 GET, then 0 while memoized; an impossible
- * pass id 0. So COSTS.apiPass = 4 covers every cheap /api/pass path.
+ * pass id 0. So COSTS.apiPass = 4 covered every cheap /api/pass path.
+ * Accounts (re-measured 2026-10-06): a new pass 113 (+ the account count and the report lookup), a signed-out
+ * new-pass request 2, an account over its 2 a day 5 the first time (then 4 while the refusal is remembered), so
+ * COSTS.apiPass = 5; a report 4 (a repeat 3, a not-safe that hides the item 4-5) = COSTS.apiReport 5; a signed-in
+ * pass page 2 (the pass + the report counts) = passPage + passStats; a sign-in attempt 1. The bound below does
+ * not change: the cost bucket's refill bounds the cheap paths whatever each request is charged, and a new pass
+ * is still bounded by the per-IP daily share (113 <= EXTRA.newPass 120 + COSTS.apiPass).
  * - Cheap paths, through the cost bucket: <= 60 + 45 x 744 = 33,540 commands.
  * - Expensive paths, beyond what the cost bucket already charged, bounded by the per-IP daily shares
  *   the shared store keeps (PASS_PER_IP_PER_DAY 20, PARKS_PER_IP_PER_DAY 60). Only a path that started

@@ -24,6 +24,8 @@ jobs:
       - run: pnpm test
       - run: pnpm build
       - run: pnpm exec playwright install --with-deps chromium
+      # Accounts: a throwaway sign-in secret for this run only, so the judge sign-in e2e works (no OAuth in CI).
+      - run: echo "AUTH_SECRET=$(openssl rand -base64 33)" >> "$GITHUB_ENV"
       # No model key in CI. Live-data specs run one at a time (playwright.config.ts "live" project) and
       # decide on the server's error code: MODEL_NOT_CONFIGURED, a busy OpenStreetMap or our per-IP
       # limit is checked and reported as SKIPPED with the code, never as passed (tests/e2e/support/honest.ts).

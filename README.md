@@ -241,11 +241,14 @@ store command:
 - **Pages** (`/`, `/pass/*`): a flood guard only, 120 at once, then 2 a second per IP. Links to these pages don't
   prefetch (`prefetch={false}`), so one click is one request. An e2e (`pnpm e2e:limits`) walks home, every example
   pass and its print page three times at the default limits and expects no 429.
-- **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, an API call 4,
-  measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP. Measured with the real store
-  code: a cache hit 3, a cached failure (not a park, too big, too slow, OpenStreetMap resting) 4, a cached park
-  search 3; a new pass about 100 (111 with the usage bookkeeping) and an uncached park search 15, which only an
-  address's daily share of new passes (20) and searches (60) can reach.
+- **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, plus 1 for a
+  signed-in visitor's report counts; `/api/pass` 5, `/api/parks` 4, `/api/report` 5, a sign-in start/callback or a
+  sign-in button 1, the session check 0; measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour
+  per IP. Measured with the real store code (2026-10-06, accounts): a cache hit 3, a cached failure (not a park, too
+  big, too slow, OpenStreetMap resting) 4, a signed-out new-pass request 2, an account over its 2 a day 5 the first
+  time then 4, a report 4 (a repeat 3), a cached park search 3; a new pass about 100 (113 with the usage bookkeeping,
+  including the account count and the report lookup) and an uncached park search 15, which only an address's daily
+  share of new passes (20) and searches (60) can reach.
 - **IPv6:** one shared bucket per /48 network (2 clients' worth), not one per /64.
 - **Pass ids that can't exist** (a day in the future or older than the 30-day pass life, a variant above 3, a
   malformed park id) are a 404 with no store read. Saved passes are kept in memory for 30 minutes after a read.
@@ -280,9 +283,50 @@ region. A rule that matches the in-app limits across all instances:
 This is a decision for the project owner (see `ACCEPTED-RISKS.md` / the decision log); nothing has been created on
 Vercel.
 
+## Accounts and visitor reports
+Kevin's rules (2026-10-06): anyone can search parks, open the example passes and any shared pass link, and print.
+**Making a NEW pass needs a grown-up to sign in** with GitHub or Google (OAuth through Auth.js / next-auth v5; no
+password is ever stored), **2 new passes a day per account** (Chicago day). A pass already made today for that park
+and age is served to anyone (it costs nothing). The order on `POST /api/pass` is: signed in? -> the account's daily
+count -> the existing per-IP and global limits; the account's count is given back unless an upstream call really
+started (a failed build that did call the model still counts).
+
+**Try as a judge:** a big one-click button signs in to a shared demo account (no OAuth, no typing). All judges
+together get `JUDGE_DEMO_DAILY_CAP` new passes a day (default 20), on top of the per-IP limits. Every judge sign-in is
+the SAME account for reports, so judges can never hide an item on their own. `JUDGE_DEMO=0` switches the button off.
+
+**Reports** (signed-in only, on the screen pass, not the printout): Found it / Didn't find it / Not safe, one per
+account per find per day, 30 an hour per account and 60 an hour per IP. An item with at least 3 "didn't find"
+reports that are more than 60% of its reports in the last 30 days is left out of new passes for that park (the pool
+step, before the model sees anything). "Not safe" from 2 different accounts hides the item from new passes for that
+park at once. Reports are deleted after 90 days. Signed-in visitors see real counts ("Visitor reports, last 30 days:
+3 found it"), nothing when there are none.
+
+**How Kevin reviews "Not safe" reports** (no admin page):
+- Vercel -> project -> Logs, search `report_not_safe` (every not-safe report: park, item, how many accounts) and
+  `report_item_hidden` (level error: an item was just hidden). No account id or name is ever logged.
+- Upstash console -> Data Browser: `gp:meta:not-safe-hidden` counts hidden items; the park's hash
+  `gp:rep:{way/123}:h` holds `<item>|hide` (the day it was hidden) and the daily counts.
+- To un-hide an item after checking it: delete the `<item>|hide` field from that hash (HDEL) and the key
+  `gp:rep:{way/123}:ns:<item>` (the set of accounts that said not safe).
+
+**Setting up the sign-in providers** (env names in `.env.example`; a provider without both values has no button):
+- `AUTH_SECRET`: 32+ random bytes (`npx auth secret` or `openssl rand -base64 33`). It encrypts the session cookie and
+  keys the account IDs; changing it signs everyone out and resets the account counts.
+- GitHub OAuth app callback URL: `http://localhost:3123/api/auth/callback/github` (local) and
+  `https://<production-domain>/api/auth/callback/github`. A GitHub OAuth app has ONE callback URL, so use one app per
+  origin. Env: `AUTH_GITHUB_ID`, `AUTH_GITHUB_SECRET`.
+- Google OAuth client (Web application) redirect URIs: `http://localhost:3123/api/auth/callback/google` and
+  `https://<production-domain>/api/auth/callback/google` (Google allows several). Env: `AUTH_GOOGLE_ID`,
+  `AUTH_GOOGLE_SECRET`.
+- Vercel: Auth.js trusts the host on Vercel; set `AUTH_URL=https://<production-domain>` only if the site is served
+  from a custom domain different from what Vercel reports. Preview deployments have their own URLs, which the OAuth
+  apps don't list, so on previews only "Try as a judge" works.
+
 ## Privacy
-No accounts, no names, no photos, no cookies, no analytics. Nothing about the child is asked for or sent. What does
-leave the device (also on `/about`):
+No names, no photos, no analytics. Nothing about the child is asked for or sent. Browsing, the examples, shared pass
+links and printing need no account and set no cookie; a grown-up who signs in gets one encrypted, httpOnly,
+SameSite=Lax sign-in cookie (Secure on https). What does leave the device (also on `/about`):
 
 | What | Where it goes | Why |
 |---|---|---|
@@ -292,6 +336,8 @@ leave the device (also on `/about`):
 | Age band | our server, then the model on DigitalOcean (inside the prompt) | item count and reading level |
 | IP address | our server; in our storage (Upstash Redis) only as a keyed hash (HMAC), never the address itself, inside rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP address, web address, time) | our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on the Hobby plan). Park searches are POSTs, so these logs never hold the typed place or location | running the site |
+| Signing in (grown-ups only) | GitHub or Google send our server an account number and a name. Our storage keeps only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, no name, no avatar. A first name goes only into the person's own encrypted cookie, for the header. Cookie: 30 days (judge demo 1 day) | count 2 new passes a day and the reports |
+| Item reports | our storage: per park and item, counts per kind per day; for "Not safe" the hashed account IDs that said so; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
 | The finished pass | saved in our storage (Upstash Redis) for 30 days | the pass link and print page |
 
 Our own server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.
@@ -299,7 +345,8 @@ For Lucky Finds we count mentions in Google Maps reviews via SerpApi; review tex
 (only the keyword, the count and the newest month), and the SerpApi key never leaves the server or appears in a log.
 Storage: Upstash Redis (free plan) holds the caches, the saved passes and the rate-limit counters. The IP hash key is
 `LIMITER_KEY_SECRET`; if it is not set, it is derived from the Upstash token (and is random per process without Upstash).
-The browser keeps only the light/dark choice and the last age band (localStorage).
+The browser keeps only the light/dark choice and the last age band (localStorage), plus, for one sign-in round trip,
+the park and age picked before signing in (sessionStorage, removed as soon as the home page restores them).
 
 ## Contributing
 Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks and the house rules (no made-up

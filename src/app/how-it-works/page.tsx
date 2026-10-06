@@ -26,6 +26,8 @@ import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
 import { WINDOW_MONTHS } from "@/lib/sources/serpapi";
 import { MIN_MENTIONS } from "@/lib/pool/lucky";
 import { limitsConfig } from "@/lib/limits/config";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
+import { REPORT_COPY } from "@/lib/reports/kinds";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { REPO_URL } from "@/lib/site-url";
 
@@ -360,7 +362,15 @@ export default function HowItWorksPage() {
               Lucky Finds: {serp.daily} SerpApi searches a day and {serp.monthly} a month (the free plan).
             </li>
             <li>A pass that came out degraded (a source was down) is rebuilt at most 3 times a day.</li>
+            <li>
+              A new pass needs a grown-up signed in with GitHub or Google: {ACCOUNT_PASSES_PER_DAY} new passes a day each. Judges
+              can press &quot;Try as a judge&quot; (a shared demo account, {judgeDailyCap()} new passes a day for all judges
+              together). Saved passes, shared links, the examples and printing need no sign-in.
+            </li>
           </ul>
+          <p>
+            Visitor reports feed back in: {REPORT_COPY.rule}
+          </p>
           <p>When a limit is reached, the page says so in plain words; saved passes and the example passes keep working.</p>
         </>
       ),
@@ -591,7 +601,11 @@ export default function HowItWorksPage() {
 
       <Section id="privacy" eyebrow="Privacy in short" title="Nothing about your child">
         <ul className={bullets}>
-          <li>No accounts, no names, no photos, no cookies, no analytics.</li>
+          <li>No names, no photos, no analytics. Browsing, the examples, shared passes and printing need no account and set no cookie.</li>
+          <li>
+            Signing in (grown-ups, only to make a new pass or send a report): {ACCOUNT_COPY.privacy} No password is ever
+            stored. Reports are deleted after 90 days.
+          </li>
           <li>The place you type goes to our server and OpenStreetMap&apos;s search, never in the web address.</li>
           <li>&quot;Use my location&quot; is rounded to about 1 km in your browser first.</li>
           <li>Your IP address is only kept as a scrambled code inside rate-limit counters that delete themselves within about a day.</li>

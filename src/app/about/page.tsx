@@ -25,6 +25,8 @@ import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { REPO_URL } from "@/lib/site-url";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
+import { REPORT_COPY } from "@/lib/reports/kinds";
 
 export const metadata: Metadata = {
   title: "About Grass Pass: how a pass is made, why open, privacy",
@@ -200,6 +202,18 @@ const PRIVACY: { what: string; where: string; why: string }[] = [
     where:
       "Our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on our plan). Park searches are sent inside the request, so these logs never show the place you typed or your location.",
     why: "Running the website.",
+  },
+  {
+    what: "Signing in with GitHub or Google (grown-ups, only to make a new pass or send a report)",
+    where:
+      "GitHub or Google tell our server an account number (and a name, which only goes into your own encrypted sign-in cookie for the \"Hi, name\" in the header). Our storage keeps ONLY a scrambled ID made from the account number with a secret key (no email, no name, no picture). The sign-in cookie lasts 30 days (the judge demo: 1 day); Sign out removes it.",
+    why: "To count your 2 new passes a day and your found-it reports.",
+  },
+  {
+    what: "Your item reports (Found it, Didn't find it, Not safe)",
+    where:
+      "Our storage (Upstash Redis): per park and item, how many of each kind per day, plus for \"Not safe\" the scrambled IDs of who said so (so 2 different people are needed). Deleted after 90 days.",
+    why: "To learn what is really findable, leave out finds nobody can spot, and catch anything unsafe.",
   },
   {
     what: "The finished pass (park, age band, items, clues, times)",
@@ -417,8 +431,10 @@ export default function AboutPage() {
 
       <Section id="privacy" title="Privacy: what leaves your device">
         <p>
-          No accounts, no names, no photos, no cookies, no analytics. The only things kept in your browser are your light or
-          dark choice and the last age band you picked. Nothing about the child is ever asked for or sent.
+          No names, no photos, no analytics, and nothing about the child is ever asked for or sent. Browsing, the example
+          passes, shared pass links and printing need no account and set no cookie. Only a grown-up who signs in (to make a
+          new pass or send a report) gets one sign-in cookie. {ACCOUNT_COPY.privacy} The only other things kept in your browser
+          are your light or dark choice and the last age band you picked.
         </p>
         <div className="overflow-x-auto rounded-3xl bg-card ring-1 ring-border" role="region" aria-labelledby="privacy-caption" tabIndex={0}>
           <table className="w-full min-w-[560px] border-collapse text-left text-base">
@@ -458,6 +474,22 @@ export default function AboutPage() {
           Our own server logs say what happened (which source or model, how long it took, the outcome, the pass id) and
           never the prompt, your IP address or the text you typed. Our storage is Upstash Redis (caches, saved passes and
           rate-limit counters). Our hosting provider (Vercel) keeps its own short request logs, as every website host does.
+        </p>
+      </Section>
+
+      <Section id="accounts" title="Accounts and visitor reports">
+        <p>
+          Anyone can search parks, open the example passes and any shared pass link, and print. Making a NEW pass needs a
+          grown-up to sign in with GitHub or Google ({ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas
+          time), because every new pass costs a real model call. {ACCOUNT_COPY.grownUps} We never store a password.
+        </p>
+        <p>
+          Judges can press <strong>Try as a judge</strong>: one click signs in to a shared demo account with no sign-up. All
+          judges together can make {judgeDailyCap()} new passes a day, on top of the usual per-address limits.
+        </p>
+        <p>
+          Signed-in grown-ups can tell us about each find on a pass: <strong>Found it</strong>, <strong>Didn&apos;t find
+          it</strong> or <strong>Not safe</strong> (one report per find per day). {REPORT_COPY.rule}
         </p>
       </Section>
 

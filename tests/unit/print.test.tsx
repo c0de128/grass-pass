@@ -157,8 +157,9 @@ describe("ParentStub (bottom of the printed sheet)", () => {
 
     pass.items.forEach((it, i) => expect(t).toContain(`${i + 1}. ${it.answer}`));
     expect(t).toContain("Golden-eye Lichen (Teloschistes chrysophthalmus)");
-    pass.items.forEach((it) => expect(t).toContain(`${it.answer} (${it.evidence})`));
-    expect(t).toContain("(seen 2 times since");
+    // The evidence is printed once, on the kid's rows (PM decision 2026-10-05), not again in the answers.
+    for (const it of pass.items) expect(t).not.toContain(`(${it.evidence})`);
+    expect(t).not.toContain("seen 2 times since");
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE} ${SAFETY_FOOTNOTE}`);
     expect(t).toContain(`Map: © OpenStreetMap contributors (ODbL), checked ${formatTime(pass.dataCheckedAt.osm)}.`);
     expect(pass.wildSince).not.toBeNull();
@@ -202,7 +203,7 @@ describe("ParentStub (bottom of the printed sheet)", () => {
       <ParentStub pass={pass} passUrl={URL_TEXT} spotAnswer={<p>spot answer slot</p>} october={<span>october source slot</span>} />,
     );
     expect(withSlots).toContain('<div data-slot="spot-answer"><p>spot answer slot</p></div>');
-    expect(withSlots).toContain('<li data-slot="october-source"><span>october source slot</span></li>');
+    expect(withSlots).toContain('<p class="gp-small gp-stub-october" data-slot="october-source"><span>october source slot</span></p>');
   });
 
   it("tear line is a labelled separator with scissors", () => {

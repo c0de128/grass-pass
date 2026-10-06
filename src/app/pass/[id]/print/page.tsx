@@ -2,10 +2,11 @@ import type { Metadata } from "next";
 import { headers } from "next/headers";
 import Link from "next/link";
 import { KidPass } from "@/components/pass/KidPass";
-import { OctoberBox } from "@/components/pass/OctoberBox";
+import { OctoberBox, octoberStubText } from "@/components/pass/OctoberBox";
 import { ParentStub, TearLine } from "@/components/pass/ParentStub";
 import { PrintButton } from "@/components/pass/PrintButton";
 import { PrintFit } from "@/components/pass/PrintFit";
+import { SpotAnswer, SpotMap } from "@/components/pass/SpotMap";
 import { buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
 import { isOctoberDay } from "@/lib/october";
@@ -58,6 +59,9 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
     );
   }
 
+  const spot = pass.spot?.status === "ok" ? pass.spot : null;
+  const octoberText = octoberStubText(pass);
+
   return (
     <main className="gp-print-page mx-auto w-full max-w-5xl flex-1 px-3 py-6 sm:px-5">
       <PrintFit />
@@ -77,10 +81,16 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
       <article className="gp-sheet" aria-label={`Printable Grass Pass for ${pass.park.name}`}>
         <KidPass
           pass={pass}
+          spot={spot ? <SpotMap spot={spot} parkName={pass.park.name} variant="print" headingLevel={2} /> : undefined}
           october={isOctoberDay(pass.day) ? <OctoberBox pass={pass} variant="print" headingLevel={2} /> : undefined}
         />
         <TearLine />
-        <ParentStub pass={pass} passUrl={await passUrl(pass.id)} />
+        <ParentStub
+          pass={pass}
+          passUrl={await passUrl(pass.id)}
+          spotAnswer={spot ? <SpotAnswer spot={spot} /> : undefined}
+          october={octoberText ?? undefined}
+        />
       </article>
     </main>
   );

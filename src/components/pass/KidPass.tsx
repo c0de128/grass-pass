@@ -94,10 +94,13 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
           <h1 id="kid-pass-title">
             <span className="gp-label">Park:</span> {pass.park.name}
           </h1>
-          <p>
-            {formatDay(pass.day)} · {AGE_BAND_INFO[pass.ageBand].label}
+          {/* One wrapping row (S5 print-space fix): date + age, then the stay-close line. */}
+          <p className="gp-kid-when">
+            <span>
+              {formatDay(pass.day)} · {AGE_BAND_INFO[pass.ageBand].label}
+            </span>{" "}
+            <span className="gp-stay">{KID_STAY_CLOSE}</span>
           </p>
-          <p className="gp-stay">{KID_STAY_CLOSE}</p>
         </div>
       </div>
 
@@ -145,7 +148,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
         )}
 
         {hasExtras ? (
-          <div className="gp-extras">
+          <div className="gp-extras" data-spot={spot ? "true" : "false"}>
             {spot ? <div data-slot="spot">{spot}</div> : null}
             {october ? <div data-slot="october">{october}</div> : null}
           </div>

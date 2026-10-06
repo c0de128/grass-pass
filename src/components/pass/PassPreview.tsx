@@ -1,6 +1,7 @@
 import { Chip, SECTION_LABELS } from "@/components/ui/Chip";
 import { TicketCard } from "@/components/ui/TicketCard";
 import { OctoberBox } from "./OctoberBox";
+import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { formatDay, formatTime, modelLicence } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
@@ -84,6 +85,8 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
           </p>
         ) : null}
 
+        {pass.spot ? <SpotMap spot={pass.spot} parkName={pass.park.name} variant="screen" /> : null}
+
         <OctoberBox pass={pass} />
 
         <p className="text-sm">
@@ -111,6 +114,18 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
             </li>
           ))}
         </ol>
+        {pass.spot?.status === "ok" ? (
+          <p className="mt-2" data-testid="spot-answer">
+            <span className="font-semibold">Find This Spot: {pass.spot.target.answer}.</span>{" "}
+            <span className="text-sm">
+              OpenStreetMap {pass.spot.target.osmId}
+              {pass.spot.target.name ? ` ("${pass.spot.target.name}")` : ""}
+              {pass.spot.start ? `; START: ${pass.spot.start.label}` : ""}
+              {pass.spot.walk ? `, about ${pass.spot.walk.meters} m ${pass.spot.walk.direction} of START` : ""}.
+              {pass.spot.riddleBy === "code" ? " The open model's riddle didn't pass our checks, so the pass uses a fixed one." : ""}
+            </span>
+          </p>
+        ) : null}
       </details>
       <ul className="flex flex-col gap-1 text-sm">
         {pass.safetyFiltered > 0 ? <li>{SAFETY_FOOTNOTE}</li> : null}

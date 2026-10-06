@@ -56,7 +56,8 @@ export type ParentStubProps = {
 };
 
 /**
- * The grown-up's stub (SPEC §8.4): answer key with the code-written evidence, safety notes,
+ * The grown-up's stub (SPEC §8.4): answer key (the evidence is printed once, on the kid's rows; PM
+ * decision 2026-10-05), the Find This Spot answer, safety notes,
  * what is missing and why, data sources with their dates, and which model wrote the clues and when.
  */
 export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubProps) {
@@ -70,6 +71,8 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   const { notGrounded, other } = pass.removed;
   const notes: string[] = [
     ...missing.map((m) => m.message),
+    // S5: why there is no Find This Spot map (the kid side shows nothing in that case).
+    ...(pass.spot?.status === "none" ? [pass.spot.message] : []),
     ...(short > 0 ? [`No data available for ${short} more ${short === 1 ? "find" : "finds"}: ${short === 1 ? "its clue" : "their clues"} didn't pass our checks, so we left ${short === 1 ? "it" : "them"} off.`] : []),
     ...(notGrounded > 0 ? [`${notGrounded} ${notGrounded === 1 ? "clue" : "clues"} removed: didn't match ${notGrounded === 1 ? "its" : "their"} source.`] : []),
     ...(other > 0 ? [`${other} ${other === 1 ? "clue" : "clues"} removed: gave away the answer or broke a rule.`] : []),
@@ -86,19 +89,27 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
       <ol className="gp-answers">
         {pass.items.map((it, i) => (
           <li key={i}>
-            {i + 1}. <span className="gp-answer-what">{it.answer}</span> <span className="gp-small">({it.evidence})</span>
+            {i + 1}. <span className="gp-answer-what">{it.answer}</span>
           </li>
         ))}
       </ol>
       {spotAnswer ? <div data-slot="spot-answer">{spotAnswer}</div> : null}
+      {/* Full width: in a narrow column the October details stacked ~9 lines and pushed the sheet to 2 pages. */}
+      {october ? (
+        <p className="gp-small gp-stub-october" data-slot="october-source">
+          {october}
+        </p>
+      ) : null}
 
-      <div className="gp-stub-cols" data-cols={notes.length > 0 ? "3" : "2"}>
-        <div className="gp-stub-col">
-          <h3>Safety</h3>
-          <p className="gp-small">
-            {[STUB_LOOK_ONLY, ...(safety.length > 0 ? [STUB_EACH_LINE] : []), ...(pass.safetyFiltered > 0 ? [SAFETY_FOOTNOTE] : [])].join(" ")}
-          </p>
-        </div>
+      {/* Safety runs full width (S5 print-space fix): as a narrow column it stacked 4-5 lines. */}
+      <div className="gp-stub-safety">
+        <h3>Safety</h3>
+        <p className="gp-small">
+          {[STUB_LOOK_ONLY, ...(safety.length > 0 ? [STUB_EACH_LINE] : []), ...(pass.safetyFiltered > 0 ? [SAFETY_FOOTNOTE] : [])].join(" ")}
+        </p>
+      </div>
+
+      <div className="gp-stub-cols" data-cols={notes.length > 0 ? "2" : "1"}>
 
         {notes.length > 0 ? (
           <div className="gp-stub-col">
@@ -121,7 +132,6 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
                 {pass.wildSince ? `, ${shortDay(pass.wildSince)} to ${shortDay(pass.day)}` : ""}; checked {formatTime(pass.dataCheckedAt.inat)}.
               </li>
             ) : null}
-            {october ? <li data-slot="october-source">{october}</li> : null}
             <li>
               Clues: {pass.model.answered} ({licence ? `open model, ${licence}` : "open model"}), made {formatTime(pass.generatedAt)}. Code
               wrote every number and date.

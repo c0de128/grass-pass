@@ -62,17 +62,35 @@ export function OctoberBox({ pass, variant = "screen", headingLevel = 2 }: Octob
         )}
       </H>
 
-      {box.status === "ok" ? (
+      {box.status === "ok" && print ? (
+        // Paper (PM decision 2026-10-05): headline + one tip line for the kid; the window, check time
+        // and milkweed line move to the parent stub (OctoberStubLine).
         <>
-          <p className={print ? "font-bold" : "text-lg font-semibold"}>{octoberHeadline(box)}</p>
+          <p className="font-bold">{octoberHeadline(box)}</p>
+          <p>{OCTOBER_TIP}</p>
+        </>
+      ) : box.status === "ok" ? (
+        <>
+          <p className="text-lg font-semibold">{octoberHeadline(box)}</p>
           <p>{octoberCompare(box)}</p>
-          <p className={print ? "" : "text-sm"}>{octoberDetail(box, formatTime(box.checkedAt))}</p>
-          <p className={print ? "" : "text-sm"}>{milkweedLine(box.milkweed)}</p>
-          <p className={print ? "" : "text-sm font-semibold"}>{OCTOBER_TIP}</p>
+          <p className="text-sm">{octoberDetail(box, formatTime(box.checkedAt))}</p>
+          <p className="text-sm">{milkweedLine(box.milkweed)}</p>
+          <p className="text-sm font-semibold">{OCTOBER_TIP}</p>
         </>
       ) : (
         <p className={print ? "" : "rounded-control border-2 border-dashed border-line px-3 py-2"}>{octoberUnavailable(box.reason)}</p>
       )}
     </section>
   );
+}
+
+/**
+ * The October details for the printed parent stub (PM decision 2026-10-05): the SPEC F10 sentence
+ * with the window and check time, and the milkweed line. Nothing outside October or
+ * when the box has no counts (the kid side already says "No data available" and why).
+ */
+export function octoberStubText(pass: Pick<Pass, "day" | "october">): string | null {
+  if (!isOctoberDay(pass.day) || pass.october?.status !== "ok") return null;
+  const box = pass.october;
+  return `October box: ${octoberDetail(box, formatTime(box.checkedAt))} ${milkweedLine(box.milkweed)}`;
 }

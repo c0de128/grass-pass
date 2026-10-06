@@ -132,6 +132,12 @@
   font-weight: 700;
 }
 
+.gp-kid-when {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0 0.18in;
+}
+
 .gp-name {
   display: flex;
   flex: 1 1 2.2in;
@@ -157,7 +163,7 @@
 .gp-kid-body {
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: 0.18in;
+  gap: 0.12in;
 }
 
 /* Extras (S5 spot map, S7 October box) sit in one row under the finds, side by side. */
@@ -171,6 +177,106 @@
 .gp-extras > * {
   flex: 1 1 3in;
   min-width: 0;
+}
+
+/*
+ * With a Find This Spot map (S5) the extras become a grid: the map on the left, the riddle + legend
+ * and the October box stacked on the right. The spot slot wrapper is display: contents (a plain div
+ * with no role) so its two parts can sit in different grid cells.
+ */
+.gp-extras[data-spot="true"] {
+  display: grid;
+  grid-template-columns: 3.2in minmax(0, 1fr);
+  grid-template-areas:
+    "map text"
+    "map oct";
+  grid-template-rows: auto 1fr;
+  gap: 0.06in 0.14in;
+  align-items: start;
+}
+
+.gp-extras[data-spot="true"] > [data-slot="spot"] {
+  display: contents;
+}
+
+.gp-extras[data-spot="true"] > [data-slot="october"] {
+  grid-area: oct;
+}
+
+.gp-spot-text {
+  grid-area: text;
+  display: flex;
+  flex-direction: column;
+  gap: 0.03in;
+  min-width: 0;
+}
+
+.gp-spot-figure {
+  grid-area: map;
+  margin: 0;
+  min-width: 0;
+}
+
+.gp-spot-title {
+  display: flex;
+  align-items: center;
+  gap: 0.06in;
+  font-size: 13pt;
+}
+
+/* The spot's own tick box: the same 8.3 mm box as the finds (>= 7 mm at the smallest print scale). */
+.gp-spot-check {
+  flex-shrink: 0;
+}
+
+.gp-spot-riddle {
+  font-size: 12pt;
+  font-weight: 700;
+  line-height: 1.15;
+}
+
+.gp-spot-frame {
+  line-height: 0;
+}
+
+/* The map itself: 3.2 in wide (1 map unit ~ 0.55 pt, so every line is >= 1.2 pt; >= 1 pt at the 0.85 floor). */
+.gp-spot-svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+
+.gp-spot-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.01in 0.1in;
+}
+
+.gp-spot-key {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.03in;
+  white-space: nowrap;
+}
+
+.gp-spot-glyph {
+  width: 0.22in;
+  height: 0.1in;
+  flex-shrink: 0;
+}
+
+.gp-spot-figure figcaption {
+  margin-top: 0.02in;
+}
+
+.gp-stub-october {
+  margin: 0.03in 0 0;
+}
+
+.gp-spot-answer {
+  margin: 0.04in 0 0;
+  font-size: 11pt;
+  line-height: 1.2;
 }
 
 /* The S7 October box on paper: same words, tighter spacing. */
@@ -296,8 +402,19 @@
   margin-top: 0.08in;
 }
 
-.gp-stub-cols[data-cols="3"] {
-  grid-template-columns: minmax(0, 0.85fr) minmax(0, 1.1fr) minmax(0, 1.45fr);
+.gp-stub-cols[data-cols="1"] {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.gp-stub-safety {
+  display: flex;
+  align-items: baseline;
+  gap: 0.1in;
+  margin-top: 0.05in;
+}
+
+.gp-stub-safety h3 {
+  flex-shrink: 0;
 }
 
 .gp-stub-col {
@@ -315,7 +432,7 @@
 
 /* Answer key: two newspaper columns across the stub, each answer kept whole. */
 .gp-answers {
-  columns: 2;
+  columns: 3;
   column-gap: 0.25in;
   margin-top: 0.03in !important;
   font-size: 11pt;
@@ -361,12 +478,24 @@
   }
 
   .gp-sheet:not(.gp-measure) .gp-stub-cols,
-  .gp-sheet:not(.gp-measure) .gp-stub-cols[data-cols="3"] {
+  .gp-sheet:not(.gp-measure) .gp-stub-safety {
+    display: block;
+  }
+
+  .gp-sheet:not(.gp-measure) .gp-stub-cols[data-cols="1"] {
     grid-template-columns: minmax(0, 1fr);
   }
 
   .gp-sheet:not(.gp-measure) .gp-answers {
     columns: 1;
+  }
+
+  .gp-sheet:not(.gp-measure) .gp-extras[data-spot="true"] {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas:
+      "text"
+      "map"
+      "oct";
   }
 }
 

@@ -1,6 +1,6 @@
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { OctoberBox } from "@/components/pass/OctoberBox";
+import { OctoberBox, octoberStubText } from "@/components/pass/OctoberBox";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { tripBreaker } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
@@ -304,7 +304,24 @@ describe("<OctoberBox> (screen and print)", () => {
     expect(html).toMatch(/<h3 id="october-title-print"/);
     expect(html).not.toContain("bg-chip");
     expect(html).toContain("border-black");
-    expect(text(html)).toContain("No monarch sightings reported within 25 km in the last 14 days");
+    // Paper (PM decision 2026-10-05): headline + one tip line on the kid's side; the window, check time
+    // and milkweed line move to the parent stub (octoberStubText).
+    const t = text(html);
+    expect(t).toContain("0 monarchs seen since Sep 21 vs 63 in 2025");
+    expect(t).toContain(OCTOBER_TIP);
+    expect(t).not.toContain("No monarch sightings reported within 25 km in the last 14 days");
+    expect(t).not.toContain("Milkweed");
+    expect(html.match(/<p[ >]/g)).toHaveLength(2);
+  });
+
+  it("stub text: the SPEC F10 sentence with window and check time and milkweed; nothing without counts", () => {
+    const box = okBox(0, 63);
+    const stub = octoberStubText({ day: "2026-10-05", october: box })!;
+    expect(stub).toMatch(/^October box: No monarch sightings reported within 25 km in the last 14 days \(iNaturalist, checked /);
+    expect(stub).not.toContain(octoberCompare(box));
+    expect(stub).toContain("Milkweed seen near this park:");
+    expect(octoberStubText({ day: "2026-10-05", october: { status: "unavailable", reason: OCTOBER_REASONS.down } })).toBeNull();
+    expect(octoberStubText({ day: "2026-09-14", october: box })).toBeNull();
   });
 
   it("not October -> nothing at all", () => {

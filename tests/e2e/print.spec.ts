@@ -4,7 +4,7 @@ import { expect, test, type APIRequestContext, type Page } from "@playwright/tes
 // S4 print: a REAL pass from the running server (live OpenStreetMap + iNaturalist + the open model,
 // or today's cached pass when the server already made it), printed with print media emulation.
 // If an upstream is down, the honest error copy is checked and the test is SKIPPED with the reason.
-// Set PRINT_PREVIEW_DIR to also save print-preview-S4.png (Letter, print media) and .pdf there.
+// Set PRINT_PREVIEW_DIR to also save print-preview-S5-connemara.png (Letter, print media) and .pdf there.
 const WAIT = 95_000;
 const CONNEMARA = { id: "way/306191453", name: "Connemara Meadow Preserve" };
 
@@ -98,12 +98,14 @@ test.describe("a real pass", () => {
     await expect(page.locator("body > header")).toBeHidden();
     await expect(page.getByRole("button", { name: "Print pass" })).toBeHidden();
     await expect(page.getByRole("link", { name: "Back to the pass" })).toBeHidden();
-    // S7 October box sits in its slot (every pass made in October); S5's Find This Spot slot is empty
-    // until S5 lands, and an empty slot renders nothing at all.
+    // S7 October box sits in its slot (every pass made in October). Connemara has no single landmark on
+    // the map (S5), so there is no Find This Spot slot at all and the stub says why (SPEC 5.4 copy).
+    // The map itself is tested on Celebration Park in spot-map.spec.ts.
     const october = sheet.locator('[data-slot="october"] [data-testid="october-box"][data-variant="print"]');
     await expect(october).toHaveCount(1);
     await expect(october.getByRole("heading", { name: "October special: monarch butterflies" })).toBeVisible();
     await expect(sheet.locator('[data-slot="spot"]')).toHaveCount(0);
+    await expect(sheet.getByText(/^No Find This Spot today: /)).toBeVisible();
     const fit = await sheet.getAttribute("data-fit");
     test.info().annotations.push({ type: "note", description: `PrintFit print scale for this real pass: ${fit}` });
     expect(Number(fit)).toBeGreaterThanOrEqual(0.85);
@@ -122,7 +124,7 @@ test.describe("a real pass", () => {
     expect(pdfPages(a4)).toBe(1);
 
     if (process.env.PRINT_PREVIEW_DIR) {
-      writeFileSync(`${process.env.PRINT_PREVIEW_DIR}/print-preview-S4.pdf`, letter);
+      writeFileSync(`${process.env.PRINT_PREVIEW_DIR}/print-preview-S5-connemara.pdf`, letter);
     }
   });
 
@@ -191,7 +193,7 @@ test.describe("a real pass", () => {
     await page.setViewportSize({ width: 816, height: 1056 });
     await openPrint(page);
     await page.addStyleTag({ content: "body{padding:0.4in !important;background:#fff !important}" });
-    await page.screenshot({ path: `${process.env.PRINT_PREVIEW_DIR}/print-preview-S4.png`, fullPage: true });
+    await page.screenshot({ path: `${process.env.PRINT_PREVIEW_DIR}/print-preview-S5-connemara.png`, fullPage: true });
     const height = await page.evaluate(() => document.documentElement.scrollHeight);
     test.info().annotations.push({ type: "note", description: `Preview height ${height}px (Letter = 1056px)` });
     expect(height).toBeLessThanOrEqual(1056);

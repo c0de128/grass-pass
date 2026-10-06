@@ -69,14 +69,14 @@ Vercel.
 
 ## Accounts and visitor reports
 Kevin's rules (2026-10-06): anyone can search parks, open the example passes and any shared pass link, and print.
-**Making a NEW pass needs a grown-up to sign in** with GitHub or Google (OAuth through Auth.js / next-auth v5; no
+**Making a NEW pass needs a grown-up to sign in** with GitHub, or Google when configured (OAuth through Auth.js / next-auth v5; no
 password is ever stored), **2 new passes a day per account** (Chicago day). A pass already made today for that park
 and age is served to anyone (it costs nothing). The order on `POST /api/pass` is: signed in? -> the account's daily
 count -> the existing per-IP and global limits; the account's count is given back unless an upstream call really
 started (a failed build that did call the model still counts). A rebuild of today's pass after a source was down
 (at most 3 a day per park and age) does not count toward anyone's 2.
 
-A sign-in lasts **7 days** (GitHub, Google) or **1 day** (the judge demo), counted from signing in however much it is
+A sign-in lasts **7 days** (GitHub, or Google when configured) or **1 day** (the judge demo), counted from signing in however much it is
 used; the cookie expires at the same time. GitHub is asked only for `read:user` (no email scope, and the email
 lookup is skipped), Google only for `openid profile`. The header reads who is signed in from `GET /api/me`, which only
 decodes the cookie: browsing without signing in sets no cookie at all.

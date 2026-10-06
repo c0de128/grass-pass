@@ -36,8 +36,8 @@ Live demo: (link added at deploy, Fri Oct 9)
    made, so it opens at once, with no sign-in.
 2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below.
 3. To make your own: search a park by name (for example "Arbor Hills Nature Preserve") or a town, pick a park and an
-   age, and press **Make my pass**. A new pass needs a grown-up to sign in (GitHub or Google, 2 a day); judges can
-   press **Try as a judge**. It usually takes 10-30 seconds, up to about a minute and a half when the free map
+   age, and press **Make my pass**. A new pass needs a grown-up to sign in (GitHub, Google optional when configured; 2 a day);
+   judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
    servers are slow.
 
 A town search lists the **10 nearest** named parks within 5 km, so a park you know may be missing ("Allen TX" lists 10
@@ -83,14 +83,16 @@ Needs Node 22 and pnpm.
 
 ```bash
 pnpm install
-cp .env.example .env.local   # add DO_INFERENCE_API_KEY, or point MODEL_BASE_URL at a local Ollama
+cp .env.example .env.local   # add DO_INFERENCE_API_KEY (or MODEL_BASE_URL for a local Ollama)
+                             # and AUTH_SECRET: npx auth secret
 pnpm dev                     # http://localhost:3000
 ```
 
 Every environment variable is explained in [`.env.example`](.env.example); keys are server-only. Lucky Finds need
 `SERPAPI_API_KEY` (free SerpApi account), capped by `SERPAPI_DAILY_CAP` and `SERPAPI_MONTHLY_CAP`. Without
 `UPSTASH_REDIS_REST_URL`/`_TOKEN`, caches and limits live in memory (fine locally). Without a model key, park search
-works and a new pass says the model is not configured.
+works and a new pass says the model is not configured. `AUTH_SECRET` switches on sign-in and "Try as a judge";
+without it, examples, search, shared passes and printing work, but new passes can't be made.
 
 | Script | What it does |
 |---|---|
@@ -186,7 +188,7 @@ checked against the results JSON by a unit test).
 
 ## Accounts and reports
 Anyone can search, open the example passes and any shared link, and print. **A NEW pass needs a grown-up to sign in**
-with GitHub or Google (Auth.js / next-auth v5; no password stored): **2 new passes a day per account** (Chicago
+with GitHub, or Google when configured (Auth.js / next-auth v5; no password stored): **2 new passes a day per account** (Chicago
 day). A pass already made today for that park and age is served to anyone. **Try as a judge** signs in to a shared
 demo account in one click (`JUDGE_DEMO_DAILY_CAP`, default 60 a day for all judges, at most 3 per connection).
 Signed-in visitors can report each find (Found it / Didn't find it / Not safe); thresholds count different accounts,
@@ -206,7 +208,7 @@ https). What leaves the device (also on `/about`):
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP, web address, time) | Vercel request logs, about 1 hour on the Hobby plan; searches are POSTs, so the logs never hold the typed place or location | running the site |
-| Signing in (grown-ups only) | GitHub or Google send an account number and a name. We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, name or avatar. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in (judge demo 1 day) | count 2 new passes a day and the reports |
+| Signing in (grown-ups only) | GitHub (or Google, when configured) sends an account number and a name. We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, name or avatar. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in; the judge demo sign-in stops working after 1 day | count 2 new passes a day and the reports |
 | Item reports | per park and item, each visitor's latest kind and day under a per-park reporter ID (an HMAC, so IDs can't be linked across parks); judge demo reports only logged; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
 | The finished pass | Upstash Redis, 30 days | the pass link and print page |
 

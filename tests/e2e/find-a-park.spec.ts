@@ -1,4 +1,5 @@
 import { expect, test, type Locator, type Page } from "@playwright/test";
+import { skipIfHonestAlert } from "./support/honest";
 
 // F1 against the real server and the LIVE OpenStreetMap services (Nominatim + Overpass).
 // Overpass can take 10-30 s when busy, so result waits are long. Each test makes at most two
@@ -7,20 +8,15 @@ const RESULT_TIMEOUT = 95_000;
 
 test.describe.configure({ mode: "serial" });
 
-const OSM_BUSY = "No data available: the OpenStreetMap server is busy. Try again in a minute, or pick an example park.";
-
 /**
- * Wait for the park list, or for the honest "OpenStreetMap is busy" state (public Overpass really
- * does fail: 504s and 30 s hangs were seen while writing this). If OSM is busy, the exact SPEC 5.4
- * copy is checked and the test is reported as SKIPPED with the reason, never as passed.
+ * Wait for the park list, or for an error box. The box carries the server's error code: an honest
+ * outside failure (OpenStreetMap busy, our per-IP limit, ...) is checked and reported as SKIPPED with
+ * the code and message, never as passed; any other code fails (support/honest.ts, R1-B2).
  */
 async function parksOrBusy(page: Page, list: Locator): Promise<void> {
-  const busy = page.getByRole("alert").filter({ hasText: "OpenStreetMap server is busy" });
-  await expect(list.or(busy)).toBeVisible({ timeout: RESULT_TIMEOUT });
-  if (await busy.isVisible()) {
-    await expect(busy).toHaveText(OSM_BUSY);
-    test.skip(true, "Live Overpass was busy; the page showed the exact SPEC 5.4 busy copy instead of parks.");
-  }
+  const failed = page.locator("[data-error-code]");
+  await expect(list.or(failed)).toBeVisible({ timeout: RESULT_TIMEOUT });
+  if (await failed.isVisible()) await skipIfHonestAlert(failed, "park search");
 }
 
 test("empty submit: field error is focused, linked, announced, and clears on typing", async ({ page }) => {
@@ -97,15 +93,16 @@ test("a place that doesn't exist shows the exact no-match copy on the field", as
 test.describe("Use my location", () => {
   test.use({ geolocation: { latitude: 33.0851102, longitude: -96.7020718 }, permissions: ["geolocation"] });
 
-  test("sends only a 2-decimal location and lists parks near you", async ({ page }) => {
+  test("sends only a 2-decimal location, in the body, and lists parks near you", async ({ page }) => {
     test.setTimeout(RESULT_TIMEOUT + 20_000);
     await page.goto("/");
-    const request = page.waitForRequest((r) => r.url().includes("/api/parks?"));
+    const request = page.waitForRequest((r) => r.url().endsWith("/api/parks"));
     await page.getByRole("button", { name: "Use my location" }).click();
-    const url = new URL((await request).url());
-    expect(url.searchParams.get("lat")).toBe("33.09");
-    expect(url.searchParams.get("lng")).toBe("-96.70");
-    expect(url.searchParams.get("q")).toBeNull();
+    const sent = await request;
+    // A POST with a JSON body: the location never appears in the address (or in request logs).
+    expect(sent.method()).toBe("POST");
+    expect(new URL(sent.url()).search).toBe("");
+    expect(sent.postDataJSON()).toEqual({ lat: "33.09", lng: "-96.70" });
     const list = page.getByRole("list", { name: "Parks near your location" });
     await parksOrBusy(page, list);
     await expect(page.getByRole("heading", { name: "Parks near your location" })).toBeVisible();

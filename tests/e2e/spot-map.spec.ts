@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext } from "@playwright/test";
+import { passOrSkip } from "./support/honest";
 
 // S5 Find This Spot: a REAL Celebration Park pass from the running server (live OpenStreetMap,
 // iNaturalist and the open model, or today's cached pass). Its only picnic shelter is the X.
@@ -14,7 +15,6 @@ test.describe.configure({ mode: "serial" });
 test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
 
 type Spot = { status: string; message?: string; riddle?: string };
-type Line = { type: string; pass?: { id: string; items: unknown[]; spot?: Spot }; error?: { message: string } };
 
 async function realPass(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number; spot?: Spot }> {
   const res = await request.post("/api/pass", {
@@ -22,14 +22,9 @@ async function realPass(request: APIRequestContext, baseURL: string): Promise<{ 
     data: { parkId: CELEBRATION.id, ageBand: "6-10" },
     timeout: WAIT,
   });
-  const body = await res.text();
-  const lines = body.trim().split("\n").filter(Boolean);
-  const last = JSON.parse(lines[lines.length - 1]) as Line & { message?: string };
-  if (last.type === "result" && last.pass) return { id: last.pass.id, items: last.pass.items.length, spot: last.pass.spot };
-  const msg = last.error?.message ?? last.message ?? body.slice(0, 200);
-  expect(msg).toMatch(/OpenStreetMap server is busy|couldn't write clues right now|took too long|iNaturalist didn't answer|paused for today|lot of requests/);
-  test.skip(true, `No pass could be made right now; the server gave the honest copy: ${msg}`);
-  throw new Error("unreachable");
+  // Skips with the server's error code when an upstream or a limit stopped it (support/honest.ts, R1-B2).
+  const pass = await passOrSkip(res, "Celebration pass for the map");
+  return { id: pass.id, items: pass.items.length, spot: pass.spot as Spot | undefined };
 }
 
 const pdfPages = (pdf: Buffer) => (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;

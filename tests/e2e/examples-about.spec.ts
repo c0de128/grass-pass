@@ -16,12 +16,29 @@ test.describe("example parks", () => {
     const list = page.getByRole("list", { name: "Example parks" });
     await expect(list.getByRole("listitem")).toHaveCount(4);
 
-    // Wait (reloading) until the server's start-up warm-up has made at least one example pass.
-    let link = list.getByRole("link").first();
-    for (let i = 0; i < 40 && (await list.getByRole("link").count()) === 0; i++) {
+    // Each card has a data-state (ExampleParks.tsx): ready | off | making | waiting. Decide on that, not on copy.
+    const states = async () => list.getByRole("listitem").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
+    const explainsItself = async () => {
       // Every example without a pass says why, in words (never a blank or a made-up pass).
       for (const item of await list.getByRole("listitem").all()) {
-        if ((await item.getByRole("link").count()) === 0) await expect(item).toContainText("No data available yet:");
+        if ((await item.getByRole("link").count()) === 0) await expect(item).toContainText(/^.+No data available yet: \S.{10,}/);
+      }
+    };
+
+    // PREWARM_EXAMPLES=0 (keyless CI): every card says the examples are switched off, so SKIP with that copy.
+    if ((await states()).every((s) => s === "off")) {
+      await explainsItself();
+      test.skip(true, `Example warm-up is switched off on this server; every card says: ${await list.getByRole("listitem").first().textContent()}`);
+    }
+
+    // Wait (reloading) while the server is making an example pass. When nothing is ready and nothing is
+    // being made (the last try failed, e.g. no AI key or OpenStreetMap busy), SKIP with the cards' copy.
+    let link = list.getByRole("link").first();
+    for (let i = 0; i < 40 && (await list.getByRole("link").count()) === 0; i++) {
+      await explainsItself();
+      const now = await states();
+      if (!now.includes("making")) {
+        test.skip(true, `No example pass is ready and none is being made; the cards say: ${(await list.textContent())?.slice(0, 300)}`);
       }
       await page.waitForTimeout(5_000);
       await page.reload();
@@ -40,7 +57,7 @@ test.describe("example parks", () => {
     await expect(page.getByRole("link", { name: "Print pass" })).toBeVisible();
   });
 
-  test("the skip link jumps to the examples", async ({ page }) => {
+  test("the examples link jumps to the examples", async ({ page }) => {
     await page.goto("/");
     await page.getByRole("link", { name: "See a real example pass" }).click();
     await expect(page).toHaveURL(/#examples-title$/);
@@ -48,7 +65,7 @@ test.describe("example parks", () => {
   });
 });
 
-test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds not connected", async ({ page }) => {
+test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds not available yet", async ({ page }) => {
   const res = await page.goto("/about");
   expect(res?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: "About Grass Pass" })).toBeVisible();
@@ -56,7 +73,7 @@ test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds 
     await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
   }
   await expect(page.getByText(/Find This Spot/).first()).toBeVisible();
-  await expect(page.getByText(/Lucky Finds .*not connected/)).toBeVisible();
+  await expect(page.getByText(/Lucky Finds .*not available yet/)).toBeVisible();
   await expect(page.getByRole("table").first()).toContainText("Gemma 4 31B");
 });
 

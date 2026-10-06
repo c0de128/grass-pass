@@ -58,17 +58,18 @@ test("dark mode follows the system and the switch remembers a choice", async ({ 
   const page = await context.newPage();
   await page.goto("/");
   const bg = () => page.evaluate(() => getComputedStyle(document.body).backgroundColor);
-  expect(await bg()).toBe("rgb(41, 80, 49)"); // --ticket
+  // Polled: under load (parallel specs) the stylesheet can land a moment after the first paint.
+  await expect.poll(bg).toBe("rgb(41, 80, 49)"); // --ticket
   const toggle = page.getByRole("button", { name: "Dark mode" });
   await expect(toggle).toHaveAttribute("aria-pressed", "true");
   await expect(page.getByRole("link", { name: "Grass Pass home" }).locator("img.only-dark")).toBeVisible();
 
   await toggle.click();
   await expect(toggle).toHaveAttribute("aria-pressed", "false");
-  expect(await bg()).toBe("rgb(250, 243, 225)"); // --paper
+  await expect.poll(bg).toBe("rgb(250, 243, 225)"); // --paper
   await page.reload();
   await expect(page.getByRole("button", { name: "Dark mode" })).toHaveAttribute("aria-pressed", "false");
-  expect(await bg()).toBe("rgb(250, 243, 225)");
+  await expect.poll(bg).toBe("rgb(250, 243, 225)");
   await context.close();
 });
 

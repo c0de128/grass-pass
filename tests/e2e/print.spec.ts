@@ -1,5 +1,6 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
+import { passOrSkip } from "./support/honest";
 
 // S4 print: a REAL pass from the running server (live OpenStreetMap + iNaturalist + the open model,
 // or today's cached pass when the server already made it), printed with print media emulation.
@@ -13,8 +14,6 @@ test.describe.configure({ mode: "serial" });
 // is a screen artefact, not ink. Grayscale antialiasing shows what a printer gets.
 test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
 
-type Line = { type: string; pass?: { id: string; items: unknown[] }; error?: { code: string; message: string } };
-
 /** Ask the server for today's pass the way the page does (same origin, JSON), reading the stream to the end. */
 async function realPassId(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number }> {
   const res = await request.post("/api/pass", {
@@ -22,18 +21,14 @@ async function realPassId(request: APIRequestContext, baseURL: string): Promise<
     data: { parkId: CONNEMARA.id, ageBand: "6-10" },
     timeout: WAIT,
   });
-  const body = await res.text();
-  const lines = body.trim().split("\n").filter(Boolean);
-  const last = JSON.parse(lines[lines.length - 1]) as Line & { error?: { message: string } };
-  if (last.type === "result" && last.pass) return { id: last.pass.id, items: last.pass.items.length };
-  const msg = last.error?.message ?? (last as { message?: string }).message ?? body.slice(0, 200);
-  expect(msg).toMatch(/OpenStreetMap server is busy|couldn't write clues right now|took too long|iNaturalist didn't answer|paused for today|lot of requests/);
-  test.skip(true, `No pass could be made right now; the server gave the honest copy: ${msg}`);
-  throw new Error("unreachable");
+  // Skips with the server's error code when an upstream or a limit stopped it (support/honest.ts, R1-B2).
+  const pass = await passOrSkip(res, "Connemara pass for printing");
+  return { id: pass.id, items: pass.items.length };
 }
 
 test("a print link for a pass that isn't saved says so and links back", async ({ page }) => {
-  await page.goto("/pass/w1-6to10-20200101-1/print");
+  const res = await page.goto("/pass/w1-6to10-20200101-1/print");
+  expect(res?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "No pass here" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Make a pass" })).toHaveAttribute("href", "/");
 });

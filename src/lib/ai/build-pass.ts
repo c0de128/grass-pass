@@ -37,9 +37,11 @@ import {
   type TaxonSummary,
 } from "@/lib/sources/inat";
 import { parkFeatures, ParkFeaturesSchema, parkIdOf, type ParkFeatures, type ParkRef } from "@/lib/sources/overpass-features";
+import { finishSpot, geometryWithin, loadGeometry, planSpot, SPOT_WAIT_MS, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
+import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, computeMix, type Mix } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { retryThreshold, validateDraft, type DropReason, type ValidationResult } from "./validate";
+import { retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -254,6 +256,24 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
 
 // ---------- the pass ----------
 
+/** Mix limits for a pool (SPEC F2/F4). */
+export function mixFor(pool: readonly PoolItem[], band: AgeBand): Mix | null {
+  const n = (s: Section) => pool.filter((i) => i.section === s).length;
+  return computeMix({ park: n("park"), wild: n("wild"), lucky: n("lucky") }, band);
+}
+
+/**
+ * S5: when the X is the park's only <kind> (its only shelter, say), the pass doesn't also ask for it
+ * as a Park Find, unless dropping it would make the pass shorter.
+ */
+export function poolForSpot(pool: PoolItem[], target: Pick<SpotTarget, "poolKind"> | null, band: AgeBand): PoolItem[] {
+  if (!target?.poolKind) return pool;
+  const id = `osm-${target.poolKind.replace(/_/g, "-")}`;
+  const without = pool.filter((p) => p.id !== id);
+  if (without.length === pool.length) return pool;
+  return mixFor(without, band)?.n === mixFor(pool, band)?.n ? without : pool;
+}
+
 const SECTION_ORDER: Record<Section, number> = { park: 0, wild: 1, lucky: 2 };
 
 function better(a: ValidationResult | null, b: ValidationResult | null): ValidationResult | null {
@@ -267,6 +287,15 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   const left = () => deps.startedAt + PASS_DEADLINE_MS - deps.now();
 
   deps.emit("map", stepText("map", deps.env));
+  // S5: the Find This Spot geometry query runs alongside the park-features query (optional, never throws).
+  const geometry: Promise<GeometryResult> = loadGeometry(input.ref, {
+    store: deps.store,
+    env: deps.env,
+    now: deps.now,
+    fetchImpl: deps.fetchImpl,
+    signal: deps.signal,
+    onUpstream: deps.onUpstream,
+  });
   const fr = await loadFeatures(input.ref, deps);
   if (!fr.ok) return fr.outcome;
   const f = fr.value;
@@ -277,8 +306,12 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   const lucky: SectionState = { status: "off", message: PASS_COPY.luckyOff };
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
-  const pool: PoolItem[] = [...park.items, ...wild.items];
-  const mix: Mix | null = computeMix({ park: park.items.length, wild: wild.items.length, lucky: 0 }, band);
+  const geoWait = Math.min(SPOT_WAIT_MS, Math.max(0, left() - MODEL_MIN_LEFT_MS - 5_000));
+  const spotPlan: SpotPlan = planSpot(await geometryWithin(geometry, geoWait), { parkName: f.park.name, features: f, variant: input.variant });
+  const target = spotPlan.status === "target" ? spotPlan.target : null;
+
+  const pool = poolForSpot([...park.items, ...wild.items], target, band);
+  const mix: Mix | null = mixFor(pool, band);
   if (!mix) {
     const bothEmpty = park.state.status === "empty" && wild.state.status === "empty";
     return {
@@ -294,12 +327,12 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   const parkData = parkDataOf(f.park.name, pool);
   deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
-  const messages = buildMessages(f.park.name, pool, band, mix);
+  const messages = buildMessages(f.park.name, pool, band, mix, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null);
   const jsonSchema = passJsonSchema({
     n: mix.n,
     itemIds: pool.map((p) => p.id) as [string, ...string[]],
     sections: [...new Set(pool.map((p) => p.section))] as [Section, ...Section[]],
-    spotTargetId: null,
+    spotTargetId: target?.id ?? null,
   });
 
   let attempts = 0;
@@ -307,6 +340,9 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   let answered = modelId;
   let best: ValidationResult | null = null;
   let lastError: ModelError | null = null;
+  /** The first riddle (of up to two calls) that passed every check. */
+  let riddle: string | null = null;
+  let riddleDrop: SpotReason | null = null;
 
   for (let call = 1; call <= 2; call++) {
     const remaining = left();
@@ -341,7 +377,13 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
       answered = r.modelLabel;
       deps.emit("check", stepText("check", deps.env));
       const v = validateDraft(r.data, pool, mix);
+      if (target && riddle === null) {
+        const sv = validateSpot(r.data.spot, target);
+        if (sv.ok) riddle = sv.riddle;
+        else riddleDrop = sv.reason;
+      }
       log("pass_checks", {
+        spot: target ? (riddle !== null ? "ok" : riddleDrop) : "none",
         call,
         model: r.modelLabel,
         n: mix.n,
@@ -416,6 +458,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
       inat: wild.checkedAt === null ? null : new Date(wild.checkedAt).toISOString(),
     },
     wildSince: wild.since,
+    spot: finishSpot(spotPlan, riddle),
   };
   return { kind: "pass", pass };
 }

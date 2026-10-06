@@ -8,7 +8,10 @@ import {
   passJsonSchema,
   passRequestSchema,
 } from "@/lib/ai/schema";
-import { isGrounded, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft } from "@/lib/ai/validate";
+import { isGrounded, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
+import { poolForSpot } from "@/lib/ai/build-pass";
+import { parseGeometry } from "@/lib/spot/geometry";
+import { pickTarget } from "@/lib/spot/pick-target";
 import { parkPool } from "@/lib/pool/park";
 import type { PoolItem } from "@/lib/pool/types";
 import { wildPool } from "@/lib/pool/wild";
@@ -16,15 +19,23 @@ import { parseSpeciesCounts, parseTaxa } from "@/lib/sources/inat";
 import { parseFeatures, parseParkId } from "@/lib/sources/overpass-features";
 import { modelRec, PARKS, rec, recordedDraft } from "./support/pass-replay";
 
-/** The exact pool the app builds from the live recordings (same code path as buildPass). */
+/**
+ * The exact pool the app builds from the live recordings (same code path as buildPass), including the
+ * S5 Find This Spot target picked from the recorded geometry (Celebration: the shelter, which then
+ * leaves the Park Finds pool; Connemara: none, so its prompt is exactly the S3 one).
+ */
 function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
-  const f = parseFeatures(rec(`overpass-features-${p.slug}`).body, parseParkId(p.id)!)!;
+  const ref = parseParkId(p.id)!;
+  const f = parseFeatures(rec(`overpass-features-${p.slug}`).body, ref)!;
   const park = parkPool(f);
   const list = parseSpeciesCounts(rec(`inat-species-${p.slug}`).body);
   const summaries = p === PARKS.connemara ? parseTaxa(rec(`inat-taxa-${p.slug}`).body) : [];
   const wild = wildPool(list, summaries, "2026-09-21");
-  const pool: PoolItem[] = [...park.items, ...wild.items];
-  return { f, park, wild, pool };
+  const g = parseGeometry(rec(`overpass-geometry-${p.slug}`).body, ref)!;
+  const target = pickTarget(g, { parkName: f.park.name, features: f, variant: 1 });
+  const pool: PoolItem[] = poolForSpot([...park.items, ...wild.items], target, "6-10");
+  const spot = target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null;
+  return { f, park, wild, pool, target, spot };
 }
 
 describe("strict JSON schema from zod (SPEC 6.2)", () => {
@@ -75,13 +86,13 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
 
   it("the schema the app builds today equals the one sent in the recorded live Gemma calls", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
-      const { pool } = poolFor(p);
+      const { pool, target } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
       const schema = passJsonSchema({
         n: mix.n,
         itemIds: pool.map((i) => i.id) as [string, ...string[]],
         sections: [...new Set(pool.map((i) => i.section))] as ["park"],
-        spotTargetId: null,
+        spotTargetId: target?.id ?? null,
       });
       expect(modelRec(p.slug).request.response_format.json_schema.schema).toEqual(schema);
     }
@@ -127,9 +138,9 @@ describe("mix limits computed by code", () => {
 describe("prompt (SPEC 6.1)", () => {
   it("the prompt the app builds today equals the recorded live request (both parks)", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
-      const { pool, f } = poolFor(p);
+      const { pool, f, spot } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", mix));
+      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", mix, spot));
     }
   });
 
@@ -183,6 +194,15 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       expect(out.drops).toEqual({});
       expect(out.belowMin).toEqual([]);
     }
+    // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target) has a riddle for the X
+    // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
+    const c = poolFor(PARKS.celebration);
+    expect(c.target?.osmId).toBe("way/536185861");
+    expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
+    const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find a place with a roof on posts and tables where people eat lunch." });
+    expect(poolFor(PARKS.connemara).target).toBeNull();
+    expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
 
   it("grounding: normalized substring (case, spaces, HTML, curly quotes, dashes, wrapping quotes)", () => {
@@ -217,7 +237,8 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
   });
 
   it("drops each bad item for its own reason and re-applies the section limits", () => {
-    const { pool } = poolFor(PARKS.celebration);
+    // The full Park Finds pool (before S5 moves the shelter to Find This Spot), so the shelter is a pool item here.
+    const pool = poolFor(PARKS.celebration).park.items;
     const mix = { n: 3, min: { park: 2, wild: 0, lucky: 0 }, max: { park: 2, wild: 0, lucky: 0 }, hardMin: 0 };
     const bench = pool.find((p) => p.id === "osm-bench")!;
     const shelter = pool.find((p) => p.id === "osm-shelter")!;

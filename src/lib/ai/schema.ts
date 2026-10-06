@@ -1,6 +1,8 @@
 /**
- * Model output schemas (SPEC §6.2). OWNER: S3 (Builder A). Other slices change this file only via
- * the owner (S5 adds the Find This Spot target through `spotTargetId`).
+ * Model output schemas (SPEC §6.2). OWNER: S3 (Builder A); S5 owns the `spot` part (PM, 2026-10-05).
+ * S5: when code picks a Find This Spot target, the request schema REQUIRES `spot` with `targetId` an
+ * enum of that one id (src/lib/spot/pick-target.ts); `items` keeps minItems = maxItems = n either way.
+ * The riddle gets the same checks as a clue (validate.ts `validateSpot`).
  *
  * Three layers:
  * 1. `PassItemDraft` / `SpotDraft` / `PassDraft`: the spec's zod schemas, applied PER ITEM in

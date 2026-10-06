@@ -6,6 +6,7 @@ import { loadPass, makePass, passId, passKey, resetPassMaking } from "@/lib/pass
 import { PASS_COPY, PassErrorResponseSchema, PassLineSchema, type PassLine } from "@/lib/pass/schema";
 import { WILD_DOWN_COPY } from "@/lib/pool/wild";
 import { PARKS_COPY } from "@/lib/parks/schema";
+import { SPOT_COPY } from "@/lib/spot/types";
 import * as route from "@/app/api/pass/route";
 import { recordedResponse } from "./support/osm-replay";
 import { modelRec, PARKS, passReplay, type Call } from "./support/pass-replay";
@@ -65,6 +66,8 @@ afterEach(() => {
 
 const modelCalls = (calls: Call[]) => calls.filter((c) => c.host === "inference.do-ai.run");
 const isOctoberCall = (c: Call) => /^\/v1\/observations(\/histogram)?$/.test(new URL(c.url).pathname);
+/** The Overpass QL sent in a call (form body `data=`). */
+const overpassQuery = (c: Call) => new URLSearchParams(String(c.init?.body ?? c.body ?? "")).get("data") ?? "";
 
 describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
   it("exports only the handler plus runtime/maxDuration", () => {
@@ -121,9 +124,19 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
-    // One Overpass query, two iNaturalist calls, one model call. (In October the S7 monarch box adds two
-    // free iNaturalist counts; they are tested with a fixed clock in october.test.ts.)
-    expect(replay.calls.filter((c) => !isOctoberCall(c)).map((c) => c.host)).toEqual(["overpass-api.de", "api.inaturalist.org", "api.inaturalist.org", "inference.do-ai.run"]);
+    // Two Overpass queries (park features + the S5 Find This Spot geometry, sent together), two
+    // iNaturalist calls, one model call. (In October the S7 monarch box adds two free iNaturalist counts;
+    // they are tested with a fixed clock in october.test.ts.)
+    expect(replay.calls.filter((c) => !isOctoberCall(c)).map((c) => c.host)).toEqual([
+      "overpass-api.de",
+      "overpass-api.de",
+      "api.inaturalist.org",
+      "api.inaturalist.org",
+      "inference.do-ai.run",
+    ]);
+    expect(replay.calls.filter((c) => overpassQuery(c).includes("out geom"))).toHaveLength(1);
+    // Connemara has no single landmark on the map: the exact SPEC 5.4 copy, and the S3 prompt unchanged.
+    expect(p.spot).toEqual({ status: "none", message: SPOT_COPY.noLandmark });
     // Key-to-host: the DO key goes only to DO.
     for (const c of replay.calls) {
       const auth = new Headers(c.init?.headers).get("authorization");
@@ -216,6 +229,15 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(f.pass.dataCheckedAt.inat).not.toBeNull();
     // Zero species -> no taxa call (the empty-id guard).
     expect(replay.calls.filter((c) => c.url.includes("/v1/taxa"))).toHaveLength(0);
+    // S5: the X is the park's only picnic shelter, the riddle is the open model's (it passed every check),
+    // and the shelter is not also a Park Find.
+    const spot = f.pass.spot;
+    if (spot?.status !== "ok") throw new Error("expected a Find This Spot map");
+    expect(spot.target).toEqual({ osmId: "way/536185861", label: "picnic shelter", name: null, answer: "The picnic shelter" });
+    expect(spot.riddleBy).toBe("model");
+    expect(spot.start).toEqual({ osmId: "way/374628989", label: "parking lot" });
+    expect(spot.walk).toEqual({ meters: 140, direction: "south-east" });
+    expect(f.pass.items.some((i) => /shelter/i.test(i.answer))).toBe(false);
   });
 
   it("Overpass busy on every server (real 504 page): the exact busy copy, no iNat or model call", async () => {
@@ -230,7 +252,9 @@ describe("POST /api/pass: honest empties and failures", () => {
     const ls = await lines(await route.POST(post(connemara)));
     const f = final(ls);
     expect(f).toMatchObject({ type: "error", status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown } });
-    expect(replay.calls.map((c) => c.host)).toEqual(["overpass-api.de", "maps.mail.ru", "overpass.private.coffee"]);
+    // The park-features query tried every server once; the geometry query only ever hit Overpass too.
+    expect(replay.calls.filter((c) => !overpassQuery(c).includes("out geom")).map((c) => c.host)).toEqual(["overpass-api.de", "maps.mail.ru", "overpass.private.coffee"]);
+    expect(replay.calls.every((c) => c.url.endsWith("/interpreter"))).toBe(true);
   });
 
   it("iNaturalist down at Connemara: not enough data for a pass; each section says why; no model call", async () => {

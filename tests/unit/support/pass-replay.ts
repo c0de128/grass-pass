@@ -1,6 +1,8 @@
 /**
  * Replays the LIVE S3 recordings (Overpass park features, iNaturalist species + taxa, and the real
- * gemma-4-31B-it answers from DigitalOcean, all recorded 2026-10-05 ~23:13-23:16 UTC). Requests with
+ * gemma-4-31B-it answers from DigitalOcean, all recorded 2026-10-05 ~23:13-23:16 UTC; S5 added the Overpass
+ * geometry recordings and re-recorded the Celebration answer with its Find This Spot target, 2026-10-06
+ * ~00:25-00:33 UTC). Requests with
  * no recording throw, so a test can never pass on invented data. Failure shapes that can't be recorded
  * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
  */
@@ -57,7 +59,14 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
       const q = new URLSearchParams(body ?? "").get("data") ?? "";
       for (const p of Object.values(PARKS)) {
         const [type, id] = p.id.split("/");
-        if (q.includes(`${type}(${id})`)) return json(rec(`overpass-features-${p.slug}`).body);
+        if (!q.includes(`${type}(${id})`)) continue;
+        // S5: the Find This Spot geometry query (`out geom`), recorded live 2026-10-06 ~00:25 UTC.
+        if (q.includes("out geom")) {
+          const g = rec(`overpass-geometry-${p.slug}`);
+          if (g._recording.overpassQuery !== q) throw new Error(`geometry query changed since the recording for ${p.id}`);
+          return json(g.body);
+        }
+        return json(rec(`overpass-features-${p.slug}`).body);
       }
       throw new Error(`no Overpass recording for ${q.slice(0, 80)}`);
     }

@@ -11,7 +11,7 @@
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import type { Mix } from "./prompt";
-import { PARENT_NOTE_MAX, PassItemDraft, type PassDraftEnvelope } from "./schema";
+import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
 export type DropReason =
   | "schema"
@@ -199,4 +199,33 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
 /** Fewer valid items than this -> one retry (SPEC §6.2: "< n-2 survive"). */
 export function retryThreshold(n: number): number {
   return Math.max(1, n - 2);
+}
+
+// ---------- Find This Spot riddle (S5) ----------
+
+/** What the riddle is checked against: the code-picked target and its code-written fact sheet. */
+export type SpotCheckTarget = { id: string; sourceText: string; nameWords: readonly string[] };
+
+export type SpotReason = "missing" | "schema" | "wrong_target" | "url_or_markup" | "danger" | "not_grounded" | "name_leak" | "number_not_in_source";
+
+/**
+ * The model's riddle for the X, with the same checks as a clue (SPEC 6.2): spec zod schema, the one
+ * code-picked target id, no URL/markup, no blocked word, `sourceQuote` a normalized substring of the
+ * target's fact sheet, no name of the thing, no number that isn't in the fact sheet.
+ * A failed riddle is never printed; the pass uses the fixed code line instead.
+ */
+export function validateSpot(raw: unknown, target: SpotCheckTarget): { ok: true; riddle: string } | { ok: false; reason: SpotReason } {
+  if (raw === undefined || raw === null) return { ok: false, reason: "missing" };
+  const parsed = SpotDraft.safeParse(
+    typeof raw === "object" ? Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, typeof v === "string" ? tidy(v) : v])) : raw,
+  );
+  if (!parsed.success) return { ok: false, reason: "schema" };
+  const d = parsed.data;
+  if (d.targetId !== target.id) return { ok: false, reason: "wrong_target" };
+  if (hasUrlOrMarkup(d.riddle)) return { ok: false, reason: "url_or_markup" };
+  if (blockedWordIn(d.riddle)) return { ok: false, reason: "danger" };
+  if (!isGrounded(d.sourceQuote, target.sourceText)) return { ok: false, reason: "not_grounded" };
+  if (nameLeak(d.riddle, target.nameWords)) return { ok: false, reason: "name_leak" };
+  if (numbersNotIn(d.riddle, target.sourceText).length > 0) return { ok: false, reason: "number_not_in_source" };
+  return { ok: true, riddle: d.riddle };
 }

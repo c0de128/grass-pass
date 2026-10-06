@@ -5,6 +5,7 @@
 import "@/lib/zod-config";
 import { z } from "zod";
 import { OctoberBoxSchema } from "@/lib/october";
+import { SpotSchema } from "@/lib/spot/types";
 
 // ---------- age bands (SPEC F2) ----------
 
@@ -94,6 +95,8 @@ export const PassSchema = z.object({
   wildSince: z.string().nullable(),
   /** October special (S7): monarch counts, checked when the pass was made. Absent outside October and on older passes. */
   october: OctoberBoxSchema.optional(),
+  /** Find This Spot (S5): the map + riddle, or why there is none. Absent on passes made before S5. */
+  spot: SpotSchema.optional(),
 });
 export type Pass = z.infer<typeof PassSchema>;
 

@@ -467,3 +467,54 @@ export async function main(): Promise<EvalResults> {
   say(`\nWrote ${path.relative(APP_ROOT, p.md)} and ${path.relative(APP_ROOT, p.json)}. Spend this run: $${results.spend.usd.toFixed(4)} (${results.spend.modelCalls} model calls).`);
   return results;
 }
+
+/**
+ * `pnpm eval:check` (free, no model): every case through the real buildPass twice, in two lanes at
+ * once like `pnpm eval`, with the model switched off. Proves the fixtures answer every request the
+ * app makes (also when its caches are warm from other parks) before any paid run.
+ */
+export async function checkReplay(): Promise<{ lane: number; caseN: number; kind: RunRecord["kind"]; errorCode?: string; message?: string }[]> {
+  const casesFile = loadCases();
+  // No key: the app refuses to call the model (MODEL_NOT_CONFIGURED), so nothing is ever spent.
+  const meter = new SpendMeter(1);
+  const noKey = {};
+  const spec = MODEL_SPECS["gemma-4-31B-it"];
+  const loaded: { c: EvalCase; fx: EvalFixture; data: CaseData }[] = [];
+  for (const c of casesFile.cases) {
+    const fx = loadFixture(c.slug);
+    const r = await caseDataOrNull(fx, casesFile.ageBand);
+    if (!r.data) throw new Error(`case ${c.n}: ${r.problem}`);
+    loaded.push({ c, fx, data: r.data });
+  }
+  const out: { lane: number; caseN: number; kind: RunRecord["kind"]; errorCode?: string; message?: string }[] = [];
+  const restore = setLogSink(() => undefined);
+  try {
+    await Promise.all(
+      [1, 2].map(async (lane) => {
+        for (const l of loaded) {
+          const r = await runModelCase(l.c, l.fx, l.data, spec, lane, casesFile.ageBand, noKey, meter);
+          out.push({ lane, caseN: l.c.n, kind: r.kind, errorCode: r.errorCode, message: r.errorCode === "FIXTURE_MISS" ? r.message : undefined });
+        }
+      }),
+    );
+  } finally {
+    restore();
+  }
+  return out;
+}
+
+/**
+ * Recompute the scores of a saved results file from its raw run records with the current scorer
+ * (no network, no model). Contexts come from the same recorded fixtures.
+ */
+export async function rescore(results: EvalResults): Promise<EvalResults> {
+  const casesFile = loadCases();
+  const contexts = new Map<number, CaseContext>();
+  for (const c of casesFile.cases) {
+    if (!results.meta.settings.cases.includes(c.n) || !existsSync(fixturePath(c.slug))) continue;
+    const r = await caseDataOrNull(loadFixture(c.slug), results.meta.ageBand);
+    if (r.data) contexts.set(c.n, caseContext(c.n, r.data));
+  }
+  const models = [...results.meta.settings.models, TEMPLATE_MODEL];
+  return { ...results, scores: models.map((m) => scoreModel(m, results.runs, contexts, m !== TEMPLATE_MODEL)) };
+}

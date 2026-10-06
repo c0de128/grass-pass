@@ -132,7 +132,13 @@ describe("raw checks (M2, M6)", () => {
       { itemId: "inat-0", section: "wild", clue: "Unknown id", lookWhere: "", sourceQuote: "whatever", difficulty: "easy" },
     ];
     const r = rawChecks(run({ calls: [call(items)] }), ctxC);
-    expect(r).toEqual({ returned: 3, grounded: 1, nameLeaks: 1 });
+    expect(r).toEqual({ returned: 3, grounded: 1, nameLeaks: 1, clueLeaks: 1 });
+  });
+
+  it("splits leaks in lookWhere from leaks in the clue itself", () => {
+    const p = connemara.pool.find((x) => x.section === "wild")!;
+    const item = { itemId: p.id, section: "wild", clue: "Look closely here.", lookWhere: `near the ${p.nameWords[0]}`, sourceQuote: p.sourceText.slice(0, 30), difficulty: "easy" };
+    expect(rawChecks(run({ calls: [call([item])] }), ctxC)).toMatchObject({ nameLeaks: 1, clueLeaks: 0 });
   });
 
   it("counts every call of a run (first answer and the retry)", () => {

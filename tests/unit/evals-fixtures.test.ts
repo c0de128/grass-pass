@@ -14,6 +14,7 @@ import {
   loadCases,
   loadFixture,
   summarize,
+  taxaIdsOf,
   trimOverpass,
 } from "../../evals/fixture";
 import { prettyJson } from "../../evals/json";
@@ -83,6 +84,24 @@ describe("replay", () => {
     const res = await r.fetch(species.url, { method: "GET" });
     expect(res.status).toBe(200);
     expect(await res.json()).toEqual(species.body);
+  });
+
+  it("answers a taxa request for a subset of the recorded ids with exactly those recorded rows", async () => {
+    // The app's taxon cache is shared across parks, so a later park can ask for fewer ids than were recorded.
+    const fx = loadFixture("connemara-meadow-preserve");
+    const taxa = fx.exchanges.find((e) => e.what === "taxa")!;
+    const ids = taxaIdsOf(taxa.url)!;
+    expect(ids.length).toBeGreaterThan(3);
+    const sub = [ids[2], ids[0]];
+    const url = taxa.url.replace(/taxa\/[\d,]+/, `taxa/${sub.join(",")}`);
+    const r = createReplayFetch(fx);
+    const body = (await (await r.fetch(url, { method: "GET" })).json()) as { results: { id: number }[] };
+    expect(body.results.map((x) => x.id)).toEqual(sub);
+    const recorded = (taxa.body as { results: { id: number }[] }).results;
+    expect(body.results[0]).toEqual(recorded.find((x) => x.id === sub[0]));
+    // An id that was never recorded is a miss, not an invention.
+    await expect(r.fetch(url.replace(/taxa\/[\d,]+/, `taxa/${ids[0]},999999999`), { method: "GET" })).rejects.toThrow();
+    expect(r.misses).toHaveLength(1);
   });
 
   it("trims Overpass answers to what the app reads, keeping the park's position", () => {

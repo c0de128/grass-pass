@@ -222,15 +222,46 @@ export function overpassQueryOf(body: string | null | undefined): string | null 
 
 export type Replay = { fetch: FetchLike; misses: string[]; served: number };
 
+const TAXA_PATH_RE = /^https:\/\/api\.inaturalist\.org\/v1\/taxa\/([\d,]+)\?/;
+
+/** Ids in a `taxa/<ids>` URL, or null for any other URL. */
+export function taxaIdsOf(url: string): number[] | null {
+  const m = TAXA_PATH_RE.exec(url);
+  return m ? m[1].split(",").map(Number) : null;
+}
+
+/**
+ * A `taxa/<ids>` request for a SUBSET of the recorded ids (the app's taxon cache, shared across
+ * parks, already had the others): answered with the recorded results for exactly those ids, values
+ * unchanged. iNaturalist answers each taxon independently, so this is the same data it would send.
+ * Null when any id was not recorded.
+ */
+export function taxaSubsetBody(fx: EvalFixture, url: string): Record<string, unknown> | null {
+  const ids = taxaIdsOf(url);
+  if (!ids) return null;
+  const recorded = new Map<number, unknown>();
+  for (const e of fx.exchanges) {
+    if (e.what !== "taxa" || !isObj(e.body) || !Array.isArray(e.body.results)) continue;
+    for (const r of e.body.results) if (isObj(r) && typeof r.id === "number") recorded.set(r.id, r);
+  }
+  if (!ids.every((id) => recorded.has(id))) return null;
+  const results = ids.map((id) => recorded.get(id));
+  return { total_results: results.length, page: 1, per_page: 30, results };
+}
+
 /**
  * Answer the app's requests from a fixture: Overpass POSTs by their exact query (any mirror),
- * iNaturalist GETs by exact URL. Anything else throws like a network error and is listed in `misses`.
+ * iNaturalist GETs by exact URL, and taxa requests for a subset of the recorded ids (see
+ * taxaSubsetBody). Anything else throws like a network error and is listed in `misses`.
  */
 export function createReplayFetch(fx: EvalFixture): Replay {
   const misses: string[] = [];
   const state = { served: 0 };
   const f: FetchLike = async (input, init) => {
     const method = (init?.method ?? "GET").toUpperCase();
+    let body: unknown;
+    let status = 200;
+    let contentType: string | null = "application/json";
     let hit: Exchange | undefined;
     if (method === "POST") {
       const q = overpassQueryOf(typeof init?.body === "string" ? init.body : null);
@@ -238,14 +269,21 @@ export function createReplayFetch(fx: EvalFixture): Replay {
     } else {
       hit = fx.exchanges.find((e) => e.method === "GET" && e.url === input);
     }
-    if (!hit) {
+    if (hit) {
+      body = hit.body;
+      status = hit.status;
+      contentType = hit.contentType;
+    } else if (method === "GET") {
+      body = taxaSubsetBody(fx, input) ?? undefined;
+    }
+    if (body === undefined) {
       misses.push(`${method} ${input}`);
       throw new TypeError(`not in the recorded fixture: ${method} ${input}`);
     }
     state.served++;
-    return new Response(JSON.stringify(hit.body), {
-      status: hit.status,
-      headers: { "content-type": hit.contentType ?? "application/json" },
+    return new Response(JSON.stringify(body), {
+      status,
+      headers: { "content-type": contentType ?? "application/json" },
     });
   };
   return {

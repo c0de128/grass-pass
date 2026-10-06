@@ -6,6 +6,7 @@ How good are the passes, measured on 20 real parks, with real recorded park data
 |---|---|---|
 | `pnpm eval:record` | Records the 20 parks LIVE with the app's own source code (Overpass park features, iNaturalist species in 1.5 km over the last 14 days, taxa summaries) into `tests/fixtures/evals/<park>.json`, each answer with its fetch time. Keeps existing files unless `EVAL_RECORD_FORCE=1`. Writes `tests/fixtures/evals/RECORDING-LOG.md`. | OpenStreetMap + iNaturalist (free, polite: one park at a time, the app's rate limits, a pause between parks) |
 | `pnpm eval` | Runs the real pass builder (`src/lib/ai/build-pass.ts`) on the recorded parks with `gemma-4-31B-it` x 3 runs and `llama-4-maverick` x 1 run on DigitalOcean, plus the no-AI template baseline. Scores M1-M8, prints the table, writes `evals/results/<date>.md` + `.json` and appends `evals/results/SPEND.md`. | DigitalOcean serverless inference, about $0.06 for a full run; hard cap `EVAL_BUDGET_USD` (default $1) |
+| `pnpm eval:check` | Free dry run: every recorded park through the real `buildPass`, twice and in two lanes like `pnpm eval`, with the model off. Fails on any request the fixtures cannot answer. Run it before a paid run. | none |
 | `pnpm eval:report` | Re-renders the newest (or `EVAL_FROM=<file>.json`) results file. | none |
 
 Settings (environment variables; the DO key is read from `.env.local` and never printed):

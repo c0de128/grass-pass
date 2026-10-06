@@ -19,7 +19,11 @@ export const METRIC_ROWS: Row[] = [
   { label: "M3 Complete passes (data-rich)", threshold: `>= ${THRESHOLDS.m3 * 100}% of runs`, cell: (s) => `${pct(s.m3.rate)} (${s.m3.complete}/${s.m3.dataRichRuns}) ${verdict(s.m3.pass)}` },
   { label: "M4 Honest empties", threshold: "100%", cell: (s) => `${pct(s.m4.rate)} (${s.m4.ok}/${s.m4.checked}) ${verdict(s.m4.pass)}` },
   { label: "M5 Reading level (FK grade, median)", threshold: `<= ${THRESHOLDS.m5}`, cell: (s) => `${s.m5.medianGrade === null ? "n/a" : s.m5.medianGrade.toFixed(1)} (${s.m5.clues} clues) ${verdict(s.m5.pass)}` },
-  { label: "M6 Name leaks, before filter", threshold: `<= ${THRESHOLDS.m6 * 100}%`, cell: (s) => `${pct(s.m6.rate)} (${s.m6.leaks}/${s.m6.returned}) ${verdict(s.m6.pass)}` },
+  {
+    label: "M6 Name leaks, before filter",
+    threshold: `<= ${THRESHOLDS.m6 * 100}%`,
+    cell: (s) => `${pct(s.m6.rate)} (${s.m6.leaks}/${s.m6.returned}; in the clue itself ${pct(s.m6.clueRate)}) ${verdict(s.m6.pass)}`,
+  },
   {
     label: "M7 Latency per model call p50 / p95",
     threshold: `<= ${THRESHOLDS.m7p50 / 1000} s / <= ${THRESHOLDS.m7p95 / 1000} s`,
@@ -80,7 +84,7 @@ export function renderMarkdown(results: EvalResults, jsonName: string): string {
   for (const row of METRIC_ROWS) L.push(`| ${row.label} | ${row.threshold} | ${scores.map((s) => row.cell(s)).join(" | ")} |`);
   L.push(`| M9 Kid check (human) | >= 8/10 | ${models.map(() => "human check: see human-check.md").join(" | ")} |`);
   L.push("");
-  L.push("How each is measured: M1 = printed items whose answer is a hard-blocked iNaturalist taxon in the recorded data, or carry a blocked word. M2 = model items whose `sourceQuote` is a normalized substring of the item's source (every call, before any item is dropped). M3 = data-rich cases (pool can fill the whole pass) whose final pass keeps >= n-1 items. M4 = data-poor sections showing the exact SPEC 5.4 copy and printing nothing, and no-pass cases making no model call. M5 = Flesch-Kincaid grade of each printed clue (code formula, evals/score.ts), median. M6 = model items whose clue or lookWhere contains the item's name, before filtering. M7 = wall time of each HTTP call to the model. M8 = (prompt tokens x input price + completion tokens x output price) per pass, DO list prices.");
+  L.push("How each is measured: M1 = printed items whose answer is a hard-blocked iNaturalist taxon in the recorded data, or carry a blocked word. M2 = model items whose `sourceQuote` is a normalized substring of the item's source (every call, before any item is dropped). M3 = data-rich cases (pool can fill the whole pass) whose final pass keeps >= n-1 items. M4 = data-poor sections showing the exact SPEC 5.4 copy and printing nothing, and no-pass cases making no model call. M5 = Flesch-Kincaid grade of each printed clue (code formula, evals/score.ts), median. M6 = model items whose clue or lookWhere contains a name word of the item, before filtering (the app drops both; 'in the clue itself' counts the clue only, the SPEC wording; FAIL is judged on the stricter clue-or-lookWhere count). M7 = wall time of each HTTP call to the model. M8 = (prompt tokens x input price + completion tokens x output price) per pass, DO list prices.");
   L.push("");
   L.push("## Open models vs the no-AI template (SPEC 6.5)");
   L.push("");

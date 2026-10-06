@@ -167,7 +167,7 @@ export function safetyViolations(run: RunRecord, ctx: CaseContext): string[] {
   return out;
 }
 
-export type RawChecks = { returned: number; grounded: number; nameLeaks: number };
+export type RawChecks = { returned: number; grounded: number; nameLeaks: number; clueLeaks: number };
 
 /** M2 + M6 before any filter: every item the model returned, in every call of this run. */
 export function rawChecks(run: RunRecord, ctx: CaseContext): RawChecks {
@@ -175,6 +175,7 @@ export function rawChecks(run: RunRecord, ctx: CaseContext): RawChecks {
   let returned = 0;
   let grounded = 0;
   let nameLeaks = 0;
+  let clueLeaks = 0;
   for (const c of run.calls) {
     for (const raw of c.rawItems ?? []) {
       returned++;
@@ -183,10 +184,12 @@ export function rawChecks(run: RunRecord, ctx: CaseContext): RawChecks {
       if (typeof raw.sourceQuote === "string" && isGrounded(raw.sourceQuote, item.sourceText)) grounded++;
       const clue = typeof raw.clue === "string" ? raw.clue : "";
       const look = typeof raw.lookWhere === "string" ? raw.lookWhere : "";
-      if (nameLeak(clue, item.nameWords) || nameLeak(look, item.nameWords)) nameLeaks++;
+      const inClue = nameLeak(clue, item.nameWords) !== null;
+      if (inClue) clueLeaks++;
+      if (inClue || nameLeak(look, item.nameWords)) nameLeaks++;
     }
   }
-  return { returned, grounded, nameLeaks };
+  return { returned, grounded, nameLeaks, clueLeaks };
 }
 
 /** M4: each data-poor section must show the exact SPEC copy and print nothing from that section. */
@@ -247,7 +250,8 @@ export type ModelScore = {
   m3: { complete: number; dataRichRuns: number; rate: number | null; pass: boolean | null };
   m4: { ok: number; checked: number; rate: number | null; pass: boolean | null; problems: string[] };
   m5: { medianGrade: number | null; clues: number; pass: boolean | null };
-  m6: { leaks: number; returned: number; rate: number | null; pass: boolean | null };
+  /** Leaks in the clue or lookWhere (what the app drops); clueLeaks = in the clue itself (the SPEC wording). */
+  m6: { leaks: number; clueLeaks: number; returned: number; rate: number | null; clueRate: number | null; pass: boolean | null };
   m7: { calls: number; p50Ms: number | null; p95Ms: number | null; passP50: boolean | null; passP95: boolean | null; perPassP50Ms: number | null };
   m8: { costPerPass: number | null; totalUsd: number; promptTokens: number; completionTokens: number; pass: boolean | null };
   retries: number;
@@ -265,6 +269,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   let returned = 0;
   let grounded = 0;
   let leaks = 0;
+  let clueLeaks = 0;
   let honestOk = 0;
   let honestChecked = 0;
   const honestProblems: string[] = [];
@@ -276,6 +281,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     returned += rc.returned;
     grounded += rc.grounded;
     leaks += rc.nameLeaks;
+    clueLeaks += rc.clueLeaks;
     const h = honestEmptyChecks(r, ctx);
     honestOk += h.ok;
     honestChecked += h.checked;
@@ -309,7 +315,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     m3: { complete, dataRichRuns: rich.length, rate: m3rate, pass: m3rate === null ? null : m3rate >= THRESHOLDS.m3 },
     m4: { ok: honestOk, checked: honestChecked, rate: m4rate, pass: m4rate === null ? null : m4rate >= THRESHOLDS.m4, problems: honestProblems },
     m5: { medianGrade: m5, clues: grades.length, pass: m5 === null ? null : m5 <= THRESHOLDS.m5 },
-    m6: { leaks, returned, rate: m6rate, pass: m6rate === null ? null : m6rate <= THRESHOLDS.m6 },
+    m6: { leaks, clueLeaks, returned, rate: m6rate, clueRate: rate(clueLeaks, returned), pass: m6rate === null ? null : m6rate <= THRESHOLDS.m6 },
     m7: {
       calls: calls.length,
       p50Ms: usesModel ? p50 : null,

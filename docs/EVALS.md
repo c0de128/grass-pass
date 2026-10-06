@@ -3,15 +3,58 @@
 Moved from the README on 2026-10-06 (no numbers changed). The README keeps the summary table.
 
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
-with the real pass builder. Current numbers: [`evals/results/2026-10-06-5.md`](../evals/results/2026-10-06-5.md)
-(what changed and why: [`2026-10-06-5-notes.md`](../evals/results/2026-10-06-5-notes.md)), one full run on Oct 6 after
-audit round 4 (app commit `74c8712`), not re-run. The earlier runs ([`2026-10-05.md`](../evals/results/2026-10-05.md),
+with the real pass builder. Current numbers: [`evals/results/2026-10-06-6.md`](../evals/results/2026-10-06-6.md)
+(what changed and why: [`2026-10-06-6-notes.md`](../evals/results/2026-10-06-6-notes.md)), one full run on Oct 6 after
+the completeness work (app commit `b5a862b`), not re-run. The earlier runs ([`2026-10-05.md`](../evals/results/2026-10-05.md),
 [`-2`](../evals/results/2026-10-05-2.md), [`-3`](../evals/results/2026-10-05-3.md), [`-4`](../evals/results/2026-10-05-4.md),
 [`2026-10-06.md`](../evals/results/2026-10-06.md), [`2026-10-06-2.md`](../evals/results/2026-10-06-2.md),
-[`2026-10-06-3.md`](../evals/results/2026-10-06-3.md) and [`2026-10-06-4.md`](../evals/results/2026-10-06-4.md)) are kept
-for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
+[`2026-10-06-3.md`](../evals/results/2026-10-06-3.md), [`2026-10-06-4.md`](../evals/results/2026-10-06-4.md) and
+[`2026-10-06-5.md`](../evals/results/2026-10-06-5.md)) are kept for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
 Oct 5). Find This Spot and Lucky Finds are not in the eval (no map or SerpApi recordings for the test parks; SerpApi
 was switched off for the run).
+
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-5`) | Gemma, first run |
+|---|---|---|---|---|---|
+| M1 Blocked taxa printed (target 0) | 0 | 0 | 0 | 0 | 0 |
+| M2 Clues quoting their source word for word, before the filter (target 85%) | 99.6% | 98.6% | 100% (by construction) | 98.6% | 99.2% |
+| M3 Passes with >= n-1 items (target 90%) | **94.1% (48/51), PASS** | 41.2% (FAIL) | 76.5% (FAIL) | 84.3% (FAIL) | 64.7% |
+| M4 Honest empty sections (target 100%) | 100% | 100% | 100% | 100% | 100% |
+| M5 Reading level, FK grade median (target <= 3.5) | 2.5 | 2.3 | 3.8 (FAIL) | 2.3 | 2.3 |
+| M6 Name leaks in clue or hint, before the filter (target <= 5%) | 2.6% (clue only 2.2%) | 16.7% (FAIL) | 1.4% | 4.5% | 17.5% |
+| M7 Model call p50 / p95 (target 10 s / 20 s) | **12.0 s / 22.7 s, FAIL** (p50 12.04 s; first calls alone 13.2 s) | 25.3 s / 60.0 s (FAIL) | none | 12.3 s / 23.8 s (FAIL) | 13.8 s / 24.3 s |
+| Median answer tokens/s (provider speed) | 36.8 | 17.7 | none | 34.3 | not measured |
+| M8 Cost per pass (target $0.001) | $0.00097 | $0.00119 (FAIL) | $0 | $0.00089 | $0.00086 |
+| M10 Printed clues repeated across parks (target <= 5%) | **5.1% (20/395), FAIL** | 3.8% (3/80) | 24.4% (FAIL) | 9.6% (FAIL) | not measured |
+| M11 Printed clues with a wrong count (target 0) | 0 of 96 (12 removed by the check) | 0 of 11 (12 removed) | 0 of 6 | 0 of 81 (13 removed) | not measured |
+
+Errors in this run: **no Gemma pass was lost.** 3 Gemma first calls failed (2 at the 30 s limit, 1 HTTP 403) and each
+got the new whole retry; all 3 passes finished complete (7/8). Gemma made 80 calls for 60 passes: 33 passes used 1
+call, 16 used 2, 5 used 3 (6 no-data parks made none). Llama: 4 passes lost to its 60 s limit, and 6 of its refills hit
+the new 20 s refill limit (at about 17.7 tokens/s a 300-token refill does not fit); its M6 rose to 16.7%.
+
+What changed since run `-5`, and why (details in the notes):
+- **M3 84.3% -> 94.1% (now PASS):** the completeness work (whole retry after a failed first call, refills with 2 spares,
+  a second refill, drop false positives fixed). The 3 misses: Connemara Meadow r1 and r2, Klyde Warren r3, the parks
+  with the least describable data; each made a first call and 2 refills.
+- **M10 9.6% -> 5.1% (still FAIL, by about one clue):** "Where can you hear water" and the "Count the 2 of them."
+  trailer no longer repeat; "Somewhere you will see a" still opens clues on 5 parks despite the prompt ban, "for a bird
+  that is" on 4, and the Osage-orange's Wikipedia text on 3.
+- **M7 12.3 s / 23.8 s -> 12.0 s / 22.7 s (still FAIL):** provider at 36.8 answer tokens/s (34.3 before, 46.2 in run
+  `-4`); prompts about 7% longer (median 2,946 tokens vs 2,763). Per-pass wall time p50 14.5 s, slowest 48.9 s.
+- **M8 $0.00089 -> $0.00097 (PASS, closer to the mark):** more passes make 2-3 calls, prompts longer.
+- **M6 4.5% -> 2.6%**, M2 98.6% -> 99.6%, M5 2.3 -> 2.5.
+- **No-AI template M3 17.6% -> 76.5%:** it is now exempt from the repeated-opening drop (see `evals/README.md`).
+
+Builder T's free replay of run `-5` had predicted M3 about 94-96%, M10 about 5.1%, cost about $0.00095-0.00108 per
+pass, template M3 76.5%: all four held (M3 at the low end).
+
+Ages 10-13, a small partial check on the same code ([`2026-10-06-partial-1621.md`](../evals/results/2026-10-06-partial-1621.md),
+Gemma, Arbor Hills, White Rock Lake and Cedar Ridge, one run each, the same parks as `partial-1439`, not re-run):
+**3 of 3 passes complete** (Arbor Hills 8/8 in 2 calls, White Rock 7/8 and Cedar Ridge 7/8 in 1 call each; before: 1 of
+3), 4 calls, reading grade 3.8 (aim 5-6; 3.1 before), 14.5 s / 25.7 s per call, 3.4% name leaks before the checks
+(removed), **$0.00107 per pass, over the $0.001 mark** ($0.00123 per finished pass before).
+
+## Run `2026-10-06-5` (previous, kept for history)
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-4`) | Gemma, first run |
 |---|---|---|---|---|---|

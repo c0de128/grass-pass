@@ -62,15 +62,15 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-5");
-    expect(t).toContain("2026-10-06-partial-1439");
+    expect(t).toContain("2026-10-06-6");
+    expect(t).toContain("2026-10-06-partial-1621");
     expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
-    expect(t).toContain(`only ${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete`);
-    // Run 2026-10-06-5: speed, complete passes and repetition missed; the table must say so.
+    expect(t).toContain(`${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete in ${SMOKE_10_13.calls} model calls`);
+    // Run 2026-10-06-6: speed and repetition missed, complete passes met; the table must say so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
     expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
-    expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Missed"]);
-    expect(t).toContain("Speed is missed: the typical call took 12.29 s, first calls alone 13.7 s");
+    expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Met"]);
+    expect(t).toContain("Speed is missed: the typical call took 12.04 s, first calls alone 13.2 s, with DigitalOcean answering at 36.8 answer tokens a second");
     expect(rows).toContainEqual(["Clues repeated across parks", "Missed"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
     expect(g.repeatPct).toBeGreaterThan(EVAL_THRESHOLDS.repeatPct);
@@ -80,7 +80,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     const j = JSON.parse(readFileSync(join(ROOT, SMOKE_10_13.file), "utf8")) as {
       meta: { day: string; ageBand: string; partial: boolean; settings: { cases: number[] } };
       scores: { model: string; errors: Record<string, number>; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { p50Ms: number; p95Ms: number }; m8: { costPerPass: number } }[];
-      runs: { model: string; kind: string }[];
+      runs: { model: string; kind: string; calls?: unknown[] }[];
       spend: { usd: number };
     };
     const s = j.scores.find((x) => x.model === "gemma-4-31B-it")!;
@@ -94,9 +94,11 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(Math.round(s.m7.p95Ms / 100) / 10).toBe(SMOKE_10_13.p95s);
     expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_10_13.costPerPass);
     const finished = j.runs.filter((r) => r.model === "gemma-4-31B-it" && r.kind === "pass").length;
-    expect(finished).toBe(2);
+    expect(finished).toBe(3);
+    expect(j.runs.filter((r) => r.model === "gemma-4-31B-it").reduce((a, r) => a + (r.calls ?? []).length, 0)).toBe(SMOKE_10_13.calls);
     expect(Math.round((j.spend.usd / finished) * 1e5) / 1e5).toBe(SMOKE_10_13.costPerFinishedPass);
-    expect(j.scores.find((x) => x.model === "gemma-4-31B-it")!.errors).toEqual({ MODEL_TIMEOUT: SMOKE_10_13.timeouts });
+    expect(j.scores.find((x) => x.model === "gemma-4-31B-it")!.errors).toEqual({});
+    expect(SMOKE_10_13.timeouts).toBe(0);
   });
 
   it("v3: every step shows a short summary and folds its detail into a closed disclosure; visible copy stays short", () => {

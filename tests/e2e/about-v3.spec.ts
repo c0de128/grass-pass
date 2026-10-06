@@ -47,8 +47,8 @@ test("/about: the stat tiles are visible first, and a disclosure opens and close
   await page.goto("/about");
   const tiles = page.getByRole("list", { name: "Measured results" }).locator(":scope > li");
   await expect(tiles).toHaveCount(8);
-  await expect(tiles.filter({ hasText: "Missed" })).toHaveCount(3);
-  await expect(page.getByText("98.6%", { exact: true })).toBeVisible();
+  await expect(tiles.filter({ hasText: "Missed" })).toHaveCount(2);
+  await expect(page.getByText("99.6%", { exact: true })).toBeVisible();
 
   const privacy = page.locator("details#privacy-table");
   const summary = privacy.locator("summary");

@@ -327,7 +327,7 @@ export default function HowItWorksPage() {
           </p>
           <ul className={bullets}>
             <li>
-              Some clues kept: a <strong>refill</strong> for the missing finds (plus one spare) from unused facts, naming what
+              Some clues kept: a <strong>refill</strong> for the missing finds (plus up to two spares) from unused facts, naming what
               was copied or too generic.
             </li>
             <li>If nothing was kept, it is the whole request again.</li>
@@ -607,8 +607,8 @@ export default function HowItWorksPage() {
             </table>
           </div>
           <p>
-            Speed is missed: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s. DigitalOcean
-            answered slower in this run ({GEMMA_TOKENS_PER_S.now} answer tokens a second, {GEMMA_TOKENS_PER_S.before} the run before).
+            Speed is missed: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s, with
+            DigitalOcean answering at {GEMMA_TOKENS_PER_S.now} answer tokens a second ({GEMMA_TOKENS_PER_S.before} the run before).
             Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
@@ -617,8 +617,8 @@ export default function HowItWorksPage() {
             <a className={bandLink} href={smokeUrl}>
               results
             </a>
-            ): only {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete ({SMOKE_10_13.timeouts} call hit the 30 s limit),
-            grade {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow. A finished 10-13 pass cost
+            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls, grade{" "}
+            {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow. A finished 10-13 pass cost
             about {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target
             (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer; code removed
             them all.

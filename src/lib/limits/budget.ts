@@ -14,7 +14,7 @@
  * - the home page shows the same notice.
  * Without this, the store fails closed at 100% and every page, saved pass included, breaks.
  * SEC-3-04: RESTING_PCT is 90 (was 95) until the app's counter has been compared with the Upstash
- * console once after the deploy (README "Limits"): the counter can run a little behind the real count.
+ * console once after the deploy (docs/operations.md, "Abuse limits"): the counter can run a little behind the real count.
  *
  * Daily pace (SEC-3-03): many addresses, each inside its own per-IP limits, could still use the whole
  * month in a few days. So each Chicago day may use at most DAILY_PACE_PCT of the monthly budget divided

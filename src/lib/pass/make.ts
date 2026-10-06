@@ -27,6 +27,9 @@ import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-p
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
+import type { Account } from "@/lib/accounts/session";
+import { excludedRefs, parkReportStats } from "@/lib/reports";
 import { createDeadline, eitherSignal } from "./deadline";
 import { peekFeatures } from "./park-data";
 import { parseParkId } from "@/lib/sources/overpass-features";
@@ -181,6 +184,14 @@ export type MakeDeps = {
    * pre-warm (internal) always may. Everyone else stops at aiCapFor(cfg, false).
    */
   reserved?: boolean;
+  /**
+   * Accounts (Kevin, 2026-10-06): the route sets `requireAccount`, so a NEW pass (a cache miss, "Make a
+   * different pass", or a rebuild of a degraded pass) needs a signed-in `account`; a saved pass for today
+   * is still served to anyone (it costs nothing). Each account may start ACCOUNT_PASSES_PER_DAY new passes
+   * per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP. Counted only when a build really starts.
+   */
+  requireAccount?: boolean;
+  account?: Account | null;
 };
 
 export type MakeOutcome =
@@ -200,6 +211,49 @@ function inflight() {
 export function resetPassMaking(): void {
   inflight().clear();
   resetPassReads();
+}
+
+/** New passes counted per account (and the judge demo) in the shared store: never a cap for everyone. */
+const NO_GLOBAL_CAP = 1_000_000_000;
+
+const signInRequired = (): MakeOutcome => ({
+  kind: "error",
+  status: 401,
+  error: { code: "SIGN_IN_REQUIRED", message: ACCOUNT_COPY.signInToMake },
+});
+
+/**
+ * Accounts: reserve this account's share of today's new passes (the judge demo: the shared demo cap).
+ * null = nothing to count (the server's own warm-up, or no account required).
+ */
+async function reserveAccountShare(
+  store: Store,
+  deps: MakeDeps,
+  env: Record<string, string | undefined>,
+  now: number,
+): Promise<null | { ok: true; ticket: QuotaTicket } | { ok: false; outcome: MakeOutcome }> {
+  if (deps.internal || !deps.account) return null;
+  const judge = deps.account.judge;
+  const r = await reserveQuota(store, {
+    name: judge ? "judge-new" : "acct-new",
+    key: judge ? "all" : deps.account.key,
+    perKey: judge ? Infinity : ACCOUNT_PASSES_PER_DAY,
+    global: judge ? judgeDailyCap(env) : NO_GLOBAL_CAP,
+    period: { kind: "day" },
+    now,
+  });
+  if (r.ok) return { ok: true, ticket: r.ticket };
+  log(judge ? "judge_daily_limit" : "account_daily_limit", {}, "warn");
+  return {
+    ok: false,
+    outcome: {
+      kind: "error",
+      status: 429,
+      error: judge
+        ? { code: "JUDGE_DAILY_LIMIT", message: ACCOUNT_COPY.judgeLimit, retryAfter: r.retryAfter }
+        : { code: "ACCOUNT_DAILY_LIMIT", message: ACCOUNT_COPY.accountLimit, retryAfter: r.retryAfter },
+    },
+  };
 }
 
 const storeDown = (): MakeOutcome => ({
@@ -254,6 +308,8 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     if (req.fresh && latest >= MAX_VARIANTS) {
       return { kind: "error", status: 429, error: { code: "VARIANT_LIMIT", message: PASS_COPY.variantLimit } };
     }
+    // Accounts: a new pass needs a signed-in grown-up. A saved degraded pass is shown again instead.
+    if (deps.requireAccount && !deps.internal && !deps.account) return fallback ? { kind: "pass", pass: fallback, cached: true } : signInRequired();
     const variant = req.fresh ? latest + 1 : Math.max(1, latest);
     const id = passId(req.parkId, req.ageBand, day, variant);
     const flightKey = `${key}|${variant}`;
@@ -284,7 +340,26 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
   }
 }
 
-async function build(ctx: {
+type BuildCtx = Parameters<typeof buildCounted>[0];
+
+/**
+ * Accounts: the account's (or judge demo's) daily share is taken before the per-IP and global caps (auth ->
+ * account count -> the existing limits), right after the free checks (daily pace, a cached failure: those
+ * answer without touching the account's count), and given back unless an upstream call really started
+ * (Q-3-03 pattern).
+ */
+async function build(ctx: BuildCtx): Promise<BuildOutcome> {
+  const held: AccountHold = { ticket: null };
+  try {
+    return await buildCounted(ctx, held);
+  } finally {
+    if (held.ticket && !held.ticket.committed) await held.ticket.release();
+  }
+}
+
+type AccountHold = { ticket: QuotaTicket | null };
+
+async function buildCounted(ctx: {
   req: PassRequest;
   ref: NonNullable<ReturnType<typeof parseParkId>>;
   id: string;
@@ -302,7 +377,7 @@ async function build(ctx: {
   deps: MakeDeps;
   /** The degraded pass this build would replace (R1-m2), or null for a new pass. */
   rebuildOf: Pass | null;
-}): Promise<BuildOutcome> {
+}, held: AccountHold = { ticket: null }): Promise<BuildOutcome> {
   const { store, now, cfg } = ctx;
   if (ctx.signal.aborted) throw new WaiterAbortedError();
   const reservedSlice = Boolean(ctx.deps.internal || ctx.deps.reserved);
@@ -322,6 +397,12 @@ async function build(ctx: {
     log("pass_not_made", { kind: "error", status: featuresPlan.outcome.status, code: featuresPlan.outcome.error.code, cached: true }, "warn");
     return featuresPlan.outcome;
   }
+
+  // Accounts: this account's share of today's new passes (2; the judge demo: its shared cap).
+  const acct = await reserveAccountShare(store, ctx.deps, ctx.env, now());
+  if (acct && !acct.ok) return acct.outcome as BuildOutcome;
+  held.ticket = acct?.ticket ?? null;
+  const accountTicket = held.ticket;
 
   // Caps BEFORE any upstream: the model budget must have room, then the per-IP daily share.
   const aiCap = aiCapFor(cfg, reservedSlice);
@@ -345,12 +426,34 @@ async function build(ctx: {
         : `You've made a lot of new passes today. Please wait ${waitText(share.retryAfter)}; passes you already made still work.`;
     return { kind: "error", status: 429, error: { code: share.scope === "global" ? "DAILY_LIMIT" : "IP_DAILY_LIMIT", message, retryAfter: share.retryAfter } };
   }
-  const ticket: QuotaTicket = share.ticket;
+  const ipTicket: QuotaTicket = share.ticket;
+  // Every upstream start spends the per-IP share and the account's share together.
+  const ticket = {
+    commit() {
+      ipTicket.commit();
+      accountTicket?.commit();
+    },
+    release: () => ipTicket.release(),
+    get committed() {
+      return ipTicket.committed;
+    },
+  };
   // Q-3-03: a rebuild is counted only now that it really starts (the finally below gives the share back
   // when the day's rebuilds are used up; makePass then shows the degraded pass again).
   if (ctx.rebuildOf && !(await noteRebuild(store, ctx.key, ctx.rebuildOf, now()))) {
     await ticket.release();
     return { kind: "error", status: 429, error: { code: "REBUILD_LIMIT", message: "This pass was already remade the most times allowed today." } };
+  }
+
+  // Accounts: items visitors reported as not findable or not safe here stay out of the pool (1 command).
+  let exclude: Set<string>;
+  try {
+    const why = excludedRefs(await parkReportStats(store, ctx.req.parkId, now()));
+    exclude = new Set(why.keys());
+    if (exclude.size > 0) log("pool_reported_out", { park: ctx.req.parkId, notFound: [...why.values()].filter((w) => w === "not_found").length, notSafe: [...why.values()].filter((w) => w === "not_safe").length });
+  } catch (err) {
+    await ticket.release();
+    throw err;
   }
 
   // October special (S7): free iNaturalist counts, fetched while the model writes clues.
@@ -401,6 +504,7 @@ async function build(ctx: {
         modelLogger: ctx.deps.modelLogger,
         onPoolsReady: startOctober,
         featuresPlan,
+        exclude,
       },
     );
     if (out.kind === "pass") {

@@ -44,7 +44,38 @@ export interface Store {
    * 1-based index of the first key that is full (nothing was added), or 0 with the new counts.
    */
   reserve?(keys: readonly string[], caps: readonly number[], ttlSec: number): Promise<Reserved>;
+  /** Optional (item reports): every field of a hash (Upstash HGETALL = 1 command); {} when there is none. */
+  hashGetAll?(key: string): Promise<Record<string, string>>;
+  /**
+   * Optional, one round trip (item reports, src/lib/reports): count one report unless this account already
+   * reported this item today, keep the "not safe" accounts, hide the item once enough distinct accounts said
+   * so, and drop counts older than the keep window. See REPORT_SCRIPT.
+   */
+  recordReport?(w: ReportWrite): Promise<ReportWritten>;
 }
+
+/** One item report (keys are built by src/lib/reports/store-keys.ts). */
+export type ReportWrite = {
+  /** Set once per account + item + day (NX); its existence makes a repeat a no-op. */
+  dedupeKey: string;
+  dedupeTtlSec: number;
+  /** The park's report hash: `<ref>|<kind>|<yyyymmdd>` -> count, `<ref>|hide` -> yyyymmdd it was hidden. */
+  hashKey: string;
+  field: string;
+  /** The set of accounts that said "not safe" about this item (only touched for `unsafe`). */
+  unsafeKey: string;
+  unsafe: boolean;
+  account: string;
+  /** Distinct "not safe" accounts that hide the item. */
+  hideAt: number;
+  hideField: string;
+  /** yyyymmdd (today). */
+  day: number;
+  /** Fields of days before this yyyymmdd are deleted (and a hide older than it). */
+  cutoff: number;
+  ttlSec: number;
+};
+export type ReportWritten = { counted: boolean; unsafeAccounts: number; newlyHidden: boolean };
 
 export type RateHit = { allowed: boolean; current: number; previous: number };
 export type Reserved = { failed: number; counts: number[] };
@@ -141,12 +172,60 @@ export class MemoryStore implements Store {
     return { failed: 0, counts };
   }
 
+  private readonly hashes = new Map<string, { fields: Map<string, string>; expiresAt: number }>();
+  private readonly sets = new Map<string, { members: Set<string>; expiresAt: number }>();
+
+  private liveHash(key: string) {
+    const h = this.hashes.get(key);
+    if (h && this.now() >= h.expiresAt) {
+      this.hashes.delete(key);
+      return undefined;
+    }
+    return h;
+  }
+
+  async hashGetAll(key: string) {
+    return Object.fromEntries(this.liveHash(key)?.fields ?? []);
+  }
+
+  /** Same steps as REPORT_SCRIPT (the Upstash version), in one synchronous run. */
+  async recordReport(w: ReportWrite): Promise<ReportWritten> {
+    if (this.live(w.dedupeKey)) return { counted: false, unsafeAccounts: 0, newlyHidden: false };
+    this.write(w.dedupeKey, "1", this.now() + ttlMs(w.dedupeTtlSec));
+    const expiresAt = this.now() + ttlMs(w.ttlSec);
+    const h = this.liveHash(w.hashKey) ?? { fields: new Map<string, string>(), expiresAt };
+    h.expiresAt = expiresAt;
+    this.hashes.set(w.hashKey, h);
+    h.fields.set(w.field, String((Number(h.fields.get(w.field)) || 0) + 1));
+    let unsafeAccounts = 0;
+    let newlyHidden = false;
+    if (w.unsafe) {
+      let s = this.sets.get(w.unsafeKey);
+      if (!s || this.now() >= s.expiresAt) s = { members: new Set(), expiresAt };
+      s.members.add(w.account);
+      s.expiresAt = expiresAt;
+      this.sets.set(w.unsafeKey, s);
+      unsafeAccounts = s.members.size;
+      if (unsafeAccounts >= w.hideAt && !h.fields.has(w.hideField)) {
+        h.fields.set(w.hideField, String(w.day));
+        newlyHidden = true;
+      }
+    }
+    for (const [f, v] of [...h.fields]) {
+      const d = f.endsWith("|hide") ? Number(v) : Number(/\|(\d+)$/.exec(f)?.[1]);
+      if (Number.isFinite(d) && d < w.cutoff) h.fields.delete(f);
+    }
+    return { counted: true, unsafeAccounts, newlyHidden };
+  }
+
   get size() {
     return this.map.size;
   }
 
   clear() {
     this.map.clear();
+    this.hashes.clear();
+    this.sets.clear();
   }
 }
 
@@ -172,6 +251,24 @@ const RESERVE_SCRIPT =
   "if v + 1 > tonumber(ARGV[i]) then return {i} end end " +
   "local out = {0} for i = 1, n do local v = redis.call('INCRBY', KEYS[i], 1) " +
   "if redis.call('TTL', KEYS[i]) < 0 then redis.call('EXPIRE', KEYS[i], ARGV[n + 1]) end out[#out + 1] = v end return out";
+
+/**
+ * One item report (src/lib/reports). KEYS = dedupe, report hash, not-safe set. ARGV = dedupe ttl, field,
+ * unsafe (1/0), account, hide threshold, hide field, today (yyyymmdd), cutoff (yyyymmdd), keep ttl.
+ * Returns {counted, distinct not-safe accounts, newly hidden}. Fields of days before the cutoff (and a hide
+ * older than it) are deleted, so a park's hash never holds more than the keep window.
+ */
+export const REPORT_SCRIPT =
+  "if not redis.call('SET', KEYS[1], '1', 'NX', 'EX', ARGV[1]) then return {0, 0, 0} end " +
+  "redis.call('HINCRBY', KEYS[2], ARGV[2], 1) redis.call('EXPIRE', KEYS[2], ARGV[9]) " +
+  "local n = 0 local hid = 0 " +
+  "if ARGV[3] == '1' then redis.call('SADD', KEYS[3], ARGV[4]) redis.call('EXPIRE', KEYS[3], ARGV[9]) n = redis.call('SCARD', KEYS[3]) " +
+  "if n >= tonumber(ARGV[5]) then hid = redis.call('HSETNX', KEYS[2], ARGV[6], ARGV[7]) end end " +
+  "local all = redis.call('HGETALL', KEYS[2]) local cut = tonumber(ARGV[8]) " +
+  "for i = 1, #all, 2 do local f = all[i] local d = nil " +
+  "if string.sub(f, -5) == '|hide' then d = tonumber(all[i + 1]) else d = tonumber(string.match(f, '|(%d+)$')) end " +
+  "if d and d < cut then redis.call('HDEL', KEYS[2], f) end end " +
+  "return {1, n, hid}";
 
 /**
  * SEC-3-03/04: add N to the monthly counter (UTC month) and the daily counter (Chicago day) at once; a new
@@ -431,6 +528,44 @@ export class UpstashStore implements Store {
     if (a[0] !== 0) return { failed: a[0], counts: [] };
     if (a.length !== keys.length + 1) throw new StoreError("The shared store returned a bad reserve answer.");
     return { failed: 0, counts: a.slice(1) };
+  }
+
+  async hashGetAll(key: string) {
+    const r = await this.command(["HGETALL", this.prefix + key]);
+    if (r === null) return {};
+    const out: Record<string, string> = {};
+    if (Array.isArray(r)) {
+      for (let i = 0; i + 1 < r.length; i += 2) out[String(r[i])] = String(r[i + 1]);
+      return out;
+    }
+    if (typeof r === "object") {
+      for (const [k, v] of Object.entries(r as Record<string, unknown>)) out[k] = String(v);
+      return out;
+    }
+    throw new StoreError("The shared store returned a bad HGETALL answer.");
+  }
+
+  async recordReport(w: ReportWrite): Promise<ReportWritten> {
+    const r = await this.command([
+      "EVAL",
+      REPORT_SCRIPT,
+      3,
+      this.prefix + w.dedupeKey,
+      this.prefix + w.hashKey,
+      this.prefix + w.unsafeKey,
+      Math.max(1, Math.ceil(w.dedupeTtlSec)),
+      w.field,
+      w.unsafe ? 1 : 0,
+      w.account,
+      Math.trunc(w.hideAt),
+      w.hideField,
+      Math.trunc(w.day),
+      Math.trunc(w.cutoff),
+      Math.max(1, Math.ceil(w.ttlSec)),
+    ]);
+    const a = Array.isArray(r) ? r.map(Number) : [];
+    if (a.length !== 3 || !a.every(Number.isFinite)) throw new StoreError("The shared store returned a bad report answer.");
+    return { counted: a[0] === 1, unsafeAccounts: a[1], newlyHidden: a[2] === 1 };
   }
 }
 

@@ -1,5 +1,6 @@
 import { ArrowRight } from "lucide-react";
 import Link from "next/link";
+import { AccountMenu } from "@/components/account/AccountMenu";
 import { Logo } from "@/components/site/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
 
@@ -55,6 +56,7 @@ export function SiteHeader() {
           </ul>
         </nav>
         <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
+          <AccountMenu />
           <ThemeToggle />
           <Link
             href="/#find"

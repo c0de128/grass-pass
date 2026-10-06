@@ -15,7 +15,8 @@ export function buildCsp(opts: { isDev: boolean; upgradeInsecure: boolean }): st
     "connect-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
-    "form-action 'self'",
+    // Sign-in buttons are forms: without JavaScript their redirect goes to the OAuth provider's page.
+    "form-action 'self' https://github.com https://accounts.google.com",
     "frame-ancestors 'none'",
   ];
   // Only on HTTPS deploys: on http://localhost it would upgrade same-origin assets to https and break them.

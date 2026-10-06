@@ -1,0 +1,77 @@
+/**
+ * Accounts (Kevin, 2026-10-06): sign in with GitHub or Google (OAuth, no passwords), or the one-click
+ * "Try as a judge" demo account. Sign-in is only needed to make a NEW pass and to send item reports.
+ *
+ * Which sign-in buttons exist is decided here from the env, so a provider without its keys never shows
+ * a button that can't work. Nothing here is a secret.
+ */
+import { intFromEnv } from "@/lib/limits/config";
+
+type Env = Record<string, string | undefined>;
+
+export const OAUTH_PROVIDERS = ["github", "google"] as const;
+export type OAuthProviderId = (typeof OAUTH_PROVIDERS)[number];
+export type ProviderId = OAuthProviderId | "judge";
+
+export const PROVIDER_LABELS: Record<ProviderId, string> = { github: "GitHub", google: "Google", judge: "the judge demo" };
+
+/** New passes per account per Chicago day. */
+export const ACCOUNT_PASSES_PER_DAY = 2;
+/** New passes per Chicago day for ALL judge demo sign-ins together (JUDGE_DEMO_DAILY_CAP). */
+export const JUDGE_DEMO_DAILY_CAP_DEFAULT = 20;
+/** Sign-in attempts (judge or OAuth start/callback) per IP per 10 minutes. */
+export const SIGNIN_PER_IP_PER_10MIN = 20;
+/** Item reports per account per hour, and per IP per hour. */
+export const REPORTS_PER_ACCOUNT_PER_HOUR = 30;
+export const REPORTS_PER_IP_PER_HOUR = 60;
+/** Session cookie lifetime: 30 days (an OAuth account), 1 day (the judge demo). */
+export const SESSION_MAX_AGE_SEC = 30 * 24 * 3600;
+export const JUDGE_SESSION_MAX_AGE_SEC = 24 * 3600;
+
+/** Auth.js session cookie names: `__Secure-` on https (production), plain on http://localhost. */
+export const SESSION_COOKIES = ["__Secure-authjs.session-token", "authjs.session-token"] as const;
+
+const has = (v: string | undefined) => (v?.trim().length ?? 0) > 0;
+
+/** OAuth providers whose id AND secret are set (AUTH_GITHUB_ID/SECRET, AUTH_GOOGLE_ID/SECRET). */
+export function enabledOAuthProviders(env: Env = process.env): OAuthProviderId[] {
+  return OAUTH_PROVIDERS.filter((p) => has(env[`AUTH_${p.toUpperCase()}_ID`]) && has(env[`AUTH_${p.toUpperCase()}_SECRET`]));
+}
+
+/** The judge demo sign-in is on unless JUDGE_DEMO=0. */
+export function judgeDemoEnabled(env: Env = process.env): boolean {
+  return env.JUDGE_DEMO?.trim() !== "0";
+}
+
+export function judgeDailyCap(env: Env = process.env): number {
+  return intFromEnv(env.JUDGE_DEMO_DAILY_CAP, JUDGE_DEMO_DAILY_CAP_DEFAULT);
+}
+
+/** Sign-in works at all only with AUTH_SECRET (it encrypts the session cookie and keys the account ids). */
+export function authConfigured(env: Env = process.env): boolean {
+  return (env.AUTH_SECRET?.trim().length ?? 0) >= 16;
+}
+
+/** What the sign-in card may offer (sent to the browser: names only, never keys). */
+export type SignInOptions = { providers: OAuthProviderId[]; judge: boolean; configured: boolean };
+
+export function signInOptions(env: Env = process.env): SignInOptions {
+  const configured = authConfigured(env);
+  return {
+    configured,
+    providers: configured ? enabledOAuthProviders(env) : [],
+    judge: configured && judgeDemoEnabled(env),
+  };
+}
+
+/** Copy shown next to the sign-in buttons and on /about (Kevin's privacy promise). */
+export const ACCOUNT_COPY = {
+  privacy: "We only keep a scrambled ID to count your 2 passes a day and your found-it reports. No email, no name.",
+  grownUps: "Sign-in is for parents and teachers, not kids.",
+  signInToMake: `Sign in to make a new pass (${ACCOUNT_PASSES_PER_DAY} a day).`,
+  accountLimit: `You've made your ${ACCOUNT_PASSES_PER_DAY} passes today. Your passes and the examples still work. New passes again after midnight (Dallas time).`,
+  judgeLimit:
+    "The judge demo account has made all its new passes for today (shared by every judge). Saved passes and the examples still work, or sign in with GitHub or Google. New demo passes again after midnight (Dallas time).",
+  judgeNote: "Try as a judge signs you in to a shared demo account: no sign-up, nothing to type.",
+  notConfigured: "Sign-in isn't set up on this server yet, so it can't make new passes. The examples and saved passes still work.",
+} as const;

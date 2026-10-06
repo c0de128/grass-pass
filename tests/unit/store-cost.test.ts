@@ -4,7 +4,7 @@
  * recorded upstream answers. The pre-limiter's COSTS and EXTRA (src/lib/limits/prelimit.ts) must be at
  * least these numbers, or the per-month math there would not hold.
  */
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { getStore, resetStores } from "@/lib/cache/store";
 import { resetMemo } from "@/lib/cache/memo";
 import { setLogSink } from "@/lib/log";
@@ -21,11 +21,19 @@ import * as parksRoute from "@/app/api/parks/route";
 import { countingUpstash, FAKE_UPSTASH_TOKEN, FAKE_UPSTASH_URL } from "./support/counting-upstash";
 import { osmReplay } from "./support/osm-replay";
 import { PARKS, passReplay } from "./support/pass-replay";
+import { judgeCookie, newAccountCookie, nextAccountCookie, primeAccountCookies } from "./support/session";
+import * as reportRoute from "@/app/api/report/route";
+import { forgetReportStats, passItemStats } from "@/lib/reports/stats";
+import { signInRate } from "@/lib/accounts/signin-rate";
+import { localDay } from "@/lib/time";
 
+beforeAll(() => primeAccountCookies(300));
+
+/** Signed in as a new account each time (accounts: a new pass needs one; tests/unit/support/session.ts). */
 const req = (path: string, body: unknown, ip: string) =>
   new Request(`http://localhost:3123${path}`, {
     method: "POST",
-    headers: { host: "localhost:3123", "sec-fetch-site": "same-origin", "content-type": "application/json", "x-forwarded-for": ip },
+    headers: { cookie: nextAccountCookie(), host: "localhost:3123", "sec-fetch-site": "same-origin", "content-type": "application/json", "x-forwarded-for": ip },
     body: JSON.stringify(body),
   });
 
@@ -218,5 +226,132 @@ describe("cached failures cost no more than COSTS.apiPass (SEC-3-02)", () => {
     await getStore("limits").prime?.();
     expect(up.counts.total - before).toBe(1);
     expect([...up.counts.byCmd.keys()].some((k) => k.startsWith("MGET gp:meta:commands:"))).toBe(true);
+  });
+});
+
+/**
+ * Accounts (2026-10-06): the new paths and what they cost. A signed-out new-pass request and an account
+ * over its 2 a day stay within COSTS.apiPass; a report within COSTS.apiReport (a hidden item adds its
+ * counter); a signed-in pass page within COSTS.passPage + COSTS.passStats; a sign-in attempt COSTS.apiAuth.
+ */
+describe("accounts: Upstash commands per request (measured)", () => {
+  const reqAs = (path: string, body: unknown, ip: string, cookie: string | null) =>
+    new Request(`http://localhost:3123${path}`, {
+      method: "POST",
+      headers: {
+        ...(cookie ? { cookie } : {}),
+        host: "localhost:3123",
+        "sec-fetch-site": "same-origin",
+        "content-type": "application/json",
+        "x-forwarded-for": ip,
+      },
+      body: JSON.stringify(body),
+    });
+
+  beforeEach(() => forgetReportStats());
+
+  it("signed out: a new pass is refused (401) after <= COSTS.apiPass commands and no upstream call", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(async (url) => {
+      throw new Error(`no upstream call expected: ${url}`);
+    }));
+    await getStore("limits").prime?.();
+    const before = up.work();
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.60", null));
+    expect(res.status).toBe(401);
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe("SIGN_IN_REQUIRED");
+    report("signed-out new pass (401)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass);
+  });
+
+  it("an account over its 2 a day: refused (429) within COSTS.apiPass", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(async (url) => {
+      throw new Error(`no upstream call expected: ${url}`);
+    }));
+    const a = await newAccountCookie();
+    await up.mem.set(`gp:q:{acct-new:${localDay(Date.now())}}:k:${a.key}`, "2", 3600);
+    await getStore("limits").prime?.();
+    let before = up.work();
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.61", a.cookie));
+    const body = (await res.json()) as { error: { code: string } };
+    expect([res.status, body.error.code]).toEqual([429, "ACCOUNT_DAILY_LIMIT"]);
+    const first = up.work() - before;
+    report("account over its 2 a day (first)", first);
+    before = up.work();
+    await (await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.61", a.cookie))).text();
+    const again = up.work() - before;
+    report("account over its 2 a day (again)", again);
+    expect(first).toBeLessThanOrEqual(COSTS.apiPass);
+    expect(again).toBeLessThanOrEqual(COSTS.apiPass);
+  });
+
+  it("reports: counted, a repeat, and a not-safe that hides the item; the signed-in pass page stats read", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(passReplay().fetchImpl));
+    const made = await passRoute.POST(req("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.62"));
+    const pass = JSON.parse((await made.text()).trim().split("\n").at(-1)!).pass as { id: string; items: { ref?: string }[] };
+    await settle();
+    const ref = pass.items.find((i) => i.ref)!.ref!;
+    const send = (cookie: string, kind: string, ip: string) => reportRoute.POST(reqAs("/api/report", { passId: pass.id, ref, kind }, ip, cookie));
+
+    const a = await newAccountCookie();
+    let before = up.work();
+    expect(((await (await send(a.cookie, "found", "203.0.113.63")).json()) as { status: string }).status).toBe("counted");
+    const counted = up.work() - before;
+    report("report counted", counted);
+    expect(counted).toBeLessThanOrEqual(COSTS.apiReport);
+
+    before = up.work();
+    expect(((await (await send(a.cookie, "notfound", "203.0.113.63")).json()) as { status: string }).status).toBe("duplicate");
+    report("report repeat (same day)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiReport);
+
+    const b = await newAccountCookie();
+    const c = await newAccountCookie();
+    await send(b.cookie, "unsafe", "203.0.113.64");
+    before = up.work();
+    expect((await send(c.cookie, "unsafe", "203.0.113.65")).status).toBe(200);
+    const hid = up.work() - before;
+    report("report not safe that hides the item", hid);
+    expect(hid).toBeLessThanOrEqual(COSTS.apiReport);
+
+    // Signed-in pass page: the pass read (memoized) + 1 HGETALL, then 0 while memoized.
+    resetPassReads();
+    forgetReportStats();
+    before = up.work();
+    const loaded = await loadPass(pass.id);
+    const stats = await passItemStats(loaded!);
+    expect(stats[ref]).toEqual({ found: 1, notFound: 0 });
+    report("signed-in pass page (pass + report counts)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.passPage + COSTS.passStats);
+    before = up.work();
+    for (let i = 0; i < 5; i++) await passItemStats((await loadPass(pass.id))!);
+    expect(up.work() - before).toBe(0);
+  });
+
+  it("the judge demo: a new pass counts against the shared cap with one reserve", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(passReplay().fetchImpl));
+    const j = await judgeCookie();
+    await getStore("limits").prime?.();
+    const before = up.work();
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "10-13" }, "203.0.113.66", j.cookie));
+    expect(await res.text()).toContain('"type":"result"');
+    await settle();
+    report("judge new pass", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass + EXTRA.newPass);
+    expect(Number(await up.mem.get(`gp:q:{judge-new:${localDay(Date.now())}}:all`))).toBe(1);
+  });
+
+  it("a sign-in attempt: 1 command, then none while a refusal is remembered", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(async (url) => {
+      throw new Error(`no upstream call expected: ${url}`);
+    }));
+    const r = new Request("http://localhost:3123/api/auth/callback/github", { headers: { "x-forwarded-for": "203.0.113.67" } });
+    await getStore("limits").prime?.();
+    let before = up.work();
+    expect((await signInRate(r)).ok).toBe(true);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiAuth);
+    for (let i = 0; i < 25; i++) await signInRate(r);
+    before = up.work();
+    expect((await signInRate(r)).ok).toBe(false);
+    expect(up.work() - before).toBe(0);
   });
 });

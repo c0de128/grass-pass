@@ -55,7 +55,29 @@ export const PRELIMIT_NET48_FACTOR = 2;
  * Cost units per request: at least the Upstash commands of its cheap path (cache hit, refusal or cached
  * failure), measured in tests/unit/store-cost.test.ts. A pass id that can't exist costs 0 (no store read).
  */
-export const COSTS = { home: 0, passPage: 1, apiPass: 4, apiParks: 4, apiOther: 1 } as const;
+export const COSTS = {
+  home: 0,
+  /** A saved pass page (screen or print): the pass read. */
+  passPage: 1,
+  /**
+   * Accounts: a signed-in visitor's screen pass also reads the item report counts (1 HGETALL per park per
+   * STATS_MEMO_MS per instance). Charged when a session cookie is present (an invalid one reads nothing).
+   */
+  passStats: 1,
+  /**
+   * Accounts: 5 (was 4). An account over its 2 a day is refused after 5 commands the first time (burst,
+   * latest, per-IP minute, features MGET, the account reserve), then 4 while the refusal is remembered.
+   */
+  apiPass: 5,
+  apiParks: 4,
+  /** POST /api/report: 2 rate-limit EVALs + the pass read + the report EVAL + the hidden-item counter. */
+  apiReport: 5,
+  /** /api/auth/signin|callback/*: 1 rate-limit EVAL. The session and CSRF reads cost 0 (no store command). */
+  apiAuth: 1,
+  apiOther: 1,
+  /** A server action (sign in / sign out) posted to a page: the judge sign-in's rate-limit EVAL. */
+  action: 1,
+} as const;
 /**
  * Upper bounds of the extra commands of the expensive paths, beyond COSTS (measured <= 106 and 9; margins
  * for 30 taxa, and for the Nominatim and saved-index fallbacks of a search).
@@ -115,30 +137,43 @@ export type PreLimitConfig = {
 export type RequestKind = "api" | "page";
 
 /** What a path is and what it costs (see COSTS). */
-export function requestCost(pathname: string, now: number): { kind: RequestKind; cost: number } {
+export function requestCost(pathname: string, now: number, opts: { action?: boolean; session?: boolean } = {}): { kind: RequestKind; cost: number } {
   if (pathname === "/api/pass") return { kind: "api", cost: COSTS.apiPass };
   if (pathname === "/api/parks") return { kind: "api", cost: COSTS.apiParks };
+  if (pathname === "/api/report") return { kind: "api", cost: COSTS.apiReport };
+  // Only an OAuth start or callback spends a store command; the session/CSRF reads (header, every page) don't.
+  if (pathname.startsWith("/api/auth/")) return { kind: "api", cost: /^\/api\/auth\/(signin|callback)\//.test(pathname) ? COSTS.apiAuth : 0 };
   if (pathname.startsWith("/api/")) return { kind: "api", cost: COSTS.apiOther };
-  const m = /^\/pass\/([^/]+)(?:\/|$)/.exec(pathname);
+  const extra = opts.action ? COSTS.action : 0;
+  const m = /^\/pass\/([^/]+)(\/.*)?$/.exec(pathname);
   if (m) {
     let id: string;
     try {
       id = decodeURIComponent(m[1]);
     } catch {
-      return { kind: "page", cost: 0 }; // the page answers 404/400 without a store read
+      return { kind: "page", cost: extra }; // the page answers 404/400 without a store read
     }
-    return { kind: "page", cost: plausiblePassId(id, now) ? COSTS.passPage : 0 };
+    const screen = m[2] === undefined || m[2] === "/";
+    return { kind: "page", cost: (plausiblePassId(id, now) ? COSTS.passPage + (screen && opts.session ? COSTS.passStats : 0) : 0) + extra };
   }
-  return { kind: "page", cost: COSTS.home };
+  return { kind: "page", cost: COSTS.home + extra };
 }
 
 /**
  * The proxy's check for one request: the request bucket of its kind (api or page) plus the cost bucket,
  * for the client key and, for IPv6, its /48 (`net48`, from networkKey()).
  */
-export function preLimitRequest(input: { key: string; net48: string | null; pathname: string; now: number; cfg: PreLimitConfig }): PreLimitResult {
+export function preLimitRequest(input: {
+  key: string;
+  net48: string | null;
+  pathname: string;
+  now: number;
+  cfg: PreLimitConfig;
+  action?: boolean;
+  session?: boolean;
+}): PreLimitResult {
   const { key, net48, pathname, now, cfg } = input;
-  const { kind, cost } = requestCost(pathname, now);
+  const { kind, cost } = requestCost(pathname, now, { action: input.action, session: input.session });
   const req: Spec =
     kind === "api" ? { burst: cfg.preLimitBurst, perSec: cfg.preLimitPerSec } : { burst: cfg.preLimitPageBurst, perSec: cfg.preLimitPagePerMin / 60 };
   const costSpec: Spec = { burst: cfg.preLimitCostBurst, perSec: cfg.preLimitCostPerHour / 3600 };

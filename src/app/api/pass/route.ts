@@ -14,12 +14,15 @@
  * R2-m5: background OpenStreetMap refreshes started by this request are kept alive with after(), so a
  * serverless instance doesn't freeze them half-way while they hold their 6 h lock. SEC-3-06: only the
  * refreshes THIS request queued, not the whole process queue.
+ * Accounts (2026-10-06): a NEW pass needs a signed-in grown-up (401 SIGN_IN_REQUIRED otherwise); today's
+ * saved pass for the park + age is served to anyone. Only the account key in the session cookie is used.
  */
 import { WaiterAbortedError } from "@/lib/cache";
 import { runAfterResponse } from "@/lib/after";
 import { guardJsonPost } from "@/lib/http/guard";
 import { jsonError } from "@/lib/http/respond";
 import { clientIp } from "@/lib/limits";
+import { readAccount } from "@/lib/accounts/session";
 import { makePass, type MakeOutcome } from "@/lib/pass/make";
 import { EXAMPLE_PARKS, readyExample } from "@/lib/prewarm";
 import { MAP_DATA_FAILURE_CODES, PassRequestSchema, type PassLine } from "@/lib/pass/schema";
@@ -58,6 +61,7 @@ export async function POST(req: Request): Promise<Response> {
   const g = await guardJsonPost(req, PassRequestSchema);
   if (!g.ok) return jsonError(g.failure.status, { code: g.failure.code, message: g.failure.message });
 
+  const account = await readAccount(req);
   const enc = new TextEncoder();
   const pending: PassLine[] = [];
   let push: ((l: PassLine) => void) | null = null;
@@ -70,6 +74,8 @@ export async function POST(req: Request): Promise<Response> {
       ip: clientIp(req),
       // The example parks may use the reserved slice of the AI budget (SEC-1-05).
       reserved: EXAMPLE_PARKS.some((e) => e.parkId === g.data.parkId),
+      requireAccount: true,
+      account,
       signal: req.signal,
       onStep: ({ step, text }) => {
         const line: PassLine = { type: "step", step, text };

@@ -1,7 +1,11 @@
+import Link from "next/link";
 import { Chip, SECTION_LABELS } from "@/components/ui/Chip";
 import { TicketCard } from "@/components/ui/TicketCard";
 import { LUCKY_MAYBE } from "./KidPass";
+import { ItemReport } from "./ItemReport";
 import { OctoberBox } from "./OctoberBox";
+import type { PassItemStats } from "@/lib/reports/stats";
+import { WINDOW_DAYS } from "@/lib/reports/kinds";
 import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { safeParkName } from "@/lib/ai/validate";
@@ -18,7 +22,19 @@ const DIFFICULTY: Record<PassItem["difficulty"], string> = { easy: "Easy", mediu
  * stub for the grown-up (answer key, sources, which model made it and when).
  * Model text is rendered as plain text only.
  */
-export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boolean }) {
+/** Accounts: report buttons for signed-in grown-ups, and real report counts (only items with reports). */
+export type PassReports = { signedIn: boolean; stats: PassItemStats };
+
+/** "Visitor reports, last 30 days: 3 found it, 1 didn't" (nothing when there are none). */
+export function reportStatsLine(s: { found: number; notFound: number } | undefined): string | null {
+  if (!s || s.found + s.notFound === 0) return null;
+  const parts: string[] = [];
+  if (s.found > 0) parts.push(`${s.found} found it`);
+  if (s.notFound > 0) parts.push(`${s.notFound} didn't`);
+  return `Visitor reports, last ${WINDOW_DAYS} days: ${parts.join(", ")}`;
+}
+
+export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reused?: boolean; reports?: PassReports }) {
   const numbered = new Map<PassItem, number>();
   pass.items.forEach((it, i) => numbered.set(it, i + 1));
   const short = pass.target - pass.items.length;
@@ -43,6 +59,22 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
             {AGE_BAND_INFO[pass.ageBand].label} · {formatDay(pass.day)} · {pass.items.length} {pass.items.length === 1 ? "find" : "finds"}
           </p>
         </header>
+
+        {reports && pass.items.some((it) => it.ref) ? (
+          <p className="rounded-control bg-muted px-3 py-2 text-sm print:hidden" data-testid="report-intro">
+            {reports.signedIn ? (
+              "Back from the park? Tell us about each find: it helps the next family, and a find nobody can spot (or that isn't safe) is left off new passes."
+            ) : (
+              <>
+                Grown-ups: back from the park?{" "}
+                <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-primary underline underline-offset-4">
+                  Sign in
+                </Link>{" "}
+                to tell us what you found. It helps the next family, and a find nobody can spot (or that isn&apos;t safe) is left off new passes.
+              </>
+            )}
+          </p>
+        ) : null}
 
         {/* R1-m10: a switched-off section (Lucky Finds without SerpApi) is left off the kid's side; the stub keeps the honest note. */}
         {SECTIONS.filter((s) => pass.sections[s].status !== "off" || pass.items.some((i) => i.section === s)).map((s) => {
@@ -72,6 +104,12 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
                           {DIFFICULTY[it.difficulty]} · {it.evidence}
                         </p>
                         {it.safety ? <p className="text-sm font-semibold">{it.safety}</p> : null}
+                        {reports && it.ref && reportStatsLine(reports.stats[it.ref]) ? (
+                          <p className="text-sm text-muted-foreground" data-testid="report-stats">
+                            {reportStatsLine(reports.stats[it.ref])}
+                          </p>
+                        ) : null}
+                        {reports?.signedIn && it.ref ? <ItemReport passId={pass.id} itemRef={it.ref} findNumber={numbered.get(it) ?? 0} /> : null}
                       </div>
                     </li>
                   ))}

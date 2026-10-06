@@ -1,4 +1,4 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { LUCKY_COPY } from "@/lib/pool/lucky";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { MemoryStore, resetStores, StoreError } from "@/lib/cache/store";
@@ -11,16 +11,19 @@ import { PARKS_COPY } from "@/lib/parks/schema";
 import { SPOT_COPY } from "@/lib/spot/types";
 import * as route from "@/app/api/pass/route";
 import { recordedResponse } from "./support/osm-replay";
+import { nextAccountCookie, primeAccountCookies } from "./support/session";
 import { modelRec, PARKS, passReplay, type Call } from "./support/pass-replay";
 
 const FAKE_KEY = "test-key-not-real";
 let n = 0;
 const nextIp = () => `203.0.113.${(++n % 250) + 1}`;
 
+/** A signed-in grown-up (a new account per request, so the 2-a-day account share never interferes). */
 function post(body: unknown, headers: Record<string, string> = {}, ip = nextIp()) {
   return new Request("http://localhost:3123/api/pass", {
     method: "POST",
     headers: {
+      cookie: nextAccountCookie(),
       host: "localhost:3123",
       origin: "http://localhost:3123",
       "sec-fetch-site": "same-origin",
@@ -44,6 +47,8 @@ const final = (ls: PassLine[]) => ls[ls.length - 1];
 
 const connemara = { parkId: PARKS.connemara.id, ageBand: "6-10" as const };
 const celebration = { parkId: PARKS.celebration.id, ageBand: "6-10" as const };
+
+beforeAll(() => primeAccountCookies(200));
 
 let replay: ReturnType<typeof passReplay>;
 let restoreLog: () => void;

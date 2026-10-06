@@ -6,13 +6,21 @@
  * "Make a pass for <park>" (the age is already chosen, so it isn't asked again) -> make the pass with the
  * server's real progress steps -> open the pass page. Failures show their exact copy; a model failure also
  * shows the real park data we found (never as a pass).
+ *
+ * Accounts (2026-10-06): a signed-out visitor sees "Sign in to make this pass" (GitHub / Google / Try as a
+ * judge) instead of the make button, plus "Open today's pass" for a pass someone already made today (free,
+ * no sign-in). The park + age are kept in sessionStorage across the sign-in round trip and restored on
+ * `/?resume=1`.
  */
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
+import { z } from "zod";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { SignInCard } from "@/components/account/SignInCard";
 import { FindAPark } from "@/components/parks/FindAPark";
+import type { SignInOptions } from "@/lib/accounts/config";
 import { Button, buttonClassName } from "@/components/ui/Button";
-import type { Park } from "@/lib/parks/schema";
+import { ParkSchema, type Park } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
 import {
   AGE_BAND_INFO,
@@ -26,7 +34,35 @@ import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
 import { clientNow, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
-const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT"]);
+const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "SIGN_IN_REQUIRED"]);
+
+/** sessionStorage key: the park + age picked before signing in (this tab only, removed once restored). */
+export const RESUME_KEY = "grass-pass:resume";
+const ResumeSchema = z.object({ park: ParkSchema, band: AgeBandSchema });
+
+function rememberForSignIn(park: Park, band: AgeBand): void {
+  try {
+    window.sessionStorage.setItem(RESUME_KEY, JSON.stringify({ park, band }));
+  } catch {
+    // storage off: after signing in the visitor picks the park again
+  }
+}
+
+/** The park + age saved before sign-in, once (validated; anything else is ignored). */
+export function takeResume(): { park: Park; band: AgeBand } | null {
+  try {
+    const raw = window.sessionStorage.getItem(RESUME_KEY);
+    window.sessionStorage.removeItem(RESUME_KEY);
+    if (!raw) return null;
+    const r = ResumeSchema.safeParse(JSON.parse(raw));
+    return r.success ? r.data : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Who is making the pass (from the server page): signed in or not, and which sign-in buttons exist. */
+export type PassMakerAccount = { signedIn: boolean; options: SignInOptions };
 
 /** Real seconds since the request started, ticking once a second while it runs. */
 function useElapsedSeconds(startedAt: number | null): number {
@@ -154,7 +190,7 @@ export function AgePicker({ band, onChange, legendId }: { band: AgeBand; onChang
   );
 }
 
-export function PassMaker() {
+export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   const ids = useId();
   const [park, setPark] = useState<Park | null>(null);
   // The remembered band (localStorage) until the visitor picks one here.
@@ -169,6 +205,20 @@ export function PassMaker() {
   const elapsed = useElapsedSeconds(state.kind === "working" ? state.startedAt : null);
   const secondsToRetry = useSecondsUntil(state.kind === "failed" ? state.autoRetryAt : undefined);
   const lastRequest = useRef<{ parkId: string; ageBand: AgeBand } | null>(null);
+  // Signed out (or the session ended): show the sign-in card instead of the make button.
+  const needsSignIn = account !== undefined && (!account.signedIn || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
+
+  // Back from signing in (/?resume=1): restore the park + age picked before, then clean the address.
+  useEffect(() => {
+    if (!new URLSearchParams(window.location.search).has("resume")) return;
+    const r = takeResume();
+    window.history.replaceState(null, "", "/#find");
+    if (!r) return;
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- one-time restore from sessionStorage after a redirect
+    setPark(r.park);
+    setPickedBand(r.band);
+    storeBand(r.band);
+  }, []);
 
   // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):
   // with 10 parks listed it starts ~700 px further down on a phone.
@@ -241,10 +291,28 @@ export function PassMaker() {
             <p className="text-sm text-muted-foreground">
               Only the park and this age range are sent to make the pass. We remember your choice on this device only.
             </p>
-            <Button type="submit" className="self-start" aria-disabled={working || undefined}>
-              {working ? "Making your pass…" : "Make my pass"}
-            </Button>
+            {needsSignIn ? (
+              <Button type="submit" variant="secondary" className="self-start" aria-disabled={working || undefined}>
+                {working ? "Looking for today's pass…" : "Open today's pass if one was made"}
+              </Button>
+            ) : (
+              <Button type="submit" className="self-start" aria-disabled={working || undefined}>
+                {working ? "Making your pass…" : "Make my pass"}
+              </Button>
+            )}
           </form>
+
+          {needsSignIn && account ? (
+            <div className="mt-4">
+              <SignInCard
+                id={`${ids}-signin`}
+                options={account.options}
+                returnTo="/?resume=1"
+                heading={state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn ? "Please sign in again to make this pass" : "Sign in to make this pass"}
+                onBeforeSignIn={() => rememberForSignIn(park, band)}
+              />
+            </div>
+          ) : null}
 
           {state.kind === "working" ? (
             <div className="mt-4 flex flex-col gap-2">
@@ -264,7 +332,15 @@ export function PassMaker() {
 
           {state.kind === "failed" ? (
             <div ref={resultRef} tabIndex={-1} className="mt-4 flex flex-col gap-3">
-              <PassFailure state={state} secondsToRetry={secondsToRetry} onTryAgain={tryAgain} />
+              <PassFailure
+                state={
+                  state.code === "SIGN_IN_REQUIRED" && account && !account.signedIn
+                    ? { ...state, message: "No pass for this park and age was made today yet. Sign in above to make one." }
+                    : state
+                }
+                secondsToRetry={secondsToRetry}
+                onTryAgain={tryAgain}
+              />
             </div>
           ) : null}
 

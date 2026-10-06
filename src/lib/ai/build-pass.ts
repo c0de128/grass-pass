@@ -105,7 +105,19 @@ export type BuildDeps = {
   onPoolsReady?: (park: { id: string; lat: number; lng: number }) => void;
   /** SEC-3-02: what makePass already read about the park's features (saves reading the same keys again). */
   featuresPlan?: FeaturesPlan;
+  /**
+   * Accounts: pool ids visitors reported as not findable or not safe in this park (src/lib/reports
+   * `excludedRefs`); they are left out of the pool, so the model never sees them.
+   */
+  exclude?: ReadonlySet<string>;
 };
+
+/** A pool without the items visitors' reports rule out (src/lib/reports). */
+export function withoutReported<T extends { items: PoolItem[] }>(pool: T, exclude: ReadonlySet<string> | undefined): T {
+  if (!exclude || exclude.size === 0) return pool;
+  const items = pool.items.filter((i) => !exclude.has(i.id));
+  return items.length === pool.items.length ? pool : { ...pool, items };
+}
 
 export type ApiError = { code: string; message: string; retryAfter?: number };
 
@@ -351,8 +363,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
 
   deps.emit("wildlife", stepText("wildlife", deps.env));
   const wild = await loadWild(f, data);
-  const park = parkPool(f);
-  const luckyResult = await luckyLoad;
+  const park = withoutReported(parkPool(f), deps.exclude);
+  const luckyResult = withoutReported(await luckyLoad, deps.exclude);
   const lucky: SectionState = luckyResult.state;
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
@@ -364,7 +376,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let spotPlan: SpotPlan = early ? planSpot(early, { parkName: f.park.name, features: f, variant: input.variant }) : { status: "none", message: SPOT_COPY.slow };
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
-  const basePool = poolForSpot([...park.items, ...wild.items], target, band);
+  const basePool = poolForSpot([...park.items, ...withoutReported(wild, deps.exclude).items], target, band);
   // Lucky Finds are "maybe" extras: they never make a pass on their own (the park + wild pool must fill one).
   const fullPool = mixFor(basePool, band) ? [...basePool, ...luckyResult.items] : basePool;
   const plan = planRequest(fullPool, band, f.park.name);
@@ -517,6 +529,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       safety: v.item.safety,
       source: v.item.source,
       ...(v.item.section === "park" && v.item.id.startsWith("osm-") ? { feature: v.item.id.slice(4).replace(/-/g, "_") } : {}),
+      ref: v.item.id,
     }));
   const dropped = best.drops as Record<DropReason, number | undefined>;
   const other = Object.entries(dropped)

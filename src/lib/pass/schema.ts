@@ -64,6 +64,11 @@ export const PassItemSchema = z.object({
   source: z.enum(["OpenStreetMap", "iNaturalist", "Google reviews via SerpApi"]),
   /** Park Finds: the mapped feature kind ("basketball", "bench"), for the row icon. Absent on older passes. */
   feature: z.string().regex(/^[a-z_]{1,40}$/).optional(),
+  /**
+   * The pool id this find came from ("osm-playground", "inat-48662", "lucky-dogs"): the same thing in the same
+   * park on any pass, so visitor reports about it add up (src/lib/reports). Absent on passes made before accounts.
+   */
+  ref: z.string().regex(/^[a-z0-9][a-z0-9_-]{0,63}$/).optional(),
 });
 export type PassItem = z.infer<typeof PassItemSchema>;
 

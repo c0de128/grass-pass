@@ -219,7 +219,7 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
       expect(api.headers.get("content-type")).toMatch(/json/);
       // Another client is not affected.
       expect(proxy(new NextRequest("http://localhost:3123/", { headers: { "x-forwarded-for": "192.0.2.201" } })).status).toBe(200);
-      expect(proxyConfig.matcher).toEqual(["/", "/pass/:path*", "/api/:path*"]);
+      expect(proxyConfig.matcher).toEqual(["/", "/signin", "/pass/:path*", "/api/:path*"]);
     } finally {
       delete process.env.PRELIMIT_BURST;
       delete process.env.PRELIMIT_PER_SEC;

@@ -8,12 +8,17 @@ import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
 import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
+import { signInOptions } from "@/lib/accounts/config";
+import { passItemStats } from "@/lib/reports/stats";
+import { auth } from "@/auth";
 
 /**
  * A saved pass, read from the pass cache only (never calls OpenStreetMap, iNaturalist or the model).
  * One store read per request: metadata and page share it (SEC-1-02). SEC-2-01: an id that can't exist
  * (bad park id shape, a day outside the 30-day pass TTL, a variant above 3) is a 404 with no store read,
  * and repeat reads are memoized in process (src/lib/limits/pass-read.ts).
+ * Accounts: for a signed-in grown-up the report buttons show, with the item report counts (one more read
+ * per park per 5 min per instance, src/lib/reports/stats.ts; the proxy charges it as COSTS.passStats).
  */
 const getPass = cache((id: string) => (plausiblePassId(id, Date.now()) ? loadPass(id) : Promise.resolve(null)));
 
@@ -32,6 +37,10 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   const pass = await getPass(id);
   // Unknown or expired id: HTTP 404 with the honest "No pass here" copy (./not-found.tsx).
   if (!pass) notFound();
+  const session = await auth();
+  const signedIn = Boolean((session as { provider?: string } | null)?.provider);
+  // Report counts are shown to signed-in grown-ups (the ones who report); 1 read per park per 5 min.
+  const stats = signedIn ? await passItemStats(pass) : {};
 
   return (
     <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 focus:outline-none sm:py-14">
@@ -43,9 +52,15 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
         </Link>
         <p className="text-base text-muted-foreground">One black-and-white page. Cut it in two: the kid takes the top.</p>
       </div>
-      <PassPreview pass={pass} reused={sp.reused === "1"} />
+      <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">
-        <DifferentPassButton parkId={pass.park.id} ageBand={pass.ageBand} variant={pass.variant} />
+        <DifferentPassButton
+          parkId={pass.park.id}
+          ageBand={pass.ageBand}
+          variant={pass.variant}
+          account={{ signedIn, options: signInOptions() }}
+          returnTo={`/pass/${pass.id}`}
+        />
         <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
           Pick another park
         </Link>

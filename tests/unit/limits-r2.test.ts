@@ -133,7 +133,7 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
   const hit = (pathname: string, now: number, key = ip4) => preLimitRequest({ key, net48: networkKey(key), pathname, now, cfg: CFG });
   const randomId = (i: number) => `w${100000 + i}-6to10-20261006-1`;
 
-  it("costs: home 0, a possible pass id 1, an impossible one 0, the APIs 4", () => {
+  it("costs: home 0, a possible pass id 1, an impossible one 0, the APIs (COSTS)", () => {
     expect(requestCost("/", T0)).toEqual({ kind: "page", cost: 0 });
     expect(requestCost("/pass/w1-6to10-20261006-1", T0)).toEqual({ kind: "page", cost: 1 });
     expect(requestCost("/pass/w1-6to10-20261006-1/print", T0)).toEqual({ kind: "page", cost: 1 });
@@ -187,8 +187,8 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
     let ok = 0;
     for (let i = 0; i < 200; i++) if (hit("/pass/w1-6to10-19990101-1", T0).ok) ok++;
     expect(ok).toBe(CFG.preLimitPageBurst);
-    // The cost bucket is untouched: 60 API-cost units are still there for this client (15 x 4).
-    for (let i = 0; i < 15; i++) expect(hit("/api/pass", T0).ok).toBe(true);
+    // The cost bucket is untouched: 60 API-cost units are still there for this client (12 x 5).
+    for (let i = 0; i < Math.floor(CFG.preLimitCostBurst / COSTS.apiPass); i++) expect(hit("/api/pass", T0).ok).toBe(true);
     expect(hit("/api/pass", T0).ok).toBe(false);
   });
 

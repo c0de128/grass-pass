@@ -1,9 +1,9 @@
 /**
  * SEC-2-01: a stand-in for the Upstash REST API that counts commands. It answers GET/SET/DEL and the
- * three EVAL scripts of src/lib/cache/store.ts from a MemoryStore, so the app's real UpstashStore code
+ * EVAL scripts of src/lib/cache/store.ts (and HGETALL for item reports) from a MemoryStore, so the app's real UpstashStore code
  * runs unchanged and every command it would send to Upstash is counted.
  */
-import { MemoryStore } from "@/lib/cache/store";
+import { MemoryStore, REPORT_SCRIPT } from "@/lib/cache/store";
 
 export const FAKE_UPSTASH_URL = "https://counting-test.upstash.io";
 export const FAKE_UPSTASH_TOKEN = "counting-test-token-not-real"; // gitleaks:allow
@@ -22,6 +22,10 @@ export function countingUpstash() {
       await mem.set(String(rest[0]), String(rest[1]), Number(rest[3]));
       return "OK";
     }
+    if (cmd === "HGETALL") {
+      const h = await mem.hashGetAll(String(rest[0]));
+      return Object.entries(h).flat();
+    }
     if (cmd === "DEL") {
       await mem.del(String(rest[0]));
       return 1;
@@ -30,6 +34,24 @@ export function countingUpstash() {
       const script = String(rest[0]);
       const n = Number(rest[1]);
       const keys = rest.slice(2, 2 + n).map(String);
+      if (script === REPORT_SCRIPT) {
+        const a = rest.slice(2 + n).map(String);
+        const r = await mem.recordReport({
+          dedupeKey: keys[0],
+          hashKey: keys[1],
+          unsafeKey: keys[2],
+          dedupeTtlSec: Number(a[0]),
+          field: a[1],
+          unsafe: a[2] === "1",
+          account: a[3],
+          hideAt: Number(a[4]),
+          hideField: a[5],
+          day: Number(a[6]),
+          cutoff: Number(a[7]),
+          ttlSec: Number(a[8]),
+        });
+        return [r.counted ? 1 : 0, r.unsafeAccounts, r.newlyHidden ? 1 : 0];
+      }
       const argv = rest.slice(2 + n).map(Number);
       if (script.startsWith("local v = redis.call('INCRBY'")) return mem.incr(keys[0], argv[0], argv[1]);
       // The budget flush (SEC-3-03/04): monthly + daily counters at once.

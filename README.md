@@ -2,94 +2,133 @@
 
 > Pick a park. Print a pass. Phone away.
 
-**Status: in development** for the DEV Hacktoberfest 2026 Open-Source AI Challenge, Week 1 "Touch Grass"
-(entry period Oct 5 to Oct 12, 2026). This README grows with the build; sections marked *coming* are not built yet.
+Grass Pass makes a one-page, printable scavenger pass for a real park and a child's age (4-6, 6-10 or 10-13). The
+goal is about **30 seconds on a screen**: pick a park, pick an age, print. Then the phone goes away. The child ticks
+boxes with a pencil, and the grown-up keeps a tear-off stub with the answers, safety notes and sources.
 
-Grass Pass makes a printable scavenger "pass" for a real park and a child's age. Every item on it is backed by
-real, dated data about **that** park: OpenStreetMap features (courts, shelters, playgrounds), species people
-actually photographed there in the last 14 days (iNaturalist), and visitor-review counts. An open-weight model
-(Gemma 4, Apache-2.0) picks a fair mix for each park and writes kid-level clues; code checks every clue against its
-source and decides what is safe. If a source has nothing, the pass says **"No data available"** and why. It never
-pads with generic items.
+Every item on a pass is backed by real, dated data about **that** park:
+- **Park Finds:** what is mapped inside the park on OpenStreetMap (courts, playgrounds, shelters, bridges, ponds...).
+- **Wild Finds:** species people photographed within 1.5 km in the last 14 days (iNaturalist, research grade only).
+- **Find This Spot:** a black-and-white map of the park's paths with an X on one real landmark, drawn by code.
+- **October special:** real monarch butterfly counts near the park, next to the same days last year.
+
+An open-weight model (**Gemma 4**, Apache-2.0) picks a fair mix for each park and writes kid-level clues. Code checks
+every clue against its source and decides what is safe. If a source has nothing, the pass says **"No data
+available"** and why. It never pads the pass with generic items.
+
+Built for the DEV Hacktoberfest 2026 Open-Source AI Challenge, Week 1 "Touch Grass".
 
 ## Live demo
-*Coming* (deploy planned for Oct 9, 2026). No login needed.
+Live demo: (link added at deploy, Fri Oct 9)
+
+No login, no account. To try it:
+1. On the home page, tap one of the **example parks** (for example Connemara Meadow Preserve). Its pass for today is
+   already made, so it opens right away.
+2. Press **Print pass** (at the top of the pass page). One Letter page: the kid's pass on top, the grown-up's stub below.
+3. To make your own: search a park by name (for example "Connemara Meadow Preserve") or a town, pick a park from the
+   list, pick an age band and press **Make my pass**. A new pass usually takes 10-30 seconds.
+
+A town search lists the **10 nearest** named parks within 5 km, so a park you know may not be in the list for a town
+search (for example "Allen TX" lists 10 of its 53 nearby parks, and Connemara is not one of them). Search the park's
+own name instead, or use "Use my location".
+
+## How it works
+```mermaid
+flowchart LR
+  S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries"] --> P["Pools, by code<br/>what is really in this park"]
+  P --> F["Code safety<br/>blocked species removed<br/>by iNaturalist taxon"]
+  F --> AI["Gemma 4 31B<br/>ONE model call<br/>strict JSON schema"]
+  AI --> V["Code checks<br/>quote must be in the source,<br/>no answer names, no added numbers"]
+  V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
+```
+
+1. **You pick a park.** Typed text goes to Nominatim (OpenStreetMap search); nearby parks come from the Overpass API.
+2. **Code collects real facts** for the park: mapped features (Overpass) and recent sightings with their Wikipedia
+   summaries (iNaturalist). From Sep 15 to Nov 15 it also counts monarchs near the park.
+3. **Code decides what is safe.** Venomous snakes, recluse and widow spiders, fire ants, poison ivy and the other
+   blocked groups in `src/lib/safety/danger-taxa.ts` are removed by iNaturalist taxon id and ancestor ids before the
+   model sees the list, and checked again after. Every Wild Find gets a fixed "look, don't touch" line from code.
+4. **One call to an open model** (`gemma-4-31B-it` on DigitalOcean serverless inference by default) picks items by
+   id and writes the clues. The JSON schema allows only the real pool ids.
+5. **Code checks every clue.** Its `sourceQuote` must appear word for word in that item's source; it must not name
+   its answer, add a number or contain a link. A failing clue is dropped (never rewritten). Too few left: one retry.
+   Every number and date on the pass is written by code, and the pass names the model that actually answered.
+6. **You print it.** Black and white, one Letter page (A4 works too).
+
+Passes are cached per park, age band and day (Chicago time), so the same park is instant for the next visitor.
+Per-IP limits and daily caps protect the free model budget and the free public map servers.
 
 ## Quick start
+Needs Node 22 and pnpm.
+
 ```bash
 pnpm install
-cp .env.example .env.local   # add DO_INFERENCE_API_KEY (or point MODEL_BASE_URL at a local Ollama)
+cp .env.example .env.local   # add DO_INFERENCE_API_KEY, or point MODEL_BASE_URL at a local Ollama
 pnpm dev                     # http://localhost:3000
 ```
+
+Every environment variable is explained in [`.env.example`](.env.example). Keys are server-only. Without
+`UPSTASH_REDIS_REST_URL`/`_TOKEN`, caches and limits live in memory (fine locally). Without a model key, park search
+still works and a new pass says the model is not configured.
 
 | Script | What it does |
 |---|---|
 | `pnpm lint` | ESLint, zero warnings allowed |
 | `pnpm typecheck` | `next typegen && tsc --noEmit` |
-| `pnpm test` | Vitest unit tests |
+| `pnpm test` | Vitest unit tests (recorded real API answers, no network) |
 | `pnpm build` / `pnpm start` | production build / server |
-| `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`) |
-| `pnpm eval` | SPEC 6.4 evals: 20 recorded real parks, live open models on DigitalOcean (about $0.06, capped at $1), no-AI baseline; see [`evals/README.md`](evals/README.md) |
-| `pnpm eval:check` | free dry run: every recorded park through the real pass builder, model off |
-| `pnpm eval:record` | re-record the 20 eval parks live from OpenStreetMap and iNaturalist |
+| `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`). Live tests skip honestly, with the server's error code, when an upstream or a limit says no |
+| `pnpm osm:snapshot` | re-records the saved OpenStreetMap data from live Overpass: map data for the 4 example parks and the Dallas-area park list used when Overpass is down (`src/data/osm/`) |
+| `pnpm eval` | the evals: 20 recorded real parks, live open models on DigitalOcean (about $0.06, capped at $1), plus a no-AI baseline. See [`evals/README.md`](evals/README.md) |
+| `pnpm eval:check` | free dry run of every recorded park through the real pass builder, model off |
+| `pnpm eval:record` | re-records the 20 eval parks live from OpenStreetMap and iNaturalist |
 | `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` |
 
-## Environment variables
-All are listed and explained in [`.env.example`](.env.example). Keys are server-only.
+### Cold start (measured)
+Measured on Oct 5, 2026 (~11:15 PM CDT) on the build laptop (Windows 11, Node 22), from a fresh git worktree:
+- `pnpm build` with no `.next` cache: **17.2 s** (Next.js 16.3.8, Turbopack).
+- `next start`, fresh process, empty in-memory store: first `GET /` answered **0.98 s after the process started**
+  (the request itself 0.62 s). The next `GET /` took 25 ms, the first `GET /about` 56 ms.
+- The first example pass was ready **30.9 s after start** (the start-up warm-up makes all 4 example passes from live
+  data and the model). A ready pass page then loads in about 25 ms.
+- A brand-new pass for a park nobody asked for today: about 10 s when the map servers are healthy (one measured
+  run: 10.1 s, of which the model took 9.6 s). The server gives up at 85 s, the browser stops waiting at 45 s.
 
-## How it works
-*Coming.* Architecture diagram, model, data sources and safety rules are added as each part is built.
+These are laptop numbers, not the hosting provider's; the deployed cold start will be added after the deploy.
 
-Built so far (slice S0):
-- `src/lib/model.ts`: plain `fetch` client for any OpenAI-compatible server. Strict JSON schema + zod, 30 s timeout,
-  one retry on network/5xx, one log line per call, distinct error codes, the shown model name comes from the model
-  that answered, the DigitalOcean key is only ever sent to `inference.do-ai.run`, and redirects are never followed.
-- `src/lib/limits/*`: per-IP rate limits, daily/monthly caps with "charge every started call" tickets, circuit
-  breakers, polite queues for free public APIs.
-- `src/lib/cache/*`: typed caches with a "stored at" time, a separate negative cache, in-flight de-duplication;
-  Upstash Redis in production, memory locally.
-- `src/lib/http/guard.ts`: same-origin check, JSON content type, streamed body size cap.
-- Security headers (CSP, no framing, nosniff, referrer policy) on every route.
-
-Slice S2, find a park:
-- `POST /api/parks` with `{"q": ...}` or `{"lat": ..., "lng": ...}` (a POST so typed text and location stay out of URLs and request logs): up to 10 named OpenStreetMap parks and nature reserves within 5 km,
-  nearest first. Place text goes to Nominatim on submit only (no autocomplete) through one 1 request/second queue
-  and is cached 30 days. Parks come from Overpass (three public servers tried in order, at most 50 seconds in total,
-  a circuit breaker per server, at most 2 queries at once) and are cached 7 days. Empty answers have their own 15-minute cache. Same-origin and JSON only,
-  2 KB body cap, 10 searches per minute per IP, plus a daily budget of uncached searches per IP and for everyone.
-- "Use my location" is rounded to 2 decimals (about 1 km) in the browser, and again on the server.
-- Every request to OpenStreetMap services sends `User-Agent: GrassPass/0.1 (+https://github.com/c0de128/grass-pass)`.
-
-Slice S3, the pass on screen:
-- Pick a park, pick an age band (4-6, 6-10 by default, 10-13; remembered on this device only), press **Make my pass**.
-  The page shows the server's real progress steps while it works (`POST /api/pass` streams them as NDJSON).
-- **Park Finds** come from one fixed Overpass query per park id: what is mapped inside the park (courts by sport,
-  playgrounds, shelters, benches, fountains, ponds, creeks, bridges...). Code writes each fact ("Celebration Park has
-  2 basketball courts on the map (OpenStreetMap).") and its evidence line. Cached 7 days.
-- **Wild Finds** come from iNaturalist: research-grade species seen within 1.5 km in the last 14 days, plus each
-  species' Wikipedia summary (the only text a clue may quote). Cached 6 hours (species) and 7 days (summaries). The
-  taxa endpoint is never called with an empty id list (it would return "Life, Animals, Plants...").
-- **Safety by code** (`src/lib/safety/danger-taxa.ts`): recluse and widow spiders, venomous snakes, fire ants,
-  poison ivy/oak/sumac, pokeweed, asp caterpillars, datura, wasps, bull nettle, nettles, nightshades, giant
-  centipedes and bark scorpions are blocked by iNaturalist taxon id and ancestor ids, before the model sees the list
-  and again after. Every Wild Find carries a fixed safety line ("Look, don't touch.").
-- **One model call** (`gemma-4-31B-it` on DigitalOcean by default) picks items by id and writes the clues. The strict
-  JSON schema is generated from zod with `minItems = maxItems = n` and an enum of the real pool ids. Code then drops
-  any item whose `sourceQuote` is not in its source text, that names the answer, adds a number that isn't in the
-  source, contains a link, or breaks the section mix computed by code. Too few survivors: one retry.
-- Every number and date on a pass is written by code. Empty sections say "No data available" and why. The footer
-  names the model that actually answered and when the pass and the data were made.
-- Passes are cached per park, age band and Chicago day (`/pass/<id>` reads only the cache); "Make a different pass"
-  makes up to 3 per day. Limits: 3 new passes/min and 20/day per IP, `AI_DAILY_CAP` model calls a day for everyone,
-  checked before any upstream call; a started model call is never cancelled and always counted.
+## Limitations
+Copied from the app's `/about` page ("What did not pass yet"), with the same numbers:
+- **Answers that name themselves: 10.5% FAIL** (target 5% or lower). Before the filter, 10.5% of Gemma's clues or
+  "look where" hints used a word of their own answer (in the clue itself 6.7%). Code catches every one: such a clue is
+  dropped and such a hint is left off, so nothing is given away on a pass, but those clues are lost. (The check got
+  stricter in this round; see the Evals section.)
+- **Kid check not done yet.** A grown-up reading 10 printed clues as a 7-year-old would ([`evals/results/human-check.md`](evals/results/human-check.md))
+  is planned with a real walk on **Sat Oct 10, 2026**. Until then it is pending, not passed.
+- **Lucky Finds are not connected yet.** The section shows "not available yet" on the pass, and no photos are printed.
+- **Self-hosting is not measured.** The app talks to any OpenAI-compatible server (for example Ollama), but we have
+  not measured a self-hosted run for this app.
+- **Llama 4 Maverick is too slow to be the default:** 39.2 s typical per model call in the eval (target 10 s), and
+  41.2% complete passes.
+- **Find This Spot is not in the eval** (its map data was not recorded for the 20 test parks).
+- **Sparse data happens.** 3 of the 17 North Texas parks in the eval had no research-grade iNaturalist sightings in the
+  last 14 days; the pass then says so instead of inventing Wild Finds.
+- **Depends on the public Overpass servers.** Park search and park maps come from free public Overpass instances,
+  which are often busy in the evening (US time). A park search waits for live Overpass for 10 s, then falls back to a
+  **saved list of 1,321 named parks in the Dallas area** (Allen, Plano, McKinney, Frisco, Richardson, Dallas), then
+  to one Nominatim park search; the list is labelled when it comes from a fallback. The 4 example parks use saved map
+  data and never need live Overpass. When none of these can answer (for example outside the Dallas area while
+  Overpass and Nominatim are both down), the search says "No data available" and why, and offers a ready example
+  pass when one is ready. A new pass for a park whose map data can't be fetched in time says so instead of guessing.
+- **Hosted inference:** the model runs on DigitalOcean's servers, so the park facts and the age band leave your device
+  (see Privacy).
 
 ## Evals
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
 with the real pass builder. Current numbers: [`evals/results/2026-10-05-4.md`](evals/results/2026-10-05-4.md)
 (what changed and why: [`2026-10-05-4-notes.md`](evals/results/2026-10-05-4-notes.md)). The earlier runs,
 [`2026-10-05.md`](evals/results/2026-10-05.md), [`2026-10-05-2.md`](evals/results/2026-10-05-2.md) and
-[`2026-10-05-3.md`](evals/results/2026-10-05-3.md), are kept for comparison. No closed model was run (open models only).
-Find This Spot is not in the eval (its map data was not recorded for these parks).
+[`2026-10-05-3.md`](evals/results/2026-10-05-3.md), are kept for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
+Oct 5). Find This Spot is not in the eval.
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, run 3 | Gemma, first run |
 |---|---|---|---|---|---|
@@ -109,9 +148,20 @@ iNaturalist "Flowers and Fruits" annotations for each park, this month, all year
 metrics. The season rule is cautious: a plant with fewer than 3 such records this month (for example autumn clematis
 near White Rock Lake, 2 of 3) is treated as not flowering, so the model describes its leaves instead.
 
-## Why open
-The clue writer is an open-weight model: `gemma-4-31B-it` (Gemma 4, Apache-2.0) on DigitalOcean serverless
-inference by default. Measured in the eval above (same parks, same checks for every column):
+Why the name-leak number went up (10.5%, FAIL): the check is stricter (it now also catches words built on a name, like
+"Passifloraceae" for a passionflower; on run 3's saved answers that alone moves 5.4% to 6.1%), and the new "make the
+child look closely" rule for Park Finds led to clues like "Count the bridges" for the bridges. Code drops every leaky
+clue and blanks every leaky hint, so nothing is given away on a pass, and with the retry at n-1 every data-rich Gemma
+pass still kept at least n-1 finds. Llama 4 Maverick got worse in this run (80.1% grounded, 41.2% complete): it often
+copied the new code-written season note ("flowers seen in October") as its quote, which is not in the source text, so
+those clues were dropped.
+
+In run 2, 3 of 56 Gemma answers (all for one park) had the next JSON field stuck onto every quote; code now
+cuts it off at the field name and keeps a quote only if the rest is really in the source (it did not happen in the
+current run). The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`, checked against the
+results JSON by a unit test).
+
+### Why open
 - **It makes the words kid-sized:** Gemma's clues read at FK grade 1.7 (median); the no-AI template on the same data
   reads at 5.8.
 - **It sticks to the facts:** 99.6% of its clues quoted their source word for word before any filter (the rest are
@@ -121,23 +171,6 @@ inference by default. Measured in the eval above (same parks, same checks for ev
   setting (`MODEL_ID`); Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
   server, e.g. Ollama. A self-hosted run has **not** been measured for this app yet.
-
-No closed model was compared (open models only; the closed models on our DigitalOcean tier answered 403 on Oct 5).
-What did not pass yet: name leaks before the filter, 10.5% of Gemma's clues or "look where" hints (target 5%; in the
-clue itself 6.7%). Two changes in this round raised it: the check is stricter (it now also catches words built on a
-name, like "Passifloraceae" for a passionflower; on run 3's saved answers that alone moves 5.4% to 6.1%), and the new
-"make the child look closely" rule for Park Finds led to clues like "Count the bridges" for the bridges. Code drops
-every leaky clue and blanks every leaky hint, so nothing is given away on a pass, and with the retry at n-1 every
-data-rich Gemma pass still kept at least n-1 finds. Llama 4 Maverick got worse in this run (80.1% grounded, 41.2%
-complete): it often copied the new code-written season note ("flowers seen in October") as its quote, which is not in
-the source text, so those clues were dropped. The human kid check is not done yet. The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`, checked against the
-results JSON by a unit test).
-
-### Example parks (pre-warmed)
-The home page links real passes for four example parks (Connemara Meadow Preserve, Celebration Park, Arbor Hills
-Nature Preserve, White Rock Lake Park), made by the normal pass builder from live data when the server starts and
-refreshed once a day in the background (stale-while-revalidate, global caps only, never charged to a visitor). Each
-link shows the real time its pass was made; an example without a pass says why. `PREWARM_EXAMPLES=0` turns it off.
 
 ## Privacy
 No accounts, no names, no photos, no cookies, no analytics. Nothing about the child is asked for or sent. What does
@@ -158,18 +191,31 @@ Storage: Upstash Redis (free plan) holds the caches, the saved passes and the ra
 `LIMITER_KEY_SECRET`; if it is not set, it is derived from the Upstash token (and is random per process without Upstash).
 The browser keeps only the light/dark choice and the last age band (localStorage).
 
-## Limitations
-*Coming.*
+## Contributing
+Contributions are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md) for setup, checks and the house rules (no made-up
+data, every number written by code), and [docs/good-first-issues.md](docs/good-first-issues.md) for three starter
+ideas. How the app was built, slice by slice: [docs/BUILD-LOG.md](docs/BUILD-LOG.md).
 
 ## Contest note
-Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
+Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026, 5:11 PM CDT). Any commit made
+after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 
 ## Credits
 - Scaffolded with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app) (Next.js, MIT).
-- The model client, limits, request guards and in-flight de-duplication are adapted from the author's earlier
-  practice project (same author, MIT).
-- Brand: logo and explorer scene are redrawn as SVG from the author's own banner design (`brand/`, `scripts/brand/art.mjs`;
-  the kid's clothes and hair are cleaned traces of that drawing in `scripts/brand/kid-trace.json`).
+- **Reused code written before the entry period.** A few generic building blocks were adapted from the same author's
+  unpublished practice project, written on **Oct 2, 2026, before the contest entry period** (same author, MIT):
+  - the model client: `src/lib/model.ts` (OpenAI-compatible `fetch` client, key-to-host rule, retry, logging);
+  - rate limits, caps and breakers: `src/lib/limits/rate.ts`, `quota.ts`, `breaker.ts`, `ip.ts`;
+  - request guards: `src/lib/http/guard.ts` (same-origin, JSON content type, body size cap);
+  - in-flight de-duplication: `src/lib/cache/inflight.ts`;
+  - small helpers: `src/lib/security-headers.ts`, `src/lib/zod-config.ts`.
+
+  They have changed a lot since (shared Upstash store, hashed IP keys, Overpass queues). Everything specific to Grass
+  Pass was written from **Oct 5, 2026**: data sources, pools, safety filter, prompt, clue checks, the pass, print
+  layout, Find This Spot map, October box, evals and brand.
+- **Brand:** the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned
+  SVG redraw of it (`brand/`, `scripts/brand/art.mjs`; the kid's clothes and hair are cleaned traces in
+  `scripts/brand/kid-trace.json`).
 - Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) 600/700 and [Nunito](https://fonts.google.com/specimen/Nunito)
   400/600/700 for the site text: the latin `.woff2` files from [Fontsource](https://fontsource.org/) 5.3.0
   (`@fontsource/fredoka`, `@fontsource/nunito`) are committed in `src/app/fonts/` with their OFL licence texts and
@@ -179,16 +225,19 @@ Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will
   All four are SIL Open Font License 1.1.
 - Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
   [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
-- Park names and locations: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,
-  via [Nominatim](https://nominatim.org/) and the [Overpass API](https://overpass-api.de/) (public instances, used under
-  their usage policies).
-- Park features: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0, via the Overpass
-  API instances at overpass-api.de, maps.mail.ru (VK Maps) and overpass.private.coffee.
-- Wildlife sightings: [iNaturalist](https://www.inaturalist.org/) observers (research-grade observations; we show
-  species names and counts only, no photos) and species summaries from Wikipedia (CC BY-SA) via the iNaturalist API.
+- Park names, locations and features: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,
+  via [Nominatim](https://nominatim.org/) and the public Overpass API instances at overpass-api.de, maps.mail.ru
+  (VK Maps) and overpass.private.coffee (used under their usage policies). The saved Dallas-area park list and example
+  park data in `src/data/osm/` are OpenStreetMap data too (ODbL).
+- Wildlife sightings and monarch counts: [iNaturalist](https://www.inaturalist.org/) observers (research-grade
+  observations; we show species names and counts only, no photos).
+- Species facts: Wikipedia (CC BY-SA), via the iNaturalist API. Wild Finds clues quote these summaries; the printed
+  stub says "Species facts: Wikipedia (CC BY-SA), via iNaturalist." whenever a pass has a Wild Find.
 - Clues: [Gemma 4](https://huggingface.co/google/gemma-4-31B-it) (`gemma-4-31B-it`, Apache-2.0) on DigitalOcean
   serverless inference.
-- Data credits for SerpApi are added when Lucky Finds land.
+- Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It answers
+  visitors only if `MODEL_ID` is switched to it; then the pass and `/about` show "Built with Llama".
+- Data credits for SerpApi will be added if Lucky Finds are connected.
 
 ## Licence
 [MIT](LICENSE)

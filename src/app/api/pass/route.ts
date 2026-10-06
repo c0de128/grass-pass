@@ -12,7 +12,8 @@
  *   failures, the real park data).
  * R2-M3: a failure caused by the map data (OpenStreetMap busy/slow) carries a ready example pass link.
  * R2-m5: background OpenStreetMap refreshes started by this request are kept alive with after(), so a
- * serverless instance doesn't freeze them half-way while they hold their 6 h lock.
+ * serverless instance doesn't freeze them half-way while they hold their 6 h lock. SEC-3-06: only the
+ * refreshes THIS request queued, not the whole process queue.
  */
 import { WaiterAbortedError } from "@/lib/cache";
 import { runAfterResponse } from "@/lib/after";
@@ -22,7 +23,7 @@ import { clientIp } from "@/lib/limits";
 import { makePass, type MakeOutcome } from "@/lib/pass/make";
 import { EXAMPLE_PARKS, readyExample } from "@/lib/prewarm";
 import { MAP_DATA_FAILURE_CODES, PassRequestSchema, type PassLine } from "@/lib/pass/schema";
-import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
+import { withRefreshScope } from "@/lib/sources/osm-refresh";
 
 export const runtime = "nodejs";
 /** Overpass (<= 50 s) + iNaturalist + the model (30 s) are cut by an 85 s pass deadline. */
@@ -56,8 +57,6 @@ async function errorResponse(o: ErrorOutcome): Promise<Response> {
 export async function POST(req: Request): Promise<Response> {
   const g = await guardJsonPost(req, PassRequestSchema);
   if (!g.ok) return jsonError(g.failure.status, { code: g.failure.code, message: g.failure.message });
-  // R2-m5: any background map refresh this pass queues finishes after the response, never frozen.
-  runAfterResponse(() => osmRefreshIdle());
 
   const enc = new TextEncoder();
   const pending: PassLine[] = [];
@@ -65,18 +64,23 @@ export async function POST(req: Request): Promise<Response> {
   let firstStep!: () => void;
   const started = new Promise<"step">((r) => (firstStep = () => r("step")));
 
-  const work = makePass(g.data, {
-    ip: clientIp(req),
-    // The example parks may use the reserved slice of the AI budget (SEC-1-05).
-    reserved: EXAMPLE_PARKS.some((e) => e.parkId === g.data.parkId),
-    signal: req.signal,
-    onStep: ({ step, text }) => {
-      const line: PassLine = { type: "step", step, text };
-      if (push) push(line);
-      else pending.push(line);
-      firstStep();
-    },
-  }).then(
+  // R2-m5 / SEC-3-06: background map refreshes this request queues finish after the response, never frozen.
+  const scoped = withRefreshScope(() =>
+    makePass(g.data, {
+      ip: clientIp(req),
+      // The example parks may use the reserved slice of the AI budget (SEC-1-05).
+      reserved: EXAMPLE_PARKS.some((e) => e.parkId === g.data.parkId),
+      signal: req.signal,
+      onStep: ({ step, text }) => {
+        const line: PassLine = { type: "step", step, text };
+        if (push) push(line);
+        else pending.push(line);
+        firstStep();
+      },
+    }),
+  );
+  runAfterResponse(() => scoped.idle());
+  const work = scoped.result.then(
     (o) => ({ ok: true as const, o }),
     (e: unknown) => ({ ok: false as const, e }),
   );

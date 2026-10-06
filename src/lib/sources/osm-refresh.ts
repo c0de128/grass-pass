@@ -6,8 +6,14 @@
  * sent (our slots were busy, or every Overpass breaker was open) the lock is given back so a later
  * visit can try again. A failure only means the saved answer (with its real fetch time) keeps being
  * used. State lives on globalThis so the home page's after() (prewarmIdle) and tests can wait for it.
+ *
+ * SEC-3-06: a request waits (in after()) only for the refreshes IT queued (`withRefreshScope`), not for
+ * the whole process queue, and the queue holds at most MAX_PENDING_REFRESHES: past that a refresh is
+ * dropped before it takes its lock (the lock is only taken when a refresh gets its turn), so a later
+ * visit can queue it again.
  */
 import "server-only";
+import { AsyncLocalStorage } from "node:async_hooks";
 import type { Store } from "@/lib/cache/store";
 import { log } from "@/lib/log";
 
@@ -17,6 +23,35 @@ export const REFRESH_LOCK_SEC = 6 * 3600;
 export const REFRESH_AFTER_SEC = 3 * 24 * 3600;
 /** Total Overpass budget of one background refresh (shorter than a visitor's 50 s). */
 export const REFRESH_BUDGET_MS = 25_000;
+/** SEC-3-06: refreshes waiting or running in one process at most; more are dropped (not locked). */
+export const MAX_PENDING_REFRESHES = 20;
+
+type Scope = { queued: Set<Promise<void>> };
+const SCOPE_KEY = Symbol.for("grass-pass.osm-refresh-scope");
+function scopeStorage(): AsyncLocalStorage<Scope> {
+  const g = globalThis as unknown as Record<symbol, AsyncLocalStorage<Scope> | undefined>;
+  return (g[SCOPE_KEY] ??= new AsyncLocalStorage<Scope>());
+}
+
+/**
+ * Run `fn` in a refresh scope: every refresh it queues (directly or deep inside) is remembered, and
+ * `idle()` waits for exactly those (SEC-3-06: a request's after() keeps its function alive for its own
+ * refreshes only).
+ */
+export function withRefreshScope<T>(fn: () => T): { result: T; idle: () => Promise<void> } {
+  const scope: Scope = { queued: new Set() };
+  const result = scopeStorage().run(scope, fn);
+  return {
+    result,
+    idle: async () => {
+      while (scope.queued.size > 0) {
+        const now = [...scope.queued];
+        await Promise.allSettled(now);
+        for (const p of now) scope.queued.delete(p);
+      }
+    },
+  };
+}
 
 type Env = Record<string, string | undefined>;
 type Holder = { running: Set<Promise<void>>; chain: Promise<void> };
@@ -40,10 +75,21 @@ export function backgroundRefreshEnabled(env: Env): boolean {
   return !(v === "0" || v === "off" || v === "false" || v === "no");
 }
 
-/** Start `run` in the background unless switched off or another instance refreshed this recently. Never throws. */
-export function refreshLater(what: { kind: "features" | "geometry"; parkId: string }, run: () => Promise<void>, deps: { store: Store; env: Env }): void {
-  if (!backgroundRefreshEnabled(deps.env)) return;
+/**
+ * Start `run` in the background unless switched off, the queue is full (SEC-3-06), or another instance
+ * refreshed this recently. Returns the queued work (null when nothing was queued). Never throws.
+ */
+export function refreshLater(
+  what: { kind: "features" | "geometry"; parkId: string },
+  run: () => Promise<void>,
+  deps: { store: Store; env: Env },
+): Promise<void> | null {
+  if (!backgroundRefreshEnabled(deps.env)) return null;
   const h = holder();
+  if (h.running.size >= MAX_PENDING_REFRESHES) {
+    log("osm_refresh_dropped", { ...what, pending: h.running.size }, "warn");
+    return null;
+  }
   const lockKey = `osm-refresh:${what.kind}:${what.parkId}`;
   const p = (async () => {
     const n = await deps.store.incr(lockKey, 1, REFRESH_LOCK_SEC);
@@ -63,9 +109,11 @@ export function refreshLater(what: { kind: "features" | "geometry"; parkId: stri
   h.chain = queued;
   const tracked = queued.finally(() => h.running.delete(tracked));
   h.running.add(tracked);
+  scopeStorage().getStore()?.queued.add(tracked);
+  return tracked;
 }
 
-/** Wait for every background refresh started so far. */
+/** Wait for every background refresh started so far (tests, the example warm-up). */
 export async function osmRefreshIdle(): Promise<void> {
   const h = holder();
   while (h.running.size > 0) await Promise.allSettled([...h.running]);

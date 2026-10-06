@@ -40,7 +40,7 @@ import {
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
 import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
-import { finishSpot, geometryWithin, loadGeometry, planSpot, SPOT_WAIT_MS, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
+import { finishSpot, geometryWithin, loadGeometry, planSpot, spotWaitMs, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { askMix, buildMessages, computeMix, type Mix } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
@@ -122,6 +122,9 @@ export function stepText(step: PassStep, env: Env): string {
   }
 }
 
+/** The end of the "no model key" message: what helps (not "try again"). */
+export const MODEL_NOT_CONFIGURED_TAIL = "Your park data is below. The person running this server needs to add a model key (see the README).";
+
 /** SPEC §6.3 copy for a failed model call. */
 export function modelFailure(err: ModelError, modelId: string): { status: number; error: ApiError } {
   const name = modelDisplayName(modelId);
@@ -131,6 +134,9 @@ export function modelFailure(err: ModelError, modelId: string): { status: number
       return { status: 504, error: { code: err.code, message: `${name} took too long. Try again. Your park data is below.` } };
     case "MODEL_QUOTA":
       return { status: 503, error: { code: err.code, message: PASS_COPY.paused, retryAfter: 3600 } };
+    case "MODEL_NOT_CONFIGURED":
+      // R2-m6 (Q-2-05): trying again never helps here, so don't say "try again in a minute".
+      return { status: 503, error: { code: err.code, message: `${name} couldn't write clues (${err.reason}). ${MODEL_NOT_CONFIGURED_TAIL}` } };
     case "MODEL_RATE_LIMITED":
       return {
         status: 503,
@@ -314,7 +320,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const lucky: SectionState = { status: "off", message: PASS_COPY.luckyOff };
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
-  const geoWait = Math.min(SPOT_WAIT_MS, Math.max(0, left() - MODEL_MIN_LEFT_MS - 5_000));
+  // R2-M2: the optional map wait is cut short once the pass has used SPOT_STAGE_END_MS (slow features step).
+  const geoWait = spotWaitMs(deps.now() - deps.startedAt, left());
   const spotPlan: SpotPlan = planSpot(await geometryWithin(geometry, geoWait), { parkName: f.park.name, features: f, variant: input.variant });
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 

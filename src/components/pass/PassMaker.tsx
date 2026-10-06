@@ -7,9 +7,10 @@
  * the real park data we found (never as a pass).
  */
 import { useEffect, useId, useRef, useState, type FormEvent } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { FindAPark } from "@/components/parks/FindAPark";
-import { Button } from "@/components/ui/Button";
+import { Button, buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
 import type { Park } from "@/lib/parks/schema";
 import {
@@ -21,7 +22,7 @@ import {
   type AgeBand,
 } from "@/lib/pass/schema";
 import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
-import { clientNow, usePassRequest } from "./usePassRequest";
+import { clientNow, PASS_WAIT_COPY, usePassRequest, type PassState } from "./usePassRequest";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
 const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT"]);
@@ -35,6 +36,58 @@ function useElapsedSeconds(startedAt: number | null): number {
     return () => clearInterval(t);
   }, [startedAt]);
   return startedAt === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));
+}
+
+/** Whole seconds left until `at` (client clock), ticking once a second; null when there is no `at`. */
+function useSecondsUntil(at: number | undefined): number | null {
+  const [now, setNow] = useState(() => clientNow());
+  useEffect(() => {
+    if (at === undefined) return;
+    const t = setInterval(() => setNow(clientNow()), 1000);
+    return () => clearInterval(t);
+  }, [at]);
+  return at === undefined ? null : Math.max(0, Math.ceil((at - now) / 1000));
+}
+
+/**
+ * A failed pass: the exact message, the one automatic retry's countdown (map data busy or slow,
+ * R2-M3), "Try again", a ready example pass when the server offered one, and any real park data.
+ */
+export function PassFailure({
+  state,
+  secondsToRetry,
+  onTryAgain,
+}: {
+  state: Extract<PassState, { kind: "failed" }>;
+  secondsToRetry: number | null;
+  onTryAgain: () => void;
+}) {
+  return (
+    <>
+      <div role="alert" data-error-code={state.code} className="rounded-ticket border-2 border-line bg-surface p-4">
+        <p className="font-semibold">{state.message}</p>
+      </div>
+      {secondsToRetry !== null ? (
+        // Not a live region: a ticking number would be read out every second.
+        <p className="text-base" data-testid="pass-auto-retry">
+          Trying once more by itself in {secondsToRetry} s.
+        </p>
+      ) : null}
+      <div className="flex flex-wrap gap-3">
+        {NO_RETRY.has(state.code) ? null : (
+          <Button type="button" variant="secondary" onClick={onTryAgain}>
+            {secondsToRetry !== null ? "Try again now" : "Try again"}
+          </Button>
+        )}
+        {state.example ? (
+          <Link href={state.example.href} className={buttonClassName("secondary")}>
+            See a ready example pass: {state.example.name}
+          </Link>
+        ) : null}
+      </div>
+      {state.parkData ? <ParkDataList data={state.parkData} /> : null}
+    </>
+  );
 }
 
 export function readStoredBand(): AgeBand {
@@ -64,6 +117,7 @@ export function PassMaker() {
   const { state, run, reset } = usePassRequest();
   const working = state.kind === "working";
   const elapsed = useElapsedSeconds(state.kind === "working" ? state.startedAt : null);
+  const secondsToRetry = useSecondsUntil(state.kind === "failed" ? state.autoRetryAt : undefined);
   const lastRequest = useRef<{ parkId: string; ageBand: AgeBand } | null>(null);
 
   // After a park is picked, bring the age step into view and move focus to its heading (R1 UX m2):
@@ -97,7 +151,7 @@ export function PassMaker() {
     if (!park || working) return;
     storeBand(band);
     lastRequest.current = { parkId: park.id, ageBand: band };
-    void run({ parkId: park.id, ageBand: band });
+    void run({ parkId: park.id, ageBand: band }, { autoRetry: true });
   }
 
   function tryAgain() {
@@ -153,7 +207,7 @@ export function PassMaker() {
               <ProgressSteps steps={state.steps} />
               {/* Not a live region: a ticking number would be read out every second. */}
               <p className="text-base" data-testid="pass-elapsed">
-                {elapsed} s so far. A new pass usually takes 10-30 seconds.
+                {elapsed} s so far. {PASS_WAIT_COPY}
               </p>
             </div>
           ) : null}
@@ -166,15 +220,7 @@ export function PassMaker() {
 
           {state.kind === "failed" ? (
             <div ref={resultRef} tabIndex={-1} className="mt-4 flex flex-col gap-3">
-              <div role="alert" data-error-code={state.code} className="rounded-ticket border-2 border-line bg-surface p-4">
-                <p className="font-semibold">{state.message}</p>
-              </div>
-              {NO_RETRY.has(state.code) ? null : (
-                <Button type="button" variant="secondary" className="self-start" onClick={tryAgain}>
-                  Try again
-                </Button>
-              )}
-              {state.parkData ? <ParkDataList data={state.parkData} /> : null}
+              <PassFailure state={state} secondsToRetry={secondsToRetry} onTryAgain={tryAgain} />
             </div>
           ) : null}
 

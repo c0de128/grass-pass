@@ -6,7 +6,10 @@
  * runs at low priority (it never holds an Overpass slot a park search or features query needs,
  * Q-1-06) and is stopped by the pass deadline (R1-M1). It is optional: if OpenStreetMap is busy or
  * slow, the pass is still made and says "No Find This Spot today: ..." with the reason. It never
- * blocks or fails a pass. The example parks have a saved real answer (src/data/osm, R1-B1).
+ * blocks or fails a pass. The example parks have a saved real answer (src/data/osm, R1-B1), and
+ * R2-M3: so does every park in the DFW index (src/data/osm/parks). A saved outline is used at once
+ * (with its real fetch time on the pass) and refreshed live in the background: a park outline rarely
+ * changes, and waiting up to 25 s for a busy Overpass was the main cause of 60 s passes (R2-M2).
  */
 import "server-only";
 import "@/lib/zod-config";
@@ -15,7 +18,7 @@ import { createCachePair, createJsonCache, type Store } from "@/lib/cache";
 import { log } from "@/lib/log";
 import type { FetchLike } from "@/lib/sources/common";
 import { SourceError } from "@/lib/sources/common";
-import { savedGeometry } from "@/lib/sources/osm-snapshot";
+import { savedDfwGeometry, savedGeometry } from "@/lib/sources/osm-snapshot";
 import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { parkIdOf } from "@/lib/sources/overpass-features";
@@ -35,6 +38,25 @@ export const GEOMETRY_HEAVY_TTL_SEC = 15 * 60;
  * answer). Still bounded by the pass deadline (build-pass.ts leaves the model its time).
  */
 export const SPOT_WAIT_MS = 25_000;
+/**
+ * R2-M2: the map wait also ends this long after the pass started. A pass whose features step was slow
+ * (Overpass failover) goes on without the map instead of making the visitor wait another 25 s; the
+ * geometry keeps loading and is cached for the next pass.
+ */
+export const SPOT_STAGE_END_MS = 40_000;
+/** Time we keep after the map wait for the model and its checks (build-pass's MODEL_MIN_LEFT_MS + 5 s). */
+const SPOT_KEEP_FOR_MODEL_MS = 20_000;
+
+/**
+ * How long to wait for the optional map now: at most SPOT_WAIT_MS, never past SPOT_STAGE_END_MS into
+ * the pass, and never into the model's time. 0 = don't wait (the map is used only if it is ready).
+ */
+export function spotWaitMs(elapsedMs: number, leftMs: number): number {
+  return Math.max(0, Math.min(SPOT_WAIT_MS, SPOT_STAGE_END_MS - elapsedMs, leftMs - SPOT_KEEP_FOR_MODEL_MS));
+}
+
+/** Saved answer for this park: the example file first, then the per-park DFW files. */
+const savedAny = (key: string) => savedGeometry(key) ?? savedDfwGeometry(key);
 
 /** Our own Overpass slots were busy (Q-1-06): not OpenStreetMap's fault. */
 export const SPOT_BUSY_HERE =
@@ -71,7 +93,7 @@ function scheduleRefresh(ref: ParkRef, key: string, deps: GeometryDeps): void {
     { kind: "geometry", parkId: key },
     async () => {
       const g = await parkGeometry(ref, { store: deps.store, env: deps.env, now: deps.now, fetchImpl: deps.fetchImpl, priority: "low", totalBudgetMs: REFRESH_BUDGET_MS });
-      if (g) await geometryCache.positive.set(key, g, { now: deps.now(), ttlSec: savedGeometry(key) ? SAVED_GEOMETRY_TTL_SEC : GEOMETRY_TTL_SEC });
+      if (g) await geometryCache.positive.set(key, g, { now: deps.now(), ttlSec: savedAny(key) ? SAVED_GEOMETRY_TTL_SEC : GEOMETRY_TTL_SEC });
     },
     deps,
   );
@@ -88,13 +110,13 @@ export async function loadGeometry(ref: ParkRef, deps: GeometryDeps): Promise<Ge
       return { status: "ok", geometry: hit.value, checkedAt: hit.storedAt };
     }
     if (await geometryCache.negative.get(key, deps.now())) return { status: "none", message: SPOT_COPY.noOutline };
-    if (await heavyCache.get(key, deps.now())) return { status: "none", message: SPOT_COPY.busy };
-    const saved = savedGeometry(key);
+    const saved = savedAny(key);
     if (saved) {
       await geometryCache.positive.set(key, saved.value, { now: saved.fetchedAt, ttlSec: SAVED_GEOMETRY_TTL_SEC });
       scheduleRefresh(ref, key, deps);
       return { status: "ok", geometry: saved.value, checkedAt: saved.fetchedAt };
     }
+    if (await heavyCache.get(key, deps.now())) return { status: "none", message: SPOT_COPY.busy };
     const g = await parkGeometry(ref, {
       store: deps.store,
       env: deps.env,

@@ -10,14 +10,19 @@
  *   ("Reading the park map...", "Writing clues with <model>..."), then ONE final line:
  *   `result` (the pass), `empty` (no usable data) or `error` (with its status and, for model
  *   failures, the real park data).
+ * R2-M3: a failure caused by the map data (OpenStreetMap busy/slow) carries a ready example pass link.
+ * R2-m5: background OpenStreetMap refreshes started by this request are kept alive with after(), so a
+ * serverless instance doesn't freeze them half-way while they hold their 6 h lock.
  */
 import { WaiterAbortedError } from "@/lib/cache";
+import { runAfterResponse } from "@/lib/after";
 import { guardJsonPost } from "@/lib/http/guard";
 import { jsonError } from "@/lib/http/respond";
 import { clientIp } from "@/lib/limits";
 import { makePass, type MakeOutcome } from "@/lib/pass/make";
-import { EXAMPLE_PARKS } from "@/lib/prewarm";
-import { PassRequestSchema, type PassLine } from "@/lib/pass/schema";
+import { EXAMPLE_PARKS, readyExample } from "@/lib/prewarm";
+import { MAP_DATA_FAILURE_CODES, PassRequestSchema, type PassLine } from "@/lib/pass/schema";
+import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
 
 export const runtime = "nodejs";
 /** Overpass (<= 50 s) + iNaturalist + the model (30 s) are cut by an 85 s pass deadline. */
@@ -25,22 +30,34 @@ export const maxDuration = 90;
 
 const NDJSON = { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
 
-function finalLine(o: MakeOutcome): PassLine {
-  if (o.kind === "pass") return { type: "result", pass: o.pass, cached: o.cached };
-  if (o.kind === "empty") return { type: "empty", parkName: o.parkName, message: o.message, sections: o.sections };
-  return { type: "error", status: o.status, error: o.error, ...(o.parkData ? { parkData: o.parkData } : {}) };
+type ErrorOutcome = Extract<MakeOutcome, { kind: "error" }>;
+
+/** The error body, plus a ready example pass when the map data was the problem (never throws). */
+async function errorBody(o: ErrorOutcome): Promise<Extract<PassLine, { type: "error" }>["error"]> {
+  if (!MAP_DATA_FAILURE_CODES.includes(o.error.code)) return o.error;
+  const example = await readyExample().catch(() => null);
+  return example ? { ...o.error, example } : o.error;
 }
 
-function errorResponse(o: Extract<MakeOutcome, { kind: "error" }>): Response {
-  if (!o.parkData) return jsonError(o.status, o.error);
+async function finalLine(o: MakeOutcome): Promise<PassLine> {
+  if (o.kind === "pass") return { type: "result", pass: o.pass, cached: o.cached };
+  if (o.kind === "empty") return { type: "empty", parkName: o.parkName, message: o.message, sections: o.sections };
+  return { type: "error", status: o.status, error: await errorBody(o), ...(o.parkData ? { parkData: o.parkData } : {}) };
+}
+
+async function errorResponse(o: ErrorOutcome): Promise<Response> {
+  const error = await errorBody(o);
+  if (!o.parkData && !error.example) return jsonError(o.status, o.error);
   const headers: Record<string, string> = { "Cache-Control": "no-store" };
   if (o.error.retryAfter) headers["Retry-After"] = String(Math.ceil(o.error.retryAfter));
-  return Response.json({ error: o.error, parkData: o.parkData }, { status: o.status, headers });
+  return Response.json({ error, ...(o.parkData ? { parkData: o.parkData } : {}) }, { status: o.status, headers });
 }
 
 export async function POST(req: Request): Promise<Response> {
   const g = await guardJsonPost(req, PassRequestSchema);
   if (!g.ok) return jsonError(g.failure.status, { code: g.failure.code, message: g.failure.message });
+  // R2-m5: any background map refresh this pass queues finishes after the response, never frozen.
+  runAfterResponse(() => osmRefreshIdle());
 
   const enc = new TextEncoder();
   const pending: PassLine[] = [];
@@ -73,7 +90,7 @@ export async function POST(req: Request): Promise<Response> {
     }
     // Answered without any slow step (cache hit, refusal): no stream needed.
     if (r.o.kind === "error") return errorResponse(r.o);
-    return new Response(`${JSON.stringify(finalLine(r.o))}\n`, { status: 200, headers: NDJSON });
+    return new Response(`${JSON.stringify(await finalLine(r.o))}\n`, { status: 200, headers: NDJSON });
   }
 
   const body = new ReadableStream<Uint8Array>({
@@ -91,7 +108,7 @@ export async function POST(req: Request): Promise<Response> {
       push = write;
       const r = await work;
       push = null;
-      if (r.ok) write(finalLine(r.o));
+      if (r.ok) write(await finalLine(r.o));
       else if (!(r.e instanceof WaiterAbortedError)) {
         write({ type: "error", status: 500, error: { code: "INTERNAL", message: "Something went wrong making the pass. Please try again." } });
       }

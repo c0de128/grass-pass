@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { ExampleChips, ExampleParks, exampleState } from "@/components/ExampleParks";
 import { ProgressSteps } from "@/components/pass/PassStatus";
 import { CLIENT_CODES, CLIENT_COPY, CLIENT_TIMEOUT_MS } from "@/components/pass/usePassRequest";
+import { PASS_DEADLINE_MS } from "@/lib/ai/build-pass";
 import { memoize, resetMemo } from "@/lib/cache/memo";
 import { EXAMPLE_PARKS, type ExampleStatus } from "@/lib/prewarm";
 
@@ -61,9 +62,11 @@ describe("long waits (R1 UX M2)", () => {
     expect(retry).toContain("Check every clue");
   });
 
-  it("the page stops waiting at 45 s with a clear message and its own code", () => {
-    expect(CLIENT_TIMEOUT_MS).toBe(45_000);
-    expect(CLIENT_COPY.timeout).toMatch(/over 45 seconds/);
+  it("the page waits longer than the server's 85 s pass deadline (R2-M2), then says so clearly", () => {
+    expect(CLIENT_TIMEOUT_MS).toBe(95_000);
+    expect(CLIENT_TIMEOUT_MS).toBeGreaterThan(PASS_DEADLINE_MS + 5_000);
+    expect(CLIENT_COPY.timeout).toMatch(/over a minute and a half/);
+    expect(CLIENT_COPY.timeout).not.toMatch(/servers/);
     expect(CLIENT_COPY.timeout).toMatch(/Try again/);
     expect(CLIENT_CODES.timeout).toBe("CLIENT_TIMEOUT");
   });

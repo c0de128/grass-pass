@@ -26,7 +26,7 @@ export const HONEST_SKIP_CODES = new Set([
   "IP_DAILY_LIMIT",
   "DAILY_LIMIT",
   "STORE_UNAVAILABLE",
-  // The page stopped waiting after 45 s and said so.
+  // The page stopped waiting after 95 s and said so.
   "CLIENT_TIMEOUT",
   // The park had no usable data today and the answer said so (type "empty").
   "EMPTY",

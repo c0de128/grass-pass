@@ -5,6 +5,7 @@
 import "@/lib/zod-config";
 import { z } from "zod";
 import { OctoberBoxSchema } from "@/lib/october";
+import { ExampleLinkSchema } from "@/lib/parks/schema";
 import { SpotSchema } from "@/lib/spot/types";
 
 // ---------- age bands (SPEC F2) ----------
@@ -118,7 +119,17 @@ export const ApiErrorBody = z.object({
   code: z.string(),
   message: z.string(),
   retryAfter: z.number().optional(),
+  /** R2-M3: a ready example pass to open instead, when the map data couldn't be read. */
+  example: ExampleLinkSchema.optional(),
 });
+
+/**
+ * Pass failures caused by the free map data (OpenStreetMap busy or slow, or our own queue), where a
+ * ready example pass is offered and the page tries ONE more time by itself (R2-M3).
+ */
+export const MAP_DATA_FAILURE_CODES: readonly string[] = ["OSM_UNAVAILABLE", "BUSY_HERE", "DATA_TOO_SLOW", "PARK_TOO_BIG"];
+/** Of those, the ones where trying again soon can help (not PARK_TOO_BIG). */
+export const AUTO_RETRY_CODES: readonly string[] = ["OSM_UNAVAILABLE", "BUSY_HERE", "DATA_TOO_SLOW"];
 
 /** What we could still show when the model failed: real park data, never printed as a pass. */
 export const ParkDataSchema = z.object({

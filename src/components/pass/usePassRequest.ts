@@ -6,7 +6,9 @@
  * every error body is validated with the shared zod schemas.
  */
 import { useCallback, useEffect, useRef, useState } from "react";
+import type { ExampleLink } from "@/lib/parks/schema";
 import {
+  AUTO_RETRY_CODES,
   PassErrorResponseSchema,
   PassLineSchema,
   type ParkData,
@@ -16,16 +18,21 @@ import {
 } from "@/lib/pass/schema";
 
 /**
- * The page stops waiting after 45 s (R1 UX M2): a new pass usually takes 10-30 s. The server keeps
- * going and caches a pass whose model call started, so "Try again" often opens it at once.
+ * R2-M2 (Q-2-02): the page waits longer than the server's whole pass deadline (85 s, PASS_DEADLINE_MS)
+ * plus a margin, so it never gives up on a pass the server is still allowed to finish. Measured
+ * 2026-10-06: most new passes take 10-30 s, but 58-67 s when the public map servers are slow. The
+ * server keeps going and caches a pass whose model call started, so "Try again" often opens it at once.
  */
-export const CLIENT_TIMEOUT_MS = 45_000;
+export const CLIENT_TIMEOUT_MS = 95_000;
+
+/** Shown under the progress steps (measured reality, R2-M2). */
+export const PASS_WAIT_COPY = "A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map websites are slow.";
 
 export const CLIENT_COPY = {
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the answer. Please try again.",
   timeout:
-    "This is taking much longer than usual (over 45 seconds), so we stopped waiting. The free map and wildlife servers can be slow at busy times. Try again: if your pass got made in the meantime, it opens right away.",
+    "This is taking much longer than usual (over a minute and a half), so we stopped waiting. The free map and wildlife websites can be slow at busy times. Try again: if your pass got made in the meantime, it opens right away.",
 } as const;
 
 /** Codes for failures the page itself detects (server failures carry the server's code). */
@@ -34,26 +41,68 @@ export const CLIENT_CODES = { offline: "OFFLINE", badAnswer: "BAD_ANSWER", timeo
 /** Module-level clock (react-hooks/purity flags Date.now() inside components). */
 export const clientNow = () => Date.now();
 
+/**
+ * R2-M3: when the map data was busy or slow, the page tries ONE more time by itself after the server's
+ * Retry-After (at least 10 s so a busy server gets a breather, at most 60 s), with a visible countdown.
+ */
+export const AUTO_RETRY_MIN_MS = 10_000;
+export const AUTO_RETRY_MAX_MS = 60_000;
+export function autoRetryWaitMs(retryAfterSec: number | undefined): number {
+  const ms = Math.round((retryAfterSec ?? 15) * 1000);
+  return Math.min(AUTO_RETRY_MAX_MS, Math.max(AUTO_RETRY_MIN_MS, Number.isFinite(ms) ? ms : AUTO_RETRY_MIN_MS));
+}
+
 export type PassState =
   | { kind: "idle" }
   | { kind: "working"; steps: { step: PassStep; text: string }[]; startedAt: number }
   | { kind: "done"; pass: Pass; cached: boolean }
   | { kind: "empty"; parkName: string; message: string; sections: Pass["sections"] }
-  | { kind: "failed"; message: string; code: string; parkData?: ParkData };
+  | {
+      kind: "failed";
+      message: string;
+      code: string;
+      parkData?: ParkData;
+      /** A ready example pass to open instead (map data busy or slow). */
+      example?: ExampleLink;
+      retryAfter?: number;
+      /** When the one automatic retry starts (client clock ms), if one is planned. */
+      autoRetryAt?: number;
+    };
+
+export type RunOptions = {
+  /** Try once more by itself after a busy/slow map-data failure (the page's main "Make my pass"). */
+  autoRetry?: boolean;
+};
+
+type TimerRef = { current: ReturnType<typeof setTimeout> | null };
+function clearRetry(ref: TimerRef): void {
+  if (ref.current) clearTimeout(ref.current);
+  ref.current = null;
+}
 
 export function usePassRequest() {
   const [state, setState] = useState<PassState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
+  const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const runRef = useRef<(body: PassRequest, opts?: RunOptions) => Promise<PassState>>(async () => ({ kind: "idle" }));
 
-  useEffect(() => () => abortRef.current?.abort(), []);
+  useEffect(
+    () => () => {
+      abortRef.current?.abort();
+      clearRetry(retryRef);
+    },
+    [],
+  );
 
   const reset = useCallback(() => {
     abortRef.current?.abort();
     abortRef.current = null;
+    clearRetry(retryRef);
     setState({ kind: "idle" });
   }, []);
 
-  const run = useCallback(async (body: PassRequest): Promise<PassState> => {
+  const run = useCallback(async (body: PassRequest, opts: RunOptions = {}): Promise<PassState> => {
+    clearRetry(retryRef);
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -66,8 +115,15 @@ export function usePassRequest() {
         ? { kind: "failed", message: CLIENT_COPY.timeout, code: CLIENT_CODES.timeout }
         : { kind: "failed", message: CLIENT_COPY.offline, code: CLIENT_CODES.offline };
     const bad: PassState = { kind: "failed", message: CLIENT_COPY.badAnswer, code: CLIENT_CODES.badAnswer };
-    const finish = (s: PassState) => {
+    const finish = (result: PassState) => {
       clearTimeout(timer);
+      let s = result;
+      if (abortRef.current === ac && opts.autoRetry && s.kind === "failed" && AUTO_RETRY_CODES.includes(s.code)) {
+        const wait = autoRetryWaitMs(s.retryAfter);
+        s = { ...s, autoRetryAt: clientNow() + wait };
+        // One retry only: the second run doesn't ask for another.
+        retryRef.current = setTimeout(() => void runRef.current(body), wait);
+      }
       if (abortRef.current === ac) setState(s);
       return s;
     };
@@ -88,7 +144,8 @@ export function usePassRequest() {
       const json = await res.json().catch(() => null);
       const err = PassErrorResponseSchema.safeParse(json);
       if (!err.success) return finish(bad);
-      return finish({ kind: "failed", message: err.data.error.message, code: err.data.error.code, parkData: err.data.parkData });
+      const e = err.data.error;
+      return finish({ kind: "failed", message: e.message, code: e.code, parkData: err.data.parkData, example: e.example, retryAfter: e.retryAfter });
     }
 
     const reader = res.body.getReader();
@@ -120,7 +177,7 @@ export function usePassRequest() {
           }
           if (l.type === "result") return finish({ kind: "done", pass: l.pass, cached: l.cached });
           if (l.type === "empty") return finish({ kind: "empty", parkName: l.parkName, message: l.message, sections: l.sections });
-          return finish({ kind: "failed", message: l.error.message, code: l.error.code, parkData: l.parkData });
+          return finish({ kind: "failed", message: l.error.message, code: l.error.code, parkData: l.parkData, example: l.error.example, retryAfter: l.error.retryAfter });
         }
         if (done) break;
       }
@@ -129,6 +186,9 @@ export function usePassRequest() {
     }
     return finish(bad);
   }, []);
+  useEffect(() => {
+    runRef.current = run;
+  }, [run]);
 
   return { state, run, reset };
 }

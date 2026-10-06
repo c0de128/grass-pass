@@ -26,7 +26,7 @@ No login, no account. To try it:
    already made, so it opens right away.
 2. Press **Print pass** (at the top of the pass page). One Letter page: the kid's pass on top, the grown-up's stub below.
 3. To make your own: search a park by name (for example "Connemara Meadow Preserve") or a town, pick a park from the
-   list, pick an age band and press **Make my pass**. A new pass usually takes 10-30 seconds.
+   list, pick an age band and press **Make my pass**. A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map servers are slow.
 
 A town search lists the **10 nearest** named parks within 5 km, so a park you know may not be in the list for a town
 search (for example "Allen TX" lists 10 of its 53 nearby parks, and Connemara is not one of them). Search the park's
@@ -92,7 +92,7 @@ Measured on Oct 5, 2026 (~11:15 PM CDT) on the build laptop (Windows 11, Node 22
 - The first example pass was ready **30.9 s after start** (the start-up warm-up makes all 4 example passes from live
   data and the model). A ready pass page then loads in about 25 ms.
 - A brand-new pass for a park nobody asked for today: about 10 s when the map servers are healthy (one measured
-  run: 10.1 s, of which the model took 9.6 s). The server gives up at 85 s, the browser stops waiting at 45 s.
+  run: 10.1 s, of which the model took 9.6 s). The server gives up at 85 s, the browser stops waiting at 95 s (measured 2026-10-06: new passes took 58-67 s while public Overpass was failing over).
 
 These are laptop numbers, not the hosting provider's; the deployed cold start will be added after the deploy.
 

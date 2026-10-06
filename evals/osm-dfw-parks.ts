@@ -11,7 +11,8 @@
  * - Polite: one query at a time, PAUSE_MS between queries, the app's endpoint failover and breakers,
  *   a too-heavy batch is split in half, and the run stops after a few failed batches in a row.
  * - Resumable: each park is written as soon as its batch answers; a park that already has the part
- *   (or a note saying OSM has none) is skipped. OSM_SNAPSHOT_REFRESH=1 records everything again.
+ *   (or a note saying OSM has none) is skipped. OSM_SNAPSHOT_REFRESH=1 records everything again;
+ *   OSM_SNAPSHOT_REVERSE=1 works from the other end (a second recorder on another mirror).
  * - Small: one brotli JSON file per park holding only the parsed form the app reads.
  * - Honest: nothing is invented. A park whose batch failed has no file part, and dfw-coverage.json
  *   counts what was recorded, when, and from which server.
@@ -217,6 +218,8 @@ export async function recordDfwParks(parts: Set<"features" | "geometry">, opts: 
           return !rec || (!rec[kind] && !hasNote(rec, kind));
         })
         .slice(0, opts.limit ?? Infinity);
+      // A second recorder (another mirror first) can work from the other end: OSM_SNAPSHOT_REVERSE=1.
+      if (process.env.OSM_SNAPSHOT_REVERSE === "1") todo.reverse();
       note(`${new Date().toISOString()} ${kind} ${type}: ${todo.length} parks to record`);
       const size = kind === "features" ? FEATURE_BATCH[type] : GEOMETRY_BATCH[type as "way" | "relation"];
       const queue: string[][] = [];

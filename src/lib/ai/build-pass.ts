@@ -356,7 +356,6 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   const jsonSchema = passJsonSchema({
     n: mix.n,
     itemIds: pool.map((p) => p.id) as [string, ...string[]],
-    sections: [...new Set(pool.map((p) => p.section))] as [Section, ...Section[]],
     spotTargetId: target?.id ?? null,
   });
 
@@ -418,6 +417,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
         belowMin: v.belowMin,
         hard: v.hardCount,
         lookWhereCleared: v.lookWhereCleared,
+        quotesRepaired: v.quotesRepaired,
         hardMin: mix.hardMin,
       });
       best = better(best, v, mix);

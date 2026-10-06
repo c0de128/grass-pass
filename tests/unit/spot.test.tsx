@@ -342,7 +342,7 @@ describe("makePass with Find This Spot (live recordings)", () => {
     const p = await pass(CEL.id);
     const s = p.spot as SpotOk;
     expect(s.status).toBe("ok");
-    expect(s.riddle).toBe("Look for a roof on posts with tables where people eat lunch.");
+    expect(s.riddle).toBe("Find a place with a roof on posts and tables for lunch.");
     expect(s.riddleBy).toBe("model");
     expect(s.target.osmId).toBe("way/536185861");
     expect(p.items).toHaveLength(8);

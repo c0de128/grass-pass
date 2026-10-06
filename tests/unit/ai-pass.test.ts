@@ -7,6 +7,7 @@ import {
   PassDraftEnvelope,
   passJsonSchema,
   passRequestSchema,
+  QUOTE_WIRE_MAX,
 } from "@/lib/ai/schema";
 import { isGrounded, mergeResults, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
 import { mixFor, passMaxTokens, poolForSpot, PROMPT_SPARES, promptPool } from "@/lib/ai/build-pass";
@@ -41,7 +42,7 @@ function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
 }
 
 describe("strict JSON schema from zod (SPEC 6.2)", () => {
-  const opts = { n: 8, itemIds: ["osm-creek", "inat-1"] as [string, ...string[]], sections: ["park", "wild"] as ["park", "wild"], spotTargetId: null };
+  const opts = { n: 8, itemIds: ["osm-creek", "inat-1"] as [string, ...string[]], spotTargetId: null };
 
   it("items has minItems = maxItems = n (Gemma returned empty arrays without minItems)", () => {
     const s = passJsonSchema(opts) as { properties: { items: { minItems: number; maxItems: number } } };
@@ -51,7 +52,7 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     expect([s6.properties.items.minItems, s6.properties.items.maxItems]).toEqual([6, 6]);
   });
 
-  it("is strict-ready: no $schema, additionalProperties false and every key required, ids and sections are enums", () => {
+  it("is strict-ready: no $schema, additionalProperties false and every key required, ids are an enum, no section (S8c)", () => {
     const s = passJsonSchema(opts) as Record<string, unknown> & {
       properties: { items: { items: { properties: Record<string, { enum?: string[]; maxLength?: number }>; required: string[]; additionalProperties: boolean } } };
       required: string[];
@@ -62,10 +63,11 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     expect(s.required).toEqual(["items", "parentNote"]);
     const item = s.properties.items.items;
     expect(item.additionalProperties).toBe(false);
-    expect(item.required.sort()).toEqual(["clue", "difficulty", "itemId", "lookWhere", "section", "sourceQuote"]);
+    expect(item.required.sort()).toEqual(["clue", "difficulty", "itemId", "lookWhere", "sourceQuote"]);
     expect(item.properties.itemId.enum).toEqual(["osm-creek", "inat-1"]);
-    expect(item.properties.section.enum).toEqual(["park", "wild"]);
+    expect(item.properties.section).toBeUndefined(); // code fills it from the pool (S8c, fewer answer tokens)
     expect(item.properties.clue.maxLength).toBe(120);
+    expect(item.properties.sourceQuote.maxLength).toBe(QUOTE_WIRE_MAX);
   });
 
   it("asks for a spot only when code picked a target (S5)", () => {
@@ -80,8 +82,10 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     const item = { itemId: "a", section: "park", clue: "Find a long seat.", lookWhere: "", sourceQuote: "a long seat", difficulty: "easy" };
     expect(PassDraft.safeParse({ items: Array(MIN_PASS_ITEMS).fill(item), spot: null, parentNote: "" }).success).toBe(true);
     expect(PassDraft.safeParse({ items: Array(MIN_PASS_ITEMS - 1).fill(item), spot: null, parentNote: "" }).success).toBe(false);
-    const req = passRequestSchema({ n: 2, itemIds: ["a"], sections: ["park"], spotTargetId: null });
-    expect(req.safeParse({ items: [item, item], parentNote: "" }).success).toBe(true);
+    const req = passRequestSchema({ n: 2, itemIds: ["a"], spotTargetId: null });
+    const { section: _s, ...wire } = item;
+    void _s;
+    expect(req.safeParse({ items: [wire, wire], parentNote: "" }).success).toBe(true);
     expect(req.safeParse({ items: [], parentNote: "" }).success).toBe(false);
     expect(PassDraftEnvelope.safeParse({ items: [] }).success).toBe(true);
   });
@@ -93,7 +97,6 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
       const schema = passJsonSchema({
         n: mix.n,
         itemIds: pool.map((i) => i.id) as [string, ...string[]],
-        sections: [...new Set(pool.map((i) => i.section))] as ["park"],
         spotTargetId: target?.id ?? null,
       });
       expect(modelRec(p.slug).request.response_format.json_schema.schema).toEqual(schema);
@@ -185,24 +188,20 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded S8b): Celebration 8/8; Connemara 7/8, one real name leak dropped", () => {
+  it("the real recorded Gemma answers (re-recorded S8c, no section in the answer): both 8/8", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
       const out = validateDraft(draft, pool, mix);
       expect(out.returned).toBe(8);
-      if (p === PARKS.celebration) {
-        expect(out.items).toHaveLength(8);
-        expect(out.drops).toEqual({});
-        expect(out.belowMin).toEqual([]);
-      } else {
-        expect(out.belowMin).toEqual(["wild"]); // 7 Wild Finds asked (the park has 1 mapped feature), 6 kept
-        // "Look for a plant that climbs and has puffs like balloons." for Lesser Balloon Vine: a real giveaway.
-        expect(out.items).toHaveLength(7);
-        expect(out.drops).toEqual({ name_leak: 1 });
-        expect(out.items.some((i) => i.item.id === "inat-62944")).toBe(false);
-      }
+      // S8c: the answer has no section field; code filled it from the pool for every item.
+      expect((draft.items as Record<string, unknown>[]).every((i) => !("section" in i))).toBe(true);
+      expect(out.items).toHaveLength(8);
+      expect(out.drops).toEqual({});
+      expect(out.belowMin).toEqual([]);
+      expect(out.quotesRepaired).toBe(0);
+      for (const i of out.items) expect(i.sourceQuote.length).toBeLessThanOrEqual(QUOTE_WIRE_MAX);
     }
     // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target) has a riddle for the X
     // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
@@ -210,7 +209,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Look for a roof on posts with tables where people eat lunch." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find a place with a roof on posts and tables for lunch." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -350,7 +349,21 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(passMaxTokens("gpt-oss-120b")).toBe(2_000);
     const sys = systemPrompt("6-10", computeMix({ park: 3, wild: 8, lucky: 0 }, "6-10")!);
     expect(sys).toContain("lookWhere must not use a word from the item's name either");
-    expect(sys).toContain('copied word for word in one piece. Never skip words or write "...".');
+    expect(sys).toContain('word for word in one piece. Never skip words or write "...".');
+  });
+
+  it("S8c: the model no longer writes section; code fills it from the pool, a wrong one still drops the item", () => {
+    const { pool } = poolFor(PARKS.connemara);
+    const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
+    const wild = pool.find((i) => i.section === "wild")!;
+    const base = { itemId: wild.id, clue: "Find a plant with small leaves.", lookWhere: "", sourceQuote: wild.sourceText.slice(-40), difficulty: "easy" };
+    const v = validateDraft({ items: [base, { ...base, itemId: "inat-does-not-exist" }] }, pool, mix);
+    expect(v.items.map((i) => [i.item.id, i.item.section])).toEqual([[wild.id, "wild"]]);
+    expect(v.drops).toEqual({ unknown_id: 1 });
+    expect(validateDraft({ items: [{ ...base, section: "park" }] }, pool, mix).drops).toEqual({ section_mismatch: 1 });
+    const sys = systemPrompt("6-10", mix);
+    expect(sys).toContain("3 to 8 words, never more than 12");
+    expect(sys).toContain("parentNote is ONE line for the whole pass (not one per item)");
   });
 
   it("retry when fewer than n-2 items survive", () => {

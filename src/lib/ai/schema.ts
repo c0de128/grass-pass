@@ -8,8 +8,9 @@
  * 1. `PassItemDraft` / `SpotDraft` / `PassDraft`: the spec's zod schemas, applied PER ITEM in
  *    validate.ts so one bad item is dropped instead of sinking the whole pass.
  * 2. `passRequestSchema()`: the strict schema for ONE request, built by code from the pool and the
- *    mix: `items` has exactly n entries (`minItems` = `maxItems` = n), `itemId` is an enum of the real
- *    pool ids, `section` an enum of the sections present. Its JSON Schema (`passJsonSchema()`) is
+ *    mix: `items` has exactly n entries (`minItems` = `maxItems` = n) and `itemId` is an enum of the real
+ *    pool ids. S8c (M7, answer tokens): `section` is NOT asked for; code fills it from the pool item
+ *    (validate.ts) and the quote is capped at QUOTE_WIRE_MAX. Its JSON Schema (`passJsonSchema()`) is
  *    generated from the same zod source and sent with `strict: true`. Measured 2026-10-05: without
  *    minItems, Gemma 4 31B on DO returned `{"cards":[]}` in 3 of 7 runs.
  * 3. `PassDraftEnvelope`: the lenient shape the answer is first parsed with (so a 121-character clue
@@ -26,6 +27,13 @@ export const CLUE_MAX = 120;
 export const LOOK_WHERE_MAX = 60;
 export const QUOTE_MIN = 4;
 export const QUOTE_MAX = 240;
+/**
+ * S8c (M7): the request schema caps a quote at this many characters. A grounding quote needs a short
+ * phrase (median 55 characters, 10 words, in the 2026-10-05-2 run); long whole-sentence quotes were
+ * where the glued-field glitch happened. A quote cut at this length by the server's JSON grammar is
+ * still checked as a substring like any other.
+ */
+export const QUOTE_WIRE_MAX = 90;
 export const RIDDLE_MAX = 140;
 export const PARENT_NOTE_MAX = 200;
 /** Smallest pass we print (a tiny park with 3 real finds is still honest; fewer is "all empty"). */
@@ -78,8 +86,6 @@ export type RequestSchemaOptions = {
   n: number;
   /** Real pool ids; the model can only answer with these. */
   itemIds: NonEmpty<string>;
-  /** Sections present in the pool. */
-  sections: NonEmpty<z.infer<typeof SectionEnum>>;
   /** S5: the code-picked Find This Spot target, or null (no `spot` asked for). */
   spotTargetId: string | null;
 };
@@ -89,10 +95,9 @@ export function passRequestSchema(o: RequestSchemaOptions) {
   if (!Number.isInteger(o.n) || o.n < 1 || o.n > MAX_PASS_ITEMS) throw new RangeError("n out of range");
   const item = z.object({
     itemId: z.enum(o.itemIds),
-    section: z.enum(o.sections),
     clue: z.string().min(CLUE_MIN).max(CLUE_MAX),
     lookWhere: z.string().max(LOOK_WHERE_MAX),
-    sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX),
+    sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_WIRE_MAX),
     difficulty: Difficulty,
   });
   const base = {
@@ -105,7 +110,7 @@ export function passRequestSchema(o: RequestSchemaOptions) {
     spot: z.object({
       targetId: z.enum([o.spotTargetId]),
       riddle: z.string().min(CLUE_MIN).max(RIDDLE_MAX),
-      sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_MAX),
+      sourceQuote: z.string().min(QUOTE_MIN).max(QUOTE_WIRE_MAX),
     }),
   });
 }

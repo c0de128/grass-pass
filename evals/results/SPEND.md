@@ -80,3 +80,4 @@ Eval r5 builder S total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10
 | 2026-10-06T20:43Z (approx) | Builder T (completeness): small live check, recorded park data + live Gemma, hard cap 10 calls: Cedar Ridge 10-13 (2), White Rock 10-13 (1), Arbor Hills 6-10 (1), Klyde Warren 6-10 (3: a first call timed out at 30 s, unknown tokens, counted as 0), Central Park 6-10 (2), Allen Station 6-10 (1) | 10 | 25796 | 3717 | about $0.0065 |
 
 Builder T total (2026-10-06 CDT): **14 calls, about $0.0088** (prices from evals/score.ts; a timed-out call may still be billed by the provider). SerpApi: 0 searches.
+| 2026-10-06T20:43:12.393Z | Site copy rewrite by Gemma (Builder G, not an eval run): docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json | 19 | 39228 | 6075 | $0.0101 |

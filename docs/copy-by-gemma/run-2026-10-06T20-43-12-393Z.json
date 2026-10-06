@@ -1,0 +1,1854 @@
+{
+  "startedAt": "2026-10-06T20:43:12.393Z",
+  "model": "gemma-4-31B-it",
+  "calls": 19,
+  "promptTokens": 39228,
+  "completionTokens": 6075,
+  "usd": 0.010098540000000001,
+  "batchSize": 10,
+  "failures": [],
+  "drafts": [
+    {
+      "id": "home.how.link",
+      "current": "The full story for curious grown-ups: the data, the AI and every check",
+      "draft": "For the curious: how the data, AI and checks work.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s1.title",
+      "current": "Pick a park & age",
+      "draft": "Pick a park and age",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s1.body",
+      "current": "Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10 or 10–13: it sets how many clues and how hard.",
+      "draft": "Search by town, ZIP, park name, or tap Use my location. Pick 4–6, 6–10 or 10–13 to set the clue count and difficulty.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s2.title",
+      "current": "AI builds the hunt",
+      "draft": "AI builds the hunt",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s2.body",
+      "current": "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.",
+      "draft": "Gemma 4 uses real maps and sightings from the last 14 days to write the clues. Code checks every find against its source. It usually takes 10–30 seconds.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s3.title",
+      "current": "Print the page",
+      "draft": "Print your page",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s3.body",
+      "current": "One black-and-white Letter page: the kid’s pass on top, a tear line, and a grown-up stub with the answers and sources.",
+      "draft": "You get one black-and-white Letter page. The kid's pass is on top, with a tear line and a grown-up answer stub at the bottom.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s4.title",
+      "current": "Hide the phone",
+      "draft": "Ditch the phone",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.how.s4.body",
+      "current": "Phone away. Your kid ticks off finds with a pencil; you keep the stub, in case anyone needs a hint.",
+      "draft": "Phone stays home. Kids use a pencil to tick off finds while you keep the stub for hints (and sanity).",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.sub",
+      "current": "Every clue comes from a real, dated source, listed on the grown-up's stub. So nobody spends 40 minutes hunting for a heron that flew off in 2019.",
+      "draft": "Every clue comes from a real, dated source listed on your stub. No one spends 40 minutes hunting for a heron that flew away in 2019.",
+      "codeCheck": {
+        "ok": false,
+        "reasons": [
+          "new number word(s) not in FACTS: one"
+        ]
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.wild.body",
+      "current": "Real sightings of birds, bugs and blooms: plants and animals people photographed in or near the park (within 1.5 km) in the last 14 days. Gemma must quote each one's source, and code checks the quote word for word.",
+      "draft": "Real birds, bugs and blooms photographed within 1.5 km of the park in the last 14 days. Gemma quotes the source for each find, and code checks it word for word.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.wild.safety",
+      "current": "Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”",
+      "draft": "Poison ivy, stinging bugs and {blocked} other risky groups are never printed. Every Wild Find says \"look, don't touch.\"",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.park.body",
+      "current": "Hoops, shelters, bridges and playground gear, straight from the park's OpenStreetMap map, with real counts like “2 basketball courts.”",
+      "draft": "Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like \"2 basketball courts.\"",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.lucky.body",
+      "current": "Maybe-sightings, like a dog or a bike, backed by at least 3 Google Maps reviews from the last 2 years that mention them (counted via SerpApi). No proof, no Lucky Finds: the pass leaves them off and says why.",
+      "draft": "Things like dogs or bikes mentioned in at least 3 Google Maps reviews from the last 2 years. SerpApi counts them. If there is no proof, the pass leaves them off and says why.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.spot.body",
+      "current": "Code draws a small black-and-white map of the park with a START and an X. Gemma writes a riddle about the spot.",
+      "draft": "Code draws a simple map with a START and an X. Gemma writes a riddle to help the kids find the spot.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.pass.october.body",
+      "current": "Code counts monarchs reported nearby in the last 14 days, next to the same days last year. Printed honestly, even when it's zero.",
+      "draft": "Code counts nearby monarchs from the last 14 days versus the same days last year. It prints the real number, even if it is zero.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.explore.sub",
+      "current": "Passes for parks near Dallas, already written from live park data for {ages}. Tap one to open it; no sign-up needed.",
+      "draft": "Example passes for parks near Dallas, made from live data for {ages}. Tap one to open it; no sign-up needed.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.explore.live.making",
+      "current": "Making today's example passes now",
+      "draft": "Making today's example passes",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.explore.live.off",
+      "current": "Example passes are switched off on this server",
+      "draft": "Example passes are turned off",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.explore.live.notready",
+      "current": "Example passes not ready yet",
+      "draft": "Example passes not ready yet",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.chips.lead",
+      "current": "Just looking? Open a real pass:",
+      "draft": "Want a sneak peek:",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.card.stub",
+      "current": "Grown-up's stub · answers & safety",
+      "draft": "Adult stub: answers & safety",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.card.open",
+      "current": "Open this pass",
+      "draft": "View pass",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.hero.sticker",
+      "current": "Fits on 1 page",
+      "draft": "Fits on 1 page",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.cta.sub",
+      "current": "Free, one printable page, written for the park across the street, not some park somewhere else.",
+      "draft": "Free, one printable page, written for your specific park.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.parks.connemara.big",
+      "current": "kinds of plants and animals spotted in and around it in 2 weeks",
+      "draft": "species spotted nearby in 2 weeks",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.parks.connemara.small",
+      "current": "playgrounds, courts or shelters",
+      "draft": "playgrounds, courts or shelters",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.parks.celebration.big",
+      "current": "soccer fields mapped here, plus 6 courts",
+      "draft": "soccer fields, plus 6 courts",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "home.parks.celebration.small",
+      "current": "recent wildlife sightings",
+      "draft": "recent wildlife sightings",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "footer.about",
+      "current": "About Grass Pass",
+      "draft": "About",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "footer.how",
+      "current": "How Grass Pass works",
+      "draft": "How it works",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "meta.home.description",
+      "current": "A free one-page treasure hunt for your local park. Gemma 4, an open-weight AI model, reads that park's real map and the last 14 days of wildlife sightings and writes the clues. Code checks every one. Print it, and the phone stays in your pocket.",
+      "draft": "Free one-page treasure hunts for your local park. Gemma 4 AI reads real maps and wildlife sightings from the last 14 days to write the clues. Code checks every one. Print it and leave the phone at home.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.meta.title",
+      "current": "How Grass Pass works: real park data in, one open model, paper out",
+      "draft": "How Grass Pass works: real data, AI, and paper",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.meta.description",
+      "current": "Step by step: how Grass Pass turns one park's real map and recent wildlife sightings into a printable kids' pass. Gemma 4, an open model, writes the clues; code fact-checks every one. What the AI does and doesn't do, and what we measured.",
+      "draft": "See how we turn real maps and wildlife sightings into a printable pass. Gemma 4 AI writes the clues and code fact-checks every one. We share what the AI does, what it doesn't, and our measured results.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.h1",
+      "current": "How a park becomes a pass.",
+      "draft": "How a park becomes a pass.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.lead",
+      "current": "You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest.",
+      "draft": "You pick the park. Gemma 4 AI writes the clues using real maps and the last 14 days of wildlife sightings. Code fact-checks every clue. Your printer does the rest.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.title",
+      "current": "Pick a park. Print a pass. Phone away.",
+      "draft": "Pick a park. Print. Phone away.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.1.title",
+      "current": "Pick a park & age",
+      "draft": "Pick a park and age",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.1.body",
+      "current": "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13.",
+      "draft": "Choose a local park and an age group: 4-6, 6-10, or 10-13.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.2.title",
+      "current": "We read the park",
+      "draft": "We gather the data",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.2.body",
+      "current": "Its map, the last {days} days of wildlife sightings nearby, and what visitor reviews mention.",
+      "draft": "It uses the park map, visitor reviews, and wildlife sightings from the last {days} days.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.3.title",
+      "current": "AI writes, code checks",
+      "draft": "AI writes, code checks",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.3.body",
+      "current": "Gemma 4, an open model, picks a fair mix and writes kid-sized clues. Code checks each one, and asks once more if too many fail.",
+      "draft": "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.4.title",
+      "current": "Print, phone away",
+      "draft": "Print and go",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.4.body",
+      "current": "One page. The kid takes the hunt; you keep the answer key.",
+      "draft": "One page. The kid gets the hunt and you keep the answer key.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.quick.note",
+      "current": "A new pass usually takes 10-30 seconds, about as long as finding the other shoe. A section with no data says \"No data available\" and why.",
+      "draft": "A pass takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing, it says \"No data available\" and why.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.steps.title",
+      "current": "From “which park?” to “found it!”",
+      "draft": "From choosing a park to finding it",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.steps.intro",
+      "current": "Each step says who does it: code (the same result every time), the open model, or you. The AI has one job: picking the finds and writing the words.",
+      "draft": "Each step is handled by code, the open model, or you. The AI has one job: picking the finds and writing the words.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.park.title",
+      "current": "Find the park",
+      "draft": "Pick your park",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.park.summary",
+      "current": "Type a town, ZIP or park name, or tap Use my location (we round it to about 1 km). Code lists the parks within 5 km, from OpenStreetMap.",
+      "draft": "Search by town, ZIP, park name, or tap Use my location (rounded to 1 km). Code finds parks within 5 km using OpenStreetMap.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.data.title",
+      "current": "Gather what's really there",
+      "draft": "Find what is actually there",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.data.summary",
+      "current": "Code fills three lists, each fact dated and sourced: Park Finds (OpenStreetMap), Wild Finds (iNaturalist, Wikipedia) and Lucky Finds (review counts via SerpApi).",
+      "draft": "Code builds three dated, sourced lists. Park Finds come from OpenStreetMap, Wild Finds from iNaturalist and Wikipedia, and Lucky Finds from Google review counts via SerpApi.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.safety.title",
+      "current": "Take out anything that bites, stings or itches",
+      "draft": "Skip the things that bite or sting",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.safety.summary",
+      "current": "Code removes {blocked} blocked groups of risky species (think fire ants and poison ivy) before the model sees the list, and checks again after.",
+      "draft": "Code removes {blocked} groups of risky species, like fire ants and poison ivy, before the model sees the list and checks again after.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.model.title",
+      "current": "The open model writes the clues",
+      "draft": "The AI writes the clues",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.model.summary",
+      "current": "Code sends the park's fact list to {model} on DigitalOcean serverless inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is one call; step 6 is the exception.",
+      "draft": "Code sends the data to {model} on DigitalOcean serverless inference. The AI picks finds by id and writes a clue, a proof quote, and one riddle. This is usually one call, unless step 6 happens.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.checks.title",
+      "current": "Code fact-checks every clue",
+      "draft": "Code checks every clue",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.checks.summary",
+      "current": "Code never takes the AI's word for it. It removes any clue that breaks one of {always} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss {softer} style rules when it can.",
+      "draft": "Code doesn't just trust the AI. It removes clues that break {always} hard rules on safety, numbers, name leaks, or proof quotes, and swaps those that miss {softer} style rules.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.retry.title",
+      "current": "Refill once, or print it short",
+      "draft": "Refill the list or print",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.retry.summary",
+      "current": "Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.",
+      "draft": "Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.spot.title",
+      "current": "Find This Spot and the October box",
+      "draft": "Find This Spot and the October box",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.spot.summary",
+      "current": "Code picks a landmark, draws a map with an X and measures the walk. The October box is all code.",
+      "draft": "Code picks a landmark, draws a map with an X, and measures the walk. The October box is all code.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.print.title",
+      "current": "Print it, hide the phone",
+      "draft": "Print and ditch the phone",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.print.summary",
+      "current": "One black-and-white page: the kid's hunt on top, your answer key and sources below. Then the phone goes in the bag.",
+      "draft": "One black-and-white page. The kid's hunt is on top, and the grown-up's answer key and sources are below.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.cache.title",
+      "current": "Saving work, and fair limits",
+      "draft": "Saved passes and fair limits",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.step.cache.summary",
+      "current": "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.",
+      "draft": "Passes are saved for 30 days. To keep map servers and budgets healthy, grown-ups get {perDay} new passes a day.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.title",
+      "current": "The AI picks and writes. Code does the rest.",
+      "draft": "The AI writes. Code does the rest.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.does.1",
+      "current": "Pick the finds, inside the mix code allows.",
+      "draft": "Pick the finds using the code mix",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.does.2",
+      "current": "Write each clue in kid words, plus a hint.",
+      "draft": "Write kid-level clues and hints",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.does.3",
+      "current": "Rate each find easy, medium or hard.",
+      "draft": "Rate finds as easy, medium or hard",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.does.4",
+      "current": "Copy a proof quote from its facts.",
+      "draft": "Copies a proof quote from the facts.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.does.5",
+      "current": "Write the Find This Spot riddle.",
+      "draft": "Writes the Find This Spot riddle.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.1",
+      "current": "Collect every fact, with its source and date.",
+      "draft": "Collects every fact, source, and date.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.2",
+      "current": "Remove unsafe species, before and after.",
+      "draft": "Removes unsafe species before and after.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.3",
+      "current": "Set the mix and the number of finds.",
+      "draft": "Sets the mix and number of finds.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.4",
+      "current": "Check every clue; remove failures.",
+      "draft": "Checks clues and removes failures.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.5",
+      "current": "Pick the spot, draw the map, measure the walk.",
+      "draft": "Picks the spot, draws maps, and measures walks.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.code.does.6",
+      "current": "Write every number, date, safety line and answer.",
+      "draft": "Writes the numbers, dates, safety lines, and answers.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.ai.schema",
+      "current": "The AI can't invent a find: its answer's schema only allows ids from the park's own list.",
+      "draft": "The AI cannot invent finds because it can only use ids from the park's own fact list.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.title",
+      "current": "Open weights, our own rules",
+      "draft": "Open weights, our own rules",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.1.title",
+      "current": "The licence is open.",
+      "draft": "Open licensing",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.1.body",
+      "current": "Gemma 4's weights are Apache-2.0: anyone can download, run and build on them.",
+      "draft": "Gemma 4 uses Apache-2.0, so anyone can download, run and build on it.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.2.title",
+      "current": "It can be self-hosted.",
+      "draft": "Self-hosting works",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.2.body",
+      "current": "Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.",
+      "draft": "Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.3.title",
+      "current": "Our rules, not a vendor's.",
+      "draft": "Our rules, not theirs",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.open.3.body",
+      "current": "The same checks run on any model; Llama 4 Maverick went through them in our test.",
+      "draft": "We run the same checks on every model, including Llama 4 Maverick.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.limits.title",
+      "current": "What doesn’t work (yet)",
+      "draft": "Where we fall short",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.privacy.title",
+      "current": "Nothing about your child",
+      "draft": "Kid privacy first",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.built.title",
+      "current": "Built in the contest week, with AI coding agents",
+      "draft": "Built in a week with AI",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.built.body",
+      "current": "Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding agents wrote and reviewed most of the code.",
+      "draft": "Built for Hacktoberfest 2026 Week 1, starting Oct 5, 2026. Kevin made the calls, while AI coding agents wrote and reviewed the code.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.privacy.1",
+      "current": "No names, no photos, no analytics. Browsing and printing set no cookie.",
+      "draft": "No names, photos, or analytics. Browsing and printing set no cookie.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.privacy.3",
+      "current": "What you type goes to our server and OpenStreetMap, never into the web address.",
+      "draft": "Your typing goes to our server and OpenStreetMap, never the web address.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.privacy.4",
+      "current": "\"Use my location\" is rounded to about 1 km in your browser.",
+      "draft": "Use my location is rounded to about 1 km in your browser before it is sent.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "how.privacy.5",
+      "current": "The model sees the park's public facts and the age band, nothing about you.",
+      "draft": "The AI sees park facts and the age band, nothing about you or your child.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.meta.title",
+      "current": "About Grass Pass: an open model, a real park and a pencil",
+      "draft": "About Grass Pass: an open AI model, a park and a pencil",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.meta.description",
+      "current": "Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). Code checks every clue. What we measured (misses included), what leaves your device, and every credit.",
+      "draft": "Gemma 4, an open-weight model, writes each pass using OpenStreetMap, iNaturalist, Wikipedia and SerpApi. Code checks every clue against its source. We show what we measured, what leaves your device, and every credit.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.h1",
+      "current": "An open model, a real park and a pencil.",
+      "draft": "An open AI model, a park and a pencil.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.lead",
+      "current": "A one-page treasure hunt for a real park. Gemma 4, an open-weight model, writes clues from its map and recent wildlife sightings. Code checks each one. The finding happens on paper.",
+      "draft": "A one-page hunt for a real park. Gemma 4 writes clues from maps and wildlife sightings. Code checks every clue for accuracy. The finding happens on paper.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.howlink",
+      "current": "See how a pass is made, step by step",
+      "draft": "See how a pass is made",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.measured.title",
+      "current": "Measured, not promised.",
+      "draft": "Measured, not promised.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.inside.title",
+      "current": "Open model. Real data. Rules in code.",
+      "draft": "Open model. Real data. Coded rules.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.model.title",
+      "current": "Gemma 4 writes the clues",
+      "draft": "Gemma 4 writes the clues",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.whyopen.1",
+      "current": "Anyone can download, run and build on the weights.",
+      "draft": "Anyone can download, run and build on the weights.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.whyopen.2",
+      "current": "Our safety rules live in our code, not a vendor's.",
+      "draft": "Our safety rules are in our code, not a vendor's.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.whyopen.3",
+      "current": "Self-hosting is possible, but not measured yet.",
+      "draft": "Self-hosting is possible, but not measured yet.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.title",
+      "current": "Four real sources, dated",
+      "draft": "Four dated data sources",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.osm",
+      "current": "Parks, paths and what is mapped inside them",
+      "draft": "Parks, paths and what's inside them",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.inat",
+      "current": "Wildlife people really spotted nearby",
+      "draft": "Wildlife people actually spotted nearby",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.wiki",
+      "current": "A short fact about each species",
+      "draft": "A short summary of each species",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.serp",
+      "current": "How often Google Maps reviews mention dogs or bikes",
+      "draft": "Google Maps review counts for dogs or bikes",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.data.nodata",
+      "current": "No data? The pass says \"No data available\" and why. Never padded.",
+      "draft": "No data? We say \"No data available\" and why. We never pad the list.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.safety.title",
+      "current": "Safety by code",
+      "draft": "Safety via code",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.safety.1",
+      "current": "{blocked} risky groups are never printed, checked before and after the model.",
+      "draft": "{blocked} groups are never printed, checked before and after the AI.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.safety.2",
+      "current": "Every clue must quote its source word for word.",
+      "draft": "Every clue quotes its source word for word.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.safety.3",
+      "current": "Every number, date and safety line is written by code.",
+      "draft": "Code writes every number, date and safety line.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.1",
+      "current": "Browsing and printing need no account or cookie.",
+      "draft": "No account or cookies needed to browse and print.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.2",
+      "current": "Sign-in only to make a new pass; we keep a scrambled ID, no email or name.",
+      "draft": "Sign-in is only for new passes. We keep a scrambled ID, no name or email.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.3",
+      "current": "Nothing about your child is asked for.",
+      "draft": "We never ask for info about your child.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.4",
+      "current": "Your location is rounded to about 1 km first.",
+      "draft": "Your location is rounded to 1 km in your browser.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.5",
+      "current": "Your IP is kept only scrambled, for about a day.",
+      "draft": "Your IP is kept scrambled for about a day.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.6",
+      "current": "Park facts and age band go to the model (US).",
+      "draft": "Park facts and age band go to the model in the US.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.limit.4",
+      "current": "The read-it-as-a-7-year-old check is not done yet.",
+      "draft": "The 7 year old reading check is not done yet.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.limit.5",
+      "current": "Find This Spot and Lucky Finds are not in the eval yet.",
+      "draft": "Find This Spot and Lucky Finds are not in the eval yet.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.details.title",
+      "current": "Details, one click away.",
+      "draft": "More details one click away",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.note2",
+      "current": "The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device.",
+      "draft": "The model runs on DigitalOcean servers in the US, so park facts and age bands leave your device.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "about.privacy.note3",
+      "current": "Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.",
+      "draft": "Logs track the model, timing, outcome, and pass id; they never record your prompt, IP, or what you typed.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.rate",
+      "current": "Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.",
+      "draft": "Too many sign-in attempts from here. Take a few minutes and try again.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.unavailable",
+      "current": "That sign-in option isn't set up on this server. Pick another one below.",
+      "draft": "That sign-in option is not set up here. Try another one below.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.denied",
+      "current": "Sign-in was cancelled, so nothing changed. Changed your mind? Try again below.",
+      "draft": "Sign-in was cancelled. Nothing changed, but you can try again below.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.callback",
+      "current": "The sign-in page didn't finish loading. Please try again.",
+      "draft": "The sign-in page didn't finish. Please try again.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.config",
+      "current": "Sign-in isn't set up correctly on this server right now. The examples and saved passes still work.",
+      "draft": "Sign-in isn't set up right on this server. Examples and saved passes still work.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.verify",
+      "current": "That sign-in link didn't work. Please try again.",
+      "draft": "That sign-in link didn't work. Please try again.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.err.general",
+      "current": "Sign-in didn't work this time. Please give it another try.",
+      "draft": "Sign-in didn't work this time. Give it another try.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.page.heading",
+      "current": "Sign in to make new passes and tell us what you found",
+      "draft": "Sign in to make new passes and report your finds",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.why.1",
+      "current": "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.",
+      "draft": "Sign in to make 2 a day or report finds. Browsing, examples, shared links and printing are open to everyone.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.privacy.link",
+      "current": "What we keep (spoiler: very little), and for how long",
+      "draft": "What we keep (spoiler: not much) and for how long",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.card.body",
+      "current": "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.",
+      "draft": "Each new pass uses a real AI model, so grown-ups sign in first for 2 new passes a day. Examples and saved passes need no sign-in.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "signin.judge.unknown",
+      "current": "We couldn't check how many judge passes are left today right now.",
+      "draft": "We can't check how many judge passes are left today.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "account.privacy",
+      "current": "We only keep a scrambled ID to count your 2 passes a day and your found-it reports. No email, no name.",
+      "draft": "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "account.grownups",
+      "current": "Sign-in is for parents and teachers, not kids.",
+      "draft": "Sign-in is for grown-ups, not kids.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "account.limit",
+      "current": "That's your {n} new passes for today. Your passes and the examples still work, and you get {n} more after midnight (Dallas time).",
+      "draft": "You used your {n} new passes for today. Saved passes and examples still work. You get {n} more after midnight Dallas time.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "account.judgeNote",
+      "current": "Try as a judge signs you in to a shared demo account: no sign-up, nothing to type.",
+      "draft": "Try as a judge to use a shared demo account. No sign-up, nothing to type.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "account.notConfigured",
+      "current": "Sign-in isn't set up on this server yet, so it can't make new passes. The examples and saved passes still work.",
+      "draft": "Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "maker.signedin",
+      "current": "Signed in. You can make this pass now.",
+      "draft": "Signed in. You can make the pass now.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.printline",
+      "current": "One black-and-white page. Cut it in half: the kid gets the hunt, you get the answers.",
+      "draft": "One black-and-white page. Cut it in half: kids get the hunt, you get the answers.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.reports.in",
+      "current": "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes.",
+      "draft": "Back from the park? Tap what you found. It helps the next family by removing things that aren't safe or can't be spotted.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "report.thanks",
+      "current": "Thanks — counted.",
+      "draft": "Thanks, counted!",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "report.duplicate",
+      "current": "You already reported this find today. Thanks!",
+      "draft": "You already reported this today. Thanks!",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "report.judgeLogged",
+      "current": "Thanks! Judge demo reports are logged for us to review, but they don't change passes or the counts.",
+      "draft": "Thanks! Judge demo reports are logged for review, but they don't change the counts or passes.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "report.judgeDuplicate",
+      "current": "You already sent that one from this browser today. Try another find.",
+      "draft": "This browser already sent that report today. Try another find.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "print.lead",
+      "current": "Here's your pass: one Letter page, black and white. In the print box, pick {scale} (or \"Default\"). Then cut on the dashed line: the kid takes the hunt, you keep the answer key.",
+      "draft": "One black and white Letter page. In the print box, pick {scale} or \"Default\". Cut on the dashed line: kid gets the hunt, you keep the answer key.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "stub.cutline",
+      "current": "cut here · kid keeps the top, grown-up keeps the bottom",
+      "draft": "cut here: top for kids, bottom for grown-ups",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "notfound.body",
+      "current": "There's no page at this address (maybe a typo). Good news: the parks are right where you left them.",
+      "draft": "We can't find this page (maybe a typo). The parks are still where you left them.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "passgone.lead",
+      "current": "This pass seems to have wandered off.",
+      "draft": "This pass wandered off.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.allEmpty",
+      "current": "No data available for {park} yet: no mapped features and no recent wildlife sightings. Try a bigger park nearby from the list.",
+      "draft": "No data available for {park}. We found no mapped features or wildlife sightings here. Try a bigger park from the list.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.notAPark",
+      "current": "We couldn't read that park on OpenStreetMap. Pick another park from the list.",
+      "draft": "We couldn't read that park on OpenStreetMap. Pick another park from the list.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.paused",
+      "current": "Clue writing is paused for today (free budget used). Passes already made today still work.",
+      "draft": "Clue writing is paused for today since the free budget is used. Passes made earlier still work.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "pass.variantLimit",
+      "current": "That's {max} different passes for this park and age today, the most we make. Print one of them, pick another park, or come back tomorrow.",
+      "draft": "That is {max} different passes for this park and age today. Print one, pick another park, or come back tomorrow.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.noPlace",
+      "current": "We couldn't find that place. Try a town name or ZIP.",
+      "draft": "We couldn't find that place. Try a town name or ZIP.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.geocoderDown",
+      "current": "No data available: the map search isn't answering. Try 'Use my location' or an example park.",
+      "draft": "No data available: the map search isn't answering. Try \"Use my location\" or an example park.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.noParks",
+      "current": "No parks found within 5 km in OpenStreetMap.",
+      "draft": "No parks within 5 km in OpenStreetMap.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.overpassDown",
+      "current": "No data available: the OpenStreetMap server is busy. Try again shortly, or pick an example park.",
+      "draft": "No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.busyHere",
+      "current": "Grass Pass is busy with other park lookups right now. Try again in a few seconds.",
+      "draft": "Grass Pass is busy with other lookups. Try again in a few seconds.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.parkTooBig",
+      "current": "No data available: OpenStreetMap couldn't read this park in time (it may be very big). Try a smaller park nearby.",
+      "draft": "No data available: OpenStreetMap couldn't read this park in time because it may be too big. Try a smaller park nearby.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.savedIndex",
+      "current": "The OpenStreetMap park server didn't answer in time, so this list comes from our saved copy of OpenStreetMap parks around Dallas (see the date below). New parks may be missing.",
+      "draft": "OpenStreetMap didn't answer in time. This list is a saved copy of OpenStreetMap parks around Dallas (see date below), so new parks may be missing.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "parks.nominatimParks",
+      "current": "The OpenStreetMap park server didn't answer in time, so this list comes from the OpenStreetMap place search (Nominatim) instead. It may miss some parks.",
+      "draft": "OpenStreetMap didn't answer in time. This list uses the OpenStreetMap place search (Nominatim) instead, so it may miss some parks.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "find.noGeo",
+      "current": "Your browser can't share a location. Type a town or ZIP instead.",
+      "draft": "Your browser can't share your location. Type a town or ZIP instead.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "find.geoDenied",
+      "current": "Location is blocked for this site. Type a town or ZIP instead, or allow location in your browser settings.",
+      "draft": "Location is blocked for this site. Type a town or ZIP, or allow location in your browser settings.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "find.geoFailed",
+      "current": "We couldn't get your location. Try again, or type a town or ZIP.",
+      "draft": "We couldn't get your location. Try again or type a town or ZIP.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "find.offline",
+      "current": "We couldn't reach Grass Pass. Check your internet connection and try again.",
+      "draft": "We couldn't reach Grass Pass. Check your internet and try again.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "find.slow",
+      "current": "Still working: the OpenStreetMap park server can be slow. If it doesn't answer soon, we use a saved park list or the OpenStreetMap place search instead.",
+      "draft": "Still working. The OpenStreetMap park server can be slow. If it doesn't answer soon, we'll try a saved park list or the OpenStreetMap place search instead.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "wait.copy",
+      "current": "A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map websites are slow.",
+      "draft": "A new pass usually takes 10-30 seconds, and up to a minute and a half if the free map websites are slow.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "wait.timeout",
+      "current": "This is taking much longer than usual (over a minute and a half), so we stopped waiting. The free map and wildlife websites can be slow at busy times. Try again: if your pass got made in the meantime, it opens right away.",
+      "draft": "This is taking longer than a minute and a half, so we stopped waiting. Free map and wildlife sites can be slow when they're busy. Try again; if your pass is ready, it will open now.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "lucky.notConnected",
+      "current": "Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews.",
+      "draft": "Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "lucky.dailyCap",
+      "current": "Lucky Finds: off for today. Grass Pass has used its free search limit for visitor reviews (SerpApi); it resets at midnight Dallas time.",
+      "draft": "Lucky Finds: off for today. We hit the free SerpApi search limit for visitor reviews. It resets at midnight Dallas time.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "lucky.down",
+      "current": "No data available: Google reviews (via SerpApi) didn't answer, so there are no Lucky Finds on this pass.",
+      "draft": "No data available: SerpApi didn't answer for Google reviews, so there are no Lucky Finds on this pass.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "wild.down",
+      "current": "No data available: iNaturalist (the wildlife sightings service) didn't answer when this pass was made. Trying again in a minute may help.",
+      "draft": "No data available: iNaturalist didn't answer when this pass was made. Trying again in a minute may help.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "spot.noLandmark",
+      "current": "No Find This Spot today: this park has no single landmark on the map (OpenStreetMap).",
+      "draft": "No Find This Spot today: OpenStreetMap doesn't show a single landmark for this park.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "spot.busy",
+      "current": "No Find This Spot today: the OpenStreetMap server was busy, so we couldn't draw the map. Make a different pass to try again.",
+      "draft": "No Find This Spot today: the OpenStreetMap server was busy and we couldn't draw the map. Make a different pass to try again.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "datatooslow",
+      "current": "The park data took too long to load, so there was no time left to write clues. Try again shortly.",
+      "draft": "The park data took too long to load, so we ran out of time to write clues. Try again shortly.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "showcase.nofinds",
+      "current": "No data available: this pass has no finds that passed our checks.",
+      "draft": "No data available: none of the finds on this pass passed our checks.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "readme.tagline",
+      "current": "Your ticket to get outside. Pick a park. Print a pass. Phone away.",
+      "draft": "Your ticket to get outside. Pick a park. Print a pass. Phone away.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "readme.intro",
+      "current": "Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age (4-6, 6-10 or 10-13). Code collects what is really in that park. Gemma 4 (open weights, Apache-2.0, on DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (plus one refill call if too few pass). Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the answers, safety notes and sources. The phone stays in your pocket.",
+      "draft": "Grass Pass creates a one-page treasure hunt in about 30 seconds. Pick a park and an age band: 4-6, 6-10, or 10-13. Our AI, Gemma 4 (Apache-2.0, on DigitalOcean), writes kid-level clues based on real park data. Usually, it takes one call, with a refill call if needed. Code fact-checks every clue and removes failures. Code also writes every number, date, and safety line. You print one black-and-white page. Kids use pencils to tick boxes while you keep a tear-off stub with the answers. The phone stays home.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    },
+    {
+      "id": "readme.nodata",
+      "current": "If a source has nothing, the pass says \"No data available\" and why. It never pads the pass with generic items.",
+      "draft": "We never use generic filler; if a source is empty, the pass says No data available and explains why.",
+      "codeCheck": {
+        "ok": true,
+        "reasons": []
+      },
+      "model": "gemma-4-31B-it"
+    }
+  ]
+}

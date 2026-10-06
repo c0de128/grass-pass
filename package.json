@@ -16,7 +16,9 @@
     "eval:report": "vitest run --config evals/vitest.config.mts evals/cli/report.ts",
     "eval:check": "vitest run --config evals/vitest.config.mts evals/cli/check.ts",
     "eval:replay": "vitest run --config evals/vitest.config.mts evals/cli/replay.ts",
-    "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts"
+    "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts",
+    "copy:gemma": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-revise.mts",
+    "copy:render": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-render.mts"
   },
   "dependencies": {
     "lucide-react": "^1.52.0",

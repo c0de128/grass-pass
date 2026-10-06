@@ -18,7 +18,7 @@ import { log } from "@/lib/log";
 import { PARKS_COPY } from "@/lib/parks/schema";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import { savedFeatures } from "@/lib/sources/osm-snapshot";
-import { REFRESH_AFTER_SEC, refreshLater } from "@/lib/sources/osm-refresh";
+import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
 import { parkFeatures, ParkFeaturesSchema, parkIdOf, type ParkFeatures, type ParkRef } from "@/lib/sources/overpass-features";
 import { PASS_COPY } from "./schema";
 
@@ -85,6 +85,7 @@ async function liveFeatures(ref: ParkRef, deps: ParkDataDeps, priority: "normal"
     onStart: deps.onUpstream,
     now: deps.now,
     priority,
+    ...(priority === "low" ? { totalBudgetMs: REFRESH_BUDGET_MS } : {}),
   });
 }
 

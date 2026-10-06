@@ -27,7 +27,7 @@ import {
   savedIndexInfo,
   savedParksNear,
 } from "@/lib/sources/osm-snapshot";
-import { osmRefreshIdle, setBackgroundRefreshForTests } from "@/lib/sources/osm-refresh";
+import { osmRefreshIdle, refreshLater, setBackgroundRefreshForTests } from "@/lib/sources/osm-refresh";
 import { breakerName, OVERPASS_DEFAULT_URLS, overpassSlots, runOverpass } from "@/lib/sources/overpass";
 import { featuresQuery, PARK_FILTER, parseParkId } from "@/lib/sources/overpass-features";
 import { loadGeometry } from "@/lib/spot/load";
@@ -157,6 +157,36 @@ describe("R1-B1 saved OpenStreetMap answers (real recordings with their fetch ti
     await loadFeatures(ref, deps2);
     await osmRefreshIdle();
     expect(r.calls.filter((c) => c.url.endsWith("/interpreter") && !isGeometry(c))).toHaveLength(1);
+  });
+});
+
+describe("background refreshes", () => {
+  it("run one at a time, and give the lock back when nothing was sent (our slots busy / breakers open)", async () => {
+    setBackgroundRefreshForTests(true);
+    const store = new MemoryStore();
+    const order: string[] = [];
+    let running = 0;
+    let maxRunning = 0;
+    const job = (name: string, fail?: SourceError) => async () => {
+      running++;
+      maxRunning = Math.max(maxRunning, running);
+      await new Promise((r) => setTimeout(r, 30));
+      order.push(name);
+      running--;
+      if (fail) throw fail;
+    };
+    refreshLater({ kind: "features", parkId: "way/1" }, job("a"), { store, env: {} });
+    refreshLater({ kind: "geometry", parkId: "way/1" }, job("b", new SourceError("overpass", "queue_full", { started: false })), { store, env: {} });
+    refreshLater({ kind: "features", parkId: "way/2" }, job("c", new SourceError("overpass", "timeout", { started: true })), { store, env: {} });
+    await osmRefreshIdle();
+    expect(order).toEqual(["a", "b", "c"]);
+    expect(maxRunning).toBe(1);
+    // "b" sent nothing: its lock is free again. "a" and "c" reached Overpass: locked for 6 h.
+    refreshLater({ kind: "geometry", parkId: "way/1" }, job("b2"), { store, env: {} });
+    refreshLater({ kind: "features", parkId: "way/1" }, job("a2"), { store, env: {} });
+    refreshLater({ kind: "features", parkId: "way/2" }, job("c2"), { store, env: {} });
+    await osmRefreshIdle();
+    expect(order).toEqual(["a", "b", "c", "b2"]);
   });
 });
 

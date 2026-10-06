@@ -16,7 +16,7 @@ import { log } from "@/lib/log";
 import type { FetchLike } from "@/lib/sources/common";
 import { SourceError } from "@/lib/sources/common";
 import { savedGeometry } from "@/lib/sources/osm-snapshot";
-import { REFRESH_AFTER_SEC, refreshLater } from "@/lib/sources/osm-refresh";
+import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { parkIdOf } from "@/lib/sources/overpass-features";
 import { buildMap, parkGeometry, ParkGeometrySchema, type ParkGeometry } from "./geometry";
@@ -70,7 +70,7 @@ function scheduleRefresh(ref: ParkRef, key: string, deps: GeometryDeps): void {
   refreshLater(
     { kind: "geometry", parkId: key },
     async () => {
-      const g = await parkGeometry(ref, { store: deps.store, env: deps.env, now: deps.now, fetchImpl: deps.fetchImpl, priority: "low" });
+      const g = await parkGeometry(ref, { store: deps.store, env: deps.env, now: deps.now, fetchImpl: deps.fetchImpl, priority: "low", totalBudgetMs: REFRESH_BUDGET_MS });
       if (g) await geometryCache.positive.set(key, g, { now: deps.now(), ttlSec: savedGeometry(key) ? SAVED_GEOMETRY_TTL_SEC : GEOMETRY_TTL_SEC });
     },
     deps,

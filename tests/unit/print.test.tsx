@@ -9,7 +9,8 @@ import { MIN_FIT, PRINT_HEIGHT_PX, bestFit, fitFor } from "@/components/pass/Pri
 import { ParentStub, STUB_EACH_LINE, STUB_LOOK_ONLY, TearLine, shortDay } from "@/components/pass/ParentStub";
 import { resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
-import { formatTime } from "@/lib/pass/format";
+import { PassPreview } from "@/components/pass/PassPreview";
+import { BUILT_WITH_LLAMA, WIKIPEDIA_CREDIT, formatTime, isLlamaModel } from "@/lib/pass/format";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
 import { PASS_COPY, type Pass } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
@@ -205,6 +206,32 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     );
     expect(withSlots).toContain('<div data-slot="spot-answer"><p>spot answer slot</p></div>');
     expect(withSlots).toContain('<p class="gp-small gp-stub-october" data-slot="october-source"><span>october source slot</span></p>');
+  });
+
+  it("R1-m11: credits Wikipedia (CC BY-SA) on paper only when the pass has a Wild Find", async () => {
+    const wild = await realPass(PARKS.connemara.id);
+    expect(wild.items.some((it) => it.section === "wild")).toBe(true);
+    expect(text(renderToStaticMarkup(<ParentStub pass={wild} passUrl={URL_TEXT} />))).toContain(WIKIPEDIA_CREDIT);
+    expect(text(renderToStaticMarkup(<PassPreview pass={wild} />))).toContain(WIKIPEDIA_CREDIT);
+    expect(WIKIPEDIA_CREDIT).toBe("Species facts: Wikipedia (CC BY-SA), via iNaturalist.");
+
+    const park = await realPass(PARKS.celebration.id);
+    expect(park.items.some((it) => it.section === "wild")).toBe(false);
+    expect(text(renderToStaticMarkup(<ParentStub pass={park} passUrl={URL_TEXT} />))).not.toContain("Wikipedia");
+  });
+
+  it("R1-m11: shows 'Built with Llama' on the printed stub and the screen pass only when a Llama model answered", async () => {
+    const pass = await realPass(PARKS.connemara.id);
+    for (const html of [renderToStaticMarkup(<ParentStub pass={pass} passUrl={URL_TEXT} />), renderToStaticMarkup(<PassPreview pass={pass} />)]) {
+      expect(html).not.toContain(BUILT_WITH_LLAMA);
+    }
+    const llama: Pass = { ...pass, model: { ...pass.model, answered: "llama-4-maverick" } };
+    const stub = text(renderToStaticMarkup(<ParentStub pass={llama} passUrl={URL_TEXT} />));
+    expect(stub).toContain("Clues: llama-4-maverick (open model, Llama 4 Community Licence)");
+    expect(stub).toContain("Built with Llama (Llama 4 Community Licence)");
+    expect(renderToStaticMarkup(<PassPreview pass={llama} />)).toContain(`>${BUILT_WITH_LLAMA}</strong>`);
+    expect(isLlamaModel("Llama-4-Maverick-17B-128E-Instruct")).toBe(true);
+    expect(isLlamaModel("gemma-4-31B-it")).toBe(false);
   });
 
   it("tear line is a labelled separator with scissors", () => {

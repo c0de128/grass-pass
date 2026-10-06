@@ -34,3 +34,17 @@ export function modelLicence(modelId: string): string | null {
   if (l.startsWith("qwen")) return "Apache-2.0";
   return null;
 }
+
+/**
+ * True when the model that answered is a Llama model. The Llama 4 Community Licence asks that a product
+ * using it shows "Built with Llama" prominently, so the pass and /about show it whenever this is true.
+ */
+export function isLlamaModel(modelId: string): boolean {
+  return /llama/i.test(modelId);
+}
+
+/** The attribution line the Llama 4 Community Licence asks for. */
+export const BUILT_WITH_LLAMA = "Built with Llama";
+
+/** Credit for the Wikipedia text Wild Finds are written from (CC BY-SA), printed on the parent stub. */
+export const WIKIPEDIA_CREDIT = "Species facts: Wikipedia (CC BY-SA), via iNaturalist.";

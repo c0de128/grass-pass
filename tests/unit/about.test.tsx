@@ -129,6 +129,30 @@ describe("/about", () => {
     expect(html).toContain(`href="${REPO_URL}"`);
     expect(html).toContain(`href="${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}"`);
   });
+
+  it("R1-m11/m13: credits the Llama licence, the banner's origin and the reused pre-period code precisely", () => {
+    expect(t).toContain("Eval comparison: Llama 4 Maverick (Llama 4 Community Licence)");
+    expect(t).toContain("the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned SVG redraw of it.");
+    expect(t).toContain("unpublished practice project, written on Oct 2, 2026, before the contest entry period");
+    expect(t).toContain("Everything specific to Grass Pass was written from Oct 5, 2026.");
+    // Default model is Gemma: no "Built with Llama" badge, only the explanation of when it shows.
+    expect(html).not.toContain('data-testid="built-with-llama"');
+  });
+});
+
+describe("/about with a Llama model configured", () => {
+  it("shows 'Built with Llama' (Llama 4 Community Licence)", () => {
+    const before = process.env.MODEL_ID;
+    process.env.MODEL_ID = "llama-4-maverick";
+    try {
+      const html = renderToStaticMarkup(<AboutPage />);
+      expect(html).toContain('data-testid="built-with-llama"');
+      expect(text(html)).toContain("Built with Llama : this site is set to use a Llama model right now.");
+    } finally {
+      if (before === undefined) delete process.env.MODEL_ID;
+      else process.env.MODEL_ID = before;
+    }
+  });
 });
 
 describe("site header and footer", () => {

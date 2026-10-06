@@ -14,7 +14,9 @@ import {
   evalColumn,
   type EvalColumn,
 } from "@/lib/about/eval-summary";
+import { configuredModelId } from "@/lib/model";
 import { OCTOBER_WINDOW_LABEL } from "@/lib/october";
+import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
 
@@ -186,6 +188,8 @@ const PRIVACY: { what: string; where: string; why: string }[] = [
 ];
 
 export default function AboutPage() {
+  // Llama 4 Community Licence: show "Built with Llama" whenever the server is set to answer with a Llama model.
+  const servingLlama = isLlamaModel(configuredModelId());
   return (
     <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-5 py-8 focus:outline-none">
       <TicketCard as="section" aria-labelledby="about-title">
@@ -414,8 +418,27 @@ export default function AboutPage() {
             </a>
             , Apache-2.0, on DigitalOcean serverless inference.
           </li>
+          <li>
+            Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It only
+            answers real visitors if the server is switched to it (<code>MODEL_ID</code>); every pass names the model that
+            answered and shows &quot;{BUILT_WITH_LLAMA}&quot; when it is a Llama model.
+            {servingLlama ? (
+              <>
+                {" "}
+                <strong data-testid="built-with-llama">{BUILT_WITH_LLAMA}</strong>: this site is set to use a Llama model right now.
+              </>
+            ) : null}
+          </li>
+          <li>
+            Logo and art: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
+            hand-cleaned SVG redraw of it.
+          </li>
           <li>Fonts: Fredoka and Nunito (SIL Open Font License 1.1), served from this site.</li>
-          <li>App code: MIT licence.</li>
+          <li>
+            App code: MIT licence. A few generic building blocks (the model client, rate limits and caps, request guards
+            and in-flight de-duplication) were adapted from the same author&apos;s unpublished practice project, written on
+            Oct 2, 2026, before the contest entry period. Everything specific to Grass Pass was written from Oct 5, 2026.
+          </li>
         </ul>
       </Section>
 

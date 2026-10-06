@@ -1,5 +1,5 @@
 import type { ReactNode } from "react";
-import { formatTime, modelLicence } from "@/lib/pass/format";
+import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import type { Pass, SectionId } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 
@@ -62,6 +62,9 @@ export type ParentStubProps = {
  */
 export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubProps) {
   const licence = modelLicence(pass.model.answered);
+  const llama = isLlamaModel(pass.model.answered);
+  // Wild Finds clues are written from (and quote) Wikipedia summaries: credit them on paper (CC BY-SA).
+  const wiki = pass.items.some((it) => it.section === "wild");
   const safety = [...new Set(pass.items.map((it) => it.safety).filter((s): s is string => Boolean(s)))];
   const short = pass.target - pass.items.length;
   const missing = SECTIONS.flatMap((s) => {
@@ -130,12 +133,20 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
               <li>
                 Wildlife: iNaturalist observers, research grade, within 1.5 km
                 {pass.wildSince ? `, ${shortDay(pass.wildSince)} to ${shortDay(pass.day)}` : ""}; checked {formatTime(pass.dataCheckedAt.inat)}.
+                {wiki ? ` ${WIKIPEDIA_CREDIT}` : ""}
               </li>
+            ) : wiki ? (
+              <li>{WIKIPEDIA_CREDIT}</li>
             ) : null}
             <li>
               Clues: {pass.model.answered} ({licence ? `open model, ${licence}` : "open model"}), made {formatTime(pass.generatedAt)}. Code
               wrote every number and date.
             </li>
+            {llama ? (
+              <li data-testid="built-with-llama">
+                <strong>{BUILT_WITH_LLAMA}</strong> (Llama 4 Community Licence)
+              </li>
+            ) : null}
             <li>Made with Grass Pass · {passUrl}</li>
           </ul>
         </div>

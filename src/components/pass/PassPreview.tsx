@@ -3,7 +3,7 @@ import { TicketCard } from "@/components/ui/TicketCard";
 import { OctoberBox } from "./OctoberBox";
 import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
-import { formatDay, formatTime, modelLicence } from "@/lib/pass/format";
+import { BUILT_WITH_LLAMA, formatDay, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
@@ -94,6 +94,12 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
           Made {madeAt}
           {reused ? " (reused for this park today)" : ""} by <strong>{pass.model.answered}</strong>
           {licence ? ` (open model, ${licence})` : " (open model)"}.
+          {isLlamaModel(pass.model.answered) ? (
+            <>
+              {" "}
+              <strong data-testid="built-with-llama">{BUILT_WITH_LLAMA}</strong>.
+            </>
+          ) : null}
         </p>
       </div>
     </TicketCard>
@@ -156,6 +162,7 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
             Wildlife sightings checked {formatTime(pass.dataCheckedAt.inat)} (iNaturalist observers, research grade, within 1.5 km, last 14 days).
           </li>
         ) : null}
+        {pass.items.some((it) => it.section === "wild") ? <li>{WIKIPEDIA_CREDIT}</li> : null}
         <li>
           Clues by {pass.model.answered}, an open-weight model anyone can download and run. Our code picks what is safe and writes
           every number and date; the model only chooses from real park data and writes the words.

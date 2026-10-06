@@ -6,7 +6,7 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { MODEL_TIMEOUT_MS } from "@/lib/model";
@@ -27,7 +27,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1005, files: 48, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1006, files: 48, day: "Oct 6, 2026" } as const;
 
 export type StatTile = {
   value: string;
@@ -203,8 +203,8 @@ export function aboutLimitPoints(): string[] {
   const g = evalColumn("gemma-4-31B-it");
   return [
     `Clues repeat across parks (${pct(g.repeatPct)}).`,
-    `Speed just meets target (${secs(g.p50s)}).`,
-    "Sparse parks get shorter passes, and say so.",
+    `Model calls were slow (${secs(g.p50s)} typical).`,
+    `${pct(g.completePct)} of passes complete; short ones say so.`,
     "The read-it-as-a-7-year-old check is not done yet.",
     "Find This Spot and Lucky Finds are not in the eval yet.",
   ];
@@ -219,15 +219,15 @@ export function aboutLimits(): Limit[] {
   return [
     {
       title: `Clues repeat across parks: Gemma ${pct(g.repeatPct)}`,
-      detail: `of printed clues share 5 words in a row with 2+ other parks (target ${t.repeatPct}%), up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before (${PREVIOUS_RUN.id}): a miss. Most are Park Finds copying our park facts ("paths that cross over water").`,
+      detail: `of printed clues share 5 words in a row with 2+ other parks (target ${t.repeatPct}%), down from ${pct(PREVIOUS_RUN.repeatPct)} in the run before (${PREVIOUS_RUN.id}): still a miss. Our park-fact phrases no longer repeat; most repeats now are Gemma's own clue openings ("Somewhere you will see a", "Where can you hear water").`,
     },
     {
-      title: `Speed: Gemma only just passes (${secs(g.p50s)} typical, ${secs(g.p95s)} slow-case; target ${t.p50s} s / ${t.p95s} s).`,
-      detail: `The typical call took ${GEMMA_P50_EXACT_S} s, counting short refill calls. First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical, which is over the mark. Llama 4 Maverick is too slow to be the default: ${secs(l.p50s)} typical, ${pct(l.completePct)} complete passes, ${usd(l.costPerPass)} a pass, over the ${usd(t.costPerPass)} mark (${l.timeouts} of its calls hit its 60 s limit).`,
+      title: `Speed: Gemma misses (${secs(g.p50s)} typical, ${secs(g.p95s)} slow-case; target ${t.p50s} s / ${t.p95s} s).`,
+      detail: `The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered slower in this run (${GEMMA_TOKENS_PER_S.now} answer tokens a second, ${GEMMA_TOKENS_PER_S.before} in the run before), so part of it is the provider. Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test passes hit its 60 s limit, ${pct(l.completePct)} complete passes.`,
     },
     {
-      title: `Complete passes: Gemma passes (${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more).`,
-      detail: "The one short pass was Spring Creek Forest Preserve, a park with little data. No call failed or timed out in this run.",
+      title: `Complete passes: Gemma misses (${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more).`,
+      detail: `Down from ${pct(PREVIOUS_RUN.completePct)} in the run before. 7 passes ended 2 or 3 finds short after their second try (the stricter checks removed more clues, and 1 second try timed out), and 1 call failed (HTTP 403). A short pass says how many finds are missing.`,
     },
     {
       title: "Answers that name themselves:",
@@ -274,12 +274,12 @@ export function howLimits(): Limit[] {
       detail: `${pct(g.repeatPct)} share 5 words in a row with 2+ other parks (target ${t.repeatPct}%).`,
     },
     {
-      title: "Speed only just meets its target.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s); ${g.timeouts} timeouts at ${MODEL_TIMEOUT_MS / 1000} s in ${g.runs} test passes.`,
+      title: "Model calls are slower than the target.",
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s); DigitalOcean answered slower in this test than the one before. 1 second try hit the ${MODEL_TIMEOUT_MS / 1000} s limit in ${g.runs} test passes.`,
     },
     {
-      title: "Parks with little data make shorter passes.",
-      detail: "The pass says how many are missing.",
+      title: "Some passes come out short.",
+      detail: `${pct(g.completePct)} of test passes were complete (target ${t.completePct}%); the pass says how many finds are missing.`,
     },
     {
       title: "The kid check is not done yet.",

@@ -71,3 +71,8 @@ Eval r4 builder Q total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10
 | 2026-10-06T18:35Z (approx) | Builder R2: example passes re-made with PREWARM_EXAMPLES=1 and AI_DAILY_CAP=4: Arbor Hills 1, White Rock 2, Celebration 1; Connemara refused by the cap | 4 | 11445 | 1642 | about $0.0029 |
 
 Builder R2 total (2026-10-06 CDT): **12 calls, about $0.0084** (prices from evals/score.ts). SerpApi: 0 searches.
+| 2026-10-06T19:21:18.186Z | 2026-10-06-5.md | 97 | 210461 | 33370 | $0.0578 |
+| 2026-10-06T19:39:25.762Z | 2026-10-06-partial-1439.md | 4 | 10115 | 1296 | $0.0025 |
+| 2026-10-06T19:19Z (approx) | Eval r5 (builder S): 1 provider speed probe before the full run (not an eval run; 5.0 s, 173 answer tokens, about 34 tokens/s) | 1 | 30 | 173 | about $0.0001 |
+
+Eval r5 builder S total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10-06-5 $0.0578 (cap $0.15) + 10-13 smoke partial-1439 $0.0025 (cap $0.0032) = **about $0.0604** (102 calls). SerpApi: 0 searches (key blank, SERPAPI_DAILY_CAP=0; the eval replays recorded data).

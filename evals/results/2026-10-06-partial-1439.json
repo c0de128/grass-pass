@@ -1,0 +1,423 @@
+{
+ "meta": {
+  "startedAt": "2026-10-06T19:39:25.762Z",
+  "finishedAt": "2026-10-06T19:40:38.761Z",
+  "day": "2026-10-06",
+  "ageBand": "10-13",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    3,
+    13,
+    15
+   ],
+   "budgetUsd": 0.0032
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": 30000,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "name": "Arbor Hills Nature Preserve",
+   "parkId": "way/38113837",
+   "note": "",
+   "fixture": "tests/fixtures/evals/arbor-hills-nature-preserve.json",
+   "fetchedAt": "2026-10-05T23:47:26.795Z",
+   "pool": {
+    "park": 10,
+    "wild": 8
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 12
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 15,
+   "slug": "cedar-ridge-preserve",
+   "name": "Cedar Ridge Preserve",
+   "parkId": "way/310790501",
+   "note": "",
+   "fixture": "tests/fixtures/evals/cedar-ridge-preserve.json",
+   "fetchedAt": "2026-10-05T23:54:30.847Z",
+   "pool": {
+    "park": 8,
+    "wild": 7
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":13740,"status":200,"error":null,"poolMatches":true,"promptTokens":3246,"completionTokens":555,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Count the 4 roofed structures with tables below them for picnics.","difficulty":"easy","itemId":"osm-shelter","lookWhere":"","sourceQuote":"4 picnic shelters"},{"clue":"Point to the long seat outdoors for a rest. There are 2 of them.","difficulty":"easy","itemId":"osm-bench","lookWhere":"","sourceQuote":"2 benches"},{"clue":"Notice the quiet gurgling sound of the running water.","difficulty":"medium","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"quiet gurgling sound"},{"clue":"Check the 4 crossings with railings on both sides.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"near the water","sourceQuote":"4 bridges"},{"clue":"Watch for a spider with a leg span in excess of four inches.","difficulty":"hard","itemId":"inat-120596","lookWhere":"on the ground","sourceQuote":"excess of a four-inch leg span"},{"clue":"Who is the vine with large, intricate flowers and prominent styles?","difficulty":"hard","itemId":"inat-51453","lookWhere":"on bushes","sourceQuote":"large, intricate flowers with prominent styles"},{"clue":"Peek at the plant with climbing or trailing stems and amberique-bean seeds.","difficulty":"hard","itemId":"inat-204420","lookWhere":"on the ground","sourceQuote":"trailing wild bean"},{"clue":"Somewhere you will see a low metal box on a stand for cooking.","difficulty":"medium","itemId":"osm-bbq","lookWhere":"","sourceQuote":"low metal box set on a stand"},{"clue":"What is the seat that hangs from ropes and moves back and forth?","difficulty":"easy","itemId":"osm-swing","lookWhere":"","sourceQuote":"seat that hangs from ropes"}]}
+   ],
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Point to the long seat outdoors for a rest. There are 2 of them.","lookWhere":"","answer":"Benches"},
+    {"section":"park","clue":"Notice the quiet gurgling sound of the running water.","lookWhere":"","answer":"Creek or stream"},
+    {"section":"park","clue":"Check the 4 crossings with railings on both sides.","lookWhere":"near the water","answer":"Bridges (Tower Overlook, Arbor Hills Loop)"},
+    {"section":"park","clue":"Somewhere you will see a low metal box on a stand for cooking.","lookWhere":"","answer":"Barbecue grill"},
+    {"section":"park","clue":"What is the seat that hangs from ropes and moves back and forth?","lookWhere":"","answer":"Swing"},
+    {"section":"wild","clue":"Watch for a spider with a leg span in excess of four inches.","lookWhere":"on the ground","answer":"Texas Brown Tarantula (Aphonopelma hentzi)"},
+    {"section":"wild","clue":"Who is the vine with large, intricate flowers and prominent styles?","lookWhere":"on bushes","answer":"Purple passionflower (Passiflora incarnata)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 2
+   },
+   "wallMs": 14855
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":13134,"status":200,"error":null,"poolMatches":true,"promptTokens":3741,"completionTokens":512,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Notice the 8 play spots with things to climb and slide down.","difficulty":"easy","itemId":"osm-playground","lookWhere":"","sourceQuote":"8 playgrounds on the map"},{"clue":"Check for a metal cooker on a stand that is dark from smoke.","difficulty":"medium","itemId":"osm-bbq","lookWhere":"","sourceQuote":"dark from smoke and old fires"},{"clue":"Where can you hear water splashing as you get close to the spray?","difficulty":"medium","itemId":"osm-fountain","lookWhere":"","sourceQuote":"hear its water splashing"},{"clue":"Hunt for the 3 fields that have a small mound of dirt for the pitcher.","difficulty":"hard","itemId":"osm-baseball","lookWhere":"","sourceQuote":"3 baseball fields"},{"clue":"Watch for an insect with a chunky white body and a checkered look.","difficulty":"hard","itemId":"inat-84549","lookWhere":"near the water","sourceQuote":"chunky white body"},{"clue":"Peek at a tiny flying insect that is no more than 25 mm long.","difficulty":"hard","itemId":"inat-59776","lookWhere":"near the water","sourceQuote":"no more than 25 mm"},{"clue":"Somewhere you will see a climbing plant with flowers in October.","difficulty":"medium","itemId":"inat-135262","lookWhere":"on bushes","sourceQuote":"show it with flowers"},{"clue":"Which insect has blue on abdominal segments 8 and 9?","difficulty":"hard","itemId":"inat-70191","lookWhere":"near the water","sourceQuote":"blue on abdominal segments 8 and 9"}]},
+    {"latencyMs":8989,"status":200,"error":null,"poolMatches":true,"promptTokens":3128,"completionTokens":229,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Which metal equipment area has 2 stations for stretching and getting strong?","difficulty":"easy","itemId":"osm-fitness","lookWhere":"","sourceQuote":"2 exercise stations"},{"clue":"Peek at the trees to see if you can find one with black bark.","difficulty":"medium","itemId":"inat-54847","lookWhere":"on tree trunks","sourceQuote":"black willow"},{"clue":"Somewhere you will see a shorebird that is large and has yellow legs.","difficulty":"hard","itemId":"inat-3892","lookWhere":"near the water","sourceQuote":"large North American shorebird"}]}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Notice the 8 play spots with things to climb and slide down.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"park","clue":"Check for a metal cooker on a stand that is dark from smoke.","lookWhere":"","answer":"Barbecue grills"},
+    {"section":"park","clue":"Where can you hear water splashing as you get close to the spray?","lookWhere":"","answer":"Fountains (Fogelson Fountain)"},
+    {"section":"park","clue":"Hunt for the 3 fields that have a small mound of dirt for the pitcher.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"wild","clue":"Watch for an insect with a chunky white body and a checkered look.","lookWhere":"near the water","answer":"Common Whitetail (Plathemis lydia)"},
+    {"section":"wild","clue":"Which insect has blue on abdominal segments 8 and 9?","lookWhere":"near the water","answer":"Rambur's Forktail (Ischnura ramburii)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 5
+   },
+   "wallMs": 23189
+  },
+  {
+   "caseN": 15,
+   "slug": "cedar-ridge-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":30007,"status":null,"error":"TimeoutError","promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null,"poolMatches":true}
+   ],
+   "parkName": "Cedar Ridge Preserve",
+   "kind": "error",
+   "errorCode": "MODEL_TIMEOUT",
+   "message": "Gemma took too long. Try again. Your park data is below.",
+   "sections": {},
+   "items": [],
+   "wallMs": 31030
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-playground","section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","sourceQuote":"It usually has a low fence or a border round it.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"A tall bar frame holds it up from above.","lookWhere":"","sourceQuote":"A tall bar frame holds it up from above.","difficulty":"medium"},{"itemId":"inat-5212","section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","sourceQuote":"The red-tailed hawk (Buteo jamaicensis) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern Canada to as far south as Panama and the West Indies.","difficulty":"medium"},{"itemId":"inat-204420","section":"wild","clue":"____ (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names ____","lookWhere":"","sourceQuote":"Strophostyles helvola (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names amberique-bean, trailing wild bean, and trailing fuzzy-bean.","difficulty":"medium"},{"itemId":"inat-4765","section":"wild","clue":"The ____ (____), also known as the American ____, is a bird in the New World ____ family whose range extends from the","lookWhere":"","sourceQuote":"The black vulture (Coragyps atratus), also known as the American black vulture, is a bird in the New World vulture family whose range extends from the southeastern United States to Peru, Central Chile and Uruguay in South America.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","sourceQuote":"Each one gives cool shade from the sun and cover in the rain.","difficulty":"medium"},{"itemId":"inat-36202","section":"wild","clue":"The ____ (____) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas","lookWhere":"","sourceQuote":"The Texas spiny lizard (Sceloporus olivaceus) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas","difficulty":"medium"},{"itemId":"osm-picnic-table","section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","sourceQuote":"People sit on both sides of it to share food outside.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","answer":"Playground"},
+    {"section":"park","clue":"A tall bar frame holds it up from above.","lookWhere":"","answer":"Swing"},
+    {"section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","answer":"Red-tailed Hawk (Buteo jamaicensis)"},
+    {"section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","answer":"Picnic shelters"},
+    {"section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","answer":"Picnic tables"}
+   ]
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","sourceQuote":"Painted lines on its ground make big boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","sourceQuote":"Teams wait their turn on long benches in sunken dugouts beside it.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-84549","section":"wild","clue":"The ____ or ____ ____ (____) is a common dragonfly across much of North America, with a striking and unusual appearance.","lookWhere":"","sourceQuote":"The common whitetail or long-tailed skimmer (Plathemis lydia) is a common dragonfly across much of North America, with a striking and unusual appearance.","difficulty":"medium"},{"itemId":"inat-59776","section":"wild","clue":"The ____ (____) is a species of dragonfly in the family Libellulidae.","lookWhere":"","sourceQuote":"The eastern amberwing (Perithemis tenera) is a species of dragonfly in the family Libellulidae.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","sourceQuote":"Each one is a play spot with things to swing on, climb and slide down.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii) is a member of the damselfly family Coenagrionidae.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","sourceQuote":"Some seats are flat, and some are a big round nest you can lie in.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","answer":"Tennis court"},
+    {"section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)"},
+    {"section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","answer":"Rambur's Forktail (Ischnura ramburii)"},
+    {"section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","answer":"Swing"}
+   ]
+  },
+  {
+   "caseN": 15,
+   "slug": "cedar-ridge-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-shelter","section":"park","clue":"Neighbours and groups sometimes meet under it for parties and picnics.","lookWhere":"","sourceQuote":"Neighbours and groups sometimes meet under it for parties and picnics.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Some have a tall back to lean on and armrests at each end.","lookWhere":"","sourceQuote":"Some have a tall back to lean on and armrests at each end.","difficulty":"medium"},{"itemId":"inat-120585","section":"wild","clue":"____, commonly known as ____ on the ____, is a species of flowering plant in the genus ____, native to the southern","lookWhere":"","sourceQuote":"Euphorbia bicolor, commonly known as snow on the prairie, is a species of flowering plant in the genus Euphorbia, native to the southern United States.","difficulty":"medium"},{"itemId":"inat-70421","section":"wild","clue":"____ (____) is a species of frog in the family Hylidae.","lookWhere":"","sourceQuote":"Blanchard's cricket frog (Acris blanchardi) is a species of frog in the family Hylidae.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (____) ____ and as ____ ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"Some have a short spout for kids or a bowl for dogs.","lookWhere":"","sourceQuote":"Some have a short spout for kids or a bowl for dogs.","difficulty":"medium"},{"itemId":"inat-75833","section":"wild","clue":"____ is a species of flowering plant in the four o'clock family which is known by many common names, including ____, red","lookWhere":"","sourceQuote":"Boerhavia coccinea is a species of flowering plant in the four o'clock family which is known by many common names, including scarlet spiderling, red boerhavia, hogweed, and in Spanish, hierba del cancer and hierba de la hormiga.","difficulty":"medium"},{"itemId":"osm-viewpoint","section":"park","clue":"It is often higher up than the land round it.","lookWhere":"","sourceQuote":"It is often higher up than the land round it.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Cedar Ridge Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Neighbours and groups sometimes meet under it for parties and picnics.","lookWhere":"","answer":"Picnic shelter"},
+    {"section":"park","clue":"Some have a tall back to lean on and armrests at each end.","lookWhere":"","answer":"Bench"},
+    {"section":"wild","clue":"____ (____) is a species of frog in the family Hylidae.","lookWhere":"","answer":"Blanchard's Cricket Frog (Acris blanchardi)"},
+    {"section":"wild","clue":"____, also known as ____ (____) ____ and as ____ ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"park","clue":"It is often higher up than the land round it.","lookWhere":"","answer":"Viewpoint"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 3,
+   "passes": 2,
+   "errors": {
+    "MODEL_TIMEOUT": 1
+   },
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 20,
+    "returned": 20,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 1,
+    "dataRichRuns": 3,
+    "rate": 0.3333333333333333,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.0953846153846136,
+    "clues": 13,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 1,
+    "clueLeaks": 1,
+    "returned": 20,
+    "rate": 0.05,
+    "clueRate": 0.05,
+    "pass": true
+   },
+   "m7": {
+    "calls": 4,
+    "p50Ms": 13437,
+    "p95Ms": 27566.949999999993,
+    "passP50": false,
+    "passP95": false,
+    "perPassP50Ms": 22123
+   },
+   "m8": {
+    "costPerPass": 0.0008229,
+    "totalUsd": 0.0024687,
+    "promptTokens": 10115,
+    "completionTokens": 1296,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 13,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 5,
+    "rawWrong": 1,
+    "details": [],
+    "returned": 20,
+    "pass": true
+   },
+   "retries": 1,
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "drops": {
+    "all": {"wrong_count":1,"name_leak":2,"generic_clue":3,"broken_count":1},
+    "incomplete": {"generic_clue":3,"broken_count":1,"name_leak":1},
+    "byRun": [{"caseN":3,"run":1,"kept":7,"n":8,"drops":{"wrong_count":1,"name_leak":1}},{"caseN":13,"run":1,"kept":6,"n":8,"drops":{"generic_clue":3,"broken_count":1,"name_leak":1}},{"caseN":15,"run":1,"kept":0,"n":8,"drops":{}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 3,
+   "passes": 3,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 24,
+    "returned": 24,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 3,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.1818181818181834,
+    "clues": 16,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 24,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 3,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 16,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 0,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 24,
+    "pass": true
+   },
+   "retries": 0,
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.0024687,
+  "modelCalls": 4,
+  "promptTokens": 10115,
+  "completionTokens": 1296
+ }
+}

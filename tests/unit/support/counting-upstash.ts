@@ -1,0 +1,59 @@
+/**
+ * SEC-2-01: a stand-in for the Upstash REST API that counts commands. It answers GET/SET/DEL and the
+ * three EVAL scripts of src/lib/cache/store.ts from a MemoryStore, so the app's real UpstashStore code
+ * runs unchanged and every command it would send to Upstash is counted.
+ */
+import { MemoryStore } from "@/lib/cache/store";
+
+export const FAKE_UPSTASH_URL = "https://counting-test.upstash.io";
+export const FAKE_UPSTASH_TOKEN = "counting-test-token-not-real"; // gitleaks:allow
+
+export function countingUpstash() {
+  const mem = new MemoryStore({ maxEntries: 1_000_000 });
+  const counts = { total: 0, byCmd: new Map<string, number>() };
+
+  async function run(args: unknown[]): Promise<unknown> {
+    const [cmd, ...rest] = args.map((a) => (typeof a === "number" ? a : String(a)));
+    if (cmd === "GET") return mem.get(String(rest[0]));
+    if (cmd === "SET") {
+      await mem.set(String(rest[0]), String(rest[1]), Number(rest[3]));
+      return "OK";
+    }
+    if (cmd === "DEL") {
+      await mem.del(String(rest[0]));
+      return 1;
+    }
+    if (cmd === "EVAL") {
+      const script = String(rest[0]);
+      const n = Number(rest[1]);
+      const keys = rest.slice(2, 2 + n).map(String);
+      const argv = rest.slice(2 + n).map(Number);
+      if (script.startsWith("local v = redis.call('INCRBY'")) return mem.incr(keys[0], argv[0], argv[1]);
+      if (script.startsWith("local c = redis.call('INCRBY'")) {
+        const r = await mem.rateHit(keys[0], keys[1], argv[0], argv[1], argv[2]);
+        return [r.allowed ? 1 : 0, r.current, r.previous];
+      }
+      if (script.startsWith("local n = #KEYS")) {
+        const r = await mem.reserve(keys, argv.slice(0, n), argv[n]);
+        return r.failed > 0 ? [r.failed] : [0, ...r.counts];
+      }
+    }
+    throw new Error(`counting-upstash: unsupported command ${String(cmd)}`);
+  }
+
+  /** Wrap another fetch: Upstash calls are answered and counted here, everything else goes to `next`. */
+  function fetchWith(next: (input: string, init?: RequestInit) => Promise<Response>) {
+    return async (input: string | URL | Request, init?: RequestInit): Promise<Response> => {
+      const url = typeof input === "string" ? input : input instanceof URL ? input.href : input.url;
+      if (!url.startsWith(FAKE_UPSTASH_URL)) return next(url, init);
+      const args = JSON.parse(String(init?.body)) as unknown[];
+      counts.total++;
+      // Command plus its first key, long hashes shortened (for debugging a count).
+      const name = `${String(args[0]) === "EVAL" ? `EVAL:${String(args[1]).slice(0, 18)}` : String(args[0])} ${String(args[0]) === "EVAL" ? String(args[3]) : String(args[1])}`.replace(/[A-Za-z0-9_-]{20,}/g, "#");
+      counts.byCmd.set(name, (counts.byCmd.get(name) ?? 0) + 1);
+      return Response.json({ result: await run(args) });
+    };
+  }
+
+  return { counts, fetchWith, mem };
+}

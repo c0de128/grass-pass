@@ -8,6 +8,7 @@
  * Key-to-host rule (same idea as the model key): the Upstash token is sent only to an
  * https://*.upstash.io URL, never on a redirect, and is never logged.
  */
+import { noteMonthlyCommands, RESTING_PCT } from "@/lib/limits/budget";
 import { log, logOnce } from "@/lib/log";
 
 export type Clock = () => number;
@@ -161,7 +162,8 @@ const RESERVE_SCRIPT =
 export const UPSTASH_FREE_MONTHLY_COMMANDS = 500_000;
 /** Commands are counted in process and added to the shared monthly counter in batches of this size. */
 export const BUDGET_FLUSH_EVERY = 50;
-export const BUDGET_ALERT_PCTS = [50, 90] as const;
+/** 95 = RESTING_PCT: Grass Pass goes read-only there (src/lib/limits/budget.ts, SEC-2-01). */
+export const BUDGET_ALERT_PCTS = [50, 90, RESTING_PCT] as const;
 
 const intOr = (v: string | undefined, d: number) => {
   const n = Number(v?.trim());
@@ -227,8 +229,9 @@ export class UpstashStore implements Store {
 
   /**
    * Monthly command budget (SEC-1-02): every BUDGET_FLUSH_EVERY commands, one extra command adds them
-   * to a shared per-month counter. The instance whose batch crosses 50% or 90% logs it once, so the PM
-   * can react before the free quota runs out and the store fails closed. Never throws.
+   * to a shared per-month counter. The instance whose batch crosses 50%, 90% or 95% logs it once, so the PM
+   * can react before the free quota runs out, and at 95% the app rests read-only instead of failing closed
+   * at 100% (src/lib/limits/budget.ts). Never throws.
    */
   private count(): void {
     this.unflushed++;
@@ -246,6 +249,7 @@ export class UpstashStore implements Store {
     try {
       const total = Number(await this.send(["EVAL", INCR_SCRIPT, 1, `${this.prefix}meta:commands:${month}`, n, 40 * 24 * 3600]));
       if (!Number.isFinite(total)) return null;
+      noteMonthlyCommands(total, this.monthlyBudget, month);
       for (const pct of BUDGET_ALERT_PCTS) {
         const at = Math.ceil((this.monthlyBudget * pct) / 100);
         if (total - n < at && total >= at) {

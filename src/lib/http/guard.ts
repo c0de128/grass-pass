@@ -4,6 +4,7 @@
  */
 import "@/lib/zod-config";
 import type { z } from "zod";
+import { restingError } from "@/lib/limits/budget";
 
 export type GuardFailure = { status: number; code: string; message: string };
 
@@ -96,7 +97,16 @@ export async function readBodyLimited(req: Request, maxBytes = MAX_BODY_BYTES): 
 }
 
 /**
- * Every guard for a JSON POST, in order: same origin (403), JSON content type (415),
+ * SEC-2-01: while the store's monthly command budget is nearly used up (src/lib/limits/budget.ts), the
+ * POST APIs answer 503 RESTING with the date, before any store command.
+ */
+export function checkResting(now: number = Date.now()): GuardFailure | null {
+  const err = restingError(now);
+  return err ? { status: 503, code: err.code, message: err.message } : null;
+}
+
+/**
+ * Every guard for a JSON POST, in order: same origin (403), resting (503), JSON content type (415),
  * streamed size cap (413), JSON parse + zod validation (400).
  */
 export async function guardJsonPost<T>(
@@ -106,6 +116,8 @@ export async function guardJsonPost<T>(
 ): Promise<{ ok: true; data: T } | { ok: false; failure: GuardFailure }> {
   const origin = checkSameOrigin(req);
   if (origin) return { ok: false, failure: origin };
+  const resting = checkResting();
+  if (resting) return { ok: false, failure: resting };
   const type = checkJsonContentType(req);
   if (type) return { ok: false, failure: type };
 

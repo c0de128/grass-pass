@@ -5,19 +5,23 @@ import { cache } from "react";
 import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { buttonClassName } from "@/components/ui/Button";
+import { safeParkName } from "@/lib/ai/validate";
+import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
 
 /**
  * A saved pass, read from the pass cache only (never calls OpenStreetMap, iNaturalist or the model).
- * One store read per request: metadata and page share it (SEC-1-02).
+ * One store read per request: metadata and page share it (SEC-1-02). SEC-2-01: an id that can't exist
+ * (bad park id shape, a day outside the 30-day pass TTL, a variant above 3) is a 404 with no store read,
+ * and repeat reads are memoized in process (src/lib/limits/pass-read.ts).
  */
-const getPass = cache((id: string) => loadPass(id));
+const getPass = cache((id: string) => (plausiblePassId(id, Date.now()) ? loadPass(id) : Promise.resolve(null)));
 
 export async function generateMetadata(props: PageProps<"/pass/[id]">): Promise<Metadata> {
   const { id } = await props.params;
   const pass = await getPass(id);
   return {
-    title: pass ? `Grass Pass for ${pass.park.name}` : "Grass Pass: pass not found",
+    title: pass ? `Grass Pass for ${safeParkName(pass.park.name).name}` : "Grass Pass: pass not found",
     robots: { index: false, follow: false },
   };
 }

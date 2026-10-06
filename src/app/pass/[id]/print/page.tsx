@@ -11,6 +11,8 @@ import { PrintFit } from "@/components/pass/PrintFit";
 import { SpotAnswer, SpotMap } from "@/components/pass/SpotMap";
 import { buttonClassName } from "@/components/ui/Button";
 import { isOctoberDay } from "@/lib/october";
+import { safeParkName } from "@/lib/ai/validate";
+import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
@@ -20,13 +22,13 @@ import "@/styles/print.css";
  * dashed tear line, parent stub below. Read from the pass cache only (never calls upstream), once per
  * request (metadata and page share the read, SEC-1-02).
  */
-const getPass = cache((id: string) => loadPass(id));
+const getPass = cache((id: string) => (plausiblePassId(id, Date.now()) ? loadPass(id) : Promise.resolve(null)));
 
 export async function generateMetadata(props: PageProps<"/pass/[id]/print">): Promise<Metadata> {
   const { id } = await props.params;
   const pass = await getPass(id);
   return {
-    title: pass ? `Print: Grass Pass for ${pass.park.name}` : "Grass Pass: pass not found",
+    title: pass ? `Print: Grass Pass for ${safeParkName(pass.park.name).name}` : "Grass Pass: pass not found",
     robots: { index: false, follow: false },
   };
 }
@@ -66,10 +68,10 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
         </div>
       </div>
 
-      <article className="gp-sheet" aria-label={`Printable Grass Pass for ${pass.park.name}`}>
+      <article className="gp-sheet" aria-label={`Printable Grass Pass for ${safeParkName(pass.park.name).name}`}>
         <KidPass
           pass={pass}
-          spot={spot ? <SpotMap spot={spot} parkName={pass.park.name} variant="print" headingLevel={2} /> : undefined}
+          spot={spot ? <SpotMap spot={spot} parkName={safeParkName(pass.park.name).name} variant="print" headingLevel={2} /> : undefined}
           october={isOctoberDay(pass.day) ? <OctoberBox pass={pass} variant="print" headingLevel={2} /> : undefined}
         />
         <TearLine />

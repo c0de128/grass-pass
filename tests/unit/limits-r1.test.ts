@@ -15,7 +15,9 @@ import {
   networkKey,
   preLimit,
   reserveQuota,
+  resetBudget,
   resetPreLimit,
+  restingState,
 } from "@/lib/limits";
 import { proxy, config as proxyConfig } from "@/proxy";
 
@@ -202,6 +204,8 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
   it("proxy: 429 with Retry-After before any store call; JSON on /api, text on pages; matcher covers store pages", () => {
     process.env.PRELIMIT_BURST = "3";
     process.env.PRELIMIT_PER_SEC = "1";
+    // SEC-2-01: pages have their own (slower) bucket.
+    process.env.PRELIMIT_PAGE_BURST = "3";
     try {
       const req = (path: string) => new NextRequest(`http://localhost:3123${path}`, { headers: { "x-forwarded-for": "192.0.2.200" } });
       for (let i = 0; i < 3; i++) expect(proxy(req("/")).status).toBe(200);
@@ -209,6 +213,7 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
       expect(page.status).toBe(429);
       expect(Number(page.headers.get("retry-after"))).toBeGreaterThan(0);
       expect(page.headers.get("content-type")).toMatch(/text\/plain/);
+      for (let i = 0; i < 3; i++) expect(proxy(req("/api/nothing")).status).toBe(200);
       const api = proxy(req("/api/pass"));
       expect(api.status).toBe(429);
       expect(api.headers.get("content-type")).toMatch(/json/);
@@ -218,6 +223,7 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
     } finally {
       delete process.env.PRELIMIT_BURST;
       delete process.env.PRELIMIT_PER_SEC;
+      delete process.env.PRELIMIT_PAGE_BURST;
     }
   });
 });
@@ -243,7 +249,7 @@ describe("Upstash: one EVAL per check, monthly budget alerts", () => {
     expect(f.sent).toHaveLength(2);
   });
 
-  it("adds commands to a shared monthly counter every 50 and logs at 50% and 90% of UPSTASH_MONTHLY_COMMANDS", async () => {
+  it("adds commands to a shared monthly counter every 50 and logs at 50%, 90% and 95% of UPSTASH_MONTHLY_COMMANDS", async () => {
     let total = 0;
     const f = fakeUpstash((cmd) => {
       if (String(cmd[3]).includes("meta:commands:2026-10")) return (total += Number(cmd[4]));
@@ -256,7 +262,11 @@ describe("Upstash: one EVAL per check, monthly budget alerts", () => {
     expect(budget.map((b) => [b.fields.pct, b.level])).toEqual([
       [50, "warn"],
       [90, "error"],
+      [95, "error"],
     ]);
     expect(total).toBeGreaterThanOrEqual(200);
+    // SEC-2-01: past 95% the app rests (read-only) instead of failing closed at 100%.
+    expect(restingState(T0).resting).toBe(true);
+    resetBudget();
   });
 });

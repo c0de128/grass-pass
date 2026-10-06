@@ -1,17 +1,21 @@
 /**
- * Runs before every page and API route that reads the shared store (SEC-1-02): the home page (example
- * statuses), saved pass pages and their print pages, and /api/*. A per-IP token bucket in this process
- * answers 429 with Retry-After before any Upstash command is spent. Static assets and /about never
- * touch the store and are not matched.
+ * Runs before every page and API route that reads the shared store (SEC-1-02, SEC-2-01): the home page
+ * (example statuses), saved pass pages and their print pages, and /api/*. Per-IP token buckets in this
+ * process (src/lib/limits/prelimit.ts: a request bucket for pages or APIs, a store-cost bucket, and a
+ * shared /48 bucket for IPv6) answer 429 with Retry-After before any Upstash command is spent.
+ * Static assets and /about never touch the store and are not matched.
+ *
+ * Nothing here relies on state shared with render code (Next 16: the proxy may run apart from it).
  */
 import { NextResponse, type NextRequest } from "next/server";
 import { jsonError, waitText } from "@/lib/http/respond";
-import { clientIp } from "@/lib/limits/ip";
+import { clientIp, networkKey } from "@/lib/limits/ip";
 import { limitsConfig } from "@/lib/limits/config";
-import { preLimit } from "@/lib/limits/prelimit";
+import { preLimitRequest } from "@/lib/limits/prelimit";
 
 export function proxy(req: NextRequest): Response {
-  const r = preLimit(clientIp(req), Date.now(), limitsConfig());
+  const key = clientIp(req);
+  const r = preLimitRequest({ key, net48: networkKey(key), pathname: req.nextUrl.pathname, now: Date.now(), cfg: limitsConfig() });
   if (r.ok) return NextResponse.next();
   const message = `That's a lot of requests from your connection. Please wait ${waitText(r.retryAfter)} and try again.`;
   if (req.nextUrl.pathname.startsWith("/api/")) {

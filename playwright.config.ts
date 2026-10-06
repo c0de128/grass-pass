@@ -38,6 +38,11 @@ export default defineConfig({
       // forwarded address and must see 429s even though page renders take a while.
       PRELIMIT_BURST: process.env.PRELIMIT_BURST ?? "300",
       PRELIMIT_PER_SEC: process.env.PRELIMIT_PER_SEC ?? "2",
+      // SEC-2-01 page and store-cost buckets (defaults 20 + 6/min, 60 + 45/h): roomy for one shared test IP.
+      PRELIMIT_PAGE_BURST: process.env.PRELIMIT_PAGE_BURST ?? "300",
+      PRELIMIT_PAGE_PER_MIN: process.env.PRELIMIT_PAGE_PER_MIN ?? "120",
+      PRELIMIT_COST_BURST: process.env.PRELIMIT_COST_BURST ?? "3000",
+      PRELIMIT_COST_PER_HOUR: process.env.PRELIMIT_COST_PER_HOUR ?? "36000",
     },
   },
 });

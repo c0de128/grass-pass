@@ -5,4 +5,6 @@ export { reserveQuota, quotaUsage, periodOf, NET48_FACTOR, type Period, type Quo
 export { tripBreaker, breakerRetryAfter, resetBreaker, DEFAULT_OPEN_SEC } from "./breaker";
 export { createSemaphore, createSpacedQueue, takeSecondSlot, QueueAbortedError } from "./concurrency";
 export { limitsConfig, intFromEnv, aiCapFor, LIMIT_DEFAULTS, SERPAPI_FREE_MONTHLY, type LimitsConfig } from "./config";
-export { preLimit, resetPreLimit, type PreLimitResult } from "./prelimit";
+export { preLimit, preLimitRequest, requestCost, monthlyCommandBound, resetPreLimit, COSTS, EXTRA, type PreLimitResult } from "./prelimit";
+export { plausiblePassId, memoPassRead, forgetPassRead, resetPassReads } from "./pass-read";
+export { restingState, restingError, restingMessage, noteMonthlyCommands, resetBudget, RESTING_PCT, type Resting } from "./budget";

@@ -29,9 +29,19 @@ export type LimitsConfig = {
    * new passes for other parks cannot use the whole day. 0 switches the reserve off; max 50.
    */
   aiReservePct: number;
-  /** In-process pre-limiter (SEC-1-02): burst size and refill per second, per IP, per instance. */
+  /** In-process pre-limiter (SEC-1-02): burst size and refill per second, per IP, per instance (/api/* requests). */
   preLimitBurst: number;
   preLimitPerSec: number;
+  /** SEC-2-01: page requests (`/`, `/pass/*`) per IP: a burst, then this many per minute (6 = 0.1/s). */
+  preLimitPageBurst: number;
+  preLimitPagePerMin: number;
+  /**
+   * SEC-2-01: store-cost units per IP: a burst, then this many per hour. A request is charged about the
+   * shared-store commands it can cause (see ./prelimit.ts `requestCost`), so the steady rate bounds the
+   * monthly Upstash commands one address can spend (math in ./prelimit.ts).
+   */
+  preLimitCostBurst: number;
+  preLimitCostPerHour: number;
 };
 
 export const LIMIT_DEFAULTS: LimitsConfig = {
@@ -46,6 +56,10 @@ export const LIMIT_DEFAULTS: LimitsConfig = {
   aiReservePct: 10,
   preLimitBurst: 40,
   preLimitPerSec: 4,
+  preLimitPageBurst: 20,
+  preLimitPagePerMin: 6,
+  preLimitCostBurst: 60,
+  preLimitCostPerHour: 45,
 };
 
 /** SerpApi free plan is 250 searches/month; never configure above it. */
@@ -65,6 +79,10 @@ export function limitsConfig(env: Env = process.env): LimitsConfig {
     aiReservePct: env.AI_RESERVE_PCT?.trim() === "0" ? 0 : Math.min(intFromEnv(env.AI_RESERVE_PCT, d.aiReservePct), 50),
     preLimitBurst: intFromEnv(env.PRELIMIT_BURST, d.preLimitBurst),
     preLimitPerSec: intFromEnv(env.PRELIMIT_PER_SEC, d.preLimitPerSec),
+    preLimitPageBurst: intFromEnv(env.PRELIMIT_PAGE_BURST, d.preLimitPageBurst),
+    preLimitPagePerMin: intFromEnv(env.PRELIMIT_PAGE_PER_MIN, d.preLimitPagePerMin),
+    preLimitCostBurst: intFromEnv(env.PRELIMIT_COST_BURST, d.preLimitCostBurst),
+    preLimitCostPerHour: intFromEnv(env.PRELIMIT_COST_PER_HOUR, d.preLimitCostPerHour),
   };
 }
 

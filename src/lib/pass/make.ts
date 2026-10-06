@@ -17,6 +17,8 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { createInflight, createJsonCache, getStore, StoreError, WaiterAbortedError, type Store } from "@/lib/cache";
 import { aiCapFor, hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type QuotaTicket } from "@/lib/limits";
+import { restingError } from "@/lib/limits/budget";
+import { forgetPassRead, memoPassRead, plausiblePassId, resetPassReads } from "@/lib/limits/pass-read";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
@@ -89,11 +91,19 @@ export function passKey(parkId: string, band: AgeBand, nowMs: number): string {
   return `${parkId}|${band}|${localDay(nowMs)}`;
 }
 
-/** Read a saved pass (the pass page; never calls upstream). */
+/**
+ * Read a saved pass (the pass page; never calls upstream). SEC-2-01: an id that can't exist (bad shape,
+ * a day outside the 30-day TTL, a variant above MAX_VARIANTS) costs no store read, and reads are memoized
+ * in process (src/lib/limits/pass-read.ts; a normal pass for 30 min, a degraded one or a miss for 15 s).
+ */
 export async function loadPass(id: string, now: number = Date.now()): Promise<Pass | null> {
-  if (!PASS_ID_PATTERN.test(id)) return null;
-  const hit = await passCache.get(id, now);
-  return hit ? hit.value : null;
+  if (!PASS_ID_PATTERN.test(id) || !plausiblePassId(id, now)) return null;
+  return memoPassRead(
+    id,
+    now,
+    async () => (await passCache.get(id, now))?.value ?? null,
+    (p) => !isDegraded(p),
+  );
 }
 
 export type MakeDeps = {
@@ -135,6 +145,7 @@ function inflight() {
 /** Tests: drop in-flight builds. */
 export function resetPassMaking(): void {
   inflight().clear();
+  resetPassReads();
 }
 
 const storeDown = (): MakeOutcome => ({
@@ -151,6 +162,9 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
   const cfg = limitsConfig(env);
   const ref = parseParkId(req.parkId);
   if (!ref) return { kind: "error", status: 400, error: { code: "BAD_INPUT", message: "That park id doesn't look right." } };
+  // SEC-2-01: the store's monthly command budget is nearly used up: read-only until it resets.
+  const resting = restingError(startedAt);
+  if (resting) return { kind: "error", status: 503, error: resting };
 
   try {
     const burst = deps.internal
@@ -240,7 +254,8 @@ async function build(ctx: {
     name: "pass-new",
     key: ctx.deps.ip,
     perKey: ctx.deps.internal ? Infinity : cfg.passPerIpPerDay,
-    global: Math.max(cfg.aiDailyCap, 1) * 2,
+    // SEC-2-02: the AI reserve applies here too, or cheap no-AI requests could fill this share for everyone.
+    global: Math.max(aiCap, 1) * 2,
     period: { kind: "day" },
     now: now(),
   });
@@ -305,6 +320,7 @@ async function build(ctx: {
         out = { ...out, pass: { ...out.pass, october: await within(october, cap) } };
       }
       await passCache.set(ctx.id, out.pass, { now: now() });
+      forgetPassRead(ctx.id);
       await latestCache.set(ctx.key, ctx.variant, { now: now() });
       log("pass_made", { id: ctx.id, items: out.pass.items.length, model: out.pass.model.answered, ms: now() - ctx.startedAt, degraded: isDegraded(out.pass) });
     } else {

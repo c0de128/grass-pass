@@ -50,11 +50,14 @@ test("the pre-limiter answers 429 with Retry-After before the store is touched",
   const r = limited[0];
   expect(Number(r.headers()["retry-after"])).toBeGreaterThan(0);
   expect((await r.json()).error.code).toBe("RATE_LIMITED");
-  // Pages from the same (nearly empty) bucket: one after another they use tokens faster than the 2/s
-  // refill, so a page is soon refused too, as plain text and without being rendered.
-  let limitedPage = await request.get("/", { headers });
-  for (let i = 0; i < 20 && limitedPage.status() !== 429; i++) limitedPage = await request.get("/", { headers });
-  expect(limitedPage.status()).toBe(429);
+  // SEC-2-01: pages have their own bucket (e2e: PRELIMIT_PAGE_BURST=300). Pass ids that can't exist
+  // cost no store read, so flooding them is cheap here; past the burst a page is refused as plain text
+  // without being rendered.
+  const pageBurst = Number(process.env.PRELIMIT_PAGE_BURST ?? 300);
+  const pages = await Promise.all(Array.from({ length: pageBurst + 40 }, (_, i) => request.get(`/pass/not-a-pass-${i}`, { headers })));
+  const limitedPage = pages.find((p) => p.status() === 429);
+  expect(limitedPage).toBeDefined();
+  if (!limitedPage) return;
   expect(limitedPage.headers()["content-type"]).toMatch(/text\/plain/);
   expect(await limitedPage.text()).toMatch(/Please wait about \d+ seconds? and try again/);
 });

@@ -99,6 +99,18 @@ function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
       cell: (c) => usd(c.costPerPass),
       target: `${EVAL_THRESHOLDS.costPerPass} or less`,
     },
+    {
+      label: "Printed clues repeated across parks",
+      plain: "How often a clue shares 5 words in a row with clues printed for at least 2 other parks. Lower means each park reads more like itself.",
+      cell: (c) => `${pct(c.repeatPct)} (${c.repeated}/${c.printedClues})`,
+      target: `${EVAL_THRESHOLDS.repeatPct}% or lower`,
+    },
+    {
+      label: "Printed clues with a wrong count",
+      plain: "A clue like \"Can you find 4 benches?\" must use the map's real number. The second number is how many wrong counts code removed before printing.",
+      cell: (c) => `${c.wrongCounts} of ${c.countClues} count clues (${c.wrongCountsRemoved} removed)`,
+      target: String(EVAL_THRESHOLDS.wrongCounts),
+    },
     { label: "Licence", plain: "The rules for using the model's weights.", cell: (c) => c.licence },
   ];
   return (
@@ -316,17 +328,30 @@ export default function AboutPage() {
         <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
-            <strong>Answers that name themselves:</strong> Gemma now passes ({pct(gemma.nameLeakPct)} of its clues or
+            <strong>Complete passes: Gemma does not pass ({pct(gemma.completePct)}, {gemma.complete} of {gemma.dataRichRuns};
+            target {EVAL_THRESHOLDS.completePct}% or more).</strong> The stricter clue checks drop more clues, and parks with
+            little data (few mapped features and few wild sightings) sometimes end up 2 or 3 finds short even after a second
+            try; {gemma.timeouts} model call ran past the time limit. A short pass says how many finds are missing; it is
+            never padded.
+          </li>
+          <li>
+            <strong>Clues still repeat across parks: Gemma {pct(gemma.repeatPct)}</strong> of printed clues share 5 words in a
+            row with clues on at least 2 other parks (target {EVAL_THRESHOLDS.repeatPct}% or lower). That is down from 45.7%
+            before the last change, but it does not pass. Wrong counts now pass: {gemma.wrongCounts} of {gemma.countClues}{" "}
+            printed count clues (24 of 88 before).
+          </li>
+          <li>
+            <strong>Answers that name themselves:</strong> Gemma passes ({pct(gemma.nameLeakPct)} of its clues or
             &quot;look where&quot; hints used a word of their own answer before the filter; target{" "}
             {EVAL_THRESHOLDS.nameLeakPct}% or lower), but Llama 4 Maverick does not ({pct(llama.nameLeakPct)}). Code catches
             every one: a clue that names its answer is dropped, and a hint that does is left off. So nothing is given away
             on the pass, but those clues are lost.
           </li>
           <li>
-            <strong>Llama 4 Maverick is too slow to be the default:</strong> {secs(llama.p50s)} typical per model call
-            (target {EVAL_THRESHOLDS.p50s} s), with {pct(llama.completePct)} complete passes. Gemma took{" "}
-            {secs(gemma.p50s)} typical and {secs(gemma.p95s)} slow-case; most of that wait is the model writing its
-            answer, so we made the answer shorter.
+            <strong>Speed: neither model passes.</strong> Gemma took {secs(gemma.p50s)} typical and {secs(gemma.p95s)}{" "}
+            slow-case per model call (target {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s), just over both marks; most of
+            that wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: {secs(llama.p50s)}{" "}
+            typical, with {pct(llama.completePct)} complete passes.
           </li>
           <li>
             <strong>A model glitch we saw in an earlier run:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park,

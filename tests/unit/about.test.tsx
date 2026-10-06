@@ -31,6 +31,8 @@ type Score = {
   m6: { rate: number; clueRate: number };
   m7: { p50Ms: number | null; p95Ms: number | null };
   m8: { costPerPass: number };
+  m10: { repeated: number; clues: number; rate: number | null };
+  m11: { printedWrong: number; printedCountClues: number; rawWrong: number };
 };
 type Results = { meta: { day: string; ageBand: string; partial: boolean }; cases: unknown[]; scores: Score[]; spend: { usd: number } };
 
@@ -64,6 +66,12 @@ describe("about page numbers come from the committed eval run", () => {
     expect(c.p95s).toBe(s.m7.p95Ms === null ? null : Math.round(s.m7.p95Ms / 100) / 10);
     expect(c.timeouts).toBe(s.errors.MODEL_TIMEOUT ?? 0);
     expect(c.costPerPass).toBe(Math.round(s.m8.costPerPass * 1e5) / 1e5);
+    expect(c.repeated).toBe(s.m10.repeated);
+    expect(c.printedClues).toBe(s.m10.clues);
+    expect(c.repeatPct).toBe(r1(s.m10.rate ?? NaN));
+    expect(c.wrongCounts).toBe(s.m11.printedWrong);
+    expect(c.countClues).toBe(s.m11.printedCountClues);
+    expect(c.wrongCountsRemoved).toBe(s.m11.rawWrong);
   });
 });
 
@@ -86,7 +94,25 @@ describe("/about", () => {
   });
 
   it("quotes the measured numbers, failures included", () => {
-    for (const s of ["98.8%", "100% (51/51)", "2.3%", "2.1%", "9.4 s / 11.7 s", "$0.00065", "1.0", "5.8", "29.9 s typical", "94.1% complete passes", "Gemma now passes (2.3%", "Llama 4 Maverick does not (9.4%)"]) {
+    for (const s of [
+      "99.1% (549/554)",
+      "86.3% (44/51)",
+      "2.7%",
+      "2.2%",
+      "10.1 s / 20.8 s",
+      "$0.00078",
+      "1.7",
+      "3.8",
+      "39.5 s typical",
+      "41.2% complete passes",
+      "Gemma passes (2.7%",
+      "Llama 4 Maverick does not (10.8%)",
+      "Complete passes: Gemma does not pass (86.3%, 44 of 51",
+      "Gemma 29.2%",
+      "29.2% (112/383)",
+      "0 of 124 count clues (1 removed)",
+      "Speed: neither model passes.",
+    ]) {
       expect(t).toContain(s);
     }
     expect(t).toContain("No closed model was compared");

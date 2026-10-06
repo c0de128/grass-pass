@@ -35,10 +35,20 @@ export function HowItWorks() {
   return (
     <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
-        <div className="flex max-w-2xl flex-col gap-4">
+        <div className="flex max-w-3xl flex-col gap-4">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
-          <h2 id="how-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
-            Real park data in. One open AI model. Paper out.
+          <h2 id="how-title" className="flex flex-col gap-2 text-4xl leading-[1.05] font-extrabold tracking-tight text-ink sm:text-5xl lg:text-6xl">
+            <span>Real park data in.</span>{" "}
+            <span className="text-primary">Advanced AI processing.</span>{" "}
+            <span>
+              <span className="relative inline-block">
+                Screen-free adventure
+                <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
+                  <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+                </svg>
+              </span>{" "}
+              out.
+            </span>
           </h2>
           <p>
             <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4">

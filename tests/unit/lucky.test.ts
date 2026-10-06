@@ -64,7 +64,7 @@ const DAY = 24 * 3600 * 1000;
 
 /** Every review snippet in the recordings (to prove none of them ever leaves the counting code). */
 const SNIPPETS = Object.values(REV).flatMap((n) =>
-  ((body(n).reviews as { snippet?: string }[] | undefined) ?? []).map((r) => r.snippet ?? "").filter((s) => s.length >= 25),
+  ((body(n).reviews as { snippet?: string }[] | undefined) ?? []).map((r) => r.snippet ?? "").filter((s) => s.length >= 15),
 );
 
 let lines: string[];
@@ -147,6 +147,27 @@ describe("park -> Google place (real google_maps answers)", () => {
   it("no results (SerpApi's 200 'no results' -> null) is no match", () => {
     expect(parsePlaces(null)).toEqual([]);
     expect(matchPlace(ARBOR, [])).toEqual({ ok: false, why: "no_results" });
+  });
+});
+
+describe("committed review fixtures keep no full review text (R3 privacy, public repo)", () => {
+  it("every kept word is within 3 words of a keyword the counting code matches; reviews without one keep an empty snippet", () => {
+    const res = Object.values(LUCKY_KEYWORDS).map((k) => k.mentions);
+    const hits = (w: string, next = "") => res.some((re) => re.test(w)) || LUCKY_KEYWORDS.skateboard.mentions.test(`${w} ${next}`);
+    let checked = 0;
+    for (const n of [...Object.values(REV), "google-maps-reviews-arbor-hills-newest-topics"]) {
+      for (const r of (body(n).reviews as { snippet?: string; iso_date?: string }[] | undefined) ?? []) {
+        expect(r.iso_date).toMatch(/^\d{4}-\d{2}-\d{2}T/); // the date stays: the window test needs it
+        for (const seg of (r.snippet ?? "").split(" … ").filter(Boolean)) {
+          const words = seg.split(/\s+/);
+          const at = words.flatMap((w, i) => (hits(w, words[i + 1]) ? [i] : []));
+          expect(at.length, `${n}: "${seg}"`).toBeGreaterThan(0);
+          for (let i = 0; i < words.length; i++) expect(at.some((j) => Math.abs(i - j) <= 4), `${n}: "${seg}"`).toBe(true);
+          checked++;
+        }
+      }
+    }
+    expect(checked).toBeGreaterThan(60);
   });
 });
 

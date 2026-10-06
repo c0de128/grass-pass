@@ -31,8 +31,13 @@ They are used only by tests and never imported by app code.
 
 The SerpApi files were recorded with the project's free-plan key by a scratch script (the key is never in a file: each
 recording was scanned for it). They are trimmed to the fields the app reads; reviewer names, profile links, photos,
-thumbnails, review ids and likes were removed (`_recording.trimmed`). Review snippets are kept only because the
-counting tests check each review's own text; the app never shows, stores or sends review text.
+thumbnails, review ids and likes were removed (`_recording.trimmed`). **Review text is cut down too (R3, 2026-10-06):**
+each review keeps only the words the counting regexes match (dog, bike, duck or skateboard words) with at most 3 words
+of context on each side (several matches are joined by " … "), plus its real dates; a review that matches none keeps an
+empty snippet. This is derived from the real answers (trimmed, never invented): the trim script checked that every
+keyword regex matches each trimmed review exactly as it matched the full text, so the counts the tests expect are
+unchanged, and `lucky.test.ts` checks that no fixture keeps more than that. The app itself never shows, stores or sends
+review text. (Earlier commits of these files, before this trim, still hold the longer snippets in git history.)
 
 The S3 recordings were made by running `makePass()` (the real app code) through a scratch Vitest config. To keep the
 repo small, the iNaturalist files keep only the fields the app reads (each file's `_recording.trimmed` says which);

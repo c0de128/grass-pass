@@ -14,7 +14,7 @@
     "latencyMs": 3210,
     "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
     "keyFoundInBody": false,
-    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). R3 (2026-10-06): each review's text was then cut down to the words the counting regexes match (dog/bike/duck/skateboard words) with at most 3 words of context on each side, joined by ' … '; a review whose text matches none of them keeps an empty snippet. Dates are untouched. Every keyword regex matches each trimmed review exactly as it matched the full text (checked by the trim script). Derived from the real answer, nothing invented."
   },
   "search_metadata": {
     "id": "6ac4fec4e64250a173ad655d",
@@ -39,7 +39,7 @@
       "iso_date": "2026-03-14T21:48:43Z",
       "iso_date_of_last_edit": "2026-03-14T21:48:43Z",
       "source": "Google",
-      "snippet": "Walking paths are fantastic but there's just no escape from the minefield of dog piles."
+      "snippet": "the minefield of dog piles."
     },
     {
       "position": 2,
@@ -48,7 +48,7 @@
       "iso_date": "2022-01-16T20:08:08Z",
       "iso_date_of_last_edit": "2025-12-10T07:07:40Z",
       "source": "Google",
-      "snippet": "This is the kind of park that sneaks up on you. You expect a patch of grass, a few swings, maybe a half-working fountain. Instead you find a sprawling, oddly intricate landscape that feels like someone finally asked, “What if we built a park people actually use?”\n\nWalking through it, you get the sense that Texans take their outdoor spaces seriously. Not in the over-curated, brochure-ready way, but in the practical sense of “kids need to run, adults need to breathe, and everyone needs a place to escape their own living rooms.”\n\nThe playground is enormous, a tangle of structures that look like they were engineered by someone who understands both centrifugal force and children’s capacity for chaos. Kids launch themselves across ropes and ramps while parents hover nearby, calculating injury probabilities and pretending they aren’t. It’s entertaining in the way watching a small, benevolent society form itself always is.\n\nThe walking trails are wide and clean, looping through the park with the quiet confidence of a place that expects you to return. Families stroll, runners negotiate their personal battles with cardiovascular fitness, and the occasional dog drags its owner with the determined authority dogs have everywhere.\n\nThe sports fields stretch across the landscape like someone ironed the earth flat and decided to mark it with chalk. You see everything here: kids learning the rudiments of teamwork, adults trying to reclaim a piece of athletic youth, entire leagues of people negotiating referees who definitely did not sign up for this level of emotional feedback.\n\nThere’s a certain beauty in the park at sunset. The Texas sky opens wide, the fields glow, and the whole place feels like a temporary ceasefire in the general absurdity of life.\n\nIf you come here expecting spectacle, you won’t find it. What you’ll find instead is something better. A park designed by people who understand what a community actually needs: room to run, room to breathe, and a place where, for an hour or two, nobody demands anything from you except maybe a push on the swing."
+      "snippet": "and the occasional dog drags its owner with the determined authority dogs have everywhere. The sports"
     },
     {
       "position": 3,
@@ -57,7 +57,7 @@
       "iso_date": "2025-11-18T17:42:13Z",
       "iso_date_of_last_edit": "2025-11-18T17:42:13Z",
       "source": "Google",
-      "snippet": "My dog rolled in a dirty diaper someone left in the parking lot. People will also toss chicken bones on the ground instead of walking the eight feet to the numerous trash bins they have. I'm sure the staff does what they can to maintain the park, but a small portion of people using the park trash it for everyone."
+      "snippet": "My dog rolled in a dirty"
     },
     {
       "position": 4,
@@ -66,7 +66,7 @@
       "iso_date": "2025-03-09T18:13:44Z",
       "iso_date_of_last_edit": "2025-03-09T18:13:44Z",
       "source": "Google",
-      "snippet": "This is a really clean park and the people that frequent it are super friendly! They are dog friendly too, so we  were able to bring her with us!"
+      "snippet": "friendly! They are dog friendly too, so we"
     },
     {
       "position": 5,
@@ -75,7 +75,7 @@
       "iso_date": "2024-08-10T23:33:03Z",
       "iso_date_of_last_edit": "2024-08-10T23:33:03Z",
       "source": "Google",
-      "snippet": "Awesome awesome place to take the kids, dog family friends just to hang out"
+      "snippet": "take the kids, dog family friends just to"
     },
     {
       "position": 6,
@@ -84,7 +84,7 @@
       "iso_date": "2024-05-07T22:46:28Z",
       "iso_date_of_last_edit": "2024-05-07T22:46:28Z",
       "source": "Google",
-      "snippet": "One of my toddler’s favorite parks! This park is pretty huge and offers something for people of all ages. There is a area for everything whether it's soccer, tennis, basketball, baseball/softball, barbecue grills, playground, spray-ground, picnic tables, covered pavilion, biking and hiking trails, walking or just sitting by the ponds and watching ducks.\n\nThe playground is huge and very colorful, it is very pleasing to the eyes. Bonus is there's a bathroom pretty close to this area as well. I've seen other parks (smaller) with no bathrooms or they are far away.\n\nCelebration park has ample space to walk around, scenic areas for a nice photo, and it's mostly clean with few instances of dog waste. There's also a good amount of parking. I’m always able to park right in front, although I have never visited on a weekend."
+      "snippet": "tables, covered pavilion, biking and hiking trails, walking … ponds and watching ducks. The playground is huge … few instances of dog waste. There's also a"
     },
     {
       "position": 7,
@@ -93,7 +93,7 @@
       "iso_date": "2023-07-15T18:16:05Z",
       "iso_date_of_last_edit": "2023-07-15T18:16:05Z",
       "source": "Google",
-      "snippet": "The kids absolutely loved it. They didn't want to leave! My dog on the other hand was being a jerk! Lesson learned. To the lady he growled at! I apologize!! He will no longer be allowed at public areas. I'm so sorry he did that. 😔"
+      "snippet": "to leave! My dog on the other hand"
     },
     {
       "position": 8,
@@ -102,7 +102,7 @@
       "iso_date": "2021-06-28T22:02:50Z",
       "iso_date_of_last_edit": "2021-06-28T22:02:50Z",
       "source": "Google",
-      "snippet": "Every dog deserves grass as beautifully manicured as celebration park. Forgo the celebration at the park and give everyone a break on their property taxes! After all they did pay for a stadium nobody ever used."
+      "snippet": "Every dog deserves grass as beautifully"
     },
     {
       "position": 9,
@@ -111,7 +111,7 @@
       "iso_date": "2021-01-26T00:15:25Z",
       "iso_date_of_last_edit": "2021-01-26T00:15:28Z",
       "source": "Google",
-      "snippet": "Had a great walk with the wifey and dog"
+      "snippet": "the wifey and dog"
     },
     {
       "position": 10,
@@ -120,7 +120,7 @@
       "iso_date": "2020-02-20T05:20:16Z",
       "iso_date_of_last_edit": "2021-01-09T19:36:02Z",
       "source": "Google",
-      "snippet": "Very big park. My daughter love it. It also have enough space to throw ball with my dog. It has a small lake to watch ducks, gooses, gulls. There’s bathrooms there. And there’s also splash park in the summer. The children play structure can be crowded on weekends on nice weather days."
+      "snippet": "ball with my dog. It has a small lake to watch ducks, gooses, gulls. There’s bathrooms"
     },
     {
       "position": 11,
@@ -129,7 +129,7 @@
       "iso_date": "2020-02-23T13:48:43Z",
       "iso_date_of_last_edit": "2020-02-23T13:48:43Z",
       "source": "Google",
-      "snippet": "Best park in the world, the grass was greener and the trees were greener than the grass and the water was greener than the trees and the sky was greener than the water and the air was greener than the sky and the sun was greener than the air and my dog just pooped."
+      "snippet": "air and my dog just pooped."
     },
     {
       "position": 12,
@@ -138,7 +138,7 @@
       "iso_date": "2019-05-18T00:18:04Z",
       "iso_date_of_last_edit": "2020-02-13T05:06:34Z",
       "source": "Google",
-      "snippet": "I came here around 10 am and there was nobody in the park except the park maintenance guy. The splash pads were working and I took my lab dog there because he loves water. He came and screamed that dogs are forbidden to this area. A very nasty old guy. I was like ok sir I did not know that and we left the park. You were a nasty old guy who hates dogs and your job. You could be nice to people. I know it was my mistake I did not read the sign but you could be nicer and I would leave definitely."
+      "snippet": "took my lab dog there because he loves … and screamed that dogs are forbidden to this … guy who hates dogs and your job. You"
     },
     {
       "position": 13,
@@ -147,7 +147,7 @@
       "iso_date": "2020-02-08T17:39:35Z",
       "iso_date_of_last_edit": "2020-02-08T17:39:35Z",
       "source": "Google",
-      "snippet": "What a great place to take your family, or dog or even go to work out. Just wish they had more lighting at night on the field"
+      "snippet": "your family, or dog or even go to"
     },
     {
       "position": 14,
@@ -156,7 +156,7 @@
       "iso_date": "2020-01-07T14:57:37Z",
       "iso_date_of_last_edit": "2020-01-07T14:57:37Z",
       "source": "Google",
-      "snippet": "Lots of choices! Walking paths throughought.  Fishing pond w/birds. Separated playground for ages. Splash pad during the summer. Soccer, baseball, football fields for sports. Huge open hills, for picnics. Trash, picnic tables, water fountains, bathrooms, grills. Wooded areas. Can bring your dog on a leash & they provide poopie bags."
+      "snippet": "Can bring your dog on a leash &"
     },
     {
       "position": 15,
@@ -165,7 +165,7 @@
       "iso_date": "2019-10-10T13:19:59Z",
       "iso_date_of_last_edit": "2019-10-10T13:19:59Z",
       "source": "Google",
-      "snippet": "Lovely dog friendly place to take a good walk with my dog."
+      "snippet": "Lovely dog friendly place to take … walk with my dog."
     },
     {
       "position": 16,
@@ -183,7 +183,7 @@
       "iso_date": "2018-07-22T17:41:10Z",
       "iso_date_of_last_edit": "2018-07-22T17:41:20Z",
       "source": "Google",
-      "snippet": "Dog liked it so I do too."
+      "snippet": "Dog liked it so I"
     },
     {
       "position": 18,
@@ -192,7 +192,7 @@
       "iso_date": "2018-05-21T06:50:52Z",
       "iso_date_of_last_edit": "2018-05-21T07:03:19Z",
       "source": "Google",
-      "snippet": "We love taking the kids to Celebration Park! My wife and I always have plenty of options on what to do at this park. Tennis, basketball, soccer, or even the splash park are all wonderful options. The park is extremely well lit and there is a strong police presence which is always appreciated. Occasionally there’s some dog poo, but for the most part people clean up after there pets."
+      "snippet": "Occasionally there’s some dog poo, but for the"
     },
     {
       "position": 19,
@@ -201,7 +201,7 @@
       "iso_date": "2018-05-06T20:49:58Z",
       "iso_date_of_last_edit": "2018-05-06T20:49:58Z",
       "source": "Google",
-      "snippet": "Nice park for relaxing, dog walking and bicycling."
+      "snippet": "park for relaxing, dog walking and bicycling."
     },
     {
       "position": 20,
@@ -210,7 +210,7 @@
       "iso_date": "2017-06-17T21:16:40Z",
       "iso_date_of_last_edit": "2017-06-17T21:16:40Z",
       "source": "Google",
-      "snippet": "Large park great for riding bikes or walkin the dog."
+      "snippet": "great for riding bikes or walkin the dog."
     }
   ],
   "serpapi_pagination": {

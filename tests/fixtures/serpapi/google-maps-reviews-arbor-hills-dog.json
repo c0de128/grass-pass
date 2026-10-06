@@ -14,7 +14,7 @@
     "latencyMs": 987,
     "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
     "keyFoundInBody": false,
-    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). R3 (2026-10-06): each review's text was then cut down to the words the counting regexes match (dog/bike/duck/skateboard words) with at most 3 words of context on each side, joined by ' … '; a review whose text matches none of them keeps an empty snippet. Dates are untouched. Every keyword regex matches each trimmed review exactly as it matched the full text (checked by the trim script). Derived from the real answer, nothing invented."
   },
   "search_metadata": {
     "id": "6ac4fb8e37ff8d0d4ae3bd0d",
@@ -39,7 +39,7 @@
       "iso_date": "2026-09-24T02:31:48Z",
       "iso_date_of_last_edit": "2026-09-24T02:31:48Z",
       "source": "Google",
-      "snippet": "Great place to go hike and run and take your dog. A good place to take photos and have really pretty views in the middle of the city. It’s a nice little oasis."
+      "snippet": "and take your dog. A good place to"
     },
     {
       "position": 2,
@@ -48,7 +48,7 @@
       "iso_date": "2026-09-16T00:32:16Z",
       "iso_date_of_last_edit": "2026-09-16T00:32:16Z",
       "source": "Google",
-      "snippet": "Always a well maintained trail system for my dog and I."
+      "snippet": "system for my dog and I."
     },
     {
       "position": 3,
@@ -57,7 +57,7 @@
       "iso_date": "2026-09-14T18:16:04Z",
       "iso_date_of_last_edit": "2026-09-14T18:17:39Z",
       "source": "Google",
-      "snippet": "Beautiful walk, but watch out for the dog poop. Almost stepped in one, that's the only reason this isn't 5 stars"
+      "snippet": "out for the dog poop. Almost stepped in"
     },
     {
       "position": 4,
@@ -66,7 +66,7 @@
       "iso_date": "2025-07-23T23:33:15Z",
       "iso_date_of_last_edit": "2026-07-06T14:55:27Z",
       "source": "Google",
-      "snippet": "Arbor Hills Nature Preserve: A Quiet Triumph in Plano, Texas\n\n📍 Location: 6701 W Parker Rd, Plano, TX 75093\n\n🕒 Hours: Open daily, 5:00 AM – 11:00 PM\n\n🐾 Dog-Friendly | 🚲 Bike Trails | 🌳 Wildlife Viewing | 🧺 Picnic Areas\n⭐ Rated 4.6/5 on TripAdvisor and Yelp\n\nNestled in the heart of Plano, Texas, Arbor Hills Nature Preserve is a 200-acre sanctuary where the wild and the weary meet. Here, the trails—both paved and earthen—wind through prairies, woodlands, and creeks, offering a rare communion with nature just minutes from the city’s pulse.\n\nThe preserve welcomes hikers, joggers, mountain bikers, and families alike. Dog-friendly paths, shaded loops, and scenic overlooks make it a favorite for locals and travelers seeking a peaceful retreat. The playground and picnic pavilions near the entrance hum with laughter and quiet joy. Wildlife sightings—hawks, deer, armadillos—are not uncommon, and the air carries the scent of cedar and sun-warmed stone.\n\nOn weekends, the preserve can be crowded. Arrive early to find parking and solitude. The 2.7-mile mountain bike trail, maintained by DORBA, offers quick drops and banked turns for beginners and seasoned riders. The main loop trail, partially shaded, is ideal for walking meditation or a brisk jog.\n\nIn the evening, the light softens. Shadows stretch across the prairie. The world exhales.\n\nArbor Hills is not just a park. It is a place to remember that silence is not empty—it is full of meaning."
+      "snippet": "11:00 PM 🐾 Dog-Friendly | 🚲 Bike Trails | 🌳 Wildlife … hikers, joggers, mountain bikers, and families alike. Dog-friendly paths, shaded loops, and … The 2.7-mile mountain bike trail, maintained by DORBA,"
     },
     {
       "position": 5,
@@ -75,7 +75,7 @@
       "iso_date": "2026-06-06T18:34:07Z",
       "iso_date_of_last_edit": "2026-06-06T18:39:32Z",
       "source": "Google",
-      "snippet": "Beautiful but very busy. Too busy for my dog and I but we're working on that. Ran into poison ivy un the unpaved paths."
+      "snippet": "busy for my dog and I but we're"
     },
     {
       "position": 6,
@@ -84,7 +84,7 @@
       "iso_date": "2026-04-14T14:54:38Z",
       "iso_date_of_last_edit": "2026-04-14T14:54:38Z",
       "source": "Google",
-      "snippet": "This place so beautiful I love nature and it has 3 in 1. Hiking trails and park for kids and more dog friendly I highly recommend it's so beautiful  ❤️❤️"
+      "snippet": "kids and more dog friendly I highly recommend"
     },
     {
       "position": 7,
@@ -93,7 +93,7 @@
       "iso_date": "2026-04-09T14:27:30Z",
       "iso_date_of_last_edit": "2026-04-09T14:27:30Z",
       "source": "Google",
-      "snippet": "Context: Family nature walk on a Sunday\n\nPros:\nProtected land where you can encounter Texas ecosystems on a variety of trails\nGenerally well-maintained (by DFW standards)\nBathrooms, drinking fountains, dog drinking fountains, maps are scattered about the trail system\nThe unpaved trails are less crowded than the paved - if you desire more nature, less people\n\nCons:\nOn Sunday morning at 11 am, we took one of the last two parking spots... be aware of peak times\nAlthough generally well maintained, there are built environments on the trail that seem to be neglected, which include the framed educational installations, and the unpaved trails in general.\nSpecific examples include: A 4 ft. metal sign post rusting on the side of the Opossum Trail near the restrooms, grill filled with build up of charcoal in the same area, trail erosion do to insufficient gravel application.\n\nCaveat: This perspective is given in light of a lot of time in states that place a high priority on park standards due in part to the stake they have in the tourist dollars. Colorado, Michigan, Washington. Relative to other nature spots in the greater DFW area, this is quite nice."
+      "snippet": "Bathrooms, drinking fountains, dog drinking fountains, maps are"
     },
     {
       "position": 8,
@@ -102,7 +102,7 @@
       "iso_date": "2026-02-23T19:57:35Z",
       "iso_date_of_last_edit": "2026-02-23T19:57:35Z",
       "source": "Google",
-      "snippet": "Not too crowded, great place for a casual walk. Dog friendly, too."
+      "snippet": "a casual walk. Dog friendly, too."
     },
     {
       "position": 9,
@@ -111,7 +111,7 @@
       "iso_date": "2026-01-11T01:17:55Z",
       "iso_date_of_last_edit": "2026-01-11T01:17:55Z",
       "source": "Google",
-      "snippet": "This is the most beautiful place in DFW. Lovely, assessible, well kept. I have enjoyed walking in every season. My big kids loved the play ground. The whole place is dog friendly. Feels really safe. Paved ways and dirt trails"
+      "snippet": "whole place is dog friendly. Feels really safe."
     },
     {
       "position": 10,
@@ -120,7 +120,7 @@
       "iso_date": "2026-01-02T18:43:49Z",
       "iso_date_of_last_edit": "2026-01-02T18:43:49Z",
       "source": "Google",
-      "snippet": "Arbor Hills Nature Preserve in Plano, Texas is a true hidden gem and one of the best outdoor spaces in North Texas. The preserve offers a perfect mix of natural beauty and well-maintained trails, making it ideal for hikers, runners, families, and anyone looking to unwind outdoors.\n\nThe paved and unpaved trails are clearly marked and suitable for all fitness levels, whether you want a leisurely walk or a more challenging hike through the rolling hills. The scenery is beautiful year-round, with wildflowers in the spring, shaded paths in the summer, colorful foliage in the fall, and peaceful open views in the winter. The overlook tower provides a great view of the surrounding landscape and is well worth the short climb.\n\nArbor Hills is also very clean and well cared for, with helpful signage, restrooms near the entrance, and plenty of parking. It’s dog-friendly, family-friendly, and a great place for photography, picnics, or simply getting some fresh air.\n\nOverall, Arbor Hills Nature Preserve is a wonderful escape from city life without leaving town. Whether you’re looking for exercise, relaxation, or a scenic spot to explore nature, this preserve is absolutely worth a visit."
+      "snippet": "of parking. It’s dog-friendly, family-friendly, and a great"
     },
     {
       "position": 11,
@@ -129,7 +129,7 @@
       "iso_date": "2017-10-25T02:07:43Z",
       "iso_date_of_last_edit": "2025-11-20T00:47:03Z",
       "source": "Google",
-      "snippet": "Safe, although we saw a bobcat, not that small.  We were waking a small dog,  so we were carful. Other than that,  love this place."
+      "snippet": "waking a small dog, so we were carful."
     },
     {
       "position": 12,
@@ -138,7 +138,7 @@
       "iso_date": "2025-10-20T17:59:41Z",
       "iso_date_of_last_edit": "2025-10-20T17:59:41Z",
       "source": "Google",
-      "snippet": "dog water station doesn’t work and half the trails are always closed and rerouted! glad we brought a bottle bc they don’t care about your dogs so make sure you bring water!"
+      "snippet": "dog water station doesn’t work … care about your dogs so make sure you"
     },
     {
       "position": 13,
@@ -147,7 +147,7 @@
       "iso_date": "2025-08-16T04:16:16Z",
       "iso_date_of_last_edit": "2025-08-16T04:16:16Z",
       "source": "Google",
-      "snippet": "Arbor Hills Nature Preserve is a true gem in Plano! The trails are beautifully maintained and offer a perfect mix of paved paths and natural dirt trails, so you can go for a casual walk, a run, or even some light hiking. The scenery changes throughout the park – open fields, wooded areas, and little streams – making every visit feel refreshing.\n\nThe lookout tower is a must-visit spot with great views of the city, especially at sunset. There are also plenty of shaded areas and benches to take a break, and the park feels safe and family-friendly.\n\nWhether you’re walking your dog, biking, exercising, or just wanting some quiet time in nature, Arbor Hills has it all. It’s the perfect escape without leaving the city. 🌳✨"
+      "snippet": "you’re walking your dog, biking, exercising, or just wanting"
     },
     {
       "position": 14,
@@ -156,7 +156,7 @@
       "iso_date": "2025-07-04T15:17:41Z",
       "iso_date_of_last_edit": "2025-07-04T15:17:41Z",
       "source": "Google",
-      "snippet": "Great paved trails and fun natural trails that cut through the woods.  Lots of nature to see here and very dog friendly!"
+      "snippet": "here and very dog friendly!"
     },
     {
       "position": 15,
@@ -165,7 +165,7 @@
       "iso_date": "2025-04-24T17:00:20Z",
       "iso_date_of_last_edit": "2025-06-01T17:34:25Z",
       "source": "Google",
-      "snippet": "The parking lot is always full, but once you get on the trails, it doesn't seem so busy. Great park to walk your dog or take your kids to play and explore!"
+      "snippet": "to walk your dog or take your kids"
     },
     {
       "position": 16,
@@ -174,7 +174,7 @@
       "iso_date": "2023-09-12T02:38:11Z",
       "iso_date_of_last_edit": "2025-05-22T13:56:38Z",
       "source": "Google",
-      "snippet": "Best place to go walk, hike, or take your kids to go have some fun. Bustling with wildlife. Well maintained trials and paths. Respect the park more though please. My only complaint is not with the park itself, but the low lifes that come to this space and leave their trash and feces everywhere. There are trash cans and free dog bags at this location. Please use both to respect the space and people who use it."
+      "snippet": "cans and free dog bags at this location."
     },
     {
       "position": 17,
@@ -183,7 +183,7 @@
       "iso_date": "2025-04-27T23:52:17Z",
       "iso_date_of_last_edit": "2025-04-27T23:52:17Z",
       "source": "Google",
-      "snippet": "I visited Arbor Hills today. I used to frequent this area just to spend time in nature and enjoy my walk. I haven’t been to this area in a while until today because I moved out of the area. But today was a special day because I decided to come back and visit this beautiful nature preserve.\n\nIndeed, Arbor Hills is a nature preserve. As you’re walking this season, you will notice the beautiful grassy plains swaying in the wind. There are an abundant of trails that you can take to explore different areas of the preserve. It is a great place to casually ride your bike and is also a popular destination for photography.\n\nThe nature preserve also has a well equipped playground for children to play and bathrooms for men and women and a family bathroom. There is also a picnic area that you can reserve to have gatherings.\n\nArbor Hills is a great place to walk your dog as they provide poop bags along the main path.\n\nAfter finishing your walks and explorations, treat yourself to some ice cream from the ice cream truck that usually is parked near the restrooms in the afternoons, ready to happily serve customers."
+      "snippet": "casually ride your bike and is also a … to walk your dog as they provide poop"
     },
     {
       "position": 18,
@@ -192,7 +192,7 @@
       "iso_date": "2025-04-14T15:41:30Z",
       "iso_date_of_last_edit": "2025-04-14T15:41:30Z",
       "source": "Google",
-      "snippet": "A beautiful park to go hiking the many trails they have in wooded areas & paved areas. Great place to take your dog hiking."
+      "snippet": "to take your dog hiking."
     },
     {
       "position": 19,
@@ -201,7 +201,7 @@
       "iso_date": "2025-03-02T04:00:12Z",
       "iso_date_of_last_edit": "2025-03-02T04:00:12Z",
       "source": "Google",
-      "snippet": "This is a great place to take the dog and your girlfriend for a walk. My favorite place in Dallas."
+      "snippet": "to take the dog and your girlfriend for"
     },
     {
       "position": 20,
@@ -210,7 +210,7 @@
       "iso_date": "2025-02-24T17:07:44Z",
       "iso_date_of_last_edit": "2025-02-24T17:07:44Z",
       "source": "Google",
-      "snippet": "First time here. I'm loving it more than my dog. We will definitely be back"
+      "snippet": "more than my dog. We will definitely be"
     }
   ],
   "serpapi_pagination": {

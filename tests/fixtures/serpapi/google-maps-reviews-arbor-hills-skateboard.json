@@ -14,7 +14,7 @@
     "latencyMs": 547,
     "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
     "keyFoundInBody": false,
-    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). R3 (2026-10-06): each review's text was then cut down to the words the counting regexes match (dog/bike/duck/skateboard words) with at most 3 words of context on each side, joined by ' … '; a review whose text matches none of them keeps an empty snippet. Dates are untouched. Every keyword regex matches each trimmed review exactly as it matched the full text (checked by the trim script). Derived from the real answer, nothing invented."
   },
   "search_metadata": {
     "id": "6ac4fbc07223f4f46197cbab",
@@ -39,7 +39,7 @@
       "iso_date": "2018-03-29T14:54:56Z",
       "iso_date_of_last_edit": "2018-03-29T14:54:56Z",
       "source": "Google",
-      "snippet": "One of my favorite nature parks. They have wide paved trails that are far from boring with the twists, turns, and hills. Some of it is covered by trees, some of it is not. They have great unpaved trails that will surely send you on hours of adventures.  The worst thing about it is it can get VERY crowded, so I tend to trek on the dirt trails. Also, if you accidentally stay even 5mins after closing you have to call the fire department to let you out, who will potentially call the cops to come and that can be problematic. Lastly, they do not allow skateboards/longboards which is a huge bummer considering the amazing hills and turns. They should have designated days where people can skateboard without putting themselves or others in danger!"
+      "snippet": "do not allow skateboards/longboards which is a … where people can skateboard without putting themselves"
     }
   ]
 }

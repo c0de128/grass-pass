@@ -20,7 +20,7 @@ const SERP_KEY = "fedcba9876543210".repeat(4);
 const ENV = { DO_INFERENCE_API_KEY: "test-key-not-real", SERPAPI_API_KEY: SERP_KEY };
 
 const SNIPPETS = ["google-maps-reviews-celebration-park-dog", "google-maps-reviews-celebration-park-bike", "google-maps-reviews-celebration-park-ducks"].flatMap(
-  (n) => ((serpBody(serpFixture(n)).reviews as { snippet?: string }[] | undefined) ?? []).map((r) => r.snippet ?? "").filter((s) => s.length >= 25),
+  (n) => ((serpBody(serpFixture(n)).reviews as { snippet?: string }[] | undefined) ?? []).map((r) => r.snippet ?? "").filter((s) => s.length >= 15),
 );
 
 let lines: string[];

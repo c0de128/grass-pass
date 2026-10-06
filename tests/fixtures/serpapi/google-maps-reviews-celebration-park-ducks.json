@@ -14,7 +14,7 @@
     "latencyMs": 7024,
     "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
     "keyFoundInBody": false,
-    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). R3 (2026-10-06): each review's text was then cut down to the words the counting regexes match (dog/bike/duck/skateboard words) with at most 3 words of context on each side, joined by ' … '; a review whose text matches none of them keeps an empty snippet. Dates are untouched. Every keyword regex matches each trimmed review exactly as it matched the full text (checked by the trim script). Derived from the real answer, nothing invented."
   },
   "search_metadata": {
     "id": "6ac4fed150d43e1ecb9d065d",
@@ -39,7 +39,7 @@
       "iso_date": "2026-07-27T12:52:45Z",
       "iso_date_of_last_edit": "2026-07-27T12:52:45Z",
       "source": "Google",
-      "snippet": "Great family park. We love coming here to fish and feed the ducks. So many things to do, always very clean. They also have bathrooms! Which is great"
+      "snippet": "and feed the ducks. So many things to"
     },
     {
       "position": 2,
@@ -57,7 +57,7 @@
       "iso_date": "2024-05-07T22:46:28Z",
       "iso_date_of_last_edit": "2024-05-07T22:46:28Z",
       "source": "Google",
-      "snippet": "One of my toddler’s favorite parks! This park is pretty huge and offers something for people of all ages. There is a area for everything whether it's soccer, tennis, basketball, baseball/softball, barbecue grills, playground, spray-ground, picnic tables, covered pavilion, biking and hiking trails, walking or just sitting by the ponds and watching ducks.\n\nThe playground is huge and very colorful, it is very pleasing to the eyes. Bonus is there's a bathroom pretty close to this area as well. I've seen other parks (smaller) with no bathrooms or they are far away.\n\nCelebration park has ample space to walk around, scenic areas for a nice photo, and it's mostly clean with few instances of dog waste. There's also a good amount of parking. I’m always able to park right in front, although I have never visited on a weekend."
+      "snippet": "tables, covered pavilion, biking and hiking trails, walking … ponds and watching ducks. The playground is huge … few instances of dog waste. There's also a"
     },
     {
       "position": 4,
@@ -66,7 +66,7 @@
       "iso_date": "2023-11-13T17:45:49Z",
       "iso_date_of_last_edit": "2023-11-13T17:45:49Z",
       "source": "Google",
-      "snippet": "My girls love feeding ducks, so we went to this park and fed all of the ducks, geese and a few pigeons hanging out. They liked the veggies and grapes we fed them, but they LOVED the seeds and oats the most."
+      "snippet": "girls love feeding ducks, so we went to … all of the ducks, geese and a few"
     },
     {
       "position": 5,
@@ -75,7 +75,7 @@
       "iso_date": "2023-11-05T20:16:34Z",
       "iso_date_of_last_edit": "2023-11-05T20:16:34Z",
       "source": "Google",
-      "snippet": "The park is beautiful I enjoy watching the ducks in the pond very nice. The restrooms are clean. I take my dogs for walks, very nice trails! The picnic area is nice and clean very comfortable."
+      "snippet": "enjoy watching the ducks in the pond very … I take my dogs for walks, very nice"
     },
     {
       "position": 6,
@@ -84,7 +84,7 @@
       "iso_date": "2023-07-01T13:02:31Z",
       "iso_date_of_last_edit": "2023-09-07T02:10:38Z",
       "source": "Google",
-      "snippet": "This is a fantastic public place in Allen that has so many positives:\n- a large open space for soccer, running\n- a playground\n- a splash pad that’s a treasure\n- beautiful walking trails\n- a cute pond with ducks and geese\n- a lovely shaded area with picnic tables\n- two beautiful fountains ⛲️\n- picnic tables\n\nJust a beautiful public resource for folks of all ages in and around Allen"
+      "snippet": "cute pond with ducks and geese - a"
     },
     {
       "position": 7,
@@ -93,7 +93,7 @@
       "iso_date": "2021-11-02T18:25:55Z",
       "iso_date_of_last_edit": "2023-02-23T16:32:14Z",
       "source": "Google",
-      "snippet": "Very large city park and the best. Lots of open fields for soccer or just to throw a ball around. Nice pond area for fishing with quite a few ducks,, just don't feed them bread.The park has a decent walking path around the entire park and a very nice path that goes all the way to Stacy Ave."
+      "snippet": "quite a few ducks,, just don't feed them"
     },
     {
       "position": 8,
@@ -102,7 +102,7 @@
       "iso_date": "2023-01-26T03:29:38Z",
       "iso_date_of_last_edit": "2023-01-26T03:35:16Z",
       "source": "Google",
-      "snippet": "I like the ponds. The little one has ducks. The big one has ducks geese and sea gulls. There's always plenty of people out walking or running."
+      "snippet": "little one has ducks. The big one has ducks geese and sea gulls."
     },
     {
       "position": 9,
@@ -111,7 +111,7 @@
       "iso_date": "2023-01-12T12:33:21Z",
       "iso_date_of_last_edit": "2023-01-12T12:33:21Z",
       "source": "Google",
-      "snippet": "Huge park near by my house. We love to play tennis, use children playground,  feed ducks! Beautiful park with a lot of facilities. Recomended!"
+      "snippet": "children playground, feed ducks! Beautiful park with a"
     },
     {
       "position": 10,
@@ -120,7 +120,7 @@
       "iso_date": "2021-03-26T12:24:00Z",
       "iso_date_of_last_edit": "2022-08-06T15:49:54Z",
       "source": "Google",
-      "snippet": "We fed the ducks and boy, they were hungry i tell you what"
+      "snippet": "We fed the ducks and boy, they were"
     },
     {
       "position": 11,
@@ -129,7 +129,7 @@
       "iso_date": "2022-05-24T18:27:57Z",
       "iso_date_of_last_edit": "2022-05-24T18:28:04Z",
       "source": "Google",
-      "snippet": "Such a beautiful park! Its huge with a  splashpark for the little ones! Also has big fields great for outdoor sport soccer football badminton! It has a tiny lake nearby with some ducks and turtles too. A nice long trail that goes around great for walking or running maybe even bike riding."
+      "snippet": "nearby with some ducks and turtles too. A … running maybe even bike riding."
     },
     {
       "position": 12,
@@ -138,7 +138,7 @@
       "iso_date": "2022-05-14T22:57:16Z",
       "iso_date_of_last_edit": "2022-05-14T22:57:16Z",
       "source": "Google",
-      "snippet": "Great park, very well kept and lots of fun things to do. My daughter and I had a blast feeding the ducks, going on the playground, and playing in the splash pad. My son comes to the park with his friends too since his school is near, and he always talks about them having fun. It's amazing!"
+      "snippet": "blast feeding the ducks, going on the playground,"
     },
     {
       "position": 13,
@@ -147,7 +147,7 @@
       "iso_date": "2022-02-23T20:15:40Z",
       "iso_date_of_last_edit": "2022-02-23T20:15:40Z",
       "source": "Google",
-      "snippet": "Celebration park is a park for all ages. It has all the play stuff for kids below 12yrs , play ground for teenage children and a walking track for elderly people . There is man made lake where there are plenty of ducks in it. There are benches around it where we can sit and relax. It's a beautiful park."
+      "snippet": "are plenty of ducks in it. There are"
     },
     {
       "position": 14,
@@ -156,7 +156,7 @@
       "iso_date": "2021-11-17T01:53:56Z",
       "iso_date_of_last_edit": "2021-11-17T01:53:56Z",
       "source": "Google",
-      "snippet": "Wonderful park to spend time with your family especially with the large playground. Can also feed the ducks if you bring duck food. Found a bag at Tractor Supply since bread is not healthy for them."
+      "snippet": "also feed the ducks if you bring duck food. Found a bag"
     },
     {
       "position": 15,
@@ -165,7 +165,7 @@
       "iso_date": "2021-03-14T22:11:23Z",
       "iso_date_of_last_edit": "2021-03-17T01:29:22Z",
       "source": "Google",
-      "snippet": "Whether you are looking for a place to spend some quality time with your fam or play soccer with your friends or you wanna huge space to fly kites... Or just sit by the pond and watch them ducks... Whether like looking at children playing and laughing or just wanna watch an old couple holding hands and going for their evening stroll.. Or just sit by yourself and see the world passing by or you like to unwind and feel the wind in your hair! This is the place! Don't go if you are avoiding crowd but go you might just like what you see! Great community park. Our family loves it!"
+      "snippet": "and watch them ducks... Whether like looking at"
     },
     {
       "position": 16,
@@ -174,7 +174,7 @@
       "iso_date": "2020-02-20T05:20:16Z",
       "iso_date_of_last_edit": "2021-01-09T19:36:02Z",
       "source": "Google",
-      "snippet": "Very big park. My daughter love it. It also have enough space to throw ball with my dog. It has a small lake to watch ducks, gooses, gulls. There’s bathrooms there. And there’s also splash park in the summer. The children play structure can be crowded on weekends on nice weather days."
+      "snippet": "ball with my dog. It has a small lake to watch ducks, gooses, gulls. There’s bathrooms"
     },
     {
       "position": 17,
@@ -192,7 +192,7 @@
       "iso_date": "2019-02-24T23:17:25Z",
       "iso_date_of_last_edit": "2019-02-24T23:17:25Z",
       "source": "Google",
-      "snippet": "There is something for everybody here. Walking tracks, ponds (you can fish in) with ducks and a few geese, a playground, restrooms, water fountains (drinking fountains), soccer fields, baseball fields, basketball courts, tennis courts, and in the summer they have a splash park. Great space for flying kites as well. Covered pavilion areas with picnic tables make it easy to meet for groups too."
+      "snippet": "fish in) with ducks and a few geese,"
     },
     {
       "position": 19,
@@ -201,7 +201,7 @@
       "iso_date": "2018-12-29T19:14:16Z",
       "iso_date_of_last_edit": "2018-12-29T19:16:41Z",
       "source": "Google",
-      "snippet": "Very well kept park. Lots of ducks and geese to feed. Love the jogging trail that goes under the street to a more nature trail that's paved and safely secluded."
+      "snippet": "park. Lots of ducks and geese to feed."
     },
     {
       "position": 20,
@@ -210,7 +210,7 @@
       "iso_date": "2017-10-26T02:50:20Z",
       "iso_date_of_last_edit": "2017-10-26T02:52:14Z",
       "source": "Google",
-      "snippet": "A great place for kids to play. Have a picnic or just sit by one of the lakes and feed the ducks and geese."
+      "snippet": "and feed the ducks and geese."
     }
   ],
   "serpapi_pagination": {

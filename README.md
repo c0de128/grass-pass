@@ -165,7 +165,8 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-6.md`](eval
   refill asks for the missing finds + 2 spares, and a pass still short gets one more refill. The 3 short passes were
   on 2 parks with small pools of finds (Connemara Meadow twice, Klyde Warren once). A short pass says how many finds are
   missing.
-- **Cost is close to the goal: Gemma $0.00097 a pass (target $0.001),** up from $0.00089 because more passes make 2
+- **Cost is close to the goal: Gemma $0.00097 a pass (target $0.001; up to $0.00102 if the 2 timed-out calls, priced
+  at $0 because they never answered, were billed in full),** up from $0.00089 because more passes make 2
   or 3 calls. A finished 10-13 pass cost $0.00107 in the small check below, over the goal.
 - **Answers that name themselves: Gemma 2.6% passes, Llama 4 Maverick 16.7% does not** (target 5%), counted before
   the checks. Code removes every such clue (and drops such a hint), so nothing is given away, but those clues are
@@ -210,7 +211,7 @@ commit `b5a862b`), not re-run. Open models only: the closed models on our Digita
 | M5 Reading level, FK grade median (target <= 3.5) | 2.5 | 2.3 | 3.8 (FAIL) | 2.3 |
 | M6 Name leaks in clue or hint, before the filter (target <= 5%) | 2.6% (clue only 2.2%) | 16.7% (FAIL) | 1.4% | 4.5% |
 | M7 Model call p50 / p95 (target 10 s / 20 s) | **12.0 s / 22.7 s, FAIL** (first calls alone 13.2 s) | 25.3 s / 60.0 s (FAIL, 4 passes timed out) | none | 12.3 s / 23.8 s (FAIL) |
-| M8 Cost per pass (target $0.001) | $0.00097 | $0.00119 (FAIL) | $0 | $0.00089 |
+| M8 Cost per pass (target $0.001) | $0.00097 (up to $0.00102 if the 2 timed-out calls were billed) | $0.00119 (FAIL) | $0 | $0.00089 |
 | M10 Printed clues repeated across parks (target <= 5%) | **5.1% (20/395), FAIL** | 3.8% (3/80) | 24.4% (FAIL) | 9.6% (FAIL) |
 | M11 Printed clues with a wrong count (target 0) | 0 of 96 (12 removed by the check) | 0 of 11 (12 removed) | 0 of 6 | 0 of 81 (13 removed) |
 
@@ -231,7 +232,7 @@ checked against the results JSON by a unit test).
 - **Kid-sized words:** Gemma's clues read at FK grade 2.5 (median); the no-AI template on the same data reads at 3.8.
 - **Sticks to the facts:** 99.6% of its clues quoted their source word for word before any filter (code drops the
   rest); 0 blocked species printed in 60 runs.
-- **Cheap enough for a classroom:** about $0.00097 per pass at DigitalOcean list prices.
+- **Cheap enough for a classroom:** about $0.00097 to $0.00102 per pass at DigitalOcean list prices.
 - **Safety rules live in our code, not a vendor's:** the same checks run on any model, switching is one setting
   (`MODEL_ID`), and Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible

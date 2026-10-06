@@ -3,10 +3,16 @@
  * (tests/fixtures/evals); the run records below are test inputs built in each test (what a model
  * might answer), never shown to users.
  */
-import { beforeAll, describe, expect, it } from "vitest";
+import { mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { tmpdir } from "node:os";
+import path from "node:path";
+import { afterEach, beforeAll, describe, expect, it, vi } from "vitest";
 import { loadCases, loadCaseData, loadFixture, type CaseData } from "../../evals/fixture";
 import {
   callCost,
+  hardFinds,
+  runCost,
+  runCostHigh,
   caseContext,
   countSyllables,
   expectedParkEmpty,
@@ -23,7 +29,8 @@ import {
   type CaseContext,
   type RunRecord,
 } from "../../evals/score";
-import { parseCompletionBody, passIdFor, requestPoolIds, settingsFromEnv, SpendMeter } from "../../evals/run";
+import { capturingModelFetch, parseCompletionBody, passIdFor, requestPoolIds, settingsFromEnv, SpendMeter, writeHumanCheck, type EvalResults } from "../../evals/run";
+import { costCell } from "../../evals/report";
 import { parkFindsEmptyCopy } from "@/lib/pool/park";
 import { wildEmptyCopy } from "@/lib/pool/wild";
 import { PASS_ID_PATTERN } from "@/lib/pass/schema";
@@ -263,5 +270,79 @@ describe("run helpers", () => {
     expect(settingsFromEnv({ EVAL_MODELS: "none" }).models).toEqual([]);
     expect(settingsFromEnv({ EVAL_CASES: "1, 2", EVAL_RUNS: "1" })).toMatchObject({ cases: [1, 2], runsOverride: 1 });
     expect(() => settingsFromEnv({ EVAL_MODELS: "gpt-5" })).toThrow(/without a price/);
+  });
+});
+
+describe("Q-5-02: calls that never answered are priced, and M8 shows a range", () => {
+  afterEach(() => vi.unstubAllGlobals());
+
+  it("runCost prices a timed-out call at its prompt size; runCostHigh adds a full max_tokens answer; HTTP errors cost 0", () => {
+    const timedOut = call(null, { status: null, error: "TimeoutError", promptTokens: null, completionTokens: null, estPromptTokens: 3_000, maxTokens: 1_200 });
+    const refused = call(null, { status: 403, error: "HTTP 403", promptTokens: null, completionTokens: null });
+    const answered = call([], { promptTokens: 3_000, completionTokens: 500 });
+    const r = run({ calls: [timedOut, refused, answered] });
+    const base = callCost("gemma-4-31B-it", 3_000, 500);
+    expect(runCost(r)).toBeCloseTo(base + callCost("gemma-4-31B-it", 3_000, 0), 12);
+    expect(runCostHigh(r)).toBeCloseTo(base + callCost("gemma-4-31B-it", 3_000, 1_200), 12);
+    // Older runs (no estimate recorded) keep their old price.
+    const old = run({ calls: [call(null, { status: null, error: "TimeoutError", promptTokens: null, completionTokens: null }), answered] });
+    expect(runCost(old)).toBeCloseTo(base, 12);
+  });
+
+  it("the eval's fetch records a timed-out call's prompt size from the retry's real usage, and its max_tokens", async () => {
+    const body = JSON.stringify({ model: "gemma-4-31B-it", max_tokens: 1_200, messages: [{ role: "user", content: "x".repeat(400) }] });
+    let n = 0;
+    vi.stubGlobal("fetch", async () => {
+      if (++n === 1) throw new DOMException("timed out", "TimeoutError");
+      return new Response(JSON.stringify({ model: "gemma-4-31B-it", usage: { prompt_tokens: 2_548, completion_tokens: 400 }, choices: [] }), { status: 200 });
+    });
+    const calls: CallRecord[] = [];
+    const meter = new SpendMeter(1);
+    const f = capturingModelFetch([], calls, meter, "gemma-4-31B-it");
+    await expect(f("https://inference.do-ai.run/v1/chat/completions", { method: "POST", body })).rejects.toThrow();
+    expect(calls[0].estPromptTokens).toBe(Math.ceil(body.length / 4)); // rough until an answer says better
+    expect(calls[0].maxTokens).toBe(1_200);
+    await f("https://inference.do-ai.run/v1/chat/completions", { method: "POST", body });
+    expect(calls[0].estPromptTokens).toBe(2_548);
+    expect(calls[1].promptTokens).toBe(2_548);
+  });
+
+  it("costCell shows the range only when calls never answered", () => {
+    const s = (lo: number, hi: number, n: number) => ({ m8: { costPerPass: lo, costPerPassHigh: hi, unansweredCalls: n, totalUsd: 0, promptTokens: 0, completionTokens: 0, pass: true } }) as never;
+    expect(costCell(s(0.00097, 0.00097, 0))).toBe("$0.00097");
+    expect(costCell(s(0.00099, 0.00102, 2))).toBe("$0.00099 to $0.00102 (2 unanswered calls: prompt only, or billed in full)");
+  });
+});
+
+describe("Q-5-05: hard finds are measured for the bands that ask for them", () => {
+  const ctx = (hardMin: number) => new Map([[1, { plan: { mix: { hardMin } } } as unknown as CaseContext]]);
+  const item = (difficulty?: "easy" | "medium" | "hard") => ({ section: "park" as const, clue: "c", lookWhere: "", answer: "a", ...(difficulty ? { difficulty } : {}) });
+
+  it("counts passes with at least hardMin hard finds; older runs without difficulty are not counted", () => {
+    const runs = [
+      run({ items: [item("hard"), item("hard"), item("easy")] }),
+      run({ run: 2, items: [item("hard"), item("medium"), item("easy")] }),
+      run({ run: 3, items: [item(), item()] }),
+    ];
+    expect(hardFinds(runs, ctx(2))).toEqual({ checked: 2, met: 1, hardMin: 2, rate: 0.5 });
+    expect(hardFinds(runs, ctx(0))).toEqual({ checked: 0, met: 0, hardMin: null, rate: null });
+  });
+});
+
+describe("human-check sheet follows the latest full run", () => {
+  it("writeHumanCheck overwrites an existing (stale) sheet", () => {
+    const dir = mkdtempSync(path.join(tmpdir(), "gp-hc-"));
+    try {
+      writeFileSync(path.join(dir, "human-check.md"), "stale sheet from 2026-10-05.md\n");
+      const results = JSON.parse(readFileSync(path.resolve(__dirname, "../../evals/results/2026-10-06-6.json"), "utf8")) as EvalResults;
+      const out = writeHumanCheck(results, "2026-10-06-6.md", dir);
+      expect(out).toBe(path.join(dir, "human-check.md"));
+      const text = readFileSync(out!, "utf8");
+      expect(text).toContain("picked from `2026-10-06-6.md`");
+      expect(text).not.toContain("stale sheet");
+      expect(text.match(/^\| \d+ \|/gm)).toHaveLength(10);
+    } finally {
+      rmSync(dir, { recursive: true, force: true });
+    }
   });
 });

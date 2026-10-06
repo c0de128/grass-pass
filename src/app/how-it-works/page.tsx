@@ -29,7 +29,7 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_COST_RANGE, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -410,7 +410,7 @@ export default function HowItWorksPage() {
   ];
 
   const measured: [string, string, string, boolean][] = [
-    ["Cost per pass (DigitalOcean list prices)", usd(gemma.costPerPass), `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
+    ["Cost per pass (DigitalOcean list prices)", `${usd(gemma.costPerPass)} (up to ${usd(GEMMA_COST_RANGE.high)} if ${GEMMA_COST_RANGE.timedOutCalls} timed-out calls were billed)`, `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
     ["Model time per call, typical / slow", `${secs(gemma.p50s)} / ${secs(gemma.p95s)}`, `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`, speedMet],
     ["Complete passes (at most 1 find missing)", `${pct(gemma.completePct)} (${gemma.complete}/${gemma.dataRichRuns})`, `${EVAL_THRESHOLDS.completePct}% or more`, gemma.completePct >= EVAL_THRESHOLDS.completePct],
     ["Reading level (grade, median)", gemma.fkGrade.toFixed(1), `${EVAL_THRESHOLDS.fkGrade} or lower`, gemma.fkGrade <= EVAL_THRESHOLDS.fkGrade],

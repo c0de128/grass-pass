@@ -82,6 +82,13 @@ export const GEMMA_RUN_COUNTS = { passes: 54, noDataRuns: 6, noDataParks: 2 } as
 /** Gemma test passes (data-rich) that ended short, and on how many different parks. */
 export const GEMMA_SHORT_PASSES = { passes: 3, parks: 2 } as const;
 
+/**
+ * Q-5-02: Gemma's cost per pass as a range. The run priced its 2 timed-out calls (no answer, so no token count) at $0;
+ * the high end bills each at its prompt size (the retry's prompt tokens) plus a full max_tokens answer. Whether
+ * DigitalOcean bills a timed-out request is not known. Checked against the JSON by tests/unit/about.test.tsx.
+ */
+export const GEMMA_COST_RANGE = { timedOutCalls: 2, high: 0.00102, maxTokens: 1_200 } as const;
+
 export const EVAL_PARKS = 20;
 export const EVAL_AGE_BAND = "6-10";
 export const EVAL_TOTAL_USD = 0.0739;

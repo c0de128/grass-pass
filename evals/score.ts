@@ -80,9 +80,24 @@ export type CallRecord = {
   rawItems: RawItem[] | null;
   /** The pool ids in the request schema equal the scoring pool (proves both used the same data). */
   poolMatches: boolean | null;
+  /**
+   * Q-5-02: a call that never answered (timeout, network) may still be billed. Its prompt size: the prompt tokens of
+   * a later answer to the same request (the whole retry sends the same prompt), else about request chars / 4.
+   * Absent in runs before 2026-10-06-7.
+   */
+  estPromptTokens?: number | null;
+  /** The request's max_tokens (the most a call that never answered could have been billed for its answer). */
+  maxTokens?: number | null;
 };
 
-export type PrintedItem = { section: Section; clue: string; lookWhere: string; answer: string };
+export type PrintedItem = {
+  section: Section;
+  clue: string;
+  lookWhere: string;
+  answer: string;
+  /** Q-5-05: the model's difficulty for the printed find (absent in runs before 2026-10-06-7). */
+  difficulty?: "easy" | "medium" | "hard";
+};
 
 export type SectionStateRecord = { status: string; message?: string };
 
@@ -248,13 +263,43 @@ export function luckyGrounding(run: RunRecord, ctx: CaseContext): { printed: num
   return { printed, problems };
 }
 
+/** Q-5-05: how many passes that must carry hard finds printed at least that many (see ModelScore.hard). */
+export function hardFinds(runs: readonly RunRecord[], contexts: ReadonlyMap<number, CaseContext>): NonNullable<ModelScore["hard"]> {
+  let checked = 0;
+  let met = 0;
+  let hardMin: number | null = null;
+  for (const r of runs) {
+    const want = contexts.get(r.caseN)?.plan?.mix.hardMin ?? 0;
+    if (r.kind !== "pass" || want <= 0 || r.items.length === 0 || r.items.some((i) => i.difficulty === undefined)) continue;
+    hardMin = hardMin === null ? want : Math.min(hardMin, want);
+    checked++;
+    if (r.items.filter((i) => i.difficulty === "hard").length >= want) met++;
+  }
+  return { checked, met, hardMin, rate: rate(met, checked) };
+}
+
 /** M3: a data-rich case whose pass has at least n-1 valid items. */
 export function isComplete(run: RunRecord): boolean {
   return run.kind === "pass" && run.n !== null && run.items.length >= run.n - 1;
 }
 
+/** A call that never got an answer (timeout, network). HTTP error answers (4xx/5xx) are rejected before any output. */
+export const unanswered = (c: CallRecord): boolean => c.status === null;
+
+/**
+ * M8 cost of one run. Q-5-02: a call that never answered is priced at least at its prompt size (it may be billed);
+ * answered calls at their real usage.
+ */
 export function runCost(run: RunRecord): number {
-  return run.calls.reduce((a, c) => a + callCost(run.model, c.promptTokens ?? 0, c.completionTokens ?? 0), 0);
+  return run.calls.reduce(
+    (a, c) => a + callCost(run.model, c.promptTokens ?? (unanswered(c) ? (c.estPromptTokens ?? 0) : 0), c.completionTokens ?? 0),
+    0,
+  );
+}
+
+/** The high end: as runCost, plus a full max_tokens answer billed for every call that never answered. */
+export function runCostHigh(run: RunRecord): number {
+  return runCost(run) + run.calls.filter(unanswered).reduce((a, c) => a + callCost(run.model, 0, c.maxTokens ?? 0), 0);
 }
 
 // ---------- R2-M5: cross-park repetition (M10) and count accuracy (M11) ----------
@@ -395,10 +440,20 @@ export type ModelScore = {
   /** Leaks in the clue or lookWhere (what the app drops); clueLeaks = in the clue itself (the SPEC wording). */
   m6: { leaks: number; clueLeaks: number; returned: number; rate: number | null; clueRate: number | null; pass: boolean | null };
   m7: { calls: number; p50Ms: number | null; p95Ms: number | null; passP50: boolean | null; passP95: boolean | null; perPassP50Ms: number | null };
-  m8: { costPerPass: number | null; totalUsd: number; promptTokens: number; completionTokens: number; pass: boolean | null };
+  /**
+   * costPerPass prices calls that never answered at their prompt size (Q-5-02); costPerPassHigh also bills their full
+   * max_tokens answer (the worst case). pass is judged on costPerPass; reports show the range when they differ.
+   */
+  m8: { costPerPass: number | null; costPerPassHigh?: number | null; unansweredCalls?: number; totalUsd: number; promptTokens: number; completionTokens: number; pass: boolean | null };
   m10: Repetition & { pass: boolean | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number; returned: number; details: string[]; pass: boolean | null };
   retries: number;
+  /**
+   * Q-5-05: passes whose age band asks for hard finds (10-13: "8 finds, 2 brain-benders"): how many printed at least
+   * the asked-for number of hard finds. checked = such passes with a recorded difficulty on every item (runs before
+   * 2026-10-06-7 recorded none, so rate is null for them).
+   */
+  hard?: { checked: number; met: number; hardMin: number | null; rate: number | null };
   /** S6: printed Lucky Finds and any that are not backed by >= MIN_MENTIONS counted reviews of their keyword (must be none). */
   lucky: { printed: number; problems: string[]; pass: boolean };
   /** Why the checks dropped model items (replayed with the app's validateDraft): all runs, and the data-rich runs that ended incomplete (M3 misses). */
@@ -462,6 +517,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   const perPass = done.filter((r) => r.calls.length > 0).map((r) => r.calls.reduce((a, c) => a + c.latencyMs, 0));
   const costs = done.filter((r) => r.calls.length > 0).map(runCost);
   const totalUsd = costs.reduce((a, b) => a + b, 0);
+  const costsHigh = done.filter((r) => r.calls.length > 0).map(runCostHigh);
   const m2rate = rate(grounded, returned);
   const m3rate = rate(complete, rich.length);
   const m4rate = rate(honestOk, honestChecked);
@@ -470,6 +526,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   const p50 = percentile(latencies, 50);
   const p95 = percentile(latencies, 95);
   const costPerPass = costs.length > 0 ? totalUsd / costs.length : null;
+  const costPerPassHigh = costsHigh.length > 0 ? costsHigh.reduce((a, b) => a + b, 0) / costsHigh.length : null;
   return {
     model,
     runs: own.length,
@@ -492,6 +549,8 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     },
     m8: {
       costPerPass: usesModel ? costPerPass : 0,
+      costPerPassHigh: usesModel ? costPerPassHigh : 0,
+      unansweredCalls: calls.filter(unanswered).length,
       totalUsd,
       promptTokens: calls.reduce((a, c) => a + (c.promptTokens ?? 0), 0),
       completionTokens: calls.reduce((a, c) => a + (c.completionTokens ?? 0), 0),
@@ -500,6 +559,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     m10: { ...rep10, pass: rep10.rate === null ? null : rep10.rate <= THRESHOLDS.m10 },
     m11: { ...counts, returned, pass: done.some((r) => r.kind === "pass") ? counts.printedWrong <= THRESHOLDS.m11 : null },
     retries: done.filter((r) => r.calls.length > 1).length,
+    hard: hardFinds(done, contexts),
     lucky: { ...lucky, pass: lucky.problems.length === 0 },
     ...(usesModel ? { drops } : {}),
   };

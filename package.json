@@ -16,6 +16,7 @@
     "eval:report": "vitest run --config evals/vitest.config.mts evals/cli/report.ts",
     "eval:check": "vitest run --config evals/vitest.config.mts evals/cli/check.ts",
     "eval:replay": "vitest run --config evals/vitest.config.mts evals/cli/replay.ts",
+    "eval:human-check": "vitest run --config evals/vitest.config.mts evals/cli/human-check.ts",
     "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts",
     "copy:gemma": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-revise.mts",
     "copy:render": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-render.mts"

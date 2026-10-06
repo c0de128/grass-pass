@@ -6,8 +6,9 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
+import { PASS_MAX_TOKENS } from "@/lib/ai/build-pass";
 import { REPO_URL } from "@/lib/site-url";
 
 const ROOT = resolve(__dirname, "../..");
@@ -35,7 +36,7 @@ type Score = {
   m10: { repeated: number; clues: number; rate: number | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number };
 };
-type RunRow = { model: string; slug: string; dataRich: boolean; kind: string; items: unknown[]; n: number | null; parkName: string | null; calls?: { status: number | null; latencyMs: number; completionTokens?: number }[] };
+type RunRow = { model: string; slug: string; dataRich: boolean; kind: string; items: unknown[]; n: number | null; parkName: string | null; calls?: { status: number | null; latencyMs: number; promptTokens?: number | null; completionTokens?: number | null }[] };
 type Results = { meta: { day: string; ageBand: string; partial: boolean }; cases: unknown[]; runs: RunRow[]; scores: Score[]; spend: { usd: number } };
 
 const results = JSON.parse(readFileSync(join(ROOT, EVAL_RESULTS_FILE), "utf8")) as Results;
@@ -64,6 +65,27 @@ describe("about page numbers come from the committed eval run", () => {
     expect(r1(beforeGemma.m10.rate!)).toBe(PREVIOUS_RUN.repeatPct); // "down from 9.6%"
     expect(r1(beforeGemma.m3.rate)).toBe(PREVIOUS_RUN.completePct); // "up from 84.3%"
     expect(Math.round(beforeGemma.m8.costPerPass * 1e5) / 1e5).toBe(PREVIOUS_RUN.costPerPass); // "up from $0.00089"
+    // Q-5-02: "up to $0.00102 if 2 timed-out calls were billed": each timed-out call at the retry's prompt size + max_tokens.
+    {
+      const price = { in: 0.18, out: 0.5 };
+      const cost = (p: number, c: number) => (p * price.in + c * price.out) / 1e6;
+      const ran = results.runs.filter((r) => r.model === "gemma-4-31B-it" && (r.calls ?? []).length > 0);
+      let total = 0;
+      let timedOut = 0;
+      for (const r of ran) {
+        const calls = r.calls ?? [];
+        calls.forEach((c, i) => {
+          total += cost(c.promptTokens ?? 0, c.completionTokens ?? 0);
+          if (c.status !== null) return;
+          timedOut++;
+          const retry = calls.slice(i + 1).find((x) => x.promptTokens !== null && x.promptTokens !== undefined);
+          total += cost(retry!.promptTokens!, GEMMA_COST_RANGE.maxTokens);
+        });
+      }
+      expect(timedOut).toBe(GEMMA_COST_RANGE.timedOutCalls);
+      expect(Math.round((total / ran.length) * 1e5) / 1e5).toBe(GEMMA_COST_RANGE.high);
+      expect(GEMMA_COST_RANGE.maxTokens).toBe(PASS_MAX_TOKENS);
+    }
     // RULES-5-03: "60 test runs (54 passes; 6 runs on the 2 no-data parks made none)"
     const gRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");
     expect(gRuns.filter((r) => r.kind === "pass")).toHaveLength(GEMMA_RUN_COUNTS.passes);
@@ -200,7 +222,8 @@ describe("/about", () => {
     expect(html.match(/<summary/g)?.length).toBe(details.length);
     // What a judge sees before opening anything: everything outside the folded bodies.
     const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
-    expect(visible.split(" ").length).toBeLessThanOrEqual(650);
+    // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity).
+    expect(visible.split(" ").length).toBeLessThanOrEqual(660);
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {

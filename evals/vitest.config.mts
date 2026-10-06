@@ -7,6 +7,7 @@ import { defineConfig } from "vitest/config";
  *   pnpm eval:record  -> evals/cli/record.ts (live Overpass + iNaturalist -> tests/fixtures/evals)
  *   pnpm eval         -> evals/cli/eval.ts   (recorded park data + the real models -> evals/results)
  *   pnpm eval:report  -> evals/cli/report.ts (re-render a results JSON, no calls)
+ *   pnpm eval:human-check -> evals/cli/human-check.ts (rebuild human-check.md from a full run, no calls)
  */
 export default defineConfig({
   resolve: {

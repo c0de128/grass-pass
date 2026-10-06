@@ -221,11 +221,28 @@ export function requestPoolIds(body: unknown): string[] | null {
   }
 }
 
-function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[], meter: SpendMeter, model: string): FetchLike {
+/** The request's max_tokens (null when absent or unreadable). */
+export function requestMaxTokens(body: unknown): number | null {
+  if (typeof body !== "string") return null;
+  try {
+    const m = (JSON.parse(body) as { max_tokens?: unknown }).max_tokens;
+    return typeof m === "number" && Number.isFinite(m) ? m : null;
+  } catch {
+    return null;
+  }
+}
+
+/** A rough prompt size for a request that never answered: about 4 characters per token. */
+export const roughPromptTokens = (body: unknown): number | null => (typeof body === "string" ? Math.ceil(body.length / 4) : null);
+
+export function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[], meter: SpendMeter, model: string): FetchLike {
   // S8b: the app sends at most n + 4 items per section (promptPool), so the sent ids must be a SUBSET of
   // the scoring pool (same ids, same source texts), not the whole pool.
   const poolIds = new Set(pool.map((p) => p.id));
+  /** Q-5-02: calls that never answered, by request body; a later answer to the same request gives their prompt size. */
+  const unansweredByBody = new Map<string, CallRecord[]>();
   return async (url, init) => {
+    const body = typeof init?.body === "string" ? init.body : null;
     const ids = requestPoolIds(init?.body);
     const poolMatches = ids === null ? null : ids.length > 0 && ids.every((id) => poolIds.has(id));
     const t0 = performance.now();
@@ -235,11 +252,15 @@ function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[
       const latencyMs = Math.round(performance.now() - t0);
       const parsed = res.ok ? parseCompletionBody(text) : { promptTokens: null, completionTokens: null, finishReason: null, answeredModel: null, rawItems: null };
       calls.push({ latencyMs, status: res.status, error: res.ok ? null : `HTTP ${res.status}`, poolMatches, ...parsed });
+      if (body !== null && parsed.promptTokens !== null) {
+        for (const earlier of unansweredByBody.get(body) ?? []) earlier.estPromptTokens = parsed.promptTokens;
+        unansweredByBody.delete(body);
+      }
       meter.add(model, parsed.promptTokens, parsed.completionTokens);
       return new Response(text, { status: res.status, statusText: res.statusText, headers: res.headers });
     } catch (err) {
       const latencyMs = Math.round(performance.now() - t0);
-      calls.push({
+      const rec: CallRecord = {
         latencyMs,
         status: null,
         error: err instanceof Error ? err.name : "error",
@@ -249,9 +270,14 @@ function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[
         answeredModel: null,
         rawItems: null,
         poolMatches,
-      });
-      // A call that never answered may still be billed; it is counted as a call with unknown tokens.
-      meter.add(model, null, null);
+        // Q-5-02: a call that never answered may still be billed: priced at least at its prompt size (refined
+        // when a later answer to the same request reports its real prompt tokens), up to a full max_tokens answer.
+        estPromptTokens: roughPromptTokens(body),
+        maxTokens: requestMaxTokens(body),
+      };
+      calls.push(rec);
+      if (body !== null) unansweredByBody.set(body, [...(unansweredByBody.get(body) ?? []), rec]);
+      meter.add(model, rec.estPromptTokens ?? null, null);
       throw err;
     }
   };
@@ -338,7 +364,7 @@ export async function runModelCase(
       parkName: p.park.name,
       kind: "pass",
       sections: p.sections,
-      items: p.items.map((i) => ({ section: i.section, clue: i.clue, lookWhere: i.lookWhere, answer: i.answer })),
+      items: p.items.map((i) => ({ section: i.section, clue: i.clue, lookWhere: i.lookWhere, answer: i.answer, difficulty: i.difficulty })),
       removed: p.removed,
       wallMs,
     };
@@ -390,7 +416,7 @@ export function runTemplateCase(c: EvalCase, data: CaseData): RunRecord {
         poolMatches: true,
       },
     ],
-    items: result.items.map((v) => ({ section: v.item.section, clue: v.clue, lookWhere: v.lookWhere, answer: v.item.answer })),
+    items: result.items.map((v) => ({ section: v.item.section, clue: v.clue, lookWhere: v.lookWhere, answer: v.item.answer, difficulty: v.difficulty })),
   };
 }
 
@@ -549,16 +575,23 @@ export function resultPaths(results: EvalResults, dir = RESULTS_DIR): { md: stri
   return { md: path.join(dir, `${stem}.md`), json: path.join(dir, `${stem}.json`) };
 }
 
+/** Write evals/results/human-check.md (the M9 kid-check sheet) for `results`; returns its path, or null when there is nothing to check. */
+export function writeHumanCheck(results: EvalResults, mdName: string, dir = RESULTS_DIR): string | null {
+  const form = renderHumanCheck(results, mdName);
+  if (!form) return null;
+  const human = path.join(dir, "human-check.md");
+  writeFileSync(human, form);
+  return human;
+}
+
 export function writeResults(results: EvalResults, dir = RESULTS_DIR): { md: string; json: string } {
   mkdirSync(dir, { recursive: true });
   const p = resultPaths(results, dir);
   writeFileSync(p.json, prettyJson(results, 4));
   writeFileSync(p.md, renderMarkdown(results, path.basename(p.json)));
-  const human = path.join(dir, "human-check.md");
-  if (!results.meta.partial && !existsSync(human)) {
-    const form = renderHumanCheck(results, path.basename(p.md));
-    if (form) writeFileSync(human, form);
-  }
+  // The kid-check sheet always follows the latest full run (it used to be written only when missing, so it went
+  // stale). `pnpm eval:human-check` rebuilds it from any saved results JSON.
+  if (!results.meta.partial) writeHumanCheck(results, path.basename(p.md), dir);
   const ledger = path.join(dir, "SPEND.md");
   if (!existsSync(ledger)) {
     writeFileSync(

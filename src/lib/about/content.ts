@@ -6,7 +6,7 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { MAX_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS } from "@/lib/model";
@@ -60,7 +60,7 @@ export function aboutStatTiles(): StatTile[] {
   return [
     { value: pct(g.groundedPct), label: "of clues quote their source exactly", target: `${t.groundedPct}% or more`, met: g.groundedPct >= t.groundedPct },
     { value: String(g.blockedPrinted), label: `risky species printed (${g.runs} runs)`, target: "0, always", met: g.blockedPrinted === 0 },
-    { value: usd(g.costPerPass), label: "per pass (list price)", target: `${usd(t.costPerPass)} or less`, met: g.costPerPass <= t.costPerPass },
+    { value: usd(g.costPerPass), label: `per pass (list price; up to ${usd(GEMMA_COST_RANGE.high)} if ${GEMMA_COST_RANGE.timedOutCalls} timed-out calls were billed)`, target: `${usd(t.costPerPass)} or less`, met: g.costPerPass <= t.costPerPass },
     { value: `Grade ${g.fkGrade.toFixed(1)}`, label: "reading level (median)", target: `${t.fkGrade} or lower`, met: g.fkGrade <= t.fkGrade },
     { value: pct(g.completePct), label: "of passes complete", target: `${t.completePct}% or more`, met: g.completePct >= t.completePct },
     {
@@ -246,7 +246,7 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: `Cost is close to the goal: Gemma ${usd(g.costPerPass)} a pass.`,
-      detail: `Target ${usd(t.costPerPass)}; up from ${usd(PREVIOUS_RUN.costPerPass)}, because more passes make 2 or 3 model calls. A 10-13 pass in the small ${SMOKE_10_13.ageBand} check cost ${usd(SMOKE_10_13.costPerFinishedPass)}, over the goal.`,
+      detail: `Target ${usd(t.costPerPass)}; up from ${usd(PREVIOUS_RUN.costPerPass)}, because more passes make 2 or 3 model calls. ${GEMMA_COST_RANGE.timedOutCalls} calls timed out with no answer and are priced at $0; if DigitalOcean bills them in full, it is ${usd(GEMMA_COST_RANGE.high)} a pass, just over the goal. A 10-13 pass in the small ${SMOKE_10_13.ageBand} check cost ${usd(SMOKE_10_13.costPerFinishedPass)}, over the goal.`,
     },
     {
       title: "Answers that name themselves:",

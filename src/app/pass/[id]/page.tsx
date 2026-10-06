@@ -44,6 +44,10 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
     <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8">
       <PassPreview pass={pass} reused={sp.reused === "1"} />
       <div className="flex flex-col gap-4">
+        {/* Opens the one-page print layout, which opens the print dialog once (ADR 0004). */}
+        <Link href={`/pass/${pass.id}/print?print=1`} className={buttonClassName("primary", "self-start")}>
+          Print pass
+        </Link>
         <DifferentPassButton parkId={pass.park.id} ageBand={pass.ageBand} variant={pass.variant} />
         <Link href="/" className={buttonClassName("secondary", "self-start")}>
           Pick another park

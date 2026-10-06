@@ -78,7 +78,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           Why sign in?
         </h2>
         <ul className="flex list-disc flex-col gap-1 pl-5">
-          <li>Only to make a new pass or to tell us what you found. Examples, shared links and printing work without it.</li>
+          <li>Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.</li>
           <li>{ACCOUNT_COPY.privacy}</li>
           <li>{ACCOUNT_COPY.grownUps}</li>
           <li>

@@ -1261,7 +1261,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.rate",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 2 sentences",
     maxChars: 120,
     text: "Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.",
@@ -1270,7 +1270,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.unavailable",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 2 short sentences",
     maxChars: 100,
     text: "That sign-in option isn't set up on this server. Pick another one below.",
@@ -1279,7 +1279,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.denied",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 2 short sentences",
     maxChars: 100,
     text: "Sign-in was cancelled, so nothing changed. Changed your mind? Try again below.",
@@ -1288,7 +1288,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.callback",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 1-2 short sentences",
     maxChars: 80,
     text: "The sign-in page didn't finish loading. Please try again.",
@@ -1297,7 +1297,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.config",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 2 sentences",
     maxChars: 120,
     text: "Sign-in isn't set up correctly on this server right now. The examples and saved passes still work.",
@@ -1306,7 +1306,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.verify",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 2 short sentences",
     maxChars: 70,
     text: "That sign-in link didn't work. Please try again.",
@@ -1315,7 +1315,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "signin.err.general",
     page: SIGN,
-    file: "src/app/signin/page.tsx",
+    file: "src/lib/accounts/signin-errors.ts",
     role: "error message, 1-2 short sentences",
     maxChars: 70,
     text: "Sign-in didn't work this time. Please give it another try.",

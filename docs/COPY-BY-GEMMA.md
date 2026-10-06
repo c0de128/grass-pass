@@ -1080,7 +1080,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.1`: accepted
 
-`src/lib/about/content.ts:197` · privacy bullet, 1-2 short sentences · max 90 characters
+`src/lib/about/content.ts:206` · privacy bullet, 1-2 short sentences · max 90 characters
 
 - **Old:** No names, no photos, no analytics. Browsing and printing set no cookie.
 - **Gemma:** No names, photos, or analytics. Browsing and printing set no cookie.
@@ -1091,7 +1091,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.3`: rejected
 
-`src/lib/about/content.ts:199` · privacy bullet, 1 sentence · max 100 characters
+`src/lib/about/content.ts:208` · privacy bullet, 1 sentence · max 100 characters
 
 - **Old:** What you type goes to our server and OpenStreetMap, never into the web address.
 - **Gemma:** Your typing goes to our server and OpenStreetMap, never the web address.
@@ -1102,7 +1102,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.4`: edited
 
-`src/lib/about/content.ts:200` · privacy bullet, 1 sentence · max 80 characters
+`src/lib/about/content.ts:209` · privacy bullet, 1 sentence · max 80 characters
 
 - **Old:** "Use my location" is rounded to about 1 km in your browser.
 - **Gemma:** Use my location is rounded to about 1 km in your browser before it is sent.
@@ -1113,7 +1113,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.5`: accepted
 
-`src/lib/about/content.ts:201` · privacy bullet, 1 sentence · max 90 characters
+`src/lib/about/content.ts:210` · privacy bullet, 1 sentence · max 90 characters
 
 - **Old:** The model sees the park's public facts and the age band, nothing about you.
 - **Gemma:** The AI sees park facts and the age band, nothing about you or your child.
@@ -1214,7 +1214,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.1`: unchanged
 
-`src/lib/about/content.ts:71` · check-mark bullet, 1 sentence · max 70 characters
+`src/lib/about/content.ts:79` · check-mark bullet, 1 sentence · max 70 characters
 
 - **Old:** Anyone can download, run and build on the weights.
 - **Gemma:** Anyone can download, run and build on the weights.
@@ -1225,7 +1225,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.2`: accepted
 
-`src/lib/about/content.ts:72` · check-mark bullet, 1 sentence · max 70 characters
+`src/lib/about/content.ts:80` · check-mark bullet, 1 sentence · max 70 characters
 
 - **Old:** Our safety rules live in our code, not a vendor's.
 - **Gemma:** Our safety rules are in our code, not a vendor's.
@@ -1236,7 +1236,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.3`: unchanged
 
-`src/lib/about/content.ts:73` · check-mark bullet, 1 sentence; must give the measured self-host result · max 70 characters
+`src/lib/about/content.ts:81` · check-mark bullet, 1 sentence; must give the measured self-host result · max 70 characters
 
 - **Old:** Self-hosting is possible, but not measured yet.
 - **Gemma:** Self-hosting is possible, but not measured yet.
@@ -1258,7 +1258,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.osm`: rejected
 
-`src/lib/about/content.ts:84` · one-line description of a data source (OpenStreetMap), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:92` · one-line description of a data source (OpenStreetMap), 8 words or fewer · max 50 characters
 
 - **Old:** Parks, paths and what is mapped inside them
 - **Gemma:** Parks, paths and what's inside them
@@ -1269,7 +1269,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.inat`: accepted
 
-`src/lib/about/content.ts:92` · one-line description of a data source (iNaturalist), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:100` · one-line description of a data source (iNaturalist), 8 words or fewer · max 50 characters
 
 - **Old:** Wildlife people really spotted nearby
 - **Gemma:** Wildlife people actually spotted nearby
@@ -1280,7 +1280,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.wiki`: accepted
 
-`src/lib/about/content.ts:99` · one-line description of a data source (Wikipedia), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:107` · one-line description of a data source (Wikipedia), 8 words or fewer · max 50 characters
 
 - **Old:** A short fact about each species
 - **Gemma:** A short summary of each species
@@ -1291,7 +1291,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.serp`: accepted
 
-`src/lib/about/content.ts:106` · one-line description of a data source (SerpApi), 10 words or fewer · max 60 characters
+`src/lib/about/content.ts:114` · one-line description of a data source (SerpApi), 10 words or fewer · max 60 characters
 
 - **Old:** How often Google Maps reviews mention dogs or bikes
 - **Gemma:** Google Maps review counts for dogs or bikes
@@ -1357,7 +1357,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.1`: accepted
 
-`src/lib/about/content.ts:115` · privacy check-mark bullet, 1 short sentence · max 60 characters
+`src/lib/about/content.ts:123` · privacy check-mark bullet, 1 short sentence · max 60 characters
 
 - **Old:** Browsing and printing need no account or cookie.
 - **Gemma:** No account or cookies needed to browse and print.
@@ -1368,7 +1368,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.2`: accepted
 
-`src/lib/about/content.ts:116` · privacy check-mark bullet, 1 sentence · max 85 characters
+`src/lib/about/content.ts:124` · privacy check-mark bullet, 1 sentence · max 85 characters
 
 - **Old:** Sign-in only to make a new pass; we keep a scrambled ID, no email or name.
 - **Gemma:** Sign-in is only for new passes. We keep a scrambled ID, no name or email.
@@ -1379,7 +1379,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.3`: accepted
 
-`src/lib/about/content.ts:117` · privacy check-mark bullet, 1 short sentence · max 50 characters
+`src/lib/about/content.ts:125` · privacy check-mark bullet, 1 short sentence · max 50 characters
 
 - **Old:** Nothing about your child is asked for.
 - **Gemma:** We never ask for info about your child.
@@ -1390,7 +1390,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.4`: edited
 
-`src/lib/about/content.ts:118` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:126` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Your location is rounded to about 1 km first.
 - **Gemma:** Your location is rounded to 1 km in your browser.
@@ -1401,7 +1401,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.5`: rejected
 
-`src/lib/about/content.ts:119` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:127` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Your IP is kept only scrambled, for about a day.
 - **Gemma:** Your IP is kept scrambled for about a day.
@@ -1412,7 +1412,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.6`: accepted
 
-`src/lib/about/content.ts:120` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:128` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Park facts and age band go to the model (US).
 - **Gemma:** Park facts and age band go to the model in the US.
@@ -1423,7 +1423,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.limit.4`: rejected
 
-`src/lib/about/content.ts:215` · limit bullet, 1 short sentence · max 60 characters
+`src/lib/about/content.ts:224` · limit bullet, 1 short sentence · max 60 characters
 
 - **Old:** The read-it-as-a-7-year-old check is not done yet.
 - **Gemma:** The 7 year old reading check is not done yet.
@@ -1434,7 +1434,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.limit.5`: unchanged
 
-`src/lib/about/content.ts:216` · limit bullet, 1 short sentence · max 60 characters
+`src/lib/about/content.ts:225` · limit bullet, 1 short sentence · max 60 characters
 
 - **Old:** Find This Spot and Lucky Finds are not in the eval yet.
 - **Gemma:** Find This Spot and Lucky Finds are not in the eval yet.
@@ -1456,7 +1456,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.note2`: edited
 
-`src/lib/about/content.ts:181` · paragraph under the privacy table, 1 sentence · max 120 characters
+`src/lib/about/content.ts:190` · paragraph under the privacy table, 1 sentence · max 120 characters
 
 - **Old:** The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device.
 - **Gemma:** The model runs on DigitalOcean servers in the US, so park facts and age bands leave your device.
@@ -1467,7 +1467,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.note3`: rejected
 
-`src/lib/about/content.ts:182` · paragraph under the privacy table, 1 sentence · max 130 characters
+`src/lib/about/content.ts:191` · paragraph under the privacy table, 1 sentence · max 130 characters
 
 - **Old:** Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.
 - **Gemma:** Logs track the model, timing, outcome, and pass id; they never record your prompt, IP, or what you typed.
@@ -1480,7 +1480,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.rate`: rejected
 
-`src/app/signin/page.tsx:14` · error message, 2 sentences · max 120 characters
+`src/lib/accounts/signin-errors.ts:6` · error message, 2 sentences · max 120 characters
 
 - **Old:** Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.
 - **Gemma:** Too many sign-in attempts from here. Take a few minutes and try again.
@@ -1491,7 +1491,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.unavailable`: accepted
 
-`src/app/signin/page.tsx:15` · error message, 2 short sentences · max 100 characters
+`src/lib/accounts/signin-errors.ts:7` · error message, 2 short sentences · max 100 characters
 
 - **Old:** That sign-in option isn't set up on this server. Pick another one below.
 - **Gemma:** That sign-in option is not set up here. Try another one below.
@@ -1502,7 +1502,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.denied`: accepted
 
-`src/app/signin/page.tsx:16` · error message, 2 short sentences · max 100 characters
+`src/lib/accounts/signin-errors.ts:8` · error message, 2 short sentences · max 100 characters
 
 - **Old:** Sign-in was cancelled, so nothing changed. Changed your mind? Try again below.
 - **Gemma:** Sign-in was cancelled. Nothing changed, but you can try again below.
@@ -1513,7 +1513,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.callback`: accepted
 
-`src/app/signin/page.tsx:17` · error message, 1-2 short sentences · max 80 characters
+`src/lib/accounts/signin-errors.ts:9` · error message, 1-2 short sentences · max 80 characters
 
 - **Old:** The sign-in page didn't finish loading. Please try again.
 - **Gemma:** The sign-in page didn't finish. Please try again.
@@ -1524,7 +1524,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.config`: accepted
 
-`src/app/signin/page.tsx:18` · error message, 2 sentences · max 120 characters
+`src/lib/accounts/signin-errors.ts:10` · error message, 2 sentences · max 120 characters
 
 - **Old:** Sign-in isn't set up correctly on this server right now. The examples and saved passes still work.
 - **Gemma:** Sign-in isn't set up right on this server. Examples and saved passes still work.
@@ -1535,7 +1535,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.verify`: unchanged
 
-`src/app/signin/page.tsx:19` · error message, 2 short sentences · max 70 characters
+`src/lib/accounts/signin-errors.ts:11` · error message, 2 short sentences · max 70 characters
 
 - **Old:** That sign-in link didn't work. Please try again.
 - **Gemma:** That sign-in link didn't work. Please try again.
@@ -1546,7 +1546,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.err.general`: accepted
 
-`src/app/signin/page.tsx:21` · error message, 1-2 short sentences · max 70 characters
+`src/lib/accounts/signin-errors.ts:13` · error message, 1-2 short sentences · max 70 characters
 
 - **Old:** Sign-in didn't work this time. Please give it another try.
 - **Gemma:** Sign-in didn't work this time. Give it another try.
@@ -1557,7 +1557,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.page.heading`: accepted
 
-`src/app/signin/page.tsx:77` · card heading on the sign-in page, 12 words or fewer · max 70 characters
+`src/app/signin/page.tsx:70` · card heading on the sign-in page, 12 words or fewer · max 70 characters
 
 - **Old:** Sign in to make new passes and tell us what you found
 - **Gemma:** Sign in to make new passes and report your finds
@@ -1568,7 +1568,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.why.1`: rejected
 
-`src/app/signin/page.tsx:84` · bullet under "Why sign in?", 2 sentences · max 140 characters
+`src/app/signin/page.tsx:81` · bullet under "Why sign in?", 2 sentences · max 140 characters
 
 - **Old:** Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.
 - **Gemma:** Sign in to make 2 a day or report finds. Browsing, examples, shared links and printing are open to everyone.
@@ -1579,7 +1579,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.privacy.link`: accepted
 
-`src/app/signin/page.tsx:93` · link to the privacy section, 12 words or fewer, light humor welcome · max 70 characters
+`src/app/signin/page.tsx:90` · link to the privacy section, 12 words or fewer, light humor welcome · max 70 characters
 
 - **Old:** What we keep (spoiler: very little), and for how long
 - **Gemma:** What we keep (spoiler: not much) and for how long
@@ -1590,7 +1590,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `signin.card.body`: rejected
 
-`src/components/account/SignInCard.tsx:95` · sign-in card paragraph, 2-3 sentences, before a sentence code adds · max 180 characters
+`src/components/account/SignInCard.tsx:99` · sign-in card paragraph, 2-3 sentences, before a sentence code adds · max 180 characters
 
 - **Old:** Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.
 - **Gemma:** Each new pass uses a real AI model, so grown-ups sign in first for 2 new passes a day. Examples and saved passes need no sign-in.
@@ -1612,7 +1612,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `account.privacy`: accepted
 
-`src/lib/accounts/config.ts:101` · privacy line on the sign-in card and pages, 2 sentences · max 120 characters
+`src/lib/accounts/config.ts:102` · privacy line on the sign-in card and pages, 2 sentences · max 120 characters
 
 - **Old:** We only keep a scrambled ID to count your 2 passes a day and your found-it reports. No email, no name.
 - **Gemma:** We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.
@@ -1623,7 +1623,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `account.grownups`: accepted
 
-`src/lib/accounts/config.ts:102` · 1 short sentence · max 60 characters
+`src/lib/accounts/config.ts:103` · 1 short sentence · max 60 characters
 
 - **Old:** Sign-in is for parents and teachers, not kids.
 - **Gemma:** Sign-in is for grown-ups, not kids.
@@ -1634,7 +1634,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `account.limit`: accepted
 
-`src/lib/accounts/config.ts:104` · limit message, 2 sentences · max 170 characters
+`src/lib/accounts/config.ts:105` · limit message, 2 sentences · max 170 characters
 
 - **Old:** That's your {n} new passes for today. Your passes and the examples still work, and you get {n} more after midnight (Dallas time).
 - **Gemma:** You used your {n} new passes for today. Saved passes and examples still work. You get {n} more after midnight Dallas time.
@@ -1645,7 +1645,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `account.judgeNote`: accepted
 
-`src/lib/accounts/config.ts:105` · note under the judge button, 1 sentence · max 95 characters
+`src/lib/accounts/config.ts:106` · note under the judge button, 1 sentence · max 95 characters
 
 - **Old:** Try as a judge signs you in to a shared demo account: no sign-up, nothing to type.
 - **Gemma:** Try as a judge to use a shared demo account. No sign-up, nothing to type.
@@ -1656,7 +1656,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `account.notConfigured`: accepted
 
-`src/lib/accounts/config.ts:106` · message, 2 sentences · max 130 characters
+`src/lib/accounts/config.ts:107` · message, 2 sentences · max 130 characters
 
 - **Old:** Sign-in isn't set up on this server yet, so it can't make new passes. The examples and saved passes still work.
 - **Gemma:** Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work.

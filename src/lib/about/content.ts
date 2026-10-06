@@ -167,7 +167,8 @@ export function privacyRows(): PrivacyRow[] {
     },
     {
       what: `Signing in ${[names ? `with ${names}` : null, judgeDemoEnabled() ? `with "Try as a judge"` : null].filter(Boolean).join(" or ")} (grown-ups only)`.replace("Signing in  (", "Signing in ("),
-      where: "GitHub or Google send your public profile (account number, name, picture link; for GitHub any public email). We store only a scrambled ID made from the number; the rest is dropped at once, except your first name, which stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.",
+      // SEC-5-04: what really arrives (the public profile), naming only the providers set up here (RULES-4-02).
+      where: `${names ? `${names} ${names.includes(" or ") ? "send" : "sends"} your public profile (account number, name, picture link${names.includes("GitHub") ? "; for GitHub any public email" : ""}). ` : ""}We store only a scrambled ID made from the number; the rest is dropped at once, except your first name, which stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.`,
       why: "To count your 2 new passes a day and your reports.",
     },
     {
@@ -304,7 +305,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "Some passes come out short.",
-      detail: `${pct(g.completePct)} of test passes were complete (target ${t.completePct}%: met); a short one says how many finds are missing.`,
+      detail: `${pct(g.completePct)} of data-rich test runs made a complete pass (target ${t.completePct}%: met); a short one says how many finds are missing.`,
     },
     {
       title: "The kid check is not done yet.",

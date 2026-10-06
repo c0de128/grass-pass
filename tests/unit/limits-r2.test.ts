@@ -203,14 +203,14 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
     expect(hit("/", T0, hashedKey("2001:db8:2::5", ENV)).ok).toBe(true);
   });
 
-  it("proxy: a pass-page flood is refused as text, impossible ids included, without touching the store", () => {
+  it("proxy: a pass-page flood is refused with the styled page (UX-5-02), impossible ids included, without touching the store", () => {
     const req = (path: string) => new NextRequest(`http://localhost:3123${path}`, { headers: { "x-forwarded-for": "192.0.2.77" } });
     // The cost bucket (60) stops plausible ids first now that the page bucket is a flood guard (SEC-3-01).
     const statuses = Array.from({ length: 70 }, (_, i) => proxy(req(`/pass/${randomId(i)}`)).status);
     expect(statuses.filter((s) => s === 200)).toHaveLength(CFG.preLimitCostBurst);
     const refused = proxy(req("/pass/w1-6to10-20261006-1"));
     expect(refused.status).toBe(429);
-    expect(refused.headers.get("content-type")).toMatch(/text\/plain/);
+    expect(refused.headers.get("content-type")).toMatch(/text\/html/);
   });
 
   it("per-month math: one IPv4 at the steady rate stays under a third of the free 500K commands", () => {

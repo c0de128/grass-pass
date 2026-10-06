@@ -39,6 +39,7 @@ const V3_SUN_ON_DARK = new Set([
   "src/components/home/TwoParks.tsx",
   "src/components/home/PassAnatomy.tsx",
   "src/components/home/HomeHero.tsx",
+  "src/components/home/HowItWorks.tsx",
   "src/app/about/page.tsx",
   "src/app/how-it-works/page.tsx",
 ]);

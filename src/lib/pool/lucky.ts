@@ -187,7 +187,7 @@ export function luckyItem(f: Find, checkedAtMs: number): PoolItem {
     section: "lucky",
     kind: "maybe find (it comes and goes)",
     sourceText: `A maybe find: Google reviews of this park from the last two years mention ${kw.plural}, so you might see one today. ${kw.describe}`,
-    answer: `${kw.answer} (a maybe find: it may not be there today)`,
+    answer: `${kw.answer} (maybe)`,
     evidence: luckyEvidence(f, checkedAtMs),
     source: LUCKY_SOURCE,
     nameWords: [...kw.nameWords],

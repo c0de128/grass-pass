@@ -9,12 +9,10 @@
  */
 import "server-only";
 import "@/lib/zod-config";
-import { z } from "zod";
-import { createCachePair, createJsonCache, type Store } from "@/lib/cache";
+import { createJsonCache, type Store } from "@/lib/cache";
 import type { QuotaTicket } from "@/lib/limits";
 import { log } from "@/lib/log";
 import { callModel, configuredModelId, MAX_TOKENS, ModelError, modelTimeoutMs, type ModelLogger } from "@/lib/model";
-import { PARKS_COPY } from "@/lib/parks/schema";
 import {
   PASS_COPY,
   type AgeBand,
@@ -36,7 +34,9 @@ import {
   type SpeciesList,
   type TaxonSummary,
 } from "@/lib/sources/inat";
-import { parkFeatures, ParkFeaturesSchema, parkIdOf, type ParkFeatures, type ParkRef } from "@/lib/sources/overpass-features";
+import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
+import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
+import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
 import { finishSpot, geometryWithin, loadGeometry, planSpot, SPOT_WAIT_MS, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, computeMix, type Mix } from "./prompt";
@@ -47,8 +47,8 @@ type Env = Record<string, string | undefined>;
 
 const HOUR = 3600;
 const DAY = 24 * HOUR;
-/** ADR 0002: park features 7 days, species list 6 h, taxon summaries 7 days. */
-export const FEATURES_TTL_SEC = 7 * DAY;
+/** ADR 0002: species list 6 h, taxon summaries 7 days (park features: src/lib/pass/park-data.ts). */
+export { FEATURES_TTL_SEC } from "@/lib/pass/park-data";
 export const SPECIES_TTL_SEC = 6 * HOUR;
 export const TAXA_TTL_SEC = 7 * DAY;
 
@@ -59,14 +59,6 @@ export const MODEL_MIN_LEFT_MS = 15_000;
 /** Don't start the one retry with less than this left. */
 export const RETRY_MIN_LEFT_MS = 20_000;
 
-const NoneSchema = z.object({ none: z.literal(true) });
-const featuresCache = createCachePair({
-  name: "park-features",
-  schema: ParkFeaturesSchema,
-  negativeSchema: NoneSchema,
-  ttlSec: FEATURES_TTL_SEC,
-  maxEntries: 2_000,
-});
 const speciesCache = createJsonCache({ name: "inat-species", schema: SpeciesListSchema, ttlSec: SPECIES_TTL_SEC, maxEntries: 2_000 });
 const taxaCache = createJsonCache({ name: "inat-taxon", schema: TaxonSummarySchema, ttlSec: TAXA_TTL_SEC, maxEntries: 20_000 });
 
@@ -152,41 +144,8 @@ function parkDataOf(parkName: string, pool: readonly PoolItem[]): ParkData {
 
 // ---------- data ----------
 
-type FeaturesResult = { ok: true; value: ParkFeatures; at: number } | { ok: false; outcome: BuildOutcome };
-
-async function loadFeatures(ref: ParkRef, deps: BuildDeps): Promise<FeaturesResult> {
-  const key = parkIdOf(ref);
-  const hit = await featuresCache.positive.get(key, deps.now());
-  if (hit) return { ok: true, value: hit.value, at: hit.storedAt };
-  const miss = await featuresCache.negative.get(key, deps.now());
-  if (miss) return { ok: false, outcome: { kind: "error", status: 404, error: { code: "NOT_A_PARK", message: PASS_COPY.notAPark } } };
-  try {
-    const f = await parkFeatures(ref, {
-      store: deps.store,
-      fetchImpl: deps.fetchImpl,
-      signal: deps.signal,
-      env: deps.env,
-      onStart: deps.onUpstream,
-      now: deps.now,
-    });
-    const at = deps.now();
-    if (!f) {
-      await featuresCache.negative.set(key, { none: true }, { now: at });
-      return { ok: false, outcome: { kind: "error", status: 404, error: { code: "NOT_A_PARK", message: PASS_COPY.notAPark } } };
-    }
-    await featuresCache.positive.set(key, f, { now: at });
-    return { ok: true, value: f, at };
-  } catch (err) {
-    if (err instanceof SourceError) {
-      log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
-      return {
-        ok: false,
-        outcome: { kind: "error", status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: err.retryAfter ?? 60 } },
-      };
-    }
-    throw err;
-  }
-}
+/** Wild Finds copy when iNaturalist was stopped by the pass deadline (R1-M1). */
+export const WILD_SLOW_COPY = "No data available: iNaturalist was too slow when this pass was made.";
 
 type WildResult = {
   items: PoolItem[];
@@ -204,7 +163,9 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
   const down = (err: unknown): WildResult => {
     if (err instanceof SourceError) {
       log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
-      return { items: [], state: { status: "unavailable", message: WILD_DOWN_COPY }, blocked: 0, checkedAt: null, since: null };
+      // R1-M1: stopped by the pass deadline -> say "too slow", not "didn't answer".
+      const message = err.code === "aborted" ? WILD_SLOW_COPY : WILD_DOWN_COPY;
+      return { items: [], state: { status: "unavailable", message }, blocked: 0, checkedAt: null, since: null };
     }
     throw err;
   };
@@ -306,25 +267,38 @@ export function passMaxTokens(modelId: string): number {
 export const PASS_MAX_TOKENS = 1_200;
 
 export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<BuildOutcome> {
-  const { band } = input;
   const left = () => deps.startedAt + PASS_DEADLINE_MS - deps.now();
 
+  // R1-M1: ONE deadline for every data stage (Overpass features + geometry, iNaturalist), so the
+  // model always keeps MODEL_MIN_LEFT_MS and the whole pass answers inside PASS_DEADLINE_MS.
+  const dataDeadline = createDeadline(left() - MODEL_MIN_LEFT_MS);
+  try {
+    return await buildWithDeadline(input, { ...deps, signal: eitherSignal(dataDeadline.signal, deps.signal) }, deps, left);
+  } finally {
+    dataDeadline.clear();
+  }
+}
+
+/** buildPass after the deadline is set: `data` carries the deadline signal for the free data steps. */
+async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: BuildDeps, left: () => number): Promise<BuildOutcome> {
+  const { band } = input;
   deps.emit("map", stepText("map", deps.env));
-  // S5: the Find This Spot geometry query runs alongside the park-features query (optional, never throws).
-  const geometry: Promise<GeometryResult> = loadGeometry(input.ref, {
-    store: deps.store,
-    env: deps.env,
-    now: deps.now,
-    fetchImpl: deps.fetchImpl,
-    signal: deps.signal,
-    onUpstream: deps.onUpstream,
-  });
-  const fr = await loadFeatures(input.ref, deps);
+  const fr = await loadFeatures(input.ref, { store: data.store, env: data.env, now: data.now, fetchImpl: data.fetchImpl, signal: data.signal, onUpstream: data.onUpstream });
   if (!fr.ok) return fr.outcome;
   const f = fr.value;
+  // SEC-1-01 / Q-1-06: the optional Find This Spot geometry starts only once features confirmed a
+  // named park; it runs at low priority alongside the wildlife step (never throws).
+  const geometry: Promise<GeometryResult> = loadGeometry(input.ref, {
+    store: data.store,
+    env: data.env,
+    now: data.now,
+    fetchImpl: data.fetchImpl,
+    signal: data.signal,
+    onUpstream: data.onUpstream,
+  });
 
   deps.emit("wildlife", stepText("wildlife", deps.env));
-  const wild = await loadWild(f, deps);
+  const wild = await loadWild(f, data);
   const park = parkPool(f);
   const lucky: SectionState = { status: "off", message: PASS_COPY.luckyOff };
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
@@ -375,7 +349,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
         return {
           kind: "error",
           status: 504,
-          error: { code: "DATA_TOO_SLOW", message: "The park data took too long to load, so there was no time left to write clues. Try again in a minute." },
+          error: { code: "DATA_TOO_SLOW", message: DATA_TOO_SLOW_COPY },
           parkData,
         };
       }

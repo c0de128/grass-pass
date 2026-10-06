@@ -2,9 +2,9 @@ import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { MemoryStore } from "@/lib/cache/store";
 import { breakerRetryAfter, createSpacedQueue } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
-import { contactUrl, DEFAULT_CONTACT_URL, parseRetryAfter, SourceError, userAgent } from "@/lib/sources/common";
+import { contactUrl, DEFAULT_CONTACT_URL, parseRetryAfter, readTextCapped, SourceError, userAgent } from "@/lib/sources/common";
 import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, parseNominatim } from "@/lib/sources/nominatim";
-import { breakerName, isErrorRemark, overpassEndpoints, OVERPASS_DEFAULT_URLS, runOverpass } from "@/lib/sources/overpass";
+import { breakerName, isErrorRemark, isHeavyQueryRemark, overpassEndpoints, OVERPASS_DEFAULT_URLS, runOverpass } from "@/lib/sources/overpass";
 import { parseParks, parksNear, parksQuery } from "@/lib/sources/overpass-parks";
 import { distanceLabel, distanceM, roundCoord } from "@/lib/geo";
 import { fixture, osmReplay, recordedResponse } from "./support/osm-replay";
@@ -277,16 +277,68 @@ describe("runOverpass failover and breakers", () => {
     expect(again.calls.map((c) => c.url)).toEqual([second]);
   });
 
-  it("200 with a runtime-error remark is a failure, not data", async () => {
-    // Overpass's documented partial-result shape (remark + elements); same text as the recorded 504 page.
-    const remark = { elements: [], remark: "runtime error: Query timed out in \"query\" at line 1 after 26 seconds." };
+  it("200 with a server-busy runtime-error remark is a failure, not data, and fails over", async () => {
+    // Overpass's documented partial-result shape (remark + elements) with its "too busy" dispatcher text.
+    const remark = {
+      elements: [],
+      remark: "runtime error: open64: 0 Success /osm3s_osm_base Dispatcher_Client::request_read_and_idx::timeout. The server is probably too busy to handle your request.",
+    };
     expect(isErrorRemark(remark.remark)).toBe(true);
+    expect(isHeavyQueryRemark(remark.remark)).toBe(false);
+    const store = new MemoryStore({ now: () => T0 });
     const { fetchImpl, calls } = osmReplay({
       overpass: (c) => (c.url === first ? Response.json(remark) : undefined),
     });
-    const r = await parksNear(center, { store: new MemoryStore(), fetchImpl, env: {} });
+    const r = await parksNear(center, { store, fetchImpl, env: {}, now: () => T0 });
     expect(r.parks.length).toBeGreaterThan(0);
     expect(calls).toHaveLength(2);
+    expect(await breakerRetryAfter(store, breakerName(first), T0)).toBe(60);
+  });
+
+  it("SEC-1-01: a 'Query timed out' remark is about THAT query: no shared breaker, no failover", async () => {
+    const remark = { elements: [], remark: "runtime error: Query timed out in \"query\" at line 1 after 26 seconds." };
+    expect(isHeavyQueryRemark(remark.remark)).toBe(true);
+    const store = new MemoryStore({ now: () => T0 });
+    const { fetchImpl, calls } = osmReplay({ overpass: () => Response.json(remark) });
+    const err = await runOverpass(parksQuery(center), { store, fetchImpl, env: {}, now: () => T0 }).catch((e) => e);
+    expect(err).toBeInstanceOf(SourceError);
+    expect(err.code).toBe("too_heavy");
+    expect(calls).toHaveLength(1);
+    for (const e of OVERPASS_DEFAULT_URLS) expect(await breakerRetryAfter(store, breakerName(e), T0)).toBe(0);
+    // A different search right after still reaches Overpass (nobody else is locked out).
+    const next = osmReplay();
+    const r = await parksNear(center, { store, fetchImpl: next.fetchImpl, env: {}, now: () => T0 });
+    expect(r.parks).toHaveLength(10);
+    expect(next.calls).toHaveLength(1);
+  });
+
+  it("SEC-1-01: the body is read with a size cap; an oversized answer is too_heavy, no breaker", async () => {
+    const store = new MemoryStore({ now: () => T0 });
+    const big = JSON.stringify({ elements: [], pad: "x".repeat(2_000) });
+    const { fetchImpl, calls } = osmReplay({ overpass: () => new Response(big, { status: 200, headers: { "content-type": "application/json" } }) });
+    const err = await runOverpass(parksQuery(center), { store, fetchImpl, env: {}, now: () => T0, maxBytes: 1_000 }).catch((e) => e);
+    expect(err.code).toBe("too_heavy");
+    expect(calls).toHaveLength(1);
+    expect(await breakerRetryAfter(store, breakerName(first), T0)).toBe(0);
+    // A declared Content-Length over the cap is refused before reading.
+    const res = new Response("{}", { headers: { "content-length": "999999" } });
+    await expect(readTextCapped(res, 1_000)).rejects.toThrow(/larger than 1000 bytes/);
+    expect(await readTextCapped(new Response("hello"), 1_000)).toBe("hello");
+  });
+
+  it("the caller's own signal (pass deadline) stops the query as 'aborted' and never trips a breaker", async () => {
+    const store = new MemoryStore({ now: () => T0 });
+    const ac = new AbortController();
+    const { fetchImpl } = osmReplay({
+      overpass: (c) =>
+        new Promise<Response>((_, reject) => {
+          c.init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")));
+          setTimeout(() => ac.abort(), 20);
+        }),
+    });
+    const err = await runOverpass(parksQuery(center), { store, fetchImpl, env: {}, now: () => T0, signal: ac.signal }).catch((e) => e);
+    expect(err.code).toBe("aborted");
+    for (const e of OVERPASS_DEFAULT_URLS) expect(await breakerRetryAfter(store, breakerName(e), T0)).toBe(0);
   });
 
   it("429 honours Retry-After on that endpoint", async () => {

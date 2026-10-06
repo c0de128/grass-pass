@@ -3,6 +3,7 @@ import { MemoryStore } from "@/lib/cache/store";
 import {
   classify,
   featuresQuery,
+  PARK_FILTER,
   parseFeatures,
   parseParkId,
 } from "@/lib/sources/overpass-features";
@@ -34,11 +35,14 @@ describe("Overpass park features (live recordings 2026-10-05)", () => {
 
   it("the query is fixed: an area of the park for ways/relations, 150 m around a node park", () => {
     const q = featuresQuery({ type: "way", id: 306191453 });
-    expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(306191453\)->\.p;\.p out tags center;\.p map_to_area->\.a;/);
+    expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(306191453\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out tags center;\.p map_to_area->\.a;/);
     expect(q).toContain('nwr(area.a)["leisure"~"^(pitch|playground');
-    expect(featuresQuery({ type: "relation", id: 5 })).toContain("rel(5)->.p");
+    // SEC-1-01: the requested element itself must be a NAMED park/nature reserve, for every OSM type.
+    expect(featuresQuery({ type: "relation", id: 5 })).toContain(`rel(5)${PARK_FILTER}->.p`);
+    expect(featuresQuery({ type: "node", id: 7 })).toContain(`node(7)${PARK_FILTER}->.p`);
     expect(featuresQuery({ type: "node", id: 7 })).toContain("nwr(around.p:150)");
-    expect(rec(`overpass-features-${PARKS.connemara.slug}`)._recording.overpassQuery).toBe(q);
+    // Recorded before R1 added the filter; the same park selects the same element with it.
+    expect(rec(`overpass-features-${PARKS.connemara.slug}`)._recording.overpassQuery).toBe(q.replace(PARK_FILTER, ""));
   });
 
   it("Celebration Park: the architect's live counts (25 soccer, 4 tennis, 2 basketball, playground, shelter)", () => {

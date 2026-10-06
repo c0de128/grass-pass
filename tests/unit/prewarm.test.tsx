@@ -6,6 +6,9 @@ import { setLogSink } from "@/lib/log";
 import { loadPass, resetPassMaking } from "@/lib/pass/make";
 import { EXAMPLE_PARKS, exampleStatuses, prewarmEnabled, prewarmIdle, resetPrewarm, warmExamples, REFRESH_LOCK_SEC, RETRY_NO_MODEL_SEC, type ExamplePark } from "@/lib/prewarm";
 import { localDay } from "@/lib/time";
+import { searchParks } from "@/lib/parks/search";
+import { ExampleLinkSchema } from "@/lib/parks/schema";
+import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { PARKS, passReplay, type Call } from "./support/pass-replay";
 
 // Park data and model answers are the LIVE recordings in tests/fixtures (see support/pass-replay.ts).
@@ -39,6 +42,7 @@ beforeEach(() => {
 });
 afterEach(async () => {
   await prewarmIdle();
+  resetSavedOsm();
   vi.unstubAllGlobals();
   vi.unstubAllEnvs();
   restoreLog();
@@ -136,6 +140,8 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
   });
 
   it("an OpenStreetMap failure (no model call) may be retried after 10 minutes, not 2 hours", async () => {
+    // The live-Overpass path: as if no map data were saved for the example.
+    disableSavedOsmForTests();
     const lockClock = { t: Date.now() };
     const store = new MemoryStore({ now: () => lockClock.t });
     // Built failure (cannot be recorded on demand): every Overpass server answers 504; nothing else is called.
@@ -173,11 +179,26 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const now = Date.now();
     const first = await exampleStatuses({ examples: EXAMPLES, now: () => now });
     expect(first.every((s) => s.pass === null && s.refreshing)).toBe(true);
-    expect(first[0].missing).toMatch(/being made right now from live park data/);
+    expect(first[0].missing).toBe("No data available yet: it is being made right now (about 15-30 seconds).");
     await prewarmIdle();
     const s = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
     expect(s[0].pass).toBeNull();
-    expect(s[0].missing).toMatch(/^The last try didn't work \(.+\)\. Pick the park yourself below\.$/);
+    // Q-1-10: one sentence, one "No data available", a short code-written reason (never the nested message).
+    expect(s[0].missing).toBe("No data available yet: the last try didn't work because the AI model didn't write clues.");
+  });
+
+  it("R1-B1: a park search that can't answer offers a link to a READY example pass (none ready -> no link)", async () => {
+    const down = async () => new Response("bad gateway", { status: 502 }); // built failure: every upstream down
+    const before = await searchParks({ kind: "text", q: "Allen TX" }, { ip: "203.0.113.77", store: new MemoryStore(), fetchImpl: down, env: {} });
+    expect(before).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE" } });
+    expect(!before.ok && before.error.example).toBeUndefined();
+    const now = Date.now();
+    await warmExamples({ examples: EXAMPLES.slice(0, 1), now: () => now });
+    const [s] = await exampleStatuses({ examples: EXAMPLES.slice(0, 1), now: () => now });
+    expect(s.pass).not.toBeNull();
+    const after = await searchParks({ kind: "text", q: "Plano TX" }, { ip: "203.0.113.78", store: new MemoryStore(), fetchImpl: down, env: {} });
+    expect(after).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE", example: { name: EXAMPLES[0].name, href: `/pass/${s.pass!.passId}?example=1` } } });
+    expect(!after.ok && ExampleLinkSchema.safeParse(after.error.example).success).toBe(true);
   });
 
   it("switched off: no upstream call, and the page says so", async () => {
@@ -185,7 +206,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     await warmExamples({ examples: EXAMPLES });
     const s = await exampleStatuses({ examples: EXAMPLES });
     expect(replay.calls).toHaveLength(0);
-    expect(s.every((x) => x.pass === null && x.missing === "Example passes are switched off on this server.")).toBe(true);
+    expect(s.every((x) => x.pass === null && x.missing === "No data available yet: example passes are switched off on this server.")).toBe(true);
   });
 
   it("renders links with the real generated time, and an honest line when there is no pass", async () => {
@@ -196,7 +217,11 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const html = renderToStaticMarkup(<ExampleParks statuses={statuses} />);
     expect(html).toContain(`href="/pass/${statuses[0].pass!.passId}?example=1"`);
     expect(html).toMatch(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
-    expect(html).toContain("No data available yet: Example passes are switched off on this server.");
+    // R1-B1 / ux M1: no dashed failure cards; one line per missing example with a Try again link.
+    expect(html).toContain("No data available yet: example passes are switched off on this server.");
+    expect(html.match(/No data available/g)).toHaveLength(EXAMPLES.length - 1);
+    expect(html).toContain(">Try again</a>");
+    expect(html).not.toContain("border-dashed");
     expect(html).toContain('<h2 id="examples-title"');
   });
 });

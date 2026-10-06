@@ -13,10 +13,11 @@ import { buildMessages, computeMix, systemPrompt, userPrompt } from "@/lib/ai/pr
 import { validateSpot } from "@/lib/ai/validate";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
+import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
 import { SourceError } from "@/lib/sources/common";
-import { parseFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
+import { PARK_FILTER, parseFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
 import {
   buildMap,
   centerOf,
@@ -44,10 +45,13 @@ let restore: () => void;
 beforeEach(() => {
   resetStores();
   resetPassMaking();
+  // These tests exercise the LIVE Overpass path for the example parks (saved answers: osm-snapshot tests).
+  disableSavedOsmForTests();
   restore = setLogSink(() => undefined);
 });
 afterEach(() => {
   restore();
+  resetSavedOsm();
   vi.unstubAllGlobals();
 });
 
@@ -58,16 +62,17 @@ const feats = (p: typeof CEL | typeof CON): ParkFeatures => parseFeatures(rec(`o
 const text = (html: string) => html.replace(/<[^>]+>/g, " ").replace(/&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&amp;/g, "&").replace(/\s+/g, " ");
 
 describe("geometry query (one fixed query per park, ADR 0002)", () => {
-  it("is fixed: only the validated numeric id varies; the live recordings used exactly this query", () => {
+  it("is fixed: only the validated numeric id varies; the live recordings used this query (before the R1 park filter)", () => {
     for (const p of [CEL, CON]) {
       const q = geometryQuery(parseParkId(p.id)!);
-      expect(rec(`overpass-geometry-${p.slug}`)._recording.overpassQuery).toBe(q);
-      expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(\d+\)->\.p;\.p out geom;\.p map_to_area->\.a;/);
+      // Recorded before R1 added the park tag filter; re-recorded live with it 2026-10-06, same parse.
+      expect(rec(`overpass-geometry-${p.slug}`)._recording.overpassQuery).toBe(q.replace(PARK_FILTER, ""));
+      expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(\d+\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out geom;\.p map_to_area->\.a;/);
       expect(q).toContain('nwr(around.p:80)["amenity"="parking"]');
       expect(q).toContain('node(around.p:40)["entrance"]');
       expect(q.endsWith("out geom qt;")).toBe(true);
     }
-    expect(geometryQuery({ type: "relation", id: 42 })).toContain("rel(42)->.p;");
+    expect(geometryQuery({ type: "relation", id: 42 })).toContain(`rel(42)${PARK_FILTER}->.p;`);
     expect(() => geometryQuery({ type: "node", id: 1 })).toThrow();
     expect(() => geometryQuery({ type: "way", id: -1 })).toThrow();
     expect(() => geometryQuery({ type: "way", id: 1.5 })).toThrow();

@@ -1,0 +1,27 @@
+{
+  "_recording": {
+    "what": "Overpass features query (featuresQuery, with the R1 park tag filter) for relation/114690, the State of Texas: NOT a park, so the filtered selector selects nothing and Overpass does no area work (SEC-1-01)",
+    "live": true,
+    "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+    "method": "POST",
+    "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+    "status": 200,
+    "contentType": "application/json",
+    "fetchedAt": "2026-10-06T03:41:10.936Z",
+    "latencyMs": 21082,
+    "recordedBy": "builder R1-A: scratch Vitest config running src/lib/sources/overpass.ts runOverpass(featuresQuery()) against the live API",
+    "parkId": "relation/114690",
+    "overpassQuery": "[out:json][timeout:25];rel(114690)[\"leisure\"~\"^(park|nature_reserve)$\"][\"name\"]->.p;.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;",
+    "failedAttempts": []
+  },
+  "body": {
+    "version": 0.6,
+    "generator": "Overpass API 0.7.62.4 2390de5a",
+    "osm3s": {
+      "timestamp_osm_base": "2026-10-06T03:40:33Z",
+      "timestamp_areas_base": "2026-10-06T02:02:44Z",
+      "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+    },
+    "elements": []
+  }
+}

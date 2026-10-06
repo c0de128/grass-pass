@@ -22,7 +22,7 @@ import type { PoolItem, SectionState } from "@/lib/pool/types";
 import { wildCandidates, wildPool } from "@/lib/pool/wild";
 import type { FetchLike } from "@/lib/sources/common";
 import { speciesCounts, taxaSummaries, windowStart, type SpeciesList, type TaxonSummary } from "@/lib/sources/inat";
-import { parkFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
+import { PARK_FILTER, parkFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
 
 export const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 export const FIXTURE_DIR = path.join(APP_ROOT, "tests", "fixtures", "evals");
@@ -274,7 +274,13 @@ export function createReplayFetch(fx: EvalFixture): Replay {
         // this is not a miss: the eval measures the clue pass without Find This Spot (stated in the report).
         throw new TypeError(`${GEOMETRY_NOT_RECORDED}: POST ${input}`);
       }
-      hit = fx.exchanges.find((e) => e.method === "POST" && e.query === q);
+      // R1 (SEC-1-01) added the park tag filter to the `.p` selector. Every recorded park is a named
+      // leisure=park|nature_reserve (parseFeatures checks it), so the filter selects the same element
+      // and the recorded answer is the answer to the filtered query too (re-checked live 2026-10-06 by
+      // pnpm osm:snapshot: Celebration Park features and the Celebration + Connemara geometry parse
+      // identically with the filter). Any other change to the query is still a miss.
+      const unfiltered = q === null ? null : q.replace(PARK_FILTER, "");
+      hit = fx.exchanges.find((e) => e.method === "POST" && (e.query === q || e.query === unfiltered));
     } else {
       hit = fx.exchanges.find((e) => e.method === "GET" && e.url === input);
     }

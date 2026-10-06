@@ -24,6 +24,8 @@ import { localDay } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
+import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
+import { createDeadline } from "./deadline";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import type { FetchLike } from "@/lib/sources/common";
 import {
@@ -46,6 +48,24 @@ export const PASS_TTL_SEC = 30 * DAY;
  * call, so it is normally done long before; if not, the box says iNaturalist was too slow.
  */
 export const OCTOBER_WAIT_MS = 6_000;
+
+/**
+ * R1-m2 (Q-1-05): a pass made while a source was down or slow (Wild Finds unavailable, no Find This
+ * Spot because OpenStreetMap was busy/slow, October box down/slow) is "degraded". It is still saved
+ * and shown, but after this long the next request tries to make a better one with the same id
+ * (and keeps showing the degraded one if that fails). The example warm-up treats it the same way.
+ */
+export const DEGRADED_RETRY_SEC = 15 * 60;
+
+const DEGRADED_OCTOBER: readonly string[] = [OCTOBER_REASONS.down, OCTOBER_REASONS.slow, OCTOBER_REASONS.rateLimited, OCTOBER_REASONS.badOutput];
+
+/** True when a source was down or slow when this pass was made (see DEGRADED_RETRY_SEC). */
+export function isDegraded(pass: Pass): boolean {
+  if (pass.sections.wild.status === "unavailable") return true;
+  if (pass.spot?.status === "none" && SPOT_DEGRADED_MESSAGES.includes(pass.spot.message)) return true;
+  if (pass.october?.status === "unavailable" && DEGRADED_OCTOBER.includes(pass.october.reason)) return true;
+  return false;
+}
 
 /** Every request, cached or not, per IP per minute. */
 export const PASS_BURST_PER_MIN = 20;
@@ -146,11 +166,15 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     const key = passKey(req.parkId, req.ageBand, startedAt);
     const latest = (await latestCache.get(key, now()))?.value ?? 0;
 
+    /** A degraded cached pass: shown again if the new try fails (R1-m2). */
+    let fallback: Pass | null = null;
     if (!req.fresh && latest > 0) {
       const id = passId(req.parkId, req.ageBand, day, latest);
       const hit = await passCache.get(id, now());
-      if (hit) return { kind: "pass", pass: hit.value, cached: true };
+      if (hit && (hit.ageSec < DEGRADED_RETRY_SEC || !isDegraded(hit.value))) return { kind: "pass", pass: hit.value, cached: true };
+      if (hit) fallback = hit.value;
     }
+    const orFallback = (out: MakeOutcome): MakeOutcome => (fallback && out.kind !== "pass" ? { kind: "pass", pass: fallback, cached: true } : out);
     if (req.fresh && latest >= MAX_VARIANTS) {
       return { kind: "error", status: 429, error: { code: "VARIANT_LIMIT", message: PASS_COPY.variantLimit } };
     }
@@ -162,11 +186,11 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     if (!deps.internal && !inflight().has(flightKey)) {
       const rl = await hitRateLimit(store, { name: "pass", key: deps.ip, limit: cfg.passPerIpPerMin, windowSec: 60, now: now() });
       if (!rl.ok) {
-        return {
+        return orFallback({
           kind: "error",
           status: 429,
           error: { code: "RATE_LIMITED", message: `That's a lot of new passes in a minute. Please wait ${waitText(rl.retryAfter)} and try again.`, retryAfter: rl.retryAfter },
-        };
+        });
       }
     }
 
@@ -177,7 +201,7 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
       deps.onStep,
     );
     if (out.kind === "pass") return { kind: "pass", pass: out.pass, cached: false };
-    return out;
+    return orFallback(out);
   } catch (err) {
     if (err instanceof StoreError) return storeDown();
     throw err; // includes WaiterAbortedError: the route answers 499 to a client that already left
@@ -229,9 +253,11 @@ async function build(ctx: {
 
   // October special (S7): free iNaturalist counts, fetched while the model writes clues.
   let october: Promise<OctoberBoxData> | null = null;
+  // R1-M1: the October box's iNaturalist calls stop at the pass deadline too (never after the answer).
+  const octoberDeadline = createDeadline(ctx.startedAt + PASS_DEADLINE_MS - now());
   const startOctober = (park: OctoberPark) => {
     if (october || !isOctoberDay(ctx.day)) return;
-    october = octoberBox(park, { store, fetchImpl: ctx.deps.fetchImpl, env: ctx.env, now, onStart: () => ticket.commit() }).catch(
+    october = octoberBox(park, { store, fetchImpl: ctx.deps.fetchImpl, env: ctx.env, now, signal: octoberDeadline.signal, onStart: () => ticket.commit() }).catch(
       (err: unknown): OctoberBoxData => {
         log("october_box_failed", { error: err instanceof Error ? err.name : "unknown" }, "error");
         return { status: "unavailable", reason: OCTOBER_REASONS.down };
@@ -278,12 +304,13 @@ async function build(ctx: {
       }
       await passCache.set(ctx.id, out.pass, { now: now() });
       await latestCache.set(ctx.key, ctx.variant, { now: now() });
-      log("pass_made", { id: ctx.id, items: out.pass.items.length, model: out.pass.model.answered, ms: now() - ctx.startedAt });
+      log("pass_made", { id: ctx.id, items: out.pass.items.length, model: out.pass.model.answered, ms: now() - ctx.startedAt, degraded: isDegraded(out.pass) });
     } else {
       log("pass_not_made", { kind: out.kind, status: out.kind === "error" ? out.status : 200, code: out.kind === "error" ? out.error.code : "EMPTY" }, "warn");
     }
     return out;
   } finally {
+    octoberDeadline.clear();
     if (!ticket.committed) await ticket.release();
   }
 }

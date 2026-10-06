@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { MemoryStore, resetStores, StoreError } from "@/lib/cache/store";
 import { WaiterAbortedError } from "@/lib/cache";
 import { setLogSink } from "@/lib/log";
@@ -49,6 +50,8 @@ let logs: string[];
 beforeEach(() => {
   resetStores();
   resetPassMaking();
+  // These tests exercise the LIVE Overpass path for the example parks (saved answers: osm-snapshot tests).
+  disableSavedOsmForTests();
   replay = passReplay();
   vi.stubGlobal("fetch", replay.fetchImpl);
   vi.stubEnv("DO_INFERENCE_API_KEY", FAKE_KEY);
@@ -60,6 +63,7 @@ beforeEach(() => {
 });
 afterEach(() => {
   vi.unstubAllGlobals();
+  resetSavedOsm();
   vi.unstubAllEnvs();
   restoreLog();
 });
@@ -126,16 +130,15 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
-    // Two Overpass queries (park features + the S5 Find This Spot geometry, sent together), two
-    // iNaturalist calls, one model call. (In October the S7 monarch box adds two free iNaturalist counts;
-    // they are tested with a fixed clock in october.test.ts.)
-    expect(replay.calls.filter((c) => !isOctoberCall(c)).map((c) => c.host)).toEqual([
-      "overpass-api.de",
-      "overpass-api.de",
-      "api.inaturalist.org",
-      "api.inaturalist.org",
-      "inference.do-ai.run",
-    ]);
+    // Two Overpass queries, two iNaturalist calls, one model call. (In October the S7 monarch box adds
+    // two free iNaturalist counts; they are tested with a fixed clock in october.test.ts.)
+    // SEC-1-01: the park-features query goes FIRST; the optional Find This Spot geometry query starts only
+    // after it confirmed a named park (it then runs alongside the wildlife step).
+    const calls = replay.calls.filter((c) => !isOctoberCall(c));
+    expect(calls[0].host).toBe("overpass-api.de");
+    expect(overpassQuery(calls[0])).not.toContain("out geom");
+    expect(calls.map((c) => c.host).sort()).toEqual(["api.inaturalist.org", "api.inaturalist.org", "inference.do-ai.run", "overpass-api.de", "overpass-api.de"]);
+    expect(calls.at(-1)!.host).toBe("inference.do-ai.run");
     expect(replay.calls.filter((c) => overpassQuery(c).includes("out geom"))).toHaveLength(1);
     // Connemara has no single landmark on the map: the exact SPEC 5.4 copy, and the S3 prompt unchanged.
     expect(p.spot).toEqual({ status: "none", message: SPOT_COPY.noLandmark });

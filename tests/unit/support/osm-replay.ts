@@ -31,6 +31,8 @@ export const NOMINATIM_RECORDINGS: Record<string, string> = {
   "connemara meadow preserve": "nominatim-connemara-meadow-preserve",
   "celebration park allen tx": "nominatim-celebration-park-allen-tx",
   "zzqxjv nowhere plorf": "nominatim-no-match",
+  // R1-B1 park fallback (q=park in a 5 km box around the Allen TX point), recorded 2026-10-06.
+  park: "nominatim-parks-allen-tx",
 };
 
 export const OVERPASS_RECORDINGS = [
@@ -60,15 +62,25 @@ export function overpassRecordingFor(query: string): string | null {
 }
 
 /** A fetch that answers from the recordings and logs every call. */
-export function osmReplay(overrides: { overpass?: (call: Call) => Response | Promise<Response> | undefined } = {}) {
+export function osmReplay(
+  overrides: {
+    overpass?: (call: Call) => Response | Promise<Response> | undefined;
+    /** Built failures for Nominatim (a recorded answer is used when this returns undefined). */
+    nominatim?: (call: Call) => Response | Promise<Response> | undefined;
+  } = {},
+) {
   const calls: Call[] = [];
   const fetchImpl = async (url: string, init?: RequestInit): Promise<Response> => {
     const u = new URL(url);
     if (u.host === "nominatim.openstreetmap.org") {
       calls.push({ url, init });
+      const o = await overrides.nominatim?.({ url, init });
+      if (o) return o;
       const q = (u.searchParams.get("q") ?? "").toLowerCase();
       const name = NOMINATIM_RECORDINGS[q];
       if (!name) throw new Error(`no Nominatim recording for "${q}"`);
+      // The park fallback was recorded for one box only: any other box is not answered.
+      if (q === "park" && (fixture(name)._recording as { url?: string }).url !== url) throw new Error(`no Nominatim park recording for ${url}`);
       return recordedResponse(name);
     }
     const query = new URLSearchParams(String(init?.body ?? "")).get("data") ?? "";

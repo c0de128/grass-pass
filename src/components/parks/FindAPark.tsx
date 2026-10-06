@@ -6,6 +6,7 @@
  * OpenStreetMap parks nearest first. Field errors follow the starter-kit pattern: focus the
  * field, aria-invalid, aria-describedby, role=alert, re-announced on every failed submit.
  */
+import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } from "react";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
@@ -15,6 +16,7 @@ import {
   LOCATION_DECIMALS,
   ParksResultSchema,
   PlaceQueryLimits,
+  type ExampleLink,
   type Park,
   type ParksResult,
 } from "@/lib/parks/schema";
@@ -28,7 +30,7 @@ const COPY = {
   geoFailed: "We couldn't get your location. Try again, or type a town or ZIP.",
   offline: "We couldn't reach Grass Pass. Check your internet connection and try again.",
   badAnswer: "Something went wrong reading the park list. Please try again.",
-  slow: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer within 30 seconds we try another server.",
+  slow: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer soon, we use a saved park list or the OpenStreetMap place search instead.",
 } as const;
 
 /** Client-side wait for /api/parks: a bit over the route's maxDuration (90 s). */
@@ -40,7 +42,7 @@ type Phase =
   | { kind: "locating" }
   | { kind: "searching"; label: string }
   | { kind: "done"; result: ParksResult }
-  | { kind: "failed"; message: string; code: string };
+  | { kind: "failed"; message: string; code: string; example?: ExampleLink };
 
 export type FindAParkProps = {
   /** Called when a park is chosen (the pass step, S3). Without it the list says what happens next. */
@@ -163,7 +165,12 @@ export function FindAPark({ onPick }: FindAParkProps) {
       setPhase({ kind: "idle" });
       if (res.status === 400 && field === "q") return showFieldError(message);
       if (res.status === 400 && field === "location") return showLocError(message);
-      setPhase({ kind: "failed", message, code: err.success ? err.data.error.code : "BAD_ANSWER" });
+      setPhase({
+        kind: "failed",
+        message,
+        code: err.success ? err.data.error.code : "BAD_ANSWER",
+        example: err.success ? err.data.error.example : undefined,
+      });
       return;
     }
     const parsed = ParksResultSchema.safeParse(json);
@@ -303,8 +310,13 @@ export function FindAPark({ onPick }: FindAParkProps) {
       </p>
 
       {phase.kind === "failed" ? (
-        <div role="alert" data-error-code={phase.code} className="rounded-ticket border-2 border-line bg-surface p-4">
+        <div role="alert" data-error-code={phase.code} className="flex flex-col gap-3 rounded-ticket border-2 border-line bg-surface p-4">
           <p className="font-semibold">{phase.message}</p>
+          {phase.example ? (
+            <Link href={phase.example.href} className={buttonClassName("secondary", "self-start")}>
+              See a ready example pass: {phase.example.name}
+            </Link>
+          ) : null}
         </div>
       ) : null}
 
@@ -334,6 +346,11 @@ function ParkList({
       <h2 id="park-results-heading" ref={headingRef} tabIndex={-1} className="text-xl">
         Parks near {where}
       </h2>
+      {result.fallback ? (
+        <p data-testid="parks-fallback" className="rounded-ticket border-2 border-line bg-surface p-3 text-base">
+          {result.fallback.message}
+        </p>
+      ) : null}
       {result.parks.length === 0 ? (
         <p className="rounded-ticket border-2 border-line bg-surface p-4 font-semibold">{result.empty?.message}</p>
       ) : (
@@ -373,7 +390,7 @@ function ParkList({
         <a className="underline" href="https://www.openstreetmap.org/copyright">
           © OpenStreetMap contributors
         </a>
-        {result.query.kind === "text" ? " (place search by Nominatim)" : ""}
+        {result.query.kind === "text" || result.fallback?.kind === "nominatim" ? " (place search by Nominatim)" : ""}
         {checked ? `, checked ${checked}` : ""}
         {result.cached ? " (saved copy; park maps change slowly)" : ""}.
       </p>

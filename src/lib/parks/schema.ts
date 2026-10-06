@@ -21,7 +21,25 @@ export const PARKS_COPY = {
   noParks: "No parks found within 5 km in OpenStreetMap.",
   overpassDown:
     "No data available: the OpenStreetMap server is busy. Try again in a minute, or pick an example park.",
+  /** Our OWN per-process Overpass slots were busy (Q-1-06): not OpenStreetMap's fault. */
+  busyHere: "Grass Pass is busy with other park lookups right now. Try again in a few seconds.",
+  /** Overpass said this one park's query was too heavy (SEC-1-01). */
+  parkTooBig:
+    "No data available: OpenStreetMap couldn't read this park in time (it may be very big). Try a smaller park nearby.",
+  /** Search answered from the saved Dallas-area park list because live Overpass didn't answer (R1-B1). */
+  savedIndex:
+    "The OpenStreetMap park server didn't answer in time, so this list comes from our saved copy of OpenStreetMap parks around Dallas (see the date below). New parks may be missing.",
+  /** Search answered from the OpenStreetMap place search because live Overpass didn't answer (R1-B1). */
+  nominatimParks:
+    "The OpenStreetMap park server didn't answer in time, so this list comes from the OpenStreetMap place search (Nominatim) instead. It may miss some parks.",
 } as const;
+
+/** A ready example pass offered when a search can't answer (R1-B1). */
+export const ExampleLinkSchema = z.object({
+  name: z.string().min(1).max(120),
+  href: z.string().regex(/^\/pass\/[a-z0-9-]{1,80}\?example=1$/),
+});
+export type ExampleLink = z.infer<typeof ExampleLinkSchema>;
 
 export const ParkSchema = z.object({
   /** OSM reference, e.g. "way/306191453". Stable id for the pass step. */
@@ -59,6 +77,12 @@ export const ParksResultSchema = z.object({
   checkedAt: z.string(),
   /** True when the park list came from our cache. */
   cached: z.boolean(),
+  /**
+   * Set when live Overpass didn't answer and the list came from somewhere else (R1-B1): our saved
+   * Dallas-area park list (real Overpass answer, `checkedAt` is its fetch time) or Nominatim.
+   * `message` is the exact note to show above the list.
+   */
+  fallback: z.object({ kind: z.enum(["saved_index", "nominatim"]), message: z.string() }).nullish(),
 });
 export type ParksResult = z.infer<typeof ParksResultSchema>;
 
@@ -69,6 +93,8 @@ export const ApiErrorSchema = z.object({
     retryAfter: z.number().optional(),
     /** Which form control the error belongs to, when it is a field error. */
     field: z.enum(["q", "location"]).optional(),
+    /** A ready example pass to open instead (when the search couldn't answer). */
+    example: ExampleLinkSchema.optional(),
   }),
 });
 export type ParksApiError = z.infer<typeof ApiErrorSchema>;

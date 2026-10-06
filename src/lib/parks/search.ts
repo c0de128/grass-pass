@@ -7,18 +7,24 @@
  *      checked BEFORE any upstream call; the slot is spent the moment a request is sent
  *      (even if it then fails) and given back only when nothing was sent;
  *   5. upstreams with their own politeness rules (Nominatim 1 req/s queue, Overpass failover +
- *      breakers), collapsed so identical concurrent searches make one set of calls.
+ *      breakers), collapsed so identical concurrent searches make one set of calls;
+ *   6. R1-B1: live Overpass gets SEARCH_OVERPASS_BUDGET_MS (10 s, our slot wait included). If it doesn't
+ *      answer, the list comes from (a) our saved Dallas-area park list (a real recorded Overpass answer,
+ *      shown with its fetch date) when it covers the point, else (b) one Nominatim "park" search; each
+ *      is labelled. If nothing answers, the error carries a link to a ready example pass.
  * A client that leaves does not cancel a started upstream call: it finishes and is cached.
  */
 import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
-import { createCachePair, createInflight, getStore, normalizeKey, StoreError, type Store } from "@/lib/cache";
+import { createCachePair, createInflight, createJsonCache, getStore, normalizeKey, StoreError, type Store } from "@/lib/cache";
 import { hitRateLimit, limitsConfig, reserveQuota, type QuotaTicket } from "@/lib/limits";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import { isValidLatLng, roundCoord, type LatLng } from "@/lib/geo";
-import { cleanPlaceQuery, geocode, PlaceSchema, type Place } from "@/lib/sources/nominatim";
+import { cleanPlaceQuery, geocode, nominatimParks, PlaceSchema, type Place } from "@/lib/sources/nominatim";
+import { savedParksNear } from "@/lib/sources/osm-snapshot";
+import { readyExample } from "@/lib/prewarm";
 import { parksNear } from "@/lib/sources/overpass-parks";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import {
@@ -28,12 +34,17 @@ import {
   PARKS_COPY,
   ParkSchema,
   PlaceQueryLimits,
+  type ExampleLink,
   type ParksResult,
 } from "./schema";
 
 const DAY = 24 * 3600;
 export const PLACE_TTL_SEC = 30 * DAY;
 export const PARKS_TTL_SEC = 7 * DAY;
+/** R1-B1: how long a park search waits for live Overpass (slot wait included) before the fallbacks. */
+export const SEARCH_OVERPASS_BUDGET_MS = 10_000;
+/** Nominatim fallback lists are kept briefly (live Overpass is tried again after this). */
+export const NOMINATIM_PARKS_TTL_SEC = 3600;
 
 export type SearchInput = { kind: "text"; q: string } | { kind: "location"; lat: number; lng: number };
 
@@ -97,6 +108,7 @@ const parksCache = createCachePair({
   ttlSec: PARKS_TTL_SEC,
   maxEntries: 2_000,
 });
+const nominatimParksCache = createJsonCache({ name: "parks-nominatim", schema: ParksNearSchema, ttlSec: NOMINATIM_PARKS_TTL_SEC, maxEntries: 500 });
 
 /** Cache key for a point: 4 decimals (~11 m). Text searches use the geocoded point; locations are already 2 decimals. */
 export function pointKey(p: LatLng): string {
@@ -112,11 +124,13 @@ export type SearchDeps = {
   fetchImpl?: FetchLike;
   env?: Record<string, string | undefined>;
   now?: () => number;
+  /** Tests: the live Overpass budget (default SEARCH_OVERPASS_BUDGET_MS). */
+  overpassBudgetMs?: number;
 };
 
 export type SearchOutcome =
   | { ok: true; result: ParksResult }
-  | { ok: false; status: number; error: ApiError & { field?: "q" | "location" } };
+  | { ok: false; status: number; error: ApiError & { field?: "q" | "location"; example?: ExampleLink } };
 
 class LimitRefusal extends Error {
   constructor(readonly status: number, readonly error: ApiError) {
@@ -138,18 +152,32 @@ export function resetParksSearch(): void {
 
 const iso = (ms: number) => new Date(ms).toISOString();
 
-function sourceFailure(err: SourceError): SearchOutcome {
+/** A ready example pass for an error answer (never throws; none ready -> no link). */
+async function exampleLink(now: () => number): Promise<{ example?: ExampleLink }> {
+  try {
+    const ex = await readyExample({ now });
+    return ex ? { example: ex } : {};
+  } catch {
+    return {};
+  }
+}
+
+async function sourceFailure(err: SourceError, now: () => number): Promise<SearchOutcome> {
+  const example = await exampleLink(now);
   if (err.source === "nominatim") {
     return {
       ok: false,
       status: 503,
-      error: { code: "GEOCODER_UNAVAILABLE", message: PARKS_COPY.geocoderDown, retryAfter: err.retryAfter ?? 30 },
+      error: { code: "GEOCODER_UNAVAILABLE", message: PARKS_COPY.geocoderDown, retryAfter: err.retryAfter ?? 30, ...example },
     };
+  }
+  if (err.code === "queue_full") {
+    return { ok: false, status: 503, error: { code: "BUSY_HERE", message: PARKS_COPY.busyHere, retryAfter: 5, ...example } };
   }
   return {
     ok: false,
     status: 503,
-    error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: err.retryAfter ?? 60 },
+    error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: err.retryAfter ?? 60, ...example },
   };
 }
 
@@ -201,7 +229,7 @@ function storeDown(): SearchOutcome {
 async function runSearch(
   input: SearchInput,
   ctx: Required<Pick<SearchDeps, "store" | "env" | "now">> &
-    Pick<SearchDeps, "ip" | "fetchImpl"> & {
+    Pick<SearchDeps, "ip" | "fetchImpl" | "overpassBudgetMs"> & {
       signal: AbortSignal;
       pin: () => void;
       cfg: ReturnType<typeof limitsConfig>;
@@ -273,7 +301,23 @@ async function runSearch(
     if (parksMiss) return found(query, center, { parks: [], totalFound: 0 }, parksMiss.storedAt, true);
 
     await ensureTicket();
-    const near = await parksNear(center, { store, fetchImpl: ctx.fetchImpl, signal: ctx.signal, env: ctx.env, onStart, now });
+    let near: { parks: ParksResult["parks"]; totalFound: number };
+    try {
+      near = await parksNear(center, {
+        store,
+        fetchImpl: ctx.fetchImpl,
+        signal: ctx.signal,
+        env: ctx.env,
+        onStart,
+        now,
+        totalBudgetMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
+        timeoutMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
+      });
+    } catch (err) {
+      if (!(err instanceof SourceError) || err.code === "aborted") throw err;
+      log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status, next: "fallback" }, "warn");
+      return await fallbackParks(query, center, err, { ...ctx, onStart });
+    }
     const at = now();
     if (near.parks.length === 0) await parksCache.negative.set(ckey, { none: true }, { now: at });
     else await parksCache.positive.set(ckey, near, { now: at });
@@ -282,12 +326,46 @@ async function runSearch(
     if (err instanceof LimitRefusal) return { ok: false, status: err.status, error: err.error };
     if (err instanceof SourceError) {
       log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
-      return sourceFailure(err);
+      return await sourceFailure(err, now);
     }
     throw err;
   } finally {
     const t = ticket as QuotaTicket | null;
     if (t && !t.committed) await t.release();
+  }
+}
+
+/**
+ * R1-B1: live Overpass didn't answer. (a) The saved Dallas-area park list when it covers the whole
+ * 5 km circle (real Overpass answer, its fetch time shown); else (b) Nominatim's park search (cached
+ * 1 h); else the original error with a link to a ready example pass. Each list is labelled.
+ */
+async function fallbackParks(
+  query: ParksResult["query"],
+  center: LatLng,
+  overpassErr: SourceError,
+  ctx: { store: Store; now: () => number; env: Record<string, string | undefined>; fetchImpl?: FetchLike; signal: AbortSignal; onStart: () => void },
+): Promise<SearchOutcome> {
+  const { now } = ctx;
+  const saved = savedParksNear(center);
+  if (saved) {
+    log("parks_search_fallback", { kind: "saved_index", parks: saved.totalFound });
+    return found(query, center, saved, saved.fetchedAt, true, { kind: "saved_index", message: PARKS_COPY.savedIndex });
+  }
+  const key = pointKey(center);
+  const hit = await nominatimParksCache.get(key, now());
+  if (hit) return found(query, center, hit.value, hit.storedAt, true, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
+  try {
+    const near = await nominatimParks(center, { store: ctx.store, fetchImpl: ctx.fetchImpl, signal: ctx.signal, env: ctx.env, onStart: ctx.onStart, now });
+    const at = now();
+    await nominatimParksCache.set(key, near, { now: at });
+    log("parks_search_fallback", { kind: "nominatim", parks: near.totalFound });
+    return found(query, center, near, at, false, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
+  } catch (err) {
+    if (!(err instanceof SourceError) || err.code === "aborted") throw err;
+    log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status, next: "none" }, "warn");
+    // The answer names what really failed first: the park server (or our own queue), not the fallback.
+    return await sourceFailure(overpassErr, now);
   }
 }
 
@@ -313,6 +391,7 @@ function found(
   near: { parks: ParksResult["parks"]; totalFound: number },
   at: number,
   cached: boolean,
+  fallback: ParksResult["fallback"] = null,
 ): SearchOutcome {
   return {
     ok: true,
@@ -325,6 +404,7 @@ function found(
       empty: near.parks.length === 0 ? { reason: "no_parks", message: PARKS_COPY.noParks } : null,
       checkedAt: iso(at),
       cached,
+      fallback,
     },
   };
 }

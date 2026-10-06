@@ -19,10 +19,21 @@ They are used only by tests and never imported by app code.
 | `overpass-geometry-connemara-meadow-preserve.json`, `overpass-geometry-celebration-park.json` | Real Overpass answers to `geometryQuery()` (S5 Find This Spot: park outline + paths, water, pitches, parking, landmarks, `out geom`) for way/306191453 and way/188145317. Connemara: outline + creeks only (no landmark, so no map); Celebration: 105 elements, the X goes on its only picnic shelter. | 2026-10-06 00:25 and 00:28 UTC (overpass-api.de; earlier tries 504'd) |
 | `do-gemma-4-31b-it-connemara-meadow-preserve-pass.json`, `do-gemma-4-31b-it-celebration-park-pass.json` | Real `gemma-4-31B-it` answers from DigitalOcean for the two 6-10 passes. Both were **re-recorded for S8c** (2026-10-06 ~02:12 UTC) after the request changed (no `section` field in the answer, sourceQuote 3-8 words and at most 90 characters, one parentNote for the whole pass); before that for S8b (2026-10-06 01:23 UTC: n + 4 pool items per section, trimmed species summaries, the lookWhere name rule, max_tokens 1200). Celebration's prompt carries the S5 Find This Spot target. Every input was replayed from this folder, only the model call was live. Both answers keep 8 of 8 (463 and 484 answer tokens; the S8b recordings were 7/8 and 8/8). The request stored is exactly what `src/lib/ai/prompt.ts` + `schema.ts` build from the fixtures above (a unit test checks this). No key or auth header is stored; `_recording.previous` names the earlier recording. | 2026-10-06 UTC (exact time in each file) |
 | `evals/<park>.json` (20 files) | SPEC 6.4 eval parks: real Overpass park features, iNaturalist species_counts (1.5 km, research grade, since 2026-09-21) and taxa summaries per park, recorded by `pnpm eval:record` with the app's own source code. Each answer keeps its URL, fetch time and latency; failed mirror tries are listed. See `evals/RECORDING-LOG.md` there and `evals/README.md`. | 2026-10-05 23:44-23:56 UTC |
+| `nominatim-parks-allen-tx.json` | Real Nominatim answer to the R1-B1 park fallback search (`nominatimParksUrl()`: `q=park`, a bounded 5 km box around the Allen TX geocode point, 40 results max). 22 named parks after the app's filtering. | 2026-10-06 03:32 UTC |
+| `overpass-features-not-a-park-texas.json` | Real Overpass answer to `featuresQuery()` WITH the R1 park tag filter for relation/114690 (the State of Texas, not a park): 0 elements, so no area work was done (SEC-1-01). maps.mail.ru after 2 failed tries. | 2026-10-06 03:41 UTC |
 
 The S3 recordings were made by running `makePass()` (the real app code) through a scratch Vitest config. To keep the
 repo small, the iNaturalist files keep only the fields the app reads (each file's `_recording.trimmed` says which);
 every kept value is exactly as received.
+
+R1 (audit round 1) added a park tag filter to the `.p` selector of the features and geometry queries (SEC-1-01).
+The recordings above were made before that. For a real named park the filter selects the same element, and the
+2026-10-06 live re-recordings with the filter (src/data/osm/examples.json) parse identically for Celebration Park
+features and the Celebration + Connemara geometry, so the replays accept the filtered query for these recordings
+(and nothing else).
+
+The saved OpenStreetMap answers the APP uses when Overpass is down live in `src/data/osm/` (not here): recorded by
+`pnpm osm:snapshot` (evals/osm-snapshot.ts) with each answer's fetch time, endpoint and query.
 
 Tests that need a failure we cannot record on demand (a 429, a hung socket, a 200 with an error remark) build that
 response inside the test and say so in a comment. Those are never used as park data.

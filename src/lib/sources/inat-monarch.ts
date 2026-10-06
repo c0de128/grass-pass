@@ -145,7 +145,7 @@ const milkweedCache = createCachePair({
 function reasonOf(err: SourceError): Reason {
   if (err.code === "rate_limited") return "rateLimited";
   if (err.code === "bad_output") return "badOutput";
-  if (err.code === "timeout") return "slow";
+  if (err.code === "timeout" || err.code === "aborted") return "slow";
   return "down";
 }
 
@@ -175,8 +175,9 @@ async function monarchCounts(park: OctoberPark, w: MonarchWindows, deps: InatDep
     if (!(err instanceof SourceError)) throw err;
     const reason = reasonOf(err);
     log("october_source_failed", { what: "monarch_histogram", code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
-    // "not_called" (breaker open / no polite slot) is not cached: the breaker already remembers it.
-    if (err.code !== "not_called") await monarchCache.negative.set(key, reason, { now: now() });
+    // "not_called" (breaker open / no polite slot) and "aborted" (our pass deadline) are not cached:
+    // neither says anything about iNaturalist.
+    if (err.code !== "not_called" && err.code !== "aborted") await monarchCache.negative.set(key, reason, { now: now() });
     return { ok: false as const, reason };
   }
 }
@@ -200,7 +201,7 @@ async function milkweed(park: OctoberPark, deps: InatDeps, now: () => number): P
   } catch (err) {
     if (!(err instanceof SourceError)) throw err;
     log("october_source_failed", { what: "milkweed_count", code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
-    if (err.code !== "not_called") await milkweedCache.negative.set(park.id, reasonOf(err), { now: now() });
+    if (err.code !== "not_called" && err.code !== "aborted") await milkweedCache.negative.set(park.id, reasonOf(err), { now: now() });
     return unavailable;
   }
 }

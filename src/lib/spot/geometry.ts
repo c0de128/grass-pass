@@ -13,7 +13,7 @@ import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
 import { runOverpass, OVERPASS_QUERY_TIMEOUT_SEC, type OverpassDeps } from "@/lib/sources/overpass";
-import { cleanOsmText, parkIdOf, type ParkRef } from "@/lib/sources/overpass-features";
+import { cleanOsmText, parkIdOf, parkSelector, type ParkRef } from "@/lib/sources/overpass-features";
 import { MAP_H, MAP_W, MAX_MAP_POINTS, type Line, type Point, type SpotMap } from "./types";
 
 // ---------- query ----------
@@ -38,11 +38,10 @@ const AROUND = [`nwr(around.p:${PARKING_AROUND_M})["amenity"="parking"]`, `node(
 
 /** The fixed Overpass QL for one park's map. Only the numeric id comes from the request (validated). */
 export function geometryQuery(ref: ParkRef): string {
-  if (!Number.isSafeInteger(ref.id) || ref.id <= 0) throw new RangeError("bad id");
   if (ref.type === "node") throw new RangeError("a park mapped as a point has no outline");
   const head = `[out:json][timeout:${OVERPASS_QUERY_TIMEOUT_SEC}];`;
-  const sel = ref.type === "way" ? "way" : "rel";
-  return `${head}${sel}(${ref.id})->.p;.p out geom;.p map_to_area->.a;(${[...INSIDE, ...AROUND].join(";")};);out geom qt;`;
+  // SEC-1-01: the same park tag filter as the features query, so a non-park id selects nothing.
+  return `${head}${parkSelector(ref)}.p out geom;.p map_to_area->.a;(${[...INSIDE, ...AROUND].join(";")};);out geom qt;`;
 }
 
 // ---------- parsed geometry (cached 7 days) ----------

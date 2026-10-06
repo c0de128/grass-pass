@@ -12,5 +12,7 @@ export default defineConfig({
   test: {
     environment: "node",
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
+    // R1: background OSM refreshes off by default (tests that check them switch them on).
+    setupFiles: ["tests/unit/support/setup.ts"],
   },
 });

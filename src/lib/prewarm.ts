@@ -11,6 +11,10 @@
  * - Refreshes go through makePass({ internal: true }): the same builder, cache and in-flight dedup as a
  *   visitor, never charged to a visitor and not subject to per-IP limits, but counted against every
  *   global cap (AI_DAILY_CAP). A failed refresh keeps the old pass. No retry loop.
+ * - A pass made while a source was down ("degraded", R1-m2) counts as fresh only for
+ *   DEGRADED_RETRY_SEC; then one refresh tries for a better one (the old one stays linked meanwhile).
+ * - The example parks' OpenStreetMap data is saved (src/data/osm, R1-B1), so a refresh needs no live
+ *   Overpass; only iNaturalist and the model are live.
  * - PREWARM_EXAMPLES=0 (or off/false/no) switches it off; the home page then says so.
  * - In-process state lives on globalThis (Next bundles instrumentation.ts separately from pages;
  *   pattern next-instrumentation-singletons-on-globalthis).
@@ -22,7 +26,9 @@ import { createJsonCache, getStore, type Store } from "@/lib/cache";
 import { log } from "@/lib/log";
 import { localDay } from "@/lib/time";
 import type { FetchLike } from "@/lib/sources/common";
-import { loadPass, makePass } from "@/lib/pass/make";
+import { DEGRADED_RETRY_SEC, isDegraded, loadPass, makePass } from "@/lib/pass/make";
+import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
+import type { ExampleLink } from "@/lib/parks/schema";
 import { DEFAULT_AGE_BAND, type AgeBand } from "@/lib/pass/schema";
 
 export type ExamplePark = {
@@ -51,7 +57,7 @@ export const REFRESH_LOCK_SEC = 2 * 3600;
  * come sooner: it costs no model call, and a short Overpass outage should not hide an example for 2 h.
  */
 export const RETRY_NO_MODEL_SEC = 10 * 60;
-const NO_MODEL_CODES = new Set(["OSM_UNAVAILABLE", "DATA_TOO_SLOW", "NOT_A_PARK", "STORE_UNAVAILABLE", "RATE_LIMITED"]);
+const NO_MODEL_CODES = new Set(["OSM_UNAVAILABLE", "BUSY_HERE", "PARK_TOO_BIG", "DATA_TOO_SLOW", "NOT_A_PARK", "STORE_UNAVAILABLE", "RATE_LIMITED"]);
 const SAVED_TTL_SEC = 60 * 24 * 3600;
 
 const SavedSchema = z.object({ passId: z.string(), day: z.string(), generatedAt: z.string() });
@@ -79,7 +85,7 @@ type Holder = {
   running: Map<string, Promise<void>>;
   /** Lock decisions in progress (so concurrent page renders share one decision). */
   deciding: Map<string, Promise<boolean>>;
-  lastError: Map<string, { at: number; message: string }>;
+  lastError: Map<string, { at: number; code: string }>;
   /** Refreshes run one after another in a process (polite to Overpass: one park's queries at a time). */
   chain: Promise<void>;
 };
@@ -97,21 +103,55 @@ export function resetPrewarm(): void {
   holder().chain = Promise.resolve();
 }
 
-/** Tests: wait for every background refresh started so far. */
+/** Wait for every background refresh started so far (examples, then saved-map refreshes). */
 export async function prewarmIdle(): Promise<void> {
   const h = holder();
   while (h.running.size > 0 || h.deciding.size > 0) await Promise.allSettled([...h.running.values(), ...h.deciding.values()]);
+  await osmRefreshIdle();
+}
+
+/**
+ * Q-1-10: a short, code-written reason per failure code (never the nested user message), finishing
+ * the sentence "No data available yet: the last try didn't work because ...".
+ */
+export function failureReason(code: string): string {
+  switch (code) {
+    case "OSM_UNAVAILABLE":
+      return "OpenStreetMap was busy";
+    case "BUSY_HERE":
+      return "Grass Pass was busy with other passes";
+    case "DATA_TOO_SLOW":
+      return "the park data was too slow";
+    case "PARK_TOO_BIG":
+    case "NOT_A_PARK":
+      return "OpenStreetMap couldn't read this park";
+    case "MODEL_NOT_CONFIGURED":
+      return "this server has no AI model set up";
+    case "DAILY_LIMIT":
+      return "today's free limit for new passes is used up";
+    case "STORE_UNAVAILABLE":
+      return "the usage-limit store didn't answer";
+    case "EMPTY":
+      return "there wasn't enough real park data";
+    case "EXCEPTION":
+      return "the pass builder stopped with an error";
+    default:
+      return code.startsWith("MODEL_") ? "the AI model didn't write clues" : "something went wrong";
+  }
 }
 
 export type ExampleStatus = {
   example: ExamplePark;
   /** The last good pass (link target), or null when none was made yet. */
   pass: Saved | null;
-  /** True when that pass is from today (Chicago day). */
+  /** True when that pass is from today (Chicago day) and not a degraded one past DEGRADED_RETRY_SEC. */
   fresh: boolean;
   /** True when this server is making a new one right now. */
   refreshing: boolean;
-  /** Why there is no pass yet (only when pass is null). */
+  /**
+   * Only when pass is null: ONE complete sentence saying why (starts "No data available yet:", never
+   * nested, Q-1-10). `retry` says whether a reload can help soon.
+   */
   missing: string | null;
 };
 
@@ -120,12 +160,12 @@ const lockStore = (deps: WarmDeps) => deps.store ?? getStore("prewarm");
 /** Take the cross-instance refresh slot for one example (true = this caller may refresh now). */
 const lockKey = (slug: string, day: string) => `prewarm-lock:${slug}:${day}`;
 
-/** Shorten the lock after a failure that cost no model call (see RETRY_NO_MODEL_SEC). */
-async function shortenLock(slug: string, day: string, deps: WarmDeps): Promise<void> {
+/** Shorten the lock after a failure that cost no model call (see RETRY_NO_MODEL_SEC) or a degraded pass. */
+async function shortenLock(slug: string, day: string, deps: WarmDeps, sec: number = RETRY_NO_MODEL_SEC): Promise<void> {
   try {
     const store = lockStore(deps);
     await store.del(lockKey(slug, day));
-    await store.incr(lockKey(slug, day), 1, RETRY_NO_MODEL_SEC);
+    await store.incr(lockKey(slug, day), 1, sec);
   } catch {
     // Store down: the long lock stays, which only means fewer retries.
   }
@@ -152,15 +192,18 @@ async function refreshOne(ex: ExamplePark, day: string, deps: WarmDeps): Promise
     if (out.kind === "pass") {
       await savedCache.set(ex.slug, { passId: out.pass.id, day: out.pass.day, generatedAt: out.pass.generatedAt }, { now: now() });
       holder().lastError.delete(ex.slug);
-      log("prewarm_ok", { example: ex.slug, id: out.pass.id, items: out.pass.items.length, cached: out.cached, ms: now() - started });
+      const degraded = isDegraded(out.pass);
+      // R1-m2: a pass made while a source was down gets another try after DEGRADED_RETRY_SEC, not 2 h.
+      if (degraded) await shortenLock(ex.slug, day, deps, DEGRADED_RETRY_SEC);
+      log("prewarm_ok", { example: ex.slug, id: out.pass.id, items: out.pass.items.length, cached: out.cached, degraded, ms: now() - started });
     } else {
-      const message = out.kind === "error" ? out.error.message : out.message;
-      holder().lastError.set(ex.slug, { at: now(), message });
+      const code = out.kind === "error" ? out.error.code : "EMPTY";
+      holder().lastError.set(ex.slug, { at: now(), code });
       if (out.kind === "error" && NO_MODEL_CODES.has(out.error.code)) await shortenLock(ex.slug, day, deps);
-      log("prewarm_failed", { example: ex.slug, kind: out.kind, code: out.kind === "error" ? out.error.code : "EMPTY", ms: now() - started }, "warn");
+      log("prewarm_failed", { example: ex.slug, kind: out.kind, code, ms: now() - started }, "warn");
     }
   } catch (err) {
-    holder().lastError.set(ex.slug, { at: now(), message: "the pass builder stopped with an error" });
+    holder().lastError.set(ex.slug, { at: now(), code: "EXCEPTION" });
     log("prewarm_failed", { example: ex.slug, kind: "exception", error: err instanceof Error ? err.name : "unknown" }, "error");
   }
 }
@@ -196,8 +239,10 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
     // The link must still open: the pass itself lives 30 days in the pass cache.
-    const saved = hit && (await loadPass(hit.value.passId, now())) ? hit.value : null;
-    const fresh = saved !== null && saved.day === today;
+    const pass = hit ? await loadPass(hit.value.passId, now()) : null;
+    const saved = hit && pass ? hit.value : null;
+    const degradedOld = pass !== null && isDegraded(pass) && now() - Date.parse(pass.generatedAt) >= DEGRADED_RETRY_SEC * 1000;
+    const fresh = saved !== null && saved.day === today && !degradedOld;
     let refreshing = holder().running.has(ex.slug);
     if (!fresh && enabled && !refreshing) refreshing = await maybeRefresh(ex, today, deps);
     const err = holder().lastError.get(ex.slug);
@@ -205,15 +250,28 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
       saved !== null
         ? null
         : !enabled
-          ? "Example passes are switched off on this server."
+          ? "No data available yet: example passes are switched off on this server."
           : refreshing
-            ? "It is being made right now from live park data (about 15-30 seconds). Reload the page in a minute."
+            ? "No data available yet: it is being made right now (about 15-30 seconds)."
             : err
-              ? `The last try didn't work (${err.message}). Pick the park yourself below.`
-              : "No pass has been made for it yet today. Pick the park yourself below.";
+              ? `No data available yet: the last try didn't work because ${failureReason(err.code)}.`
+              : "No data available yet: no pass has been made for it today.";
     out.push({ example: ex, pass: saved, fresh, refreshing, missing });
   }
   return out;
+}
+
+/**
+ * A ready example pass to offer when a park search can't answer (R1-B1): the first example whose
+ * saved pass still opens. Never starts a refresh. Null when none is ready.
+ */
+export async function readyExample(deps: Pick<WarmDeps, "now" | "examples"> = {}): Promise<ExampleLink | null> {
+  const now = deps.now ?? (() => Date.now());
+  for (const ex of deps.examples ?? EXAMPLE_PARKS) {
+    const hit = await savedCache.get(ex.slug, now());
+    if (hit && (await loadPass(hit.value.passId, now()))) return { name: ex.name, href: `/pass/${hit.value.passId}?example=1` };
+  }
+  return null;
 }
 
 /**
@@ -230,7 +288,8 @@ export async function warmExamples(deps: WarmDeps = {}): Promise<void> {
   const now = deps.now ?? (() => Date.now());
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
-    if (hit && hit.value.day === localDay(now()) && (await loadPass(hit.value.passId, now()))) continue;
+    const pass = hit && hit.value.day === localDay(now()) ? await loadPass(hit.value.passId, now()) : null;
+    if (pass && !isDegraded(pass)) continue;
     if (await maybeRefresh(ex, localDay(now()), deps)) await holder().running.get(ex.slug);
   }
 }

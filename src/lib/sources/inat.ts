@@ -248,9 +248,13 @@ export async function getJson(url: string, what: string, deps: InatDeps): Promis
     }, queueSignal);
   } catch (err) {
     await ticket.release();
-    if (err instanceof QueueAbortedError) throw new SourceError(INAT_SOURCE, "not_called", { started: false, retryAfter: 5, cause: err });
+    if (err instanceof QueueAbortedError) {
+      // Our own deadline / client gone is "aborted"; a full polite queue is "not_called".
+      throw new SourceError(INAT_SOURCE, deps.signal?.aborted ? "aborted" : "not_called", { started: false, retryAfter: 5, cause: err });
+    }
     if (err instanceof SourceError) {
-      if (err.started) {
+      // R1-M1: our own deadline stopping a request says nothing about iNaturalist: no breaker.
+      if (err.started && err.code !== "aborted") {
         await tripBreaker(deps.store, INAT_SOURCE, now(), INAT_ERROR_OPEN_SEC);
         log("upstream_call", { source: INAT_SOURCE, what, outcome: err.code }, "warn");
       }

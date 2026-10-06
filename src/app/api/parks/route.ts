@@ -17,7 +17,10 @@ import { PlaceQueryLimits } from "@/lib/parks/schema";
 import { parseSearchParams, searchParks } from "@/lib/parks/search";
 
 export const runtime = "nodejs";
-/** Worst case: Nominatim queue (8 s) + answer (10 s) + Overpass total budget (50 s, all attempts) = 68 s. */
+/**
+ * Worst case: Nominatim queue (8 s) + answer (10 s) + Overpass search budget (10 s, R1-B1) + the Nominatim
+ * park fallback (queue 8 s + answer 10 s) = 46 s.
+ */
 export const maxDuration = 90;
 
 const BodySchema = z

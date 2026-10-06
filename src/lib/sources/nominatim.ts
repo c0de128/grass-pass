@@ -9,6 +9,8 @@
  * - results cached (30 days, in src/lib/parks/search.ts);
  * - an identifying User-Agent naming the app and its public repo (no personal email).
  * A 429/403 opens a circuit breaker so we stop calling until the wait is over.
+ * R1-B1: when Overpass doesn't answer a park search, one bounded "park" search here is the fallback
+ * (nominatimParks), through the same queue and limits.
  */
 import "server-only";
 import "@/lib/zod-config";
@@ -16,7 +18,9 @@ import { z } from "zod";
 import type { Store } from "@/lib/cache/store";
 import { breakerRetryAfter, createSpacedQueue, QueueAbortedError, takeSecondSlot, tripBreaker } from "@/lib/limits";
 import { log } from "@/lib/log";
-import { isValidLatLng } from "@/lib/geo";
+import { distanceM, isValidLatLng, type LatLng } from "@/lib/geo";
+import { PARK_RADIUS_M, type Park } from "@/lib/parks/schema";
+import { parseParks } from "./overpass-parks";
 import { fetchText, parseRetryAfter, SourceError, userAgent, type FetchLike } from "./common";
 
 export const NOMINATIM_SEARCH_URL = "https://nominatim.openstreetmap.org/search";
@@ -114,11 +118,12 @@ export type GeocodeDeps = {
 };
 
 /**
- * Look up `q`. Returns the place, or null when Nominatim has no match.
- * Throws SourceError: "not_called" (breaker open / no slot in time), "rate_limited",
- * "busy", "timeout", "network", "bad_output".
+ * One polite Nominatim GET (breaker, 1 req/s queue + shared slot, timeout, status handling).
+ * Returns the parsed JSON body. Throws SourceError: "not_called" (breaker open / no shared slot),
+ * "queue_full" (our queue), "aborted" (caller signal), "rate_limited", "busy", "timeout", "network",
+ * "bad_output". `what` names the call in the log.
  */
-export async function geocode(q: string, deps: GeocodeDeps): Promise<Place | null> {
+async function nominatimGet(url: string, what: string, deps: GeocodeDeps): Promise<{ json: unknown; status: number; latencyMs: number }> {
   const now = deps.now ?? (() => Date.now());
   const wait = await breakerRetryAfter(deps.store, NOMINATIM_SOURCE, now());
   if (wait > 0) throw new SourceError(NOMINATIM_SOURCE, "not_called", { started: false, retryAfter: wait });
@@ -142,23 +147,23 @@ export async function geocode(q: string, deps: GeocodeDeps): Promise<Place | nul
       deps.onStart?.();
       return fetchText(
         NOMINATIM_SOURCE,
-        nominatimUrl(q),
+        url,
         { method: "GET", headers: { "User-Agent": userAgent(deps.env), Accept: "application/json" } },
-        { timeoutMs: NOMINATIM_TIMEOUT_MS, fetchImpl: deps.fetchImpl, signal: deps.signal },
+        { timeoutMs: NOMINATIM_TIMEOUT_MS, fetchImpl: deps.fetchImpl, signal: deps.signal, maxBytes: NOMINATIM_MAX_BYTES },
       );
     }, queueSignal);
   } catch (err) {
     if (err instanceof QueueAbortedError) {
-      throw new SourceError(NOMINATIM_SOURCE, "not_called", { started: false, retryAfter: 2, cause: err });
+      throw new SourceError(NOMINATIM_SOURCE, deps.signal?.aborted ? "aborted" : "queue_full", { started: false, retryAfter: 2, cause: err });
     }
     if (err instanceof SourceError && (err.code === "timeout" || err.code === "network")) {
       await tripBreaker(deps.store, NOMINATIM_SOURCE, now(), NOMINATIM_ERROR_OPEN_SEC);
-      log("upstream_call", { source: NOMINATIM_SOURCE, outcome: err.code });
+      log("upstream_call", { source: NOMINATIM_SOURCE, what, outcome: err.code });
     }
     throw err;
   }
 
-  const base = { source: NOMINATIM_SOURCE, status: res.status, latencyMs: res.latencyMs };
+  const base = { source: NOMINATIM_SOURCE, what, status: res.status, latencyMs: res.latencyMs };
   if (res.status === 429 || res.status === 403) {
     const retryAfter = parseRetryAfter(res.headers.get("retry-after"), now()) ?? NOMINATIM_BLOCKED_OPEN_SEC;
     await tripBreaker(deps.store, NOMINATIM_SOURCE, now(), retryAfter);
@@ -174,13 +179,95 @@ export async function geocode(q: string, deps: GeocodeDeps): Promise<Place | nul
     log("upstream_call", { ...base, outcome: "bad_status" }, "warn");
     throw new SourceError(NOMINATIM_SOURCE, "bad_output", { status: res.status, started: true });
   }
-  let place: Place | null;
   try {
-    place = parseNominatim(JSON.parse(res.text));
+    return { json: JSON.parse(res.text) as unknown, status: res.status, latencyMs: res.latencyMs };
   } catch (err) {
     log("upstream_call", { ...base, outcome: "bad_output" }, "warn");
     throw new SourceError(NOMINATIM_SOURCE, "bad_output", { status: res.status, started: true, cause: err });
   }
-  log("upstream_call", { ...base, outcome: place ? "ok" : "no_match" });
+}
+
+/** Biggest Nominatim answer we read (40 results are about 25 KB). */
+export const NOMINATIM_MAX_BYTES = 512 * 1024;
+
+/**
+ * Look up `q`. Returns the place, or null when Nominatim has no match.
+ * Throws SourceError (see nominatimGet).
+ */
+export async function geocode(q: string, deps: GeocodeDeps): Promise<Place | null> {
+  const r = await nominatimGet(nominatimUrl(q), "geocode", deps);
+  let place: Place | null;
+  try {
+    place = parseNominatim(r.json);
+  } catch (err) {
+    log("upstream_call", { source: NOMINATIM_SOURCE, what: "geocode", status: r.status, latencyMs: r.latencyMs, outcome: "bad_output" }, "warn");
+    throw new SourceError(NOMINATIM_SOURCE, "bad_output", { status: r.status, started: true, cause: err });
+  }
+  log("upstream_call", { source: NOMINATIM_SOURCE, what: "geocode", status: r.status, latencyMs: r.latencyMs, outcome: place ? "ok" : "no_match" });
   return place;
+}
+
+// ---------- parks fallback (R1-B1) ----------
+
+/** Nominatim answers at most 40 results per search. */
+export const NOMINATIM_PARKS_LIMIT = 40;
+
+/**
+ * The park fallback search: Nominatim's "park" special phrase (OSM leisure=park) inside a box of
+ * `radiusM` around the point, bounded. One request, through the same 1 req/s queue as geocoding.
+ * Used only when live Overpass didn't answer a park search.
+ */
+export function nominatimParksUrl(center: LatLng, radiusM: number = PARK_RADIUS_M): string {
+  if (!isValidLatLng(center)) throw new RangeError("bad point");
+  const dLat = radiusM / 110_574;
+  const dLng = radiusM / (111_320 * Math.cos((center.lat * Math.PI) / 180));
+  const f = (n: number) => n.toFixed(5);
+  const u = new URL(NOMINATIM_SEARCH_URL);
+  u.searchParams.set("format", "jsonv2");
+  u.searchParams.set("q", "park");
+  // viewbox = left,top,right,bottom (lng/lat)
+  u.searchParams.set("viewbox", `${f(center.lng - dLng)},${f(center.lat + dLat)},${f(center.lng + dLng)},${f(center.lat - dLat)}`);
+  u.searchParams.set("bounded", "1");
+  u.searchParams.set("limit", String(NOMINATIM_PARKS_LIMIT));
+  u.searchParams.set("addressdetails", "0");
+  u.searchParams.set("accept-language", "en");
+  return u.toString();
+}
+
+const NominatimParkHit = z.object({
+  osm_type: z.enum(["node", "way", "relation"]),
+  osm_id: z.number().int().positive(),
+  lat: z.string().regex(/^-?\d+(\.\d+)?$/),
+  lon: z.string().regex(/^-?\d+(\.\d+)?$/),
+  category: z.string(),
+  type: z.string(),
+  name: z.string().optional(),
+});
+
+/** Named leisure=park|nature_reserve hits within `radiusM`, merged, nearest first (same rules as the Overpass list). */
+export function parseNominatimParks(json: unknown, center: LatLng, radiusM: number = PARK_RADIUS_M): { parks: Park[]; totalFound: number } {
+  const list = NominatimBody.parse(json);
+  const elements: unknown[] = [];
+  for (const item of list) {
+    const h = NominatimParkHit.safeParse(item);
+    if (!h.success || h.data.category !== "leisure" || (h.data.type !== "park" && h.data.type !== "nature_reserve")) continue;
+    const name = h.data.name?.trim();
+    const lat = Number(h.data.lat);
+    const lng = Number(h.data.lon);
+    if (!name || !isValidLatLng({ lat, lng }) || distanceM(center, { lat, lng }) > radiusM) continue;
+    elements.push({ type: h.data.osm_type, id: h.data.osm_id, lat, lon: lng, tags: { name, leisure: h.data.type } });
+  }
+  return parseParks({ elements }, center);
+}
+
+/** Parks near a point from Nominatim (the fallback when Overpass is down). Throws SourceError. */
+export async function nominatimParks(center: LatLng, deps: GeocodeDeps): Promise<{ parks: Park[]; totalFound: number }> {
+  const r = await nominatimGet(nominatimParksUrl(center), "parks", deps);
+  try {
+    const out = parseNominatimParks(r.json, center);
+    log("upstream_call", { source: NOMINATIM_SOURCE, what: "parks", status: r.status, latencyMs: r.latencyMs, outcome: "ok", parks: out.totalFound });
+    return out;
+  } catch (err) {
+    throw new SourceError(NOMINATIM_SOURCE, "bad_output", { status: r.status, started: true, cause: err });
+  }
 }

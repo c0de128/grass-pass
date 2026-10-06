@@ -45,17 +45,29 @@ const SELECTORS = [
   `nwr(SCOPE)["historic"]`,
 ];
 
+/**
+ * The tag filter every park query puts on the requested element itself (SEC-1-01): an id that is
+ * not a NAMED park or nature reserve selects nothing, so the area/around steps that follow run on an
+ * empty set and Overpass does no heavy work for it.
+ */
+export const PARK_FILTER = `["leisure"~"^(park|nature_reserve)$"]["name"]`;
+
+/** `way(123)["leisure"~...]["name"]->.p;` for one park ref (numeric id only, validated). */
+export function parkSelector(ref: ParkRef): string {
+  if (!Number.isSafeInteger(ref.id) || ref.id <= 0) throw new RangeError("bad id");
+  const sel = ref.type === "node" ? "node" : ref.type === "way" ? "way" : "rel";
+  return `${sel}(${ref.id})${PARK_FILTER}->.p;`;
+}
+
 /** The fixed Overpass QL for one park. Only the numeric id comes from the request (validated). */
 export function featuresQuery(ref: ParkRef): string {
-  if (!Number.isSafeInteger(ref.id) || ref.id <= 0) throw new RangeError("bad id");
   const head = `[out:json][timeout:${OVERPASS_QUERY_TIMEOUT_SEC}];`;
   if (ref.type === "node") {
     const body = SELECTORS.map((s) => s.replace("SCOPE", `around.p:${NODE_PARK_RADIUS_M}`)).join(";");
-    return `${head}node(${ref.id})->.p;.p out;(${body};);out tags center qt;`;
+    return `${head}${parkSelector(ref)}.p out;(${body};);out tags center qt;`;
   }
-  const sel = ref.type === "way" ? "way" : "rel";
   const body = SELECTORS.map((s) => s.replace("SCOPE", "area.a")).join(";");
-  return `${head}${sel}(${ref.id})->.p;.p out tags center;.p map_to_area->.a;(${body};);out tags center qt;`;
+  return `${head}${parkSelector(ref)}.p out tags center;.p map_to_area->.a;(${body};);out tags center qt;`;
 }
 
 // ---------- feature kinds ----------

@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { breakerRetryAfter, quotaUsage, tripBreaker } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
@@ -6,7 +7,12 @@ import { FIELD_COPY, parseSearchParams, resetParksSearch, searchParks, type Sear
 import { PARKS_COPY, ParksResultSchema } from "@/lib/parks/schema";
 import { NOMINATIM_SOURCE } from "@/lib/sources/nominatim";
 import { breakerName, OVERPASS_DEFAULT_URLS } from "@/lib/sources/overpass";
-import { aroundPoint, osmReplay, recordedResponse } from "./support/osm-replay";
+import { aroundPoint, fixture, osmReplay, recordedResponse } from "./support/osm-replay";
+import { SEARCH_OVERPASS_BUDGET_MS } from "@/lib/parks/search";
+import { nominatimParksUrl, parseNominatimParks } from "@/lib/sources/nominatim";
+import { savedIndexInfo } from "@/lib/sources/osm-snapshot";
+import { SourceError } from "@/lib/sources/common";
+import { featuresFailure } from "@/lib/pass/park-data";
 
 // 2026-10-05 22:45 UTC (5:45 PM CDT).
 const T0 = Date.UTC(2026, 9, 5, 22, 45, 0);
@@ -21,11 +27,16 @@ const clock = () => T0 + (Date.now() - startedAt);
 beforeEach(() => {
   resetStores();
   resetParksSearch();
+  // These tests exercise the LIVE Overpass path for the example parks (saved answers: osm-snapshot tests).
+  disableSavedOsmForTests();
   startedAt = Date.now();
   store = new MemoryStore({ now: clock });
   restoreLog = setLogSink(() => undefined);
 });
-afterEach(() => restoreLog());
+afterEach(() => {
+  restoreLog();
+  resetSavedOsm();
+});
 
 function deps(fetchImpl: SearchDeps["fetchImpl"], extra: Partial<SearchDeps> = {}): SearchDeps {
   return { ip: freshIp(), store, fetchImpl, env: {}, now: clock, ...extra };
@@ -141,15 +152,23 @@ describe("failures show the exact §5.4 copy and are charged honestly", () => {
     expect(await usage(ip)).toEqual({ global: 0, key: 0 });
   });
 
-  it("both Overpass servers busy -> OSM_UNAVAILABLE copy; the place stays cached", async () => {
-    const { fetchImpl, calls } = osmReplay({ overpass: () => recordedResponse("overpass-504-too-busy") });
+  it("every Overpass server busy AND the Nominatim park fallback down -> OSM_UNAVAILABLE copy; the place stays cached", async () => {
+    const { fetchImpl, calls } = osmReplay({
+      overpass: () => recordedResponse("overpass-504-too-busy"),
+      // Built failure (cannot be recorded on demand): the fallback park search answers 502.
+      nominatim: (c) => (new URL(c.url).searchParams.get("q") === "park" ? new Response("bad gateway", { status: 502 }) : undefined),
+    });
     const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl));
     expect(r).toMatchObject({ ok: false, status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown } });
+    // No example pass is ready in this test, so no link is offered (never a made-up one).
+    expect(!r.ok && r.error.example).toBeUndefined();
     expect(calls.map((c) => new URL(c.url).host)).toEqual([
       "nominatim.openstreetmap.org",
       ...OVERPASS_DEFAULT_URLS.map((u) => new URL(u).host),
+      "nominatim.openstreetmap.org",
     ]);
-    for (const u of OVERPASS_DEFAULT_URLS) expect(await breakerRetryAfter(store, breakerName(u), clock())).toBe(60);
+    // ~60 s (the Nominatim fallback waited about 1 s for its 1 req/s slot after the breakers opened).
+    for (const u of OVERPASS_DEFAULT_URLS) expect(await breakerRetryAfter(store, breakerName(u), clock())).toBeGreaterThanOrEqual(58);
 
     // A minute later Overpass is back: the place comes from the cache, only Overpass is called.
     startedAt -= 61_000;
@@ -234,5 +253,84 @@ describe("abuse controls", () => {
     const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl, { store: broken }));
     expect(r).toMatchObject({ ok: false, status: 503, error: { code: "STORE_UNAVAILABLE" } });
     expect(calls).toHaveLength(0);
+  });
+});
+
+describe("R1-B1: park search survives a public Overpass outage", () => {
+  const busyOverpass = () => recordedResponse("overpass-504-too-busy");
+
+  it("gives live Overpass 10 s (slot wait included), then falls back", () => {
+    expect(SEARCH_OVERPASS_BUDGET_MS).toBe(10_000);
+  });
+
+  it("Overpass busy near Dallas -> the SAVED Dallas-area list (real recorded answer, its own date), labelled, no extra call", async () => {
+    resetSavedOsm(); // this test uses the saved index
+    const info = savedIndexInfo();
+    expect(info).not.toBeNull();
+    const { fetchImpl, calls } = osmReplay({ overpass: busyOverpass });
+    const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl));
+    if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
+    expect(r.result.fallback).toEqual({ kind: "saved_index", message: PARKS_COPY.savedIndex });
+    expect(r.result.checkedAt).toBe(new Date(info!.fetchedAt).toISOString());
+    expect(r.result.cached).toBe(true);
+    expect(r.result.parks).toHaveLength(10);
+    expect(r.result.totalFound).toBeGreaterThan(10);
+    for (const p of r.result.parks) expect(p.distanceM).toBeLessThanOrEqual(5_000);
+    // Same nearest-first order as a live list.
+    expect([...r.result.parks].sort((a, b) => a.distanceM - b.distanceM)).toEqual(r.result.parks);
+    expect(ParksResultSchema.safeParse(r.result).success).toBe(true);
+    // Geocode + the 3 Overpass tries; the saved list needs no request.
+    expect(calls).toHaveLength(1 + OVERPASS_DEFAULT_URLS.length);
+  });
+
+  it("a hung Overpass is given up after the search budget, not the 50 s pass budget", async () => {
+    resetSavedOsm();
+    const { fetchImpl } = osmReplay({
+      overpass: (c) =>
+        new Promise<Response>((_, reject) => c.init?.signal?.addEventListener("abort", () => reject(new DOMException("aborted", "AbortError")))),
+    });
+    const t0 = Date.now();
+    const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl, { overpassBudgetMs: 300 }));
+    expect(Date.now() - t0).toBeLessThan(2_000);
+    expect(r.ok && r.result.fallback?.kind).toBe("saved_index");
+  });
+
+  it("no saved list for the point -> the Nominatim park search (live recording), labelled", async () => {
+    const { fetchImpl, calls } = osmReplay({ overpass: busyOverpass });
+    const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl));
+    if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
+    expect(r.result.fallback).toEqual({ kind: "nominatim", message: PARKS_COPY.nominatimParks });
+    expect(r.result.cached).toBe(false);
+    expect(r.result.parks.length).toBeGreaterThan(0);
+    expect(r.result.parks.length).toBeLessThanOrEqual(10);
+    for (const p of r.result.parks) {
+      expect(p.distanceM).toBeLessThanOrEqual(5_000);
+      expect(["park", "nature_reserve"]).toContain(p.kind);
+    }
+    expect(calls.map((c) => new URL(c.url).searchParams.get("q")).filter(Boolean)).toEqual(["Allen TX", "park"]);
+    // The fallback list is cached briefly: a second search makes no new Nominatim park call.
+    resetParksSearch();
+    const again = osmReplay({ overpass: busyOverpass });
+    startedAt -= 61_000; // Overpass breakers closed again, still busy
+    const r2 = await searchParks({ kind: "text", q: "Allen TX" }, deps(again.fetchImpl));
+    expect(r2.ok && r2.result.fallback?.kind).toBe("nominatim");
+    expect(again.calls.filter((c) => new URL(c.url).searchParams.get("q") === "park")).toHaveLength(0);
+  });
+
+  it("parses the recorded Nominatim park answer: named leisure=park only, within 5 km, nearest first", () => {
+    const rec = fixture("nominatim-parks-allen-tx");
+    const meta = rec._recording as unknown as { url: string; center: { lat: number; lng: number } };
+    expect(nominatimParksUrl(meta.center)).toBe(meta.url);
+    const out = parseNominatimParks(rec.body, meta.center);
+    expect(out.totalFound).toBeGreaterThan(5);
+    expect(out.parks.every((p) => p.name.length > 0 && p.distanceM <= 5_000)).toBe(true);
+    expect(new Set(out.parks.map((p) => p.id)).size).toBe(out.parks.length);
+    expect([...out.parks].sort((a, b) => a.distanceM - b.distanceM)).toEqual(out.parks);
+  });
+
+  it("our OWN Overpass queue being full is not blamed on OpenStreetMap (Q-1-06)", () => {
+    const err = new SourceError("overpass", "queue_full", { started: false, retryAfter: 5 });
+    expect(featuresFailure(err).error).toMatchObject({ code: "BUSY_HERE", message: PARKS_COPY.busyHere });
+    expect(PARKS_COPY.busyHere).not.toMatch(/OpenStreetMap/);
   });
 });

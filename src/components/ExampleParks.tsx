@@ -18,7 +18,9 @@ export function exampleState(s: ExampleStatus, enabled: boolean): ExampleState {
 
 /**
  * "See a real pass now": links to passes made earlier from live data (pre-warmed, SPEC S8). Each link
- * says when that pass was really generated; an example with no pass yet says why instead of linking.
+ * says when that pass was really generated. An example with no pass yet is NOT a dashed failure card
+ * (R1-B1 / ux M1, Q-1-10): one line with its name and ONE sentence saying why (from prewarm.ts, a single
+ * "No data available yet:"), plus "Try again" (or "Reload" while it is being made) that reloads the page.
  * Server component, no client JavaScript.
  */
 export function ExampleParks({ statuses, enabled = true }: { statuses: readonly ExampleStatus[]; enabled?: boolean }) {
@@ -48,10 +50,17 @@ export function ExampleParks({ statuses, enabled = true }: { statuses: readonly 
                 </span>
               </Link>
             ) : (
-              <div className="flex min-h-11 w-full flex-col items-start rounded-control border-2 border-dashed border-line px-4 py-2">
-                <span className="font-display text-lg font-semibold">{s.example.name}</span>
-                <span className="text-sm">No data available yet: {s.missing}</span>
-              </div>
+              <p className="px-1 py-2 text-sm">
+                <span className="font-semibold">{s.example.name}:</span> {s.missing}
+                {exampleState(s, enabled) === "off" ? null : (
+                  <>
+                    {" "}
+                    <Link href="/" prefetch={false} className="underline">
+                      {s.refreshing ? "Reload" : "Try again"}
+                    </Link>
+                  </>
+                )}
+              </p>
             )}
           </li>
         ))}

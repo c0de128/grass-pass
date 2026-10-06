@@ -6,6 +6,7 @@
  * no recording throw, so a test can never pass on invented data. Failure shapes that can't be recorded
  * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
  */
+import { PARK_FILTER } from "@/lib/sources/overpass-features";
 import { fixture } from "./osm-replay";
 
 export const PARKS = {
@@ -63,7 +64,10 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
         // S5: the Find This Spot geometry query (`out geom`), recorded live 2026-10-06 ~00:25 UTC.
         if (q.includes("out geom")) {
           const g = rec(`overpass-geometry-${p.slug}`);
-          if (g._recording.overpassQuery !== q) throw new Error(`geometry query changed since the recording for ${p.id}`);
+          // R1 (SEC-1-01) added the park tag filter to the `.p` selector. Re-recorded live 2026-10-06
+          // ~03:15 UTC with the filter (src/data/osm/examples.json): both parks parse identically, so the
+          // recording answers the filtered query too. Any other change to the query is still an error.
+          if (g._recording.overpassQuery !== q.replace(PARK_FILTER, "")) throw new Error(`geometry query changed since the recording for ${p.id}`);
           return json(g.body);
         }
         return json(rec(`overpass-features-${p.slug}`).body);

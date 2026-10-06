@@ -43,8 +43,14 @@ export type SourceErrorCode =
   | "busy"
   /** 200 but not the shape we expect. */
   | "bad_output"
-  /** We did not call: the circuit breaker is open or no polite slot was free in time. */
-  | "not_called";
+  /** We did not call: the upstream's circuit breaker is open, or its shared budget is used up. */
+  | "not_called"
+  /** We did not call: OUR OWN per-process politeness queue had no free slot in time (not the upstream's fault). */
+  | "queue_full"
+  /** Our own signal stopped it (the pass deadline, or every client left). Never the upstream's fault. */
+  | "aborted"
+  /** The upstream said THIS query was too heavy (Overpass "Query timed out" / "out of memory"). Not a server outage. */
+  | "too_heavy";
 
 export class SourceError extends Error {
   /**
@@ -97,16 +103,50 @@ export type FetchLike = (input: string, init?: RequestInit) => Promise<Response>
 
 export type UpstreamResponse = { status: number; headers: Headers; text: string; latencyMs: number };
 
+/** Thrown inside fetchText when a body is bigger than the caller allows. */
+class BodyTooLargeError extends Error {
+  constructor(readonly limit: number) {
+    super(`body larger than ${limit} bytes`);
+    this.name = "BodyTooLargeError";
+  }
+}
+
+/** Read a body as UTF-8 text, stopping (and cancelling the stream) once it passes `maxBytes`. */
+export async function readTextCapped(res: Response, maxBytes: number): Promise<string> {
+  const declared = Number(res.headers.get("content-length"));
+  if (Number.isFinite(declared) && declared > maxBytes) {
+    await res.body?.cancel().catch(() => undefined);
+    throw new BodyTooLargeError(maxBytes);
+  }
+  if (!res.body) return "";
+  const reader = res.body.getReader();
+  const decoder = new TextDecoder();
+  let total = 0;
+  let text = "";
+  for (;;) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    total += value.byteLength;
+    if (total > maxBytes) {
+      await reader.cancel().catch(() => undefined);
+      throw new BodyTooLargeError(maxBytes);
+    }
+    text += decoder.decode(value, { stream: true });
+  }
+  return text + decoder.decode();
+}
+
 /**
  * One request with a hard timeout (covers headers AND body). Throws SourceError
- * "timeout" or "network" (started: true). Never follows a redirect: our upstream
- * URLs are fixed, so a redirect means something is wrong.
+ * "timeout", "network", "aborted" (the caller's own signal fired: deadline or client gone) or
+ * "bad_output" (body over `maxBytes`), all with started: true. Never follows a redirect: our
+ * upstream URLs are fixed, so a redirect means something is wrong.
  */
 export async function fetchText(
   source: string,
   url: string,
   init: RequestInit,
-  opts: { timeoutMs: number; fetchImpl?: FetchLike; signal?: AbortSignal },
+  opts: { timeoutMs: number; fetchImpl?: FetchLike; signal?: AbortSignal; maxBytes?: number },
 ): Promise<UpstreamResponse> {
   const fetchImpl = opts.fetchImpl ?? ((u, i) => fetch(u, i));
   const timeout = AbortSignal.timeout(opts.timeoutMs);
@@ -114,10 +154,13 @@ export async function fetchText(
   const started = Date.now();
   try {
     const res = await fetchImpl(url, { ...init, signal, redirect: "error", cache: "no-store" });
-    const text = await res.text();
+    const text = opts.maxBytes ? await readTextCapped(res, opts.maxBytes) : await res.text();
     return { status: res.status, headers: res.headers, text, latencyMs: Date.now() - started };
   } catch (err) {
-    const code: SourceErrorCode = timeout.aborted ? "timeout" : "network";
+    if (err instanceof BodyTooLargeError) {
+      throw new SourceError(source, "bad_output", { started: true, cause: err, message: `${source}: answer larger than ${err.limit} bytes` });
+    }
+    const code: SourceErrorCode = timeout.aborted ? "timeout" : opts.signal?.aborted ? "aborted" : "network";
     throw new SourceError(source, code, { started: true, cause: err });
   }
 }

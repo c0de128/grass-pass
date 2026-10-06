@@ -214,14 +214,19 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     await warmExamples({ examples: EXAMPLES.slice(0, 1), now: () => now });
     vi.stubEnv("PREWARM_EXAMPLES", "0");
     const statuses = await exampleStatuses({ examples: EXAMPLES, now: () => now });
-    const html = renderToStaticMarkup(<ExampleParks statuses={statuses} />);
+    const html = renderToStaticMarkup(<ExampleParks statuses={statuses} enabled={false} />);
     expect(html).toContain(`href="/pass/${statuses[0].pass!.passId}?example=1"`);
     expect(html).toMatch(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
     // R1-B1 / ux M1: no dashed failure cards; one line per missing example with a Try again link.
     expect(html).toContain("No data available yet: example passes are switched off on this server.");
     expect(html.match(/No data available/g)).toHaveLength(EXAMPLES.length - 1);
-    expect(html).toContain(">Try again</a>");
     expect(html).not.toContain("border-dashed");
+    // Switched off: nothing to retry, so no link. A failed try (warm-up on) offers "Try again".
+    expect(html).not.toContain(">Try again</a>");
+    const waiting = { ...statuses[1], refreshing: false, missing: "No data available yet: the last try didn't work because OpenStreetMap was busy." };
+    const html2 = renderToStaticMarkup(<ExampleParks statuses={[statuses[0], waiting]} enabled />);
+    expect(html2).toContain(`${waiting.example.name}:</span> No data available yet: the last try didn&#x27;t work because OpenStreetMap was busy.`);
+    expect(html2).toContain(">Try again</a>");
     expect(html).toContain('<h2 id="examples-title"');
   });
 });

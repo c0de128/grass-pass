@@ -18,6 +18,9 @@ export const HONEST_SKIP_CODES = new Set([
   "OSM_UNAVAILABLE",
   "GEOCODER_UNAVAILABLE",
   "DATA_TOO_SLOW",
+  // R1-B1/Q-1-06: our own Overpass slots were busy (BUSY_HERE), or Overpass called the park too heavy.
+  "BUSY_HERE",
+  "PARK_TOO_BIG",
   // Our own limits (tests share one IP) and the shared store.
   "RATE_LIMITED",
   "IP_DAILY_LIMIT",

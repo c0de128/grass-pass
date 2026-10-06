@@ -27,29 +27,36 @@ import { looksScore } from "@/lib/pool/wild";
 import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
-export type DropReason =
-  | "schema"
-  | "cut_off"
-  | "url_or_markup"
-  | "unknown_id"
-  | "duplicate_id"
-  | "section_mismatch"
-  | "danger"
-  | "not_grounded"
-  | "name_leak"
-  | "mentions_map"
-  | "out_of_season"
-  | "number_not_in_source"
-  | "wrong_count"
-  | "broken_count"
-  | "silent_sound"
-  | "filler_only"
-  | "generic_clue"
-  | "copies_example"
-  | "copies_source"
-  | "repeats_clue"
-  | "repeats_opening"
-  | "over_section_max";
+/**
+ * Every reason a model item can be dropped (logs, the pass footer, the eval scorer's drop table).
+ * SPEC 6.2 lists the same set (the PM keeps it in sync).
+ */
+export const DROP_REASONS = [
+  "schema",
+  "cut_off",
+  "url_or_markup",
+  "unknown_id",
+  "duplicate_id",
+  "section_mismatch",
+  "danger",
+  "not_grounded",
+  "name_leak",
+  "mentions_map",
+  "out_of_season",
+  "number_not_in_source",
+  "wrong_count",
+  "broken_count",
+  "silent_sound",
+  "filler_only",
+  "generic_clue",
+  "copies_example",
+  "copies_source",
+  "repeats_clue",
+  "repeats_opening",
+  "over_section_max",
+] as const;
+
+export type DropReason = (typeof DROP_REASONS)[number];
 
 export type ValidItem = {
   item: PoolItem;

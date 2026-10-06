@@ -8,7 +8,7 @@ import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { caseDataOrNull, loadFixture, type CaseData } from "../../evals/fixture";
 import { planRequest, refillPlan } from "@/lib/ai/prompt";
-import { fitToMix, isGenericClue, luckyLimit, mergeResults, sharedFrame, validateDraft, type ValidationResult, type ValidItem } from "@/lib/ai/validate";
+import { DROP_REASONS, fitToMix, isGenericClue, luckyLimit, mergeResults, sharedFrame, validateDraft, type ValidationResult, type ValidItem } from "@/lib/ai/validate";
 import { LUCKY_KEYWORDS, luckyItem } from "@/lib/pool/lucky";
 import { nameTraitWords } from "@/lib/pool/wild";
 import type { PoolItem } from "@/lib/pool/types";
@@ -218,5 +218,12 @@ describe("R3-M6 (Q-3-01 option 3): a park is 'slow' only when every mirror tried
     expect(everyMirrorTimedOut(err(["timeout"]), 1)).toBe(true); // ... unless it is the only mirror
     expect(everyMirrorTimedOut(err(["busy", "timeout"]))).toBe(false);
     expect(everyMirrorTimedOut(new SourceError("overpass", "timeout", { started: false }))).toBe(false); // budget ran out, nothing tried
+  });
+});
+
+describe("R3-M7: the drop reasons the scorer and SPEC 6.2 list", () => {
+  it("DROP_REASONS holds every reason, the round-3 ones included", () => {
+    expect(DROP_REASONS).toEqual(expect.arrayContaining(["broken_count", "silent_sound", "filler_only", "repeats_clue", "repeats_opening", "name_leak", "generic_clue"]));
+    expect(new Set(DROP_REASONS).size).toBe(DROP_REASONS.length);
   });
 });

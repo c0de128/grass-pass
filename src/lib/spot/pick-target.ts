@@ -14,7 +14,8 @@
  * riddle may quote.
  */
 import "server-only";
-import { distinctiveWords } from "@/lib/pool/types";
+import { hasUrlOrMarkup } from "@/lib/ai/validate";
+import { distinctiveWords, kindLabelWords } from "@/lib/pool/types";
 import { classify, FEATURE_KINDS, type FeatureKind, type ParkFeatures } from "@/lib/sources/overpass-features";
 import { centerOf, compass, distanceM, type GeoElement, type LatLng, type ParkGeometry } from "./geometry";
 
@@ -23,6 +24,7 @@ export type TargetKind = FeatureKind | "toilets";
 /** Restrooms are not a Park Find (S3), but they are a fine, findable Find This Spot target. */
 const TOILETS = {
   label: "restroom building",
+  plural: "restroom buildings",
   describe: "A restroom building is a small building with toilets and sinks for visitors.",
   nameWords: ["restroom", "restrooms", "toilet", "toilets", "bathroom", "bathrooms"],
 };
@@ -82,8 +84,18 @@ function kindOf(tags: Record<string, string>): TargetKind | null {
   return k && k !== "tree" ? k : null;
 }
 
+/**
+ * R1-m7 (SEC-1-04) follow-up: anyone can edit an OSM name. A name with a link, bare domain, @handle or
+ * phone-like digits never reaches the riddle prompt, the fact sheet or the answer key (same filter
+ * as the Park Finds names in pool/park.ts); the thing is then described by its kind only.
+ */
+export function safeOsmName(name: string | undefined): string | null {
+  const n = name?.trim();
+  return n && !hasUrlOrMarkup(n) ? n : null;
+}
+
 function startOf(el: GeoElement): SpotStart | null {
-  const name = el.tags.name ?? null;
+  const name = safeOsmName(el.tags.name);
   if (el.tags.entrance) return { osmId: el.osmId, label: name ? `park entrance (${name})` : "park entrance", at: centerOf(el.lines) };
   if (el.tags.amenity === "parking") return { osmId: el.osmId, label: name ? `parking lot (${name})` : "parking lot", at: centerOf(el.lines) };
   return null;
@@ -152,7 +164,7 @@ export function pickTarget(
   if (list.length === 0) return null;
   const c = list[(Math.max(1, opts.variant) - 1) % Math.min(list.length, 3)];
   const info = infoOf(c.kind);
-  const name = c.el.tags.name ?? null;
+  const name = safeOsmName(c.el.tags.name);
 
   const start =
     starts.length > 0
@@ -186,7 +198,9 @@ export function pickTarget(
     center: c.center,
     onePitchOf: c.onePitchOf,
     sourceText,
-    nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...(name ? distinctiveWords(name, { place: true }) : [])])],
+    nameWords: [
+      ...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...(name ? distinctiveWords(name, { place: true, allowed: kindLabelWords(info) }) : [])]),
+    ],
     answer: cap(answer),
     start,
     walk,

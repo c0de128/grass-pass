@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext, type Page } from "@playwright/test";
 import { passOrSkip } from "./support/honest";
+import { judgeSignInRequest } from "./support/judge";
 
 // S4 print: a REAL pass from the running server (live OpenStreetMap + iNaturalist + the open model,
 // or today's cached pass when the server already made it), printed with print media emulation.
@@ -16,6 +17,8 @@ test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
 
 /** Ask the server for today's pass the way the page does (same origin, JSON), reading the stream to the end. */
 async function realPassId(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number }> {
+  // Accounts: a new pass needs a sign-in (the judge demo; today's saved pass would be served anyway).
+  await judgeSignInRequest(request, baseURL);
   const res = await request.post("/api/pass", {
     headers: { "content-type": "application/json", origin: new URL(baseURL).origin },
     data: { parkId: CONNEMARA.id, ageBand: "6-10" },

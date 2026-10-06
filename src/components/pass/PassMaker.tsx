@@ -13,9 +13,9 @@
  * `/?resume=1`.
  */
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent } from "react";
-import { z } from "zod";
+import { z } from "@/lib/zod-config";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import { SignInCard } from "@/components/account/SignInCard";
 import { FindAPark } from "@/components/parks/FindAPark";
 import type { SignInOptions } from "@/lib/accounts/config";
@@ -208,9 +208,11 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   // Signed out (or the session ended): show the sign-in card instead of the make button.
   const needsSignIn = account !== undefined && (!account.signedIn || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
 
-  // Back from signing in (/?resume=1): restore the park + age picked before, then clean the address.
+  // Back from signing in (/?resume=1): restore the park + age picked before, then clean the address. The judge
+  // sign-in comes back with a client navigation (this component stays mounted), OAuth with a full page load.
+  const resume = useSearchParams().get("resume");
   useEffect(() => {
-    if (!new URLSearchParams(window.location.search).has("resume")) return;
+    if (resume === null) return;
     const r = takeResume();
     window.history.replaceState(null, "", "/#find");
     if (!r) return;
@@ -218,7 +220,7 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
     setPark(r.park);
     setPickedBand(r.band);
     storeBand(r.band);
-  }, []);
+  }, [resume]);
 
   // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):
   // with 10 parks listed it starts ~700 px further down on a phone.

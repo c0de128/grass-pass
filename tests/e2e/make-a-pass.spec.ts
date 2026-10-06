@@ -1,5 +1,6 @@
 import { expect, test, type Page } from "@playwright/test";
 import { skipIfHonestAlert } from "./support/honest";
+import { judgeSignInPage } from "./support/judge";
 
 // S3 main journey against the real server and the LIVE services: OpenStreetMap (Nominatim + Overpass),
 // iNaturalist and the open model on DigitalOcean (the server reads its key from .env.local).
@@ -44,7 +45,7 @@ async function makePassOrHonestError(page: Page, parkName: string) {
   if (await failed.isVisible()) {
     // A failed pass offers "Try again", except for limits that only reset later.
     const code = (await failed.getAttribute("data-error-code")) ?? "";
-    if (!["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT"].includes(code)) {
+    if (!["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT"].includes(code)) {
       await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
     }
     await skipIfHonestAlert(failed, "new pass");
@@ -54,6 +55,7 @@ async function makePassOrHonestError(page: Page, parkName: string) {
 
 test("pick Connemara Meadow Preserve -> age 6-10 -> a real pass on screen with evidence and the model that answered", async ({ page }) => {
   test.setTimeout(2 * WAIT + 30_000);
+  await judgeSignInPage(page);
   await searchAndPick(page, "Connemara Meadow Preserve", "Connemara Meadow Preserve");
   await makePassOrHonestError(page, "Connemara Meadow Preserve");
 
@@ -80,6 +82,7 @@ test("pick Connemara Meadow Preserve -> age 6-10 -> a real pass on screen with e
 
 test("Celebration Park: park finds, and Wild Finds shows the exact 'No data available' copy", async ({ page }) => {
   test.setTimeout(2 * WAIT + 30_000);
+  await judgeSignInPage(page);
   await searchAndPick(page, "Celebration Park Allen TX", "Celebration Park");
   await makePassOrHonestError(page, "Celebration Park");
   const pass = page.getByRole("article", { name: "Celebration Park" });

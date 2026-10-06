@@ -2,8 +2,8 @@
 
 /**
  * "Sign in to make this pass" (accounts, Kevin 2026-10-06): GitHub / Google (only the ones set up on this
- * server) and the big one-click "Try as a judge". Each button is a real form posting to a server action
- * (works without JavaScript too); `onBeforeSignIn` lets the pass maker remember the park + age so the home
+ * server) and the big one-click "Try as a judge". Each button submits a form to a server action, then tells
+ * the header to read the session again; `onBeforeSignIn` lets the pass maker remember the park + age so the home
  * page can restore them after the round trip (sessionStorage, this tab only).
  */
 import { Gavel, LogIn } from "lucide-react";
@@ -11,6 +11,7 @@ import { useFormStatus } from "react-dom";
 import { signInAction } from "@/app/actions/auth";
 import { buttonClassName } from "@/components/ui/Button";
 import { ACCOUNT_COPY, PROVIDER_LABELS, type SignInOptions } from "@/lib/accounts/config";
+import { announceSessionChange } from "./session-event";
 
 function ProviderButton({ provider, label, judge, onClick }: { provider: string; label: string; judge?: boolean; onClick?: () => void }) {
   const { pending, data } = useFormStatus();
@@ -65,7 +66,15 @@ export function SignInCard({
       <p className="text-base">
         New passes need a grown-up to sign in: 2 a day each. {ACCOUNT_COPY.grownUps}
       </p>
-      <form action={signInAction} className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Sign in">
+      <form
+        action={async (fd: FormData) => {
+          try {
+            await signInAction(fd);
+          } finally {
+            announceSessionChange();
+          }
+        }}
+        className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Sign in">
         <input type="hidden" name="returnTo" value={returnTo} />
         {options.judge ? <ProviderButton provider="judge" label="Try as a judge" judge onClick={onBeforeSignIn} /> : null}
         {options.providers.map((p) => (

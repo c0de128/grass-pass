@@ -9,9 +9,10 @@ import { LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { useEffect, useState } from "react";
-import { z } from "zod";
+import { z } from "@/lib/zod-config";
 import { signOutAction } from "@/app/actions/auth";
 import { PROVIDER_LABELS } from "@/lib/accounts/config";
+import { announceSessionChange, SESSION_EVENT } from "./session-event";
 
 const SessionSchema = z
   .object({
@@ -30,7 +31,14 @@ export function whoLabel(name: string | null | undefined, provider: "github" | "
 
 export function AccountMenu() {
   const [who, setWho] = useState<Who | null>(null);
+  const [version, setVersion] = useState(0);
   const path = usePathname();
+
+  useEffect(() => {
+    const bump = () => setVersion((v) => v + 1);
+    window.addEventListener(SESSION_EVENT, bump);
+    return () => window.removeEventListener(SESSION_EVENT, bump);
+  }, []);
 
   useEffect(() => {
     let live = true;
@@ -45,7 +53,7 @@ export function AccountMenu() {
     return () => {
       live = false;
     };
-  }, [path]);
+  }, [path, version]);
 
   if (!who) return <span className="inline-block min-h-11 w-0" aria-hidden="true" />;
   if (!who.signedIn) {
@@ -63,7 +71,17 @@ export function AccountMenu() {
   }
   const returnTo = path && path.startsWith("/pass/") && !path.endsWith("/print") ? path : "/";
   return (
-    <form action={signOutAction} className="flex items-center gap-2" aria-label="Account">
+    <form
+      action={async (fd: FormData) => {
+        try {
+          await signOutAction(fd);
+        } finally {
+          announceSessionChange();
+        }
+      }}
+      className="flex items-center gap-2"
+      aria-label="Account"
+    >
       <span className="hidden max-w-36 truncate text-sm font-medium text-muted-foreground md:inline" data-testid="header-who">
         {who.label}
       </span>

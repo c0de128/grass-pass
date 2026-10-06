@@ -7,7 +7,7 @@
  * today") or the real error. The result is announced to screen readers (role=status).
  */
 import { useState } from "react";
-import { z } from "zod";
+import { z } from "@/lib/zod-config";
 import type { ReportKind } from "@/lib/reports/kinds";
 
 const AnswerSchema = z.object({ status: z.enum(["counted", "duplicate"]), message: z.string().max(200) });

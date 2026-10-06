@@ -65,7 +65,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
               {from === "/" ? "Make a pass" : "Go back"}
             </Link>
             <form action={signOutAction}>
-              <input type="hidden" name="returnTo" value="/signin" />
+              <input type="hidden" name="returnTo" value="/" />
               <button type="submit" className={buttonClassName("secondary")}>
                 Sign out
               </button>

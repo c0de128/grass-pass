@@ -8,7 +8,7 @@ const baseURL = process.env.E2E_BASE_URL ?? "http://localhost:3123";
 const port = new URL(baseURL).port || "3123";
 
 /** Specs that call live services (OpenStreetMap, iNaturalist, the model) through the per-IP limits. */
-const LIVE = ["find-a-park.spec.ts", "make-a-pass.spec.ts", "print.spec.ts", "spot-map.spec.ts", "examples-about.spec.ts"];
+const LIVE = ["accounts.spec.ts", "find-a-park.spec.ts", "make-a-pass.spec.ts", "print.spec.ts", "spot-map.spec.ts", "examples-about.spec.ts"];
 
 export default defineConfig({
   testDir: "./tests/e2e",

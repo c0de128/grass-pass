@@ -1,6 +1,7 @@
 import { writeFileSync } from "node:fs";
 import { expect, test, type APIRequestContext } from "@playwright/test";
 import { passOrSkip } from "./support/honest";
+import { judgeSignInRequest } from "./support/judge";
 
 // S5 Find This Spot: a REAL Celebration Park pass from the running server (live OpenStreetMap,
 // iNaturalist and the open model, or today's cached pass). Its only picnic shelter is the X.
@@ -17,6 +18,8 @@ test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
 type Spot = { status: string; message?: string; riddle?: string };
 
 async function realPass(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number; spot?: Spot }> {
+  // Accounts: a new pass needs a sign-in (the judge demo; today's saved pass would be served anyway).
+  await judgeSignInRequest(request, baseURL);
   const res = await request.post("/api/pass", {
     headers: { "content-type": "application/json", origin: new URL(baseURL).origin },
     data: { parkId: CELEBRATION.id, ageBand: "6-10" },

@@ -13,3 +13,8 @@ Tokens are counted from each answer's `usage`; USD = tokens x the DO price list 
 | 2026-10-06T01:15:24Z (approx) | S8b full run ABORTED (no results file): hung for 10+ min inside llama-4-maverick case 14 (no CPU use), stopped by hand after Gemma 3x20 and Llama 13 of 20 finished; harness now has a per-case guard | about 78 | not saved | not saved | $0.0394 measured before the stop (+ at most ~$0.001 for the hung call) |
 | 2026-10-06T01:23Z | S8b re-recording of the two model fixtures in tests/fixtures (not an eval run) | 2 | about 3,400 | 1208 | about $0.0013 |
 | 2026-10-06T01:36:22.211Z | 2026-10-05-2.md | 76 | 129455 | 39466 | $0.0484 |
+| 2026-10-06T02:10:52.435Z | 2026-10-05-partial-2110.md | 6 | 12049 | 2741 | $0.0035 |
+| 2026-10-06T02:12Z | S8c re-recording of the two model fixtures in tests/fixtures (not an eval run) | 2 | 2829 | 947 | $0.0010 |
+| 2026-10-06T02:15:33.541Z | 2026-10-05-3.md | 73 | 133550 | 32579 | $0.0457 |
+
+S8c total (builder, 2026-10-05 CDT): smoke $0.0035 + fixture re-recording $0.0010 + full run $0.0457 = **$0.0502** (cap $0.12).

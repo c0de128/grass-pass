@@ -1,15 +1,16 @@
 /**
  * The measured numbers the /about page quotes (SPEC §6.4 / §6.5, F14).
  *
- * Copied from the committed eval run `evals/results/2026-10-05-2.json` (summary: `2026-10-05-2.md`), the S8b re-run
- * after the name-word, prompt and pool fixes. The first run (`2026-10-05.json`) stays in the repo for comparison.
+ * Copied from the committed eval run `evals/results/2026-10-05-3.json` (summary: `2026-10-05-3.md`), the S8c re-run
+ * after the shorter-answer and glued-quote fixes. The earlier runs (`2026-10-05.json`, `2026-10-05-2.json`) stay in
+ * the repo for comparison.
  * tests/unit/about.test.tsx re-reads that JSON and fails if any number here drifts from it, so the page
  * can never show a number that was not measured. When the eval is re-run, point EVAL_RESULTS_FILE at the new
  * results and update the numbers; FAILs stay on the page as current limitations.
  */
 
-export const EVAL_RESULTS_FILE = "evals/results/2026-10-05-2.json";
-export const EVAL_SUMMARY_FILE = "evals/results/2026-10-05-2.md";
+export const EVAL_RESULTS_FILE = "evals/results/2026-10-05-3.json";
+export const EVAL_SUMMARY_FILE = "evals/results/2026-10-05-3.md";
 /** Chicago day of the run. */
 export const EVAL_DAY = "2026-10-05";
 
@@ -46,7 +47,7 @@ export type EvalColumn = {
 
 export const EVAL_PARKS = 20;
 export const EVAL_AGE_BAND = "6-10";
-export const EVAL_TOTAL_USD = 0.04843;
+export const EVAL_TOTAL_USD = 0.04575;
 
 export const EVAL_COLUMNS: readonly EvalColumn[] = [
   {
@@ -55,20 +56,20 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Apache-2.0",
     runs: 60,
     blockedPrinted: 0,
-    groundedPct: 91.6,
-    grounded: 395,
-    returned: 431,
-    completePct: 86.3,
-    complete: 44,
+    groundedPct: 99.5,
+    grounded: 421,
+    returned: 423,
+    completePct: 96.1,
+    complete: 49,
     dataRichRuns: 51,
     honestEmptiesPct: 100,
-    fkGrade: 2.1,
-    nameLeakPct: 4.9,
+    fkGrade: 2.3,
+    nameLeakPct: 5.4,
     clueLeakPct: 3.5,
-    p50s: 10.7,
-    p95s: 17.1,
-    timeouts: 1,
-    costPerPass: 0.00062,
+    p50s: 9.4,
+    p95s: 11.3,
+    timeouts: 0,
+    costPerPass: 0.00056,
   },
   {
     model: "llama-4-maverick",
@@ -76,20 +77,20 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Llama 4 Community Licence",
     runs: 20,
     blockedPrinted: 0,
-    groundedPct: 92.8,
-    grounded: 116,
-    returned: 125,
-    completePct: 64.7,
-    complete: 11,
+    groundedPct: 94.3,
+    grounded: 133,
+    returned: 141,
+    completePct: 82.4,
+    complete: 14,
     dataRichRuns: 17,
     honestEmptiesPct: 100,
-    fkGrade: 2.4,
-    nameLeakPct: 8.8,
-    clueLeakPct: 8.0,
-    p50s: 47.4,
-    p95s: 60.0,
-    timeouts: 2,
-    costPerPass: 0.00084,
+    fkGrade: 2.3,
+    nameLeakPct: 6.4,
+    clueLeakPct: 5.7,
+    p50s: 43.0,
+    p95s: 52.3,
+    timeouts: 0,
+    costPerPass: 0.00086,
   },
   {
     model: "no-AI template",

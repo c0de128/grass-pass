@@ -277,21 +277,21 @@ export default function AboutPage() {
         <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
-            <strong>Complete passes: {pct(gemma.completePct)}</strong> of Gemma passes kept at least n-1 items (target{" "}
-            {EVAL_THRESHOLDS.completePct}%). Most lost items were clues that named their own answer or did not quote their
-            source exactly. A pass with fewer items still prints and says how many were left off.
+            <strong>Answers that name themselves: {pct(gemma.nameLeakPct)}</strong> of Gemma&apos;s clues or &quot;look
+            where&quot; hints used a word of their own answer before the filter (target {EVAL_THRESHOLDS.nameLeakPct}% or
+            lower; in the clue itself {pct(gemma.clueLeakPct)}). Code catches every one: a clue that names its answer is
+            dropped, and a hint that does is left off. So nothing is given away on the pass, but those clues are lost.
           </li>
           <li>
-            <strong>Speed: {secs(gemma.p50s)}</strong> typical and {secs(gemma.p95s)} slow-case per model call (target{" "}
-            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s): the typical time is still just over the target. Most of
-            the wait is the model writing its answer, not reading the park facts. The page shows each step while it waits,
-            and the example parks on the home page open a pass that was already made. Llama 4 Maverick was much
-            slower ({secs(llama.p50s)} typical) and timed out in {llama.timeouts} of {llama.runs} runs.
+            <strong>Llama 4 Maverick is too slow to be the default:</strong> {secs(llama.p50s)} typical per model call
+            (target {EVAL_THRESHOLDS.p50s} s), and {pct(llama.completePct)} complete passes. Gemma took {secs(gemma.p50s)}{" "}
+            typical and {secs(gemma.p95s)} slow-case; most of that wait is the model writing its answer, so we made the answer
+            shorter.
           </li>
           <li>
-            <strong>A model glitch we saw:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park, every quote had
-            extra text stuck on the end, so none of those quotes matched the source and those clues were dropped (two
-            passes for that park showed the error copy instead). That is part of the grounding number above ({pct(gemma.groundedPct)}).
+            <strong>A model glitch we saw in an earlier run:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park,
+            the next part of the answer was stuck onto the end of every quote. Code now cuts that stuck-on text off and keeps
+            the quote only if what is left is really, word for word, in the source. It did not happen in the run above.
           </li>
           <li>
             <strong>Not in this test:</strong> the Find This Spot map and riddle (the map data was not recorded for the 20

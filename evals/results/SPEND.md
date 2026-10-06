@@ -66,3 +66,8 @@ PM decision 1B builder N total (2026-10-06 CDT): **about $0.0004** (1 call).
 | 2026-10-06T16:58Z (approx) | Eval r4 (builder Q): 1 provider speed probe before the full run (not an eval run; 4.9 s, 182 answer tokens) | 1 | 30 | 182 | about $0.0001 |
 
 Eval r4 builder Q total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10-06-4 $0.0746 (cap $0.09) + 10-13 smoke partial-1218 $0.0036 = **about $0.0783** (111 calls). SerpApi: 0 searches (the eval replays recorded data; Lucky Finds are not in the eval).
+| 2026-10-06T18:0xZ (approx) | Builder R2 (audit round 4): re-recorded the Celebration (1 call) and Connemara (first call + refill) model fixtures | 3 | 6615 | 1180 | about $0.0018 |
+| 2026-10-06T18:26-18:30Z | Builder R2: ages 10-13 live smoke on its own server (:3320, SerpApi off): Arbor Hills 1, White Rock 1, Washington Park Denver 2, Cedar Ridge 1 (refill blocked by AI_DAILY_CAP=1) | 5 | 15068 | 2136 | about $0.0038 |
+| 2026-10-06T18:35Z (approx) | Builder R2: example passes re-made with PREWARM_EXAMPLES=1 and AI_DAILY_CAP=4: Arbor Hills 1, White Rock 2, Celebration 1; Connemara refused by the cap | 4 | 11445 | 1642 | about $0.0029 |
+
+Builder R2 total (2026-10-06 CDT): **12 calls, about $0.0084** (prices from evals/score.ts). SerpApi: 0 searches.

@@ -286,8 +286,9 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Site design (v3, Oct 6, 2026):** designed by Kevin in [v0 by Vercel](https://v0.app/) and ported by hand (no v0
   runtime code, no analytics). Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (13 with small edits) after code and people fact-checked them, and the rest kept
-  their old text. Every block, old and new, with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
+  text; 90 of its drafts shipped (13 with small edits) after a code check and a review by an AI coding agent
+  (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,
+  with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.
 - **Home page pictures:** the hero is an AI illustration generated with v0 by Vercel (labelled "AI illustration"; it
   shows no real child or park). The four park photos are real, used under their free licences (credited on each

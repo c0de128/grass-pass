@@ -2,7 +2,7 @@
  * Step 1 + 2 of the Gemma copy pipeline (docs/COPY-BY-GEMMA.md): send every block in scripts/copy/blocks.mts to
  * Gemma 4 (the app's own model client, src/lib/model.ts: same model, key and host rules as the live site) in
  * batches, then run the code check on each draft. Writes docs/copy-by-gemma/run-<stamp>.json and one row in
- * evals/results/SPEND.md. Nothing in the site changes here: people review the drafts, then apply them by hand.
+ * evals/results/SPEND.md. Nothing in the site changes here: a reviewer (so far an AI coding agent, Claude Code) reviews the drafts, then applies them by hand.
  *
  *   pnpm copy:gemma            (paid: about 15 calls, cap 40 calls and $0.05)
  *   COPY_ONLY=id1,id2 pnpm copy:gemma   (re-run some blocks only)

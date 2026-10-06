@@ -1,6 +1,6 @@
 /**
  * Step 4 of the Gemma copy pipeline: render docs/COPY-BY-GEMMA.md from the run file (Gemma's drafts + the
- * code check) and docs/copy-by-gemma/review.json (people's decisions). No model calls.
+ * code check) and docs/copy-by-gemma/review.json (the review decisions, made by an AI coding agent). No model calls.
  *
  *   pnpm copy:render
  */
@@ -15,7 +15,7 @@ import { SYSTEM_PROMPT } from "./prompt.mts";
 
 const ROOT = fileURLToPath(new URL("../..", import.meta.url));
 
-type Decision = { id: string; decision: "accepted" | "edited" | "rejected" | "unchanged"; stage: "code" | "gemma" | "people"; reason: string; shipped: string; factFixAfterRun?: boolean };
+type Decision = { id: string; decision: "accepted" | "edited" | "rejected" | "unchanged"; stage: "code" | "gemma" | "agent-review"; reason: string; shipped: string; factFixAfterRun?: boolean };
 type Review = { reviewedBy: string; run: string; counts: Record<string, number>; decisions: Decision[] };
 
 /** First line of `file` that holds the start of `text` (JSX entities and wraps allowed). */
@@ -41,7 +41,7 @@ test("render docs/COPY-BY-GEMMA.md (pnpm copy:render)", () => {
   out.push("# Site copy drafted by Gemma 4");
   out.push("");
   out.push(
-    `On ${run.startedAt.slice(0, 10)}, Kevin asked for the rest of the website copy to be revised with Google's Gemma. This file is the full record: what Gemma was told, what it wrote for each block, what code and people checked, and what shipped. Kevin's own lines were not sent (list below).`,
+    `On ${run.startedAt.slice(0, 10)}, Kevin asked for the rest of the website copy to be revised with Google's Gemma. This file is the full record: what Gemma was told, what it wrote for each block, what the code check and the review by an AI coding agent (Claude Code) found, and what shipped. No person has reviewed the drafts yet. Kevin's own lines were not sent (list below).`,
   );
   out.push("");
   out.push("## In short");
@@ -50,8 +50,8 @@ test("render docs/COPY-BY-GEMMA.md (pnpm copy:render)", () => {
   out.push(`- **Calls:** ${run.calls} (batches of ${run.batchSize}), ${run.promptTokens.toLocaleString("en-US")} prompt + ${run.completionTokens.toLocaleString("en-US")} completion tokens, **$${run.usd.toFixed(4)}** at DigitalOcean list prices (logged in \`evals/results/SPEND.md\`). Failures: ${run.failures.length === 0 ? "none" : run.failures.map((f) => `batch ${f.batch}: ${f.error}`).join("; ")}.`);
   out.push(`- **Blocks sent:** ${review.decisions.length}.`);
   out.push(`  - **Accepted** as Gemma wrote them: ${c.accepted}`);
-  out.push(`  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): ${c.edited}`);
-  out.push(`  - **Rejected** (old text kept): ${c.rejected} (${codeRejected} by the code check, ${c.rejected - codeRejected} by people)`);
+  out.push(`  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): ${c.edited}`);
+  out.push(`  - **Rejected** (old text kept): ${c.rejected} (${codeRejected} by the code check, ${c.rejected - codeRejected} by the AI coding agent review)`);
   out.push(`  - **Unchanged** (Gemma returned the old text): ${c.unchanged}`);
   out.push(`- **Reviewed by:** ${review.reviewedBy}. Decisions and reasons: \`docs/copy-by-gemma/review.json\`. Raw drafts: \`docs/copy-by-gemma/${review.run}\`.`);
   out.push("- **Test:** `tests/unit/copy-check.test.ts` checks the code check itself, that every block's old text passes its own rules, that every hand edit passes them too, and that every shipped text is really in the code.");
@@ -68,7 +68,7 @@ test("render docs/COPY-BY-GEMMA.md (pnpm copy:render)", () => {
   out.push(`   - adds a name (a capitalised word mid-sentence, or one with inner capitals like "iNaturalist") not in the old text, FACTS or these site words: ${SITE_WORDS.join(", ")};`);
   out.push(`   - uses a banned word: ${BANNED_WORDS.join(", ")};`);
   out.push("   - has an emoji or markup.");
-  out.push("4. **People** read every draft that passed: untrue, garbled, off-tone or weaker drafts are rejected; tiny fixes are allowed and marked. Decisions go in `docs/copy-by-gemma/review.json`; accepted and edited texts are applied by hand in the files named below.");
+  out.push("4. **An AI coding agent (Claude Code)** read every draft that passed (no person has reviewed them yet): untrue, garbled, off-tone or weaker drafts are rejected; tiny fixes are allowed and marked. Decisions go in `docs/copy-by-gemma/review.json`; accepted and edited texts are applied by hand in the files named below.");
   out.push("5. `pnpm copy:render` writes this file.");
   out.push("");
   out.push(

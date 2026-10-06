@@ -1,5 +1,5 @@
 {
-  "reviewedBy": "Builder G (Claude Code), 2026-10-06",
+  "reviewedBy": "Builder G, an AI coding agent (Claude Code), 2026-10-06; no person has reviewed the drafts yet",
   "run": "run-2026-10-06T20-43-12-393Z.json",
   "counts": {
     "accepted": 77,
@@ -11,21 +11,21 @@
     {
       "id": "home.how.link",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'grown-ups' (who the page is for) and the voice; the current line is better.",
       "shipped": "The full story for curious grown-ups: the data, the AI and every check"
     },
     {
       "id": "home.how.s1.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Kevin's own words (his home copy reference); kept.",
       "shipped": "Pick a park & age"
     },
     {
       "id": "home.how.s1.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'clue count and difficulty' is stiffer than 'how many clues and how hard'.",
       "shipped": "Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10 or 10–13: it sets how many clues and how hard."
     },
@@ -39,35 +39,35 @@
     {
       "id": "home.how.s2.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'Gemma writes, code checks.' (Kevin's line, corrected from his reference) and 'a fair mix'.",
       "shipped": "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds."
     },
     {
       "id": "home.how.s3.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Kevin's own words (his home copy reference); kept.",
       "shipped": "Print the page"
     },
     {
       "id": "home.how.s3.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'sources' from what the stub carries.",
       "shipped": "One black-and-white Letter page: the kid’s pass on top, a tear line, and a grown-up stub with the answers and sources."
     },
     {
       "id": "home.how.s4.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Kevin's own words (his home copy reference); kept.",
       "shipped": "Hide the phone"
     },
     {
       "id": "home.how.s4.body",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: 'Phone stays home' changed back to 'Phone away' (the card says hide the phone, and grown-ups may carry one).",
       "shipped": "Phone away. Kids tick off finds with a pencil while you keep the stub for hints (and sanity)."
     },
@@ -81,63 +81,63 @@
     {
       "id": "home.pass.wild.body",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Real birds, bugs and blooms photographed within 1.5 km of the park in the last 14 days. Gemma quotes the source for each find, and code checks it word for word."
     },
     {
       "id": "home.pass.wild.safety",
       "decision": "rejected",
-      "stage": "people",
-      "reason": "UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; people caught it.",
+      "stage": "agent-review",
+      "reason": "UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; the agent review caught it.",
       "shipped": "Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”"
     },
     {
       "id": "home.pass.park.body",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True and shorter; it says code writes the counts. Straight quotes set as curly quotes in JSX.",
       "shipped": "Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like \"2 basketball courts.\""
     },
     {
       "id": "home.pass.lucky.body",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'Maybe-sightings' (a Lucky Find is a maybe, not a promise) and the 'No proof?' hook.",
       "shipped": "Maybe-sightings, like dogs or bikes, mentioned in at least 3 Google Maps reviews from the last 2 years. SerpApi counts them. No proof? The pass leaves them off and says why."
     },
     {
       "id": "home.pass.spot.body",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Code draws a simple map with a START and an X. Gemma writes a riddle to help the kids find the spot."
     },
     {
       "id": "home.pass.october.body",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Code counts nearby monarchs from the last 14 days versus the same days last year. It prints the real number, even if it is zero."
     },
     {
       "id": "home.explore.sub",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Example passes for parks near Dallas, made from live data for {ages}. Tap one to open it; no sign-up needed."
     },
     {
       "id": "home.explore.live.making",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Making today's example passes"
     },
     {
       "id": "home.explore.live.off",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Example passes are turned off"
     },
@@ -151,21 +151,21 @@
     {
       "id": "home.chips.lead",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled: a question that ends in a colon, and it drops 'real pass'.",
       "shipped": "Just looking? Open a real pass:"
     },
     {
       "id": "home.card.stub",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'Adult' is off-voice; the site says 'grown-up' everywhere.",
       "shipped": "Grown-up's stub · answers & safety"
     },
     {
       "id": "home.card.open",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "View pass"
     },
@@ -179,14 +179,14 @@
     {
       "id": "home.cta.sub",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Loses 'the park across the street', the line's whole point and voice.",
       "shipped": "Free, one printable page, written for the park across the street, not some park somewhere else."
     },
     {
       "id": "home.parks.connemara.big",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "species spotted nearby in 2 weeks"
     },
@@ -200,7 +200,7 @@
     {
       "id": "home.parks.celebration.big",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "soccer fields, plus 6 courts"
     },
@@ -214,35 +214,35 @@
     {
       "id": "footer.about",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Short, and the footer link already sits under the Grass Pass logo.",
       "shipped": "About"
     },
     {
       "id": "footer.how",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Short, and the footer link already sits under the Grass Pass logo.",
       "shipped": "How it works"
     },
     {
       "id": "meta.home.description",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'open-weight' (the contest's core) and says 'leave the phone at home'.",
       "shipped": "A free one-page treasure hunt for your local park. Gemma 4, an open-weight AI model, reads that park's real map and the last 14 days of wildlife sightings and writes the clues. Code checks every one. Print it, and the phone stays in your pocket."
     },
     {
       "id": "how.meta.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'open model'.",
       "shipped": "How Grass Pass works: real park data in, one open model, paper out"
     },
     {
       "id": "how.meta.description",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: 'Gemma 4 AI' -> 'Gemma 4, an open model'; 'our measured results' -> 'what we measured'.",
       "shipped": "See how we turn a park's real map and wildlife sightings into a printable pass. Gemma 4, an open model, writes the clues and code fact-checks every one. What the AI does, what it doesn't, and what we measured."
     },
@@ -256,42 +256,42 @@
     {
       "id": "how.lead",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'open'; otherwise the same as the current line.",
       "shipped": "You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest."
     },
     {
       "id": "how.quick.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'Pick a park. Print a pass. Phone away.' is the README / logo tagline; 'Print.' alone reads cut off.",
       "shipped": "Pick a park. Print a pass. Phone away."
     },
     {
       "id": "how.quick.1.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Kevin's own words (his home copy reference); kept.",
       "shipped": "Pick a park & age"
     },
     {
       "id": "how.quick.1.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'your kid' for 'an age group'; less personal.",
       "shipped": "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13."
     },
     {
       "id": "how.quick.2.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'We read the park' is more vivid.",
       "shipped": "We read the park"
     },
     {
       "id": "how.quick.2.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Less accurate: we count what reviews mention, we don't use the reviews; drops 'nearby'.",
       "shipped": "Its map, the last {days} days of wildlife sightings nearby, and what visitor reviews mention."
     },
@@ -305,7 +305,7 @@
     {
       "id": "how.quick.3.body",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True and simpler; the open-model fact is two lines above. Gemma draft, edited: 'asks once more' -> 'asks again'. Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.",
       "shipped": "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks again if too many fail.",
       "factFixAfterRun": true
@@ -313,112 +313,112 @@
     {
       "id": "how.quick.4.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Print and go"
     },
     {
       "id": "how.quick.4.body",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "One page. The kid gets the hunt and you keep the answer key."
     },
     {
       "id": "how.quick.note",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'.",
       "shipped": "A new pass usually takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing, the pass says \"No data available\" and why."
     },
     {
       "id": "how.steps.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled: 'finding it' reads as finding the park.",
       "shipped": "From “which park?” to “found it!”"
     },
     {
       "id": "how.steps.intro",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Each step is handled by code, the open model, or you. The AI has one job: picking the finds and writing the words."
     },
     {
       "id": "how.step.park.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Pick your park"
     },
     {
       "id": "how.step.park.summary",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'about' (the rounding is about 1 km, not exactly).",
       "shipped": "Search by town, ZIP, park name, or tap Use my location (rounded to about 1 km). Code finds parks within 5 km using OpenStreetMap."
     },
     {
       "id": "how.step.data.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "No better, and 'Find' clashes with step 1.",
       "shipped": "Gather what's really there"
     },
     {
       "id": "how.step.data.summary",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Code builds three dated, sourced lists. Park Finds come from OpenStreetMap, Wild Finds from iNaturalist and Wikipedia, and Lucky Finds from Google review counts via SerpApi."
     },
     {
       "id": "how.step.safety.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'itches' (poison ivy) and the joke.",
       "shipped": "Take out anything that bites, stings or itches"
     },
     {
       "id": "how.step.safety.summary",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Code removes {blocked} groups of risky species, like fire ants and poison ivy, before the model sees the list and checks again after."
     },
     {
       "id": "how.step.model.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Says AI plainly; the badge next to it still says 'Done by the open model'.",
       "shipped": "The AI writes the clues"
     },
     {
       "id": "how.step.model.summary",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "UNTRUE as written: 'writes a clue, a proof quote, and one riddle' reads as one clue in total, not one per find.",
       "shipped": "Code sends the park's fact list to {model} on DigitalOcean serverless inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is one call; step 6 is the exception."
     },
     {
       "id": "how.step.checks.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'fact-checks' is the stronger true word.",
       "shipped": "Code fact-checks every clue"
     },
     {
       "id": "how.step.checks.summary",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'doesn't just trust' weakens 'never takes the AI's word', and it drops 'when it can'.",
       "shipped": "Code never takes the AI's word for it. It removes any clue that breaks one of {always} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss {softer} style rules when it can."
     },
     {
       "id": "how.step.retry.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Loses the meaning ('print it short'). Old text kept, then: Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.",
       "shipped": "Refill, or print it short",
       "factFixAfterRun": true
@@ -426,7 +426,7 @@
     {
       "id": "how.step.retry.summary",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: 'once more' -> 'again ... (at most 3 calls per pass)'. Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.",
       "shipped": "Too few clues pass the check? Code asks the AI again for the missing ones (at most 3 calls per pass). Still short? We list how many are missing. No made-up filler.",
       "factFixAfterRun": true
@@ -441,126 +441,126 @@
     {
       "id": "how.step.spot.summary",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Only adds a comma.",
       "shipped": "Code picks a landmark, draws a map with an X, and measures the walk. The October box is all code."
     },
     {
       "id": "how.step.print.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Print and ditch the phone"
     },
     {
       "id": "how.step.print.summary",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops the joke ('the phone goes in the bag'); nothing gained.",
       "shipped": "One black-and-white page: the kid's hunt on top, your answer key and sources below. Then the phone goes in the bag."
     },
     {
       "id": "how.step.cache.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Saved passes and fair limits"
     },
     {
       "id": "how.step.cache.summary",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers.",
       "shipped": "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers."
     },
     {
       "id": "how.ai.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'picks' (the AI also picks the finds).",
       "shipped": "The AI picks and writes. Code does the rest."
     },
     {
       "id": "how.ai.does.1",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled ('using the code mix'). Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Pick the finds, inside the mix code allows."
     },
     {
       "id": "how.ai.does.2",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Write each clue in kid words, plus a hint."
     },
     {
       "id": "how.ai.does.3",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Rate each find easy, medium or hard."
     },
     {
       "id": "how.ai.does.4",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Copy a proof quote from its facts."
     },
     {
       "id": "how.ai.does.5",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Write the Find This Spot riddle."
     },
     {
       "id": "how.code.does.1",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Collect every fact, with its source and date."
     },
     {
       "id": "how.code.does.2",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Remove unsafe species, before and after."
     },
     {
       "id": "how.code.does.3",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Set the mix and the number of finds."
     },
     {
       "id": "how.code.does.4",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Check every clue; remove failures."
     },
     {
       "id": "how.code.does.5",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Pick the spot, draw the map, measure the walk."
     },
     {
       "id": "how.code.does.6",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
       "shipped": "Write every number, date, safety line and answer."
     },
     {
       "id": "how.ai.schema",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Clearer: no 'schema' jargon, same fact.",
       "shipped": "The AI cannot invent finds because it can only use ids from the park's own fact list."
     },
@@ -574,28 +574,28 @@
     {
       "id": "how.open.1.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "The three card titles must match; the other two were rejected.",
       "shipped": "The licence is open."
     },
     {
       "id": "how.open.1.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled: 'Gemma 4 uses Apache-2.0' (the weights are licensed Apache-2.0).",
       "shipped": "Gemma 4's weights are Apache-2.0: anyone can download, run and build on them."
     },
     {
       "id": "how.open.2.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'Self-hosting works' claims something we have not measured.",
       "shipped": "It can be self-hosted."
     },
     {
       "id": "how.open.2.body",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became \"edited\".",
       "shipped": "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 1-3 minutes a pass.",
       "factFixAfterRun": true
@@ -603,105 +603,105 @@
     {
       "id": "how.open.3.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'not theirs' is vague (whose?).",
       "shipped": "Our rules, not a vendor's."
     },
     {
       "id": "how.open.3.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "UNTRUE: 'every model' (we tested two).",
       "shipped": "The same checks run on any model; Llama 4 Maverick went through them in our test."
     },
     {
       "id": "how.limits.title",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Honest and plain.",
       "shipped": "Where we fall short"
     },
     {
       "id": "how.privacy.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "A slogan; the current title says the actual fact.",
       "shipped": "Nothing about your child"
     },
     {
       "id": "how.built.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'in a week' and 'with AI' are vaguer than 'in the contest week, with AI coding agents'.",
       "shipped": "Built in the contest week, with AI coding agents"
     },
     {
       "id": "how.built.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "UNTRUE: drops 'most of' (AI agents wrote most, not all, of the code).",
       "shipped": "Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding agents wrote and reviewed most of the code."
     },
     {
       "id": "how.privacy.1",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No names, photos, or analytics. Browsing and printing set no cookie."
     },
     {
       "id": "how.privacy.3",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'Your typing' is awkward.",
       "shipped": "What you type goes to our server and OpenStreetMap, never into the web address."
     },
     {
       "id": "how.privacy.4",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back the quotes around the button name.",
       "shipped": "\"Use my location\" is rounded to about 1 km in your browser before it is sent."
     },
     {
       "id": "how.privacy.5",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "The AI sees park facts and the age band, nothing about you or your child."
     },
     {
       "id": "about.meta.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'real' (the point of the app).",
       "shipped": "About Grass Pass: an open model, a real park and a pencil"
     },
     {
       "id": "about.meta.description",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'Google review counts' (SerpApi alone means nothing to a parent) and 'misses included'.",
       "shipped": "Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). Code checks every clue. What we measured (misses included), what leaves your device, and every credit."
     },
     {
       "id": "about.h1",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'real'.",
       "shipped": "An open model, a real park and a pencil."
     },
     {
       "id": "about.lead",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'open-weight' and 'recent'.",
       "shipped": "A one-page treasure hunt for a real park. Gemma 4, an open-weight model, writes clues from its map and recent wildlife sightings. Code checks each one. The finding happens on paper."
     },
     {
       "id": "about.howlink",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "See how a pass is made"
     },
@@ -715,7 +715,7 @@
     {
       "id": "about.inside.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'Coded rules' is weaker than 'Rules in code'.",
       "shipped": "Open model. Real data. Rules in code."
     },
@@ -736,7 +736,7 @@
     {
       "id": "about.whyopen.2",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Tiny change.",
       "shipped": "Our safety rules are in our code, not a vendor's."
     },
@@ -751,119 +751,119 @@
     {
       "id": "about.data.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'real'.",
       "shipped": "Four real sources, dated"
     },
     {
       "id": "about.data.osm",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'mapped' (only what is mapped is used).",
       "shipped": "Parks, paths and what is mapped inside them"
     },
     {
       "id": "about.data.inat",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Wildlife people actually spotted nearby"
     },
     {
       "id": "about.data.wiki",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "More accurate: it is a summary.",
       "shipped": "A short summary of each species"
     },
     {
       "id": "about.data.serp",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Google Maps review counts for dogs or bikes"
     },
     {
       "id": "about.data.nodata",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No data? We say \"No data available\" and why. We never pad the list."
     },
     {
       "id": "about.safety.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'via' is stiffer.",
       "shipped": "Safety by code"
     },
     {
       "id": "about.safety.1",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'risky' (what the groups are).",
       "shipped": "{blocked} risky groups are never printed, checked before and after the model."
     },
     {
       "id": "about.safety.2",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True for every printed clue (one that fails is removed).",
       "shipped": "Every clue quotes its source word for word."
     },
     {
       "id": "about.safety.3",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Code writes every number, date and safety line."
     },
     {
       "id": "about.privacy.1",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No account or cookies needed to browse and print."
     },
     {
       "id": "about.privacy.2",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in is only for new passes. We keep a scrambled ID, no name or email."
     },
     {
       "id": "about.privacy.3",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "We never ask for info about your child."
     },
     {
       "id": "about.privacy.4",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'about'.",
       "shipped": "Your location is rounded to about 1 km in your browser."
     },
     {
       "id": "about.privacy.5",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'only' (the raw IP is never kept).",
       "shipped": "Your IP is kept only scrambled, for about a day."
     },
     {
       "id": "about.privacy.6",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Park facts and age band go to the model in the US."
     },
     {
       "id": "about.limit.4",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled ('The 7 year old reading check').",
       "shipped": "The read-it-as-a-7-year-old check is not done yet."
     },
@@ -877,56 +877,56 @@
     {
       "id": "about.details.title",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Lost its punctuation; no better.",
       "shipped": "Details, one click away."
     },
     {
       "id": "about.privacy.note2",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: 'age bands' -> 'the age band'.",
       "shipped": "The model runs on DigitalOcean servers in the US, so park facts and the age band leave your device."
     },
     {
       "id": "about.privacy.note3",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "UNTRUE: 'your prompt' (the prompt is ours, not the visitor's), and drops 'which source'.",
       "shipped": "Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed."
     },
     {
       "id": "signin.err.rate",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'from here' is vague, and the friendly 'Whoa' goes.",
       "shipped": "Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again."
     },
     {
       "id": "signin.err.unavailable",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "That sign-in option is not set up here. Try another one below."
     },
     {
       "id": "signin.err.denied",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in was cancelled. Nothing changed, but you can try again below."
     },
     {
       "id": "signin.err.callback",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "The sign-in page didn't finish. Please try again."
     },
     {
       "id": "signin.err.config",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in isn't set up right on this server. Examples and saved passes still work."
     },
@@ -940,161 +940,161 @@
     {
       "id": "signin.err.general",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in didn't work this time. Give it another try."
     },
     {
       "id": "signin.page.heading",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign in to make new passes and report your finds"
     },
     {
       "id": "signin.why.1",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Garbled: 'Sign in to make 2 a day'.",
       "shipped": "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it."
     },
     {
       "id": "signin.privacy.link",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "What we keep (spoiler: not much) and for how long"
     },
     {
       "id": "signin.card.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Loses the 'wakes up a real AI model' line.",
       "shipped": "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in."
     },
     {
       "id": "signin.judge.unknown",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'right now' (the failure is temporary).",
       "shipped": "We couldn't check how many judge passes are left today right now."
     },
     {
       "id": "account.privacy",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name."
     },
     {
       "id": "account.grownups",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in is for grown-ups, not kids."
     },
     {
       "id": "account.limit",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "You used your {n} new passes for today. Saved passes and examples still work. You get {n} more after midnight Dallas time."
     },
     {
       "id": "account.judgeNote",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Try as a judge to use a shared demo account. No sign-up, nothing to type."
     },
     {
       "id": "account.notConfigured",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work."
     },
     {
       "id": "maker.signedin",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Tiny change.",
       "shipped": "Signed in. You can make the pass now."
     },
     {
       "id": "pass.printline",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "One black-and-white page. Cut it in half: kids get the hunt, you get the answers."
     },
     {
       "id": "pass.reports.in",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Over-simple: one tap does not remove a find (it takes 3 different visitors, or 2 'not safe').",
       "shipped": "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes."
     },
     {
       "id": "report.thanks",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Thanks, counted!"
     },
     {
       "id": "report.duplicate",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "You already reported this today. Thanks!"
     },
     {
       "id": "report.judgeLogged",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Thanks! Judge demo reports are logged for review, but they don't change the counts or passes."
     },
     {
       "id": "report.judgeDuplicate",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "This browser already sent that report today. Try another find."
     },
     {
       "id": "print.lead",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: 'black and white' -> 'black-and-white'.",
       "shipped": "One black-and-white Letter page. In the print box, pick {scale} or \"Default\". Cut on the dashed line: kid gets the hunt, you keep the answer key."
     },
     {
       "id": "stub.cutline",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "cut here: top for kids, bottom for grown-ups"
     },
     {
       "id": "notfound.body",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'Good news:', the joke's set-up.",
       "shipped": "There's no page at this address (maybe a typo). Good news: the parks are right where you left them."
     },
     {
       "id": "passgone.lead",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "This pass wandered off."
     },
     {
       "id": "pass.allEmpty",
       "decision": "edited",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'recent' (the park may have older sightings).",
       "shipped": "No data available for {park}. We found no mapped features or recent wildlife sightings here. Try a bigger park from the list."
     },
@@ -1108,14 +1108,14 @@
     {
       "id": "pass.paused",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Clue writing is paused for today since the free budget is used. Passes made earlier still work."
     },
     {
       "id": "pass.variantLimit",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'the most we make' (why there are no more).",
       "shipped": "That's {max} different passes for this park and age today, the most we make. Print one of them, pick another park, or come back tomorrow."
     },
@@ -1129,154 +1129,154 @@
     {
       "id": "parks.geocoderDown",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Only the quote style.",
       "shipped": "No data available: the map search isn't answering. Try \"Use my location\" or an example park."
     },
     {
       "id": "parks.noParks",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No parks within 5 km in OpenStreetMap."
     },
     {
       "id": "parks.overpassDown",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Only a comma.",
       "shipped": "No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park."
     },
     {
       "id": "parks.busyHere",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Grass Pass is busy with other lookups. Try again in a few seconds."
     },
     {
       "id": "parks.parkTooBig",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "'because it may be' is a muddled cause.",
       "shipped": "No data available: OpenStreetMap couldn't read this park in time (it may be very big). Try a smaller park nearby."
     },
     {
       "id": "parks.savedIndex",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "OpenStreetMap didn't answer in time. This list is a saved copy of OpenStreetMap parks around Dallas (see date below), so new parks may be missing."
     },
     {
       "id": "parks.nominatimParks",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "OpenStreetMap didn't answer in time. This list uses the OpenStreetMap place search (Nominatim) instead, so it may miss some parks."
     },
     {
       "id": "find.noGeo",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Your browser can't share your location. Type a town or ZIP instead."
     },
     {
       "id": "find.geoDenied",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Location is blocked for this site. Type a town or ZIP, or allow location in your browser settings."
     },
     {
       "id": "find.geoFailed",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "We couldn't get your location. Try again or type a town or ZIP."
     },
     {
       "id": "find.offline",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "The same line is used in 3 files (park search, pass maker, report buttons); keep them identical.",
       "shipped": "We couldn't reach Grass Pass. Check your internet connection and try again."
     },
     {
       "id": "find.slow",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Still working. The OpenStreetMap park server can be slow. If it doesn't answer soon, we'll try a saved park list or the OpenStreetMap place search instead."
     },
     {
       "id": "wait.copy",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "A new pass usually takes 10-30 seconds, and up to a minute and a half if the free map websites are slow."
     },
     {
       "id": "wait.timeout",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "This is taking longer than a minute and a half, so we stopped waiting. Free map and wildlife sites can be slow when they're busy. Try again; if your pass is ready, it will open now."
     },
     {
       "id": "lucky.notConnected",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."
     },
     {
       "id": "lucky.dailyCap",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "Lucky Finds: off for today. We hit the free SerpApi search limit for visitor reviews. It resets at midnight Dallas time."
     },
     {
       "id": "lucky.down",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No data available: SerpApi didn't answer for Google reviews, so there are no Lucky Finds on this pass."
     },
     {
       "id": "wild.down",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops what iNaturalist is; most parents won't know.",
       "shipped": "No data available: iNaturalist (the wildlife sightings service) didn't answer when this pass was made. Trying again in a minute may help."
     },
     {
       "id": "spot.noLandmark",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Reads as 'no landmark at all' (the rule is: no landmark the park has only one of).",
       "shipped": "No Find This Spot today: this park has no single landmark on the map (OpenStreetMap)."
     },
     {
       "id": "spot.busy",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No Find This Spot today: the OpenStreetMap server was busy and we couldn't draw the map. Make a different pass to try again."
     },
     {
       "id": "datatooslow",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "The park data took too long to load, so we ran out of time to write clues. Try again shortly."
     },
     {
       "id": "showcase.nofinds",
       "decision": "accepted",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
       "shipped": "No data available: none of the finds on this pass passed our checks."
     },
@@ -1290,7 +1290,7 @@
     {
       "id": "readme.intro",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Drops 'open weights', 'a fair mix' and 'what is really in that park'. Old text kept, then: Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.",
       "shipped": "Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age (4-6, 6-10 or 10-13). Code collects what is really in that park. Gemma 4 (open weights, Apache-2.0, on DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass). Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the answers, safety notes and sources. The phone stays in your pocket.",
       "factFixAfterRun": true
@@ -1298,7 +1298,7 @@
     {
       "id": "readme.nodata",
       "decision": "rejected",
-      "stage": "people",
+      "stage": "agent-review",
       "reason": "Lost the quotes around No data available.",
       "shipped": "If a source has nothing, the pass says \"No data available\" and why. It never pads the pass with generic items."
     }

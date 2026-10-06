@@ -107,3 +107,17 @@ describe("the shipped copy is really in the code", () => {
     expect(textIsInSource(d.shipped, src), `${d.decision} text for ${id} not found in ${b!.file}`).toBe(true);
   });
 });
+
+describe("RULES-5-01: the copy credit names the real reviewer (an AI coding agent), never people", () => {
+  const files = ["README.md", "src/app/about/page.tsx", "docs/COPY-BY-GEMMA.md", "scripts/copy/gemma-render.mts", "docs/copy-by-gemma/review.json"];
+  const flat = (f: string) => readFileSync(path.join(ROOT, f), "utf8").replace(/\s+/g, " ");
+
+  it.each(files)("%s does not claim a human review", (f) => {
+    const s = flat(f);
+    expect(s).not.toMatch(/people fact-checked|code and people|by people\)|by a person|\*\*People\*\* read|"stage": "people"|people caught it/);
+  });
+
+  it.each(["README.md", "src/app/about/page.tsx", "docs/COPY-BY-GEMMA.md", "scripts/copy/gemma-render.mts"])("%s says an AI coding agent (Claude Code) reviewed", (f) => {
+    expect(flat(f)).toMatch(/AI coding agent \(Claude ?Code\)/);
+  });
+});

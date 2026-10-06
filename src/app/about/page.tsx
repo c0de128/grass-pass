@@ -473,7 +473,8 @@ export default function AboutPage() {
               </li>
               <li data-testid="copy-credit">
                 Site copy: Gemma 4 redrafted {GEMMA_COPY.sent} blocks of this site&apos;s text; {GEMMA_COPY.shipped} of its drafts
-                shipped ({GEMMA_COPY.edited} with small edits) after code and people fact-checked them. Every block, old and new:{" "}
+                shipped ({GEMMA_COPY.edited} with small edits) after a code check and a review by an AI coding agent (Claude
+                Code). Every block, old and new:{" "}
                 <a className={ext} href={`${REPO_URL}/blob/main/docs/COPY-BY-GEMMA.md`}>
                   docs/COPY-BY-GEMMA.md
                 </a>

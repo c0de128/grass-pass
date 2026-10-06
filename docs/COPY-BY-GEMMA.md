@@ -1,6 +1,6 @@
 # Site copy drafted by Gemma 4
 
-On 2026-10-06, Kevin asked for the rest of the website copy to be revised with Google's Gemma. This file is the full record: what Gemma was told, what it wrote for each block, what code and people checked, and what shipped. Kevin's own lines were not sent (list below).
+On 2026-10-06, Kevin asked for the rest of the website copy to be revised with Google's Gemma. This file is the full record: what Gemma was told, what it wrote for each block, what the code check and the review by an AI coding agent (Claude Code) found, and what shipped. No person has reviewed the drafts yet. Kevin's own lines were not sent (list below).
 
 ## In short
 
@@ -8,10 +8,10 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 - **Calls:** 19 (batches of 10), 39,228 prompt + 6,075 completion tokens, **$0.0101** at DigitalOcean list prices (logged in `evals/results/SPEND.md`). Failures: none.
 - **Blocks sent:** 184.
   - **Accepted** as Gemma wrote them: 77
-  - **Edited** (Gemma draft with a small fix by a person, marked "Gemma draft, edited"): 13
-  - **Rejected** (old text kept): 76 (1 by the code check, 75 by people)
+  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): 13
+  - **Rejected** (old text kept): 76 (1 by the code check, 75 by the AI coding agent review)
   - **Unchanged** (Gemma returned the old text): 18
-- **Reviewed by:** Builder G (Claude Code), 2026-10-06. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
+- **Reviewed by:** Builder G, an AI coding agent (Claude Code), 2026-10-06; no person has reviewed the drafts yet. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
 - **Test:** `tests/unit/copy-check.test.ts` checks the code check itself, that every block's old text passes its own rules, that every hand edit passes them too, and that every shipped text is really in the code.
 
 ## How it works (and how to run it again)
@@ -26,7 +26,7 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
    - adds a name (a capitalised word mid-sentence, or one with inner capitals like "iNaturalist") not in the old text, FACTS or these site words: Grass, Pass, AI, OK, I, No, Yes, Print, Tap, Sign, Make, Try;
    - uses a banned word: revolutionary, revolutionize, revolutionise, magic, magical, seamless, seamlessly, cutting-edge, game-changer, game-changing, unleash, effortless, effortlessly, supercharge, ultimate, world-class, best-in-class, groundbreaking, state-of-the-art, next-level, delve, elevate, empower, unlock, harness, guarantee, guaranteed, forever, always free, 100%, perfect, flawless, instantly;
    - has an emoji or markup.
-4. **People** read every draft that passed: untrue, garbled, off-tone or weaker drafts are rejected; tiny fixes are allowed and marked. Decisions go in `docs/copy-by-gemma/review.json`; accepted and edited texts are applied by hand in the files named below.
+4. **An AI coding agent (Claude Code)** read every draft that passed (no person has reviewed them yet): untrue, garbled, off-tone or weaker drafts are rejected; tiny fixes are allowed and marked. Decisions go in `docs/copy-by-gemma/review.json`; accepted and edited texts are applied by hand in the files named below.
 5. `pnpm copy:render` writes this file.
 
 **Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) is 17. The sheet below is corrected. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.
@@ -211,7 +211,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Gemma:** Poison ivy, stinging bugs and {blocked} other risky groups are never printed. Every Wild Find says "look, don't touch."
 - **Code check:** passed
 - **Shipped:** Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”
-- **Why:** UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; people caught it.
+- **Why:** UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; the agent review caught it.
 - **FACTS:** {blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length, 17 on 2026-10-06), filled in by code. / Blocked: venomous snakes, poison ivy, stinging bugs and more. They are never printed. / Every Wild Find carries the line "look, don't touch." · KEEP: "never printed", "look, don't touch"
 
 #### `home.pass.park.body`: accepted

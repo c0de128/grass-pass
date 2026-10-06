@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { buttonClassName } from "@/components/ui/Button";
 import { formatTime } from "@/lib/pass/format";
 import { AGE_BAND_INFO } from "@/lib/pass/schema";
 import { EXAMPLE_BAND, type ExampleStatus } from "@/lib/prewarm";
@@ -20,7 +21,8 @@ export function exampleState(s: ExampleStatus, enabled: boolean): ExampleState {
  * "See a real pass now": links to passes made earlier from live data (pre-warmed, SPEC S8). Each link
  * says when that pass was really generated. An example with no pass yet is NOT a dashed failure card
  * (R1-B1 / ux M1, Q-1-10): one line with its name and ONE sentence saying why (from prewarm.ts, a single
- * "No data available yet:"), plus "Try again" (or "Reload" while it is being made) that reloads the page.
+ * "No data available yet:"). Below the list, one "Try again" button (a plain GET form, so no client
+ * JavaScript) reloads the page. It is a button, not a link: every link in the list is a ready pass.
  * Server component, no client JavaScript.
  */
 export function ExampleParks({ statuses, enabled = true }: { statuses: readonly ExampleStatus[]; enabled?: boolean }) {
@@ -52,19 +54,18 @@ export function ExampleParks({ statuses, enabled = true }: { statuses: readonly 
             ) : (
               <p className="px-1 py-2 text-sm">
                 <span className="font-semibold">{s.example.name}:</span> {s.missing}
-                {exampleState(s, enabled) === "off" ? null : (
-                  <>
-                    {" "}
-                    <Link href="/" prefetch={false} className="underline">
-                      {s.refreshing ? "Reload" : "Try again"}
-                    </Link>
-                  </>
-                )}
               </p>
             )}
           </li>
         ))}
       </ul>
+      {statuses.some((s) => exampleState(s, enabled) === "waiting" || exampleState(s, enabled) === "making") ? (
+        <form action="/" method="get">
+          <button type="submit" className={buttonClassName("secondary")}>
+            Try again
+          </button>
+        </form>
+      ) : null}
     </section>
   );
 }

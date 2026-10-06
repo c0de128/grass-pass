@@ -221,12 +221,15 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     expect(html).toContain("No data available yet: example passes are switched off on this server.");
     expect(html.match(/No data available/g)).toHaveLength(EXAMPLES.length - 1);
     expect(html).not.toContain("border-dashed");
-    // Switched off: nothing to retry, so no link. A failed try (warm-up on) offers "Try again".
-    expect(html).not.toContain(">Try again</a>");
+    // Switched off: nothing to retry, so no button. A failed try (warm-up on) offers ONE "Try again"
+    // button below the list (not a link: every link in the list is a ready pass).
+    expect(html).not.toContain("Try again");
     const waiting = { ...statuses[1], refreshing: false, missing: "No data available yet: the last try didn't work because OpenStreetMap was busy." };
     const html2 = renderToStaticMarkup(<ExampleParks statuses={[statuses[0], waiting]} enabled />);
     expect(html2).toContain(`${waiting.example.name}:</span> No data available yet: the last try didn&#x27;t work because OpenStreetMap was busy.`);
-    expect(html2).toContain(">Try again</a>");
+    expect(html2.match(/Try again/g)).toHaveLength(1);
+    expect(html2).toContain('<form action="/" method="get">');
+    expect(html2.match(/<a /g)).toHaveLength(1); // only the ready pass
     expect(html).toContain('<h2 id="examples-title"');
   });
 });

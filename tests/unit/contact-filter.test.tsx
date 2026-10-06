@@ -56,6 +56,38 @@ describe("domains and spelled dots (R2-m3)", () => {
     }
   });
 
+  it("SEC-3-07: full-width and ideographic dots, title-case and spaced TLDs, (at)", () => {
+    for (const t of [
+      "Kidsprize.Com",
+      "kidsprize.Net prizes",
+      "kidsprize . com",
+      "kidsprize .com",
+      "kidsprize. com",
+      "KIDSPRIZE . NET",
+      "kidsprize。com",
+      "kidsprize．com",
+      "＠kidsprize",
+      "kidsprize(at)gmail",
+      "kidsprize [at] gmail",
+      "ｋｉｄｓ.com",
+    ]) {
+      expect(hasUrlOrMarkup(t), t).toBe(true);
+    }
+    // Still fine: a missing space before a word that is also a TLD, sentences, abbreviations.
+    for (const t of [
+      "Look by the pond.In the grass you may see ducks.",
+      "Find the bench.To the left is a tree.",
+      "etc. in the meadow",
+      "Go down the slide. Me next!",
+      "St. Mary's Park",
+      "e.g. co-op garden",
+      "Look at the hat on the statue",
+      "Bring a cat (at home) toy",
+    ]) {
+      expect(hasUrlOrMarkup(t), t).toBe(false);
+    }
+  });
+
   it("safeParkName: a name with contact details becomes a neutral label", () => {
     expect(safeParkName("Celebration Park")).toEqual({ name: "Celebration Park", hidden: false });
     expect(safeParkName("Prize at kidsprize.ru Park")).toEqual({ name: HIDDEN_PARK_LABEL, hidden: true });

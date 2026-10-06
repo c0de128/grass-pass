@@ -11,6 +11,7 @@ import { useEffect, useId, useRef, useState, type FormEvent, type RefObject } fr
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
 import { distanceLabel, roundCoord } from "@/lib/geo";
+import { safeParkName } from "@/lib/safety/contact";
 import {
   ApiErrorSchema,
   LOCATION_DECIMALS,
@@ -313,7 +314,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
         <div role="alert" data-error-code={phase.code} className="flex flex-col gap-3 rounded-ticket border-2 border-line bg-surface p-4">
           <p className="font-semibold">{phase.message}</p>
           {phase.example ? (
-            <Link href={phase.example.href} className={buttonClassName("secondary", "self-start")}>
+            <Link href={phase.example.href} prefetch={false} className={buttonClassName("secondary", "self-start")}>
               See a ready example pass: {phase.example.name}
             </Link>
           ) : null}
@@ -370,7 +371,7 @@ function ParkList({
                   aria-pressed={picked?.id === p.id}
                   className="flex min-h-11 w-full flex-col items-start rounded-control border-2 border-line bg-surface px-4 py-2 text-left text-fg hover:bg-secondary-hover aria-pressed:bg-primary aria-pressed:text-on-primary"
                 >
-                  <span className="font-display text-lg font-semibold">{p.name}</span>
+                  <span className="font-display text-lg font-semibold">{safeParkName(p.name).name}</span>
                   <span className="text-base">
                     {kindLabel(p.kind)} · {distanceLabel(p.distanceM)} away
                   </span>
@@ -382,7 +383,7 @@ function ParkList({
       )}
       {picked && !hasNextStep ? (
         <p role="status" className="rounded-ticket border-2 border-line bg-surface p-4">
-          You picked <strong>{picked.name}</strong>. Making a pass for a park isn&apos;t switched on in this build yet.
+          You picked <strong>{safeParkName(picked.name).name}</strong>. Making a pass for a park isn&apos;t switched on in this build yet.
         </p>
       ) : null}
       <p className="text-sm">

@@ -13,6 +13,7 @@ import { FindAPark } from "@/components/parks/FindAPark";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
 import type { Park } from "@/lib/parks/schema";
+import { safeParkName } from "@/lib/safety/contact";
 import {
   AGE_BAND_INFO,
   AGE_BAND_STORAGE_KEY,
@@ -80,7 +81,7 @@ export function PassFailure({
           </Button>
         )}
         {state.example ? (
-          <Link href={state.example.href} className={buttonClassName("secondary")}>
+          <Link href={state.example.href} prefetch={false} className={buttonClassName("secondary")}>
             See a ready example pass: {state.example.name}
           </Link>
         ) : null}
@@ -167,7 +168,7 @@ export function PassMaker() {
         <TicketCard as="section" aria-labelledby={`${ids}-age`}>
           <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-label="Make a pass">
             <h2 id={`${ids}-age`} ref={headingRef} tabIndex={-1} className="text-2xl">
-              Who&apos;s hunting at {park.name}?
+              Who&apos;s hunting at {safeParkName(park.name).name}?
             </h2>
             <fieldset className="flex flex-col gap-2">
               <legend className="mb-1 text-lg font-semibold">Age</legend>

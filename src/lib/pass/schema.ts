@@ -61,7 +61,7 @@ export const PassItemSchema = z.object({
   answer: z.string().max(260),
   /** Fixed, code-written safety line, or null. */
   safety: z.string().max(120).nullable(),
-  source: z.enum(["OpenStreetMap", "iNaturalist"]),
+  source: z.enum(["OpenStreetMap", "iNaturalist", "Google reviews via SerpApi"]),
   /** Park Finds: the mapped feature kind ("basketball", "bench"), for the row icon. Absent on older passes. */
   feature: z.string().regex(/^[a-z_]{1,40}$/).optional(),
 });
@@ -93,7 +93,8 @@ export const PassSchema = z.object({
     latencyMs: z.number().int().min(0),
   }),
   generatedAt: z.string(),
-  dataCheckedAt: z.object({ osm: z.string(), inat: z.string().nullable() }),
+  /** `lucky` (S6): when the Google review counts (SerpApi) were made; absent when no search answered and on older passes. */
+  dataCheckedAt: z.object({ osm: z.string(), inat: z.string().nullable(), lucky: z.string().optional() }),
   /** First day of the iNaturalist window ("2026-09-21"), when iNat answered. */
   wildSince: z.string().nullable(),
   /**
@@ -160,7 +161,6 @@ export const PassErrorResponseSchema = z.object({ error: ApiErrorBody, parkData:
 export const PASS_COPY = {
   allEmpty: (park: string) =>
     `No data available for ${park} yet: no mapped features and no recent wildlife sightings. Try a bigger park nearby from the list.`,
-  luckyOff: "Lucky Finds: not available yet (we haven't built this part of Grass Pass).",
   notAPark: "We couldn't read that park on OpenStreetMap. Pick another park from the list.",
   paused: "Clue writing is paused for today (free budget used). Passes already made today still work.",
   passGone: "No data available: this pass isn't saved here anymore (passes are kept for 30 days), or the link is wrong.",

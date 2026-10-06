@@ -61,7 +61,8 @@ test("pick Connemara Meadow Preserve -> age 6-10 -> a real pass on screen with e
   await expect(pass.getByText(/· iNaturalist$/).first()).toBeVisible();
   await expect(pass.getByText(/^Look, don't/).first()).toBeVisible();
   await expect(pass.getByText(/^Made .+ by gemma-4-31B-it \(open model, Apache-2\.0\)/)).toBeVisible();
-  await expect(pass.getByText(/Lucky Finds: not available yet/)).toBeVisible();
+  // S6: Lucky Finds are either on the pass (a "Lucky Finds" section) or the grown-up's part says why not.
+  await expect(pass.getByText(/Lucky Finds/).first()).toBeVisible();
   await expect(page.getByRole("button", { name: "Make a different pass" })).toBeVisible();
 
   // Print comes first on the page (R1: top of the page on a phone).

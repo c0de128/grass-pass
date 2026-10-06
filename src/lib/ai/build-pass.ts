@@ -22,6 +22,7 @@ import {
   type PassStep,
 } from "@/lib/pass/schema";
 import { parkPool } from "@/lib/pool/park";
+import { LUCKY_COPY, loadLucky, type LuckyResult } from "@/lib/pool/lucky";
 import type { PoolItem, Section, SectionState } from "@/lib/pool/types";
 import { monthOfDay } from "@/lib/pool/season";
 import { plantCandidateIds, WILD_DOWN_COPY, wildCandidates, wildPool, type WildSeasonInput } from "@/lib/pool/wild";
@@ -316,10 +317,28 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     onUpstream: data.onUpstream,
   });
 
+  // S6 Lucky Finds (SerpApi), alongside the wildlife step. Its own deadline, NOT the client-gone signal:
+  // a search that was sent is paid for, so it finishes and its counts are cached (never throws).
+  const luckyDeadline = createDeadline(left() - MODEL_MIN_LEFT_MS);
+  const luckyLoad: Promise<LuckyResult> = loadLucky(f.park, f, {
+    store: data.store,
+    env: data.env,
+    now: data.now,
+    fetchImpl: data.fetchImpl,
+    signal: luckyDeadline.signal,
+    onUpstream: data.onUpstream,
+  })
+    .catch((err: unknown): LuckyResult => {
+      log("lucky_failed", { park: f.park.id, kind: err instanceof Error ? err.name : "unknown" }, "error");
+      return { items: [], state: { status: "unavailable", message: LUCKY_COPY.down }, checkedAt: null, searches: 0 };
+    })
+    .finally(() => luckyDeadline.clear());
+
   deps.emit("wildlife", stepText("wildlife", deps.env));
   const wild = await loadWild(f, data);
   const park = parkPool(f);
-  const lucky: SectionState = { status: "off", message: PASS_COPY.luckyOff };
+  const luckyResult = await luckyLoad;
+  const lucky: SectionState = luckyResult.state;
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
   // R2-M2: the optional map wait is cut short once the pass has used SPOT_STAGE_END_MS (slow features step).
@@ -327,7 +346,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const spotPlan: SpotPlan = planSpot(await geometryWithin(geometry, geoWait), { parkName: f.park.name, features: f, variant: input.variant });
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
-  const fullPool = poolForSpot([...park.items, ...wild.items], target, band);
+  const basePool = poolForSpot([...park.items, ...wild.items], target, band);
+  // Lucky Finds are "maybe" extras: they never make a pass on their own (the park + wild pool must fill one).
+  const fullPool = mixFor(basePool, band) ? [...basePool, ...luckyResult.items] : basePool;
   const plan = planRequest(fullPool, band, f.park.name);
   if (!plan) {
     const bothEmpty = park.state.status === "empty" && wild.state.status === "empty";
@@ -493,6 +514,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     dataCheckedAt: {
       osm: new Date(fr.at).toISOString(),
       inat: wild.checkedAt === null ? null : new Date(wild.checkedAt).toISOString(),
+      ...(luckyResult.checkedAt ? { lucky: luckyResult.checkedAt } : {}),
     },
     wildSince: wild.since,
     ...(wild.seasonUnknown ? { seasonUnknown: true } : {}),

@@ -1,4 +1,5 @@
 import { readFileSync } from "node:fs";
+import { LUCKY_COPY } from "@/lib/pool/lucky";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OctoberBox } from "@/components/pass/OctoberBox";
@@ -12,7 +13,7 @@ import { setLogSink } from "@/lib/log";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { BUILT_WITH_LLAMA, WIKIPEDIA_CREDIT, formatTime, isLlamaModel } from "@/lib/pass/format";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
-import { PASS_COPY, type Pass } from "@/lib/pass/schema";
+import type { Pass } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { PARKS, passReplay } from "./support/pass-replay";
 
@@ -173,8 +174,8 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain(`Clues: gemma-4-31B-it (open model, Apache-2.0), made ${formatTime(pass.generatedAt)}. Code wrote every number and date.`);
     expect(t).toContain(`Made with Grass Pass · ${URL_TEXT}`);
     expect(t).toContain(`Keep this part. ${pass.parentNote}`);
-    // Lucky Finds isn't connected in the recordings: the stub says so instead of hiding it.
-    expect(t).toContain(PASS_COPY.luckyOff);
+    // Lucky Finds isn't connected in these tests (no SerpApi key): the stub says so instead of hiding it.
+    expect(t).toContain(LUCKY_COPY.notConnected);
   });
 
   it("Celebration: the exact empty Wild Finds copy goes under 'Not on this pass'; no safety footnote when nothing was filtered", async () => {

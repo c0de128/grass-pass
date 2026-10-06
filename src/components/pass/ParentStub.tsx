@@ -141,6 +141,9 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
             ) : wiki ? (
               <li>{WIKIPEDIA_CREDIT}</li>
             ) : null}
+            {pass.dataCheckedAt.lucky ? (
+              <li>Lucky Finds: counts of Google reviews via SerpApi (no review text), checked {formatTime(pass.dataCheckedAt.lucky)}.</li>
+            ) : null}
             <li>
               Clues: {pass.model.answered} ({licence ? `open model, ${licence}` : "open model"}), made {formatTime(pass.generatedAt)}. Code
               wrote every number and date.

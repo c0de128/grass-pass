@@ -37,6 +37,9 @@ const SECTION_ONE: Record<SectionId, string> = {
   lucky: SECTION_LABELS.lucky.replace(/s$/, ""),
 };
 
+/** S6: printed before a Lucky Find's clue, so the kid knows it may not be there today. */
+export const LUCKY_MAYBE = "Maybe!";
+
 /** Fixed kid safety line printed on every pass (ADR 0003). */
 export const KID_STAY_CLOSE = "Stay where your grown-up can see you.";
 
@@ -49,7 +52,8 @@ export function estimatedLines(items: readonly PassItem[]): number {
   return items.reduce((n, it) => {
     // The evidence is small print (8.5 pt) on the hint line: about 0.8 of a hint character each.
     const hint = (it.lookWhere ? it.lookWhere.length + 8 : 0) + (it.safety?.length ?? 0) + Math.ceil((it.evidence.length + 2) * 0.8);
-    return n + Math.ceil(it.clue.length / CLUE_CHARS_PER_LINE) + Math.ceil(hint / HINT_CHARS_PER_LINE);
+    const clue = it.clue.length + (it.section === "lucky" ? LUCKY_MAYBE.length + 1 : 0);
+    return n + Math.ceil(clue / CLUE_CHARS_PER_LINE) + Math.ceil(hint / HINT_CHARS_PER_LINE);
   }, 0);
 }
 
@@ -143,6 +147,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
                       <span className="sr-only">
                         Find {i + 1}, {SECTION_ONE[it.section]}:{" "}
                       </span>
+                      {it.section === "lucky" ? <span className="gp-maybe">{LUCKY_MAYBE} </span> : null}
                       {it.clue}
                     </p>
                     <p className="gp-hint">

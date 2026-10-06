@@ -7,6 +7,7 @@ import { planRequest, refillPlan, type RequestPlan } from "@/lib/ai/prompt";
 import { countProblem, isGrounded, nameLeak, ngrams, validateDraft, type DropReason, type ValidItem } from "@/lib/ai/validate";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
+import { LUCKY_EVIDENCE_RE, LUCKY_KEYWORDS, LUCKY_SOURCE, MIN_MENTIONS } from "@/lib/pool/lucky";
 import type { CaseData } from "./fixture";
 
 // ---------- prices (USD per 1M tokens, DigitalOcean serverless pricing page, ADR 0001, 2026-10-05) ----------
@@ -223,6 +224,30 @@ export function honestEmptyChecks(run: RunRecord, ctx: CaseContext): { checked: 
   return { checked, ok, problems };
 }
 
+/**
+ * S6 Lucky Finds grounding: every printed Lucky Find must come from a Lucky Finds pool item whose
+ * code-written evidence counts at least MIN_MENTIONS recent reviews of ITS keyword. (The recorded eval
+ * cases have no SerpApi data, so today this checks 0 items; it guards future runs with Lucky Finds.)
+ */
+export function luckyGrounding(run: RunRecord, ctx: CaseContext): { printed: number; problems: string[] } {
+  const problems: string[] = [];
+  let printed = 0;
+  for (const it of run.items) {
+    if (it.section !== "lucky") continue;
+    printed++;
+    const p = poolItemFor(it, ctx);
+    if (!p || p.source !== LUCKY_SOURCE || !p.id.startsWith("lucky-")) {
+      problems.push(`${it.answer}: not a Lucky Finds pool item`);
+      continue;
+    }
+    const m = LUCKY_EVIDENCE_RE.exec(p.evidence);
+    const kw = LUCKY_KEYWORDS[p.id.slice("lucky-".length) as keyof typeof LUCKY_KEYWORDS];
+    if (!m || !kw || m[3] !== kw.plural) problems.push(`${it.answer}: evidence "${p.evidence}" does not count its own keyword`);
+    else if (Number(m[2]) < MIN_MENTIONS) problems.push(`${it.answer}: only ${m[2]} mentions (needs ${MIN_MENTIONS})`);
+  }
+  return { printed, problems };
+}
+
 /** M3: a data-rich case whose pass has at least n-1 valid items. */
 export function isComplete(run: RunRecord): boolean {
   return run.kind === "pass" && run.n !== null && run.items.length >= run.n - 1;
@@ -374,6 +399,8 @@ export type ModelScore = {
   m10: Repetition & { pass: boolean | null };
   m11: { printedWrong: number; printedCountClues: number; rawWrong: number; returned: number; details: string[]; pass: boolean | null };
   retries: number;
+  /** S6: printed Lucky Finds and any that are not backed by >= MIN_MENTIONS counted reviews of their keyword (must be none). */
+  lucky: { printed: number; problems: string[]; pass: boolean };
   /** Why the checks dropped model items (replayed with the app's validateDraft): all runs, and the data-rich runs that ended incomplete (M3 misses). */
   drops?: { all: DropCounts; incomplete: DropCounts; byRun: { caseN: number; run: number; kept: number; n: number | null; drops: DropCounts }[] };
 };
@@ -395,6 +422,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
   let honestChecked = 0;
   const honestProblems: string[] = [];
   const counts = { printedWrong: 0, printedCountClues: 0, rawWrong: 0, details: [] as string[] };
+  const lucky = { printed: 0, problems: [] as string[] };
   const drops: NonNullable<ModelScore["drops"]> = { all: {}, incomplete: {}, byRun: [] };
   for (const r of done) {
     const ctx = contexts.get(r.caseN);
@@ -420,6 +448,9 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     counts.printedCountClues += cc.printedCountClues;
     counts.rawWrong += cc.rawWrong;
     counts.details.push(...cc.details.map((d) => `case ${r.caseN} run ${r.run}: ${d}`));
+    const lg = luckyGrounding(r, ctx);
+    lucky.printed += lg.printed;
+    lucky.problems.push(...lg.problems.map((p) => `case ${r.caseN} run ${r.run}: ${p}`));
   }
   const rep10 = crossParkRepetition(done, model);
 
@@ -469,6 +500,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     m10: { ...rep10, pass: rep10.rate === null ? null : rep10.rate <= THRESHOLDS.m10 },
     m11: { ...counts, returned, pass: done.some((r) => r.kind === "pass") ? counts.printedWrong <= THRESHOLDS.m11 : null },
     retries: done.filter((r) => r.calls.length > 1).length,
+    lucky: { ...lucky, pass: lucky.problems.length === 0 },
     ...(usesModel ? { drops } : {}),
   };
 }

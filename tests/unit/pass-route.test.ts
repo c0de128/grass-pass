@@ -1,4 +1,5 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { LUCKY_COPY } from "@/lib/pool/lucky";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { MemoryStore, resetStores, StoreError } from "@/lib/cache/store";
 import { WaiterAbortedError } from "@/lib/cache";
@@ -129,7 +130,7 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
-    expect(p.sections.lucky).toEqual({ status: "off", message: PASS_COPY.luckyOff });
+    expect(p.sections.lucky).toEqual({ status: "off", message: LUCKY_COPY.notConnected });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
     expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild"]);
     // R2-M5: the grown-up's line is code-written from these items. In this answer the only easy find that stays

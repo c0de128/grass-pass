@@ -1,5 +1,6 @@
 import { Chip, SECTION_LABELS } from "@/components/ui/Chip";
 import { TicketCard } from "@/components/ui/TicketCard";
+import { LUCKY_MAYBE } from "./KidPass";
 import { OctoberBox } from "./OctoberBox";
 import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
@@ -52,6 +53,9 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
               <h2 id={`sec-${s}`} className="text-xl">
                 <Chip kind={s} />
               </h2>
+              {s === "lucky" && items.length > 0 ? (
+                <p className="text-base">Maybe finds: they come and go, so it&apos;s fine to miss them. Visitors&apos; Google reviews say people see them here.</p>
+              ) : null}
               {items.length > 0 ? (
                 <ol className="flex flex-col gap-3">
                   {items.map((it) => (
@@ -60,6 +64,7 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
                       <div className="flex flex-col gap-0.5">
                         <p className="text-lg font-semibold">
                           <span className="sr-only">Find {numbered.get(it)}: </span>
+                          {it.section === "lucky" ? <span>{LUCKY_MAYBE} </span> : null}
                           {it.clue}
                         </p>
                         {it.lookWhere ? <p className="text-base">Look: {it.lookWhere}</p> : null}
@@ -166,6 +171,12 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
           </li>
         ) : null}
         {pass.items.some((it) => it.section === "wild") ? <li>{WIKIPEDIA_CREDIT}</li> : null}
+        {pass.dataCheckedAt.lucky ? (
+          <li>
+            Visitor reviews checked {formatTime(pass.dataCheckedAt.lucky)} (Google reviews via SerpApi). We only count reviews that mention a
+            Lucky Find in the last 2 years; review text is never shown or sent to the AI.
+          </li>
+        ) : null}
         <li>
           Clues by {pass.model.answered}, an open-weight model anyone can download and run. Our code picks what is safe and writes
           every number and date; the model only chooses from real park data and writes the words.

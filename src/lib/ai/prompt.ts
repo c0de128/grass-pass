@@ -21,8 +21,8 @@ export type Mix = {
   hardMin: number;
 };
 
-/** Each section gets at least this many when it has them (so a pass is a real mix). */
-const BASE_MIN: Record<Section, number> = { park: 2, wild: 2, lucky: 0 };
+/** Each section gets at least this many when it has them (so a pass is a real mix). S6: one Lucky Find when the pool has one. */
+const BASE_MIN: Record<Section, number> = { park: 2, wild: 2, lucky: 1 };
 /** Lucky Finds are uncertain ("maybe you'll spot a dog"): never more than 2. */
 const LUCKY_MAX = 2;
 const SECTIONS: Section[] = ["park", "wild", "lucky"];
@@ -364,6 +364,10 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
     ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
+    // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.
+    ...(mix.max.lucky > 0
+      ? ['- Lucky Finds (section "lucky") come and go: the clue must say the child MIGHT see it today, and describe how it looks, sounds or moves from its SOURCE.']
+      : []),
     ...(mix.max.wild > 0 ? [`- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals. Bad: ${bad(0)}, ${bad(1)}.`] : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
     ...(month && ctx?.hasSeasonNotes

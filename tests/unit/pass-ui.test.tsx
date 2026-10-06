@@ -1,4 +1,5 @@
 import { renderToStaticMarkup } from "react-dom/server";
+import { LUCKY_COPY } from "@/lib/pool/lucky";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { ParkDataList, ProgressSteps, SectionNotes } from "@/components/pass/PassStatus";
@@ -7,7 +8,6 @@ import { setLogSink } from "@/lib/log";
 import { formatDay, formatTime, modelLicence } from "@/lib/pass/format";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
 import type { Pass } from "@/lib/pass/schema";
-import { PASS_COPY } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { PARKS, passReplay } from "./support/pass-replay";
 
@@ -43,10 +43,10 @@ describe("PassPreview (screen pass)", () => {
     expect(html).toContain('<h1 id="pass-title"');
     expect(t).toContain("Celebration Park");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
-    expect(t).toContain(PASS_COPY.luckyOff);
+    expect(t).toContain(LUCKY_COPY.notConnected);
     // R1-m10: the switched-off Lucky Finds section is not on the kid's side; only the grown-up's stub says so, once.
     expect(html).not.toContain('id="sec-lucky"');
-    expect(t.split(PASS_COPY.luckyOff)).toHaveLength(2);
+    expect(t.split(LUCKY_COPY.notConnected)).toHaveLength(2);
     expect((t.match(/on the park map · OpenStreetMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
     expect(t).toContain(`Made ${formatTime(pass.generatedAt)} by gemma-4-31B-it (open model, Apache-2.0)`);
     expect(t).not.toContain("reused for this park today");
@@ -95,7 +95,7 @@ describe("status pieces", () => {
     const t = text(
       renderToStaticMarkup(
         <>
-          <SectionNotes sections={{ park: { status: "ok" }, wild: { status: "unavailable", message: "No data available: iNaturalist didn't answer." }, lucky: { status: "off", message: PASS_COPY.luckyOff } }} />
+          <SectionNotes sections={{ park: { status: "ok" }, wild: { status: "unavailable", message: "No data available: iNaturalist didn't answer." }, lucky: { status: "off", message: LUCKY_COPY.notConnected } }} />
           <ParkDataList data={{ parkName: "X Park", items: [{ section: "park", answer: "Bench", evidence: "1 on the park map · OpenStreetMap" }] }} />
         </>,
       ),

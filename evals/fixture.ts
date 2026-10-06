@@ -254,6 +254,9 @@ export function taxaSubsetBody(fx: EvalFixture, url: string): Record<string, unk
  * iNaturalist GETs by exact URL, and taxa requests for a subset of the recorded ids (see
  * taxaSubsetBody). Anything else throws like a network error and is listed in `misses`.
  */
+/** Thrown (not listed as a miss) for the Find This Spot geometry query, which the eval fixtures don't hold. */
+export const GEOMETRY_NOT_RECORDED = "Find This Spot geometry is not in the eval fixtures";
+
 export function createReplayFetch(fx: EvalFixture): Replay {
   const misses: string[] = [];
   const state = { served: 0 };
@@ -265,6 +268,12 @@ export function createReplayFetch(fx: EvalFixture): Replay {
     let hit: Exchange | undefined;
     if (method === "POST") {
       const q = overpassQueryOf(typeof init?.body === "string" ? init.body : null);
+      if (q !== null && q.includes("out geom")) {
+        // Find This Spot (S5) geometry was not part of the 2026-10-05 recordings. The app treats a failed
+        // geometry query as "no map today" and the prompt then has no SPOT, exactly like the S9 run, so
+        // this is not a miss: the eval measures the clue pass without Find This Spot (stated in the report).
+        throw new TypeError(`${GEOMETRY_NOT_RECORDED}: POST ${input}`);
+      }
       hit = fx.exchanges.find((e) => e.method === "POST" && e.query === q);
     } else {
       hit = fx.exchanges.find((e) => e.method === "GET" && e.url === input);

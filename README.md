@@ -85,36 +85,45 @@ Slice S3, the pass on screen:
 
 ## Evals
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
-with the real pass builder: [`evals/results/2026-10-05.md`](evals/results/2026-10-05.md) (what failed and why:
-[`2026-10-05-notes.md`](evals/results/2026-10-05-notes.md)). No closed model was run (open models only).
+with the real pass builder. Current numbers: [`evals/results/2026-10-05-2.md`](evals/results/2026-10-05-2.md)
+(what changed and why: [`2026-10-05-2-notes.md`](evals/results/2026-10-05-2-notes.md)). The first run,
+[`2026-10-05.md`](evals/results/2026-10-05.md), is kept for comparison. No closed model was run (open models only).
+Find This Spot is not in the eval (its map data was not recorded for these parks).
 
-| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template |
-|---|---|---|---|
-| Blocked taxa printed | 0 | 0 | 0 |
-| Clues quoting their source word for word | 99.2% | 97.4% | 100% (by construction) |
-| Passes with >= n-1 items (target 90%) | 64.7% | 58.8% | 100% |
-| Reading level, FK grade median (target <= 3.5) | 2.3 | 2.3 | 5.9 |
-| Name leaks before the filter (target <= 5%) | 17.5% | 9.4% | 0% |
-| Model call p50 / p95 (target 10 s / 20 s) | 13.8 s / 24.3 s | 28.8 s / 60 s (4 timeouts) | none |
-| Cost per pass | $0.00086 | $0.00098 | $0 |
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, first run |
+|---|---|---|---|---|
+| Blocked taxa printed | 0 | 0 | 0 | 0 |
+| Clues quoting their source word for word (target 85%) | 91.6% | 92.8% | 100% (by construction) | 99.2% |
+| Passes with >= n-1 items (target 90%) | 86.3% | 64.7% | 100% | 64.7% |
+| Reading level, FK grade median (target <= 3.5) | 2.1 | 2.4 | 5.9 | 2.3 |
+| Name leaks before the filter (target <= 5%) | 4.9% | 8.8% | 0% | 17.5% |
+| Model call p50 / p95 (target 10 s / 20 s) | 10.7 s / 17.1 s | 47.4 s / 60 s (2 timeouts) | none | 13.8 s / 24.3 s |
+| Cost per pass | $0.00062 | $0.00084 | $0 | $0.00086 |
 
 ## Why open
 The clue writer is an open-weight model: `gemma-4-31B-it` (Gemma 4, Apache-2.0) on DigitalOcean serverless
 inference by default. Measured in the eval above (same parks, same checks for every column):
-- **It makes the words kid-sized:** Gemma's clues read at FK grade 2.3 (median); the no-AI template on the same data
+- **It makes the words kid-sized:** Gemma's clues read at FK grade 2.1 (median); the no-AI template on the same data
   reads at 5.9.
-- **It sticks to the facts:** 99.2% of its clues quoted their source word for word before any filter; 0 blocked
-  species printed in 60 runs.
-- **It is cheap enough for a classroom:** about $0.00086 per pass at DigitalOcean list prices.
+- **It sticks to the facts:** 91.6% of its clues quoted their source word for word before any filter (the rest are
+  dropped by code); 0 blocked species printed in 60 runs.
+- **It is cheap enough for a classroom:** about $0.00062 per pass at DigitalOcean list prices.
 - **The safety rules live in our code, not a vendor's:** the same checks run on any model, and switching is one
   setting (`MODEL_ID`); Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
   server, e.g. Ollama. A self-hosted run has **not** been measured for this app yet.
 
 No closed model was compared (open models only; the closed models on our DigitalOcean tier answered 403 on Oct 5).
-What did not pass yet: complete passes 64.7% (target 90%), name leaks before the filter 17.5% (target 5%), model
-time 13.8 s p50 / 24.3 s p95 (target 10 s / 20 s), and the human kid check is not done. The app's `/about` page shows
-the same numbers (`src/lib/about/eval-summary.ts`, checked against the results JSON by a unit test).
+What did not pass yet: complete passes 86.3% (target 90%), model time 10.7 s p50 (target 10 s; p95 17.1 s passes),
+and the human kid check is not done. In 3 of 56 Gemma answers (all for one park) every quote had stray text
+appended, so those clues were dropped. The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`, checked against the
+results JSON by a unit test).
+
+### Example parks (pre-warmed)
+The home page links real passes for four example parks (Connemara Meadow Preserve, Celebration Park, Arbor Hills
+Nature Preserve, White Rock Lake Park), made by the normal pass builder from live data when the server starts and
+refreshed once a day in the background (stale-while-revalidate, global caps only, never charged to a visitor). Each
+link shows the real time its pass was made; an example without a pass says why. `PREWARM_EXAMPLES=0` turns it off.
 
 ## Privacy
 No accounts, no names, no photos, no cookies, no analytics. Nothing about the child is asked for or sent. What does

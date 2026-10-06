@@ -199,6 +199,14 @@ export default function AboutPage() {
             next to the same days last year) and whether milkweed has been seen near the park.
           </li>
           <li>
+            <strong>Code draws a Find This Spot map.</strong> Code picks one real place inside the park from OpenStreetMap: a
+            landmark the park has only one of (a picnic shelter, a playground, a bridge), or else the middle of one sports
+            field. It marks that place with an X on a simple black-and-white map of the park&apos;s paths, with a START at
+            the nearest mapped parking lot or entrance, a north arrow and a scale. The walking distance and direction on
+            the parent stub are measured by code. A park with nothing to point at gets &quot;No Find This Spot today&quot;
+            instead of a guess.
+          </li>
+          <li>
             <strong>Code decides what is safe.</strong> Dangerous species are removed by their iNaturalist taxon before the
             model sees the list, and checked again after. Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot;
             line written by code, not by the model.
@@ -216,9 +224,10 @@ export default function AboutPage() {
           <li>
             <strong>One call to an open model writes the clues.</strong> By default that is <code>gemma-4-31B-it</code>{" "}
             (Google&apos;s Gemma 4, open weights, Apache-2.0) on DigitalOcean serverless inference. It picks items from the
-            list by id and writes a short clue for each. Code then checks every clue: its quote must appear word for word in
-            that item&apos;s source, it must not name the answer, it must not add numbers or links. Clues that fail are
-            dropped. Every number and date on a pass is written by code. Each pass names the model that actually answered.
+            list by id, writes a short clue for each and a riddle for the X on the map. Code then checks every clue: its
+            quote must appear word for word in that item&apos;s source, it must not name the answer, it must not add numbers
+            or links. Clues that fail are dropped (a &quot;look where&quot; hint that names the answer is left off). Every
+            number and date on a pass is written by code. Each pass names the model that actually answered.
           </li>
           <li>
             <strong>You print it.</strong> Kid pass on top, a dashed tear line, and a parent stub below with the answers,
@@ -269,19 +278,24 @@ export default function AboutPage() {
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
             <strong>Complete passes: {pct(gemma.completePct)}</strong> of Gemma passes kept at least n-1 items (target{" "}
-            {EVAL_THRESHOLDS.completePct}%). Almost every lost item was a clue dropped for naming its own answer. A pass with
-            fewer items still prints.
-          </li>
-          <li>
-            <strong>Name leaks: {pct(gemma.nameLeakPct)}</strong> of Gemma&apos;s clues or &quot;look where&quot; hints named
-            the answer before the filter ({pct(gemma.clueLeakPct)} in the clue itself; target {EVAL_THRESHOLDS.nameLeakPct}%).
-            The filter removes them before printing. Some removals were false alarms caused by small words such as
-            &quot;and&quot; or &quot;park&quot; in map names; that is a known bug we are fixing.
+            {EVAL_THRESHOLDS.completePct}%). Most lost items were clues that named their own answer or did not quote their
+            source exactly. A pass with fewer items still prints and says how many were left off.
           </li>
           <li>
             <strong>Speed: {secs(gemma.p50s)}</strong> typical and {secs(gemma.p95s)} slow-case per model call (target{" "}
-            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s). The page shows each step while it waits. Llama 4 Maverick
-            was slower ({secs(llama.p50s)} typical) and timed out in {llama.timeouts} of {llama.runs} runs.
+            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s): the typical time is still just over the target. Most of
+            the wait is the model writing its answer, not reading the park facts. The page shows each step while it waits,
+            and the example parks on the home page open a pass that was already made. Llama 4 Maverick was much
+            slower ({secs(llama.p50s)} typical) and timed out in {llama.timeouts} of {llama.runs} runs.
+          </li>
+          <li>
+            <strong>A model glitch we saw:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park, every quote had
+            extra text stuck on the end, so none of those quotes matched the source and those clues were dropped (two
+            passes for that park showed the error copy instead). That is part of the grounding number above ({pct(gemma.groundedPct)}).
+          </li>
+          <li>
+            <strong>Not in this test:</strong> the Find This Spot map and riddle (the map data was not recorded for the 20
+            test parks).
           </li>
           <li>
             <strong>Kid check not done yet.</strong> A grown-up reading 10 clues as a 7-year-old would is planned; it is not

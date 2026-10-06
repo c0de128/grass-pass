@@ -152,10 +152,12 @@ export function requestPoolIds(body: unknown): string[] | null {
 }
 
 function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[], meter: SpendMeter, model: string): FetchLike {
-  const poolIds = [...pool.map((p) => p.id)].sort().join("|");
+  // S8b: the app sends at most n + 4 items per section (promptPool), so the sent ids must be a SUBSET of
+  // the scoring pool (same ids, same source texts), not the whole pool.
+  const poolIds = new Set(pool.map((p) => p.id));
   return async (url, init) => {
     const ids = requestPoolIds(init?.body);
-    const poolMatches = ids === null ? null : [...ids].sort().join("|") === poolIds;
+    const poolMatches = ids === null ? null : ids.length > 0 && ids.every((id) => poolIds.has(id));
     const t0 = performance.now();
     try {
       const res = await fetch(url, init);
@@ -186,6 +188,9 @@ function capturingModelFetch(pool: readonly { id: string }[], calls: CallRecord[
 }
 
 // ---------- one model run on one case ----------
+
+/** Longer than the app's own 85 s pass deadline plus every model timeout: only a real hang reaches it. */
+export const CASE_GUARD_MS = 150_000;
 
 const PASS_ID_BAND: Record<AgeBand, string> = { "4-6": "4to6", "6-10": "6to10", "10-13": "10to13" };
 
@@ -233,8 +238,28 @@ export async function runModelCase(
   const base = { caseN: c.n, slug: c.slug, model: spec.id, run, n: data.mix?.n ?? null, dataRich: data.dataRich, calls };
   const ref = parseParkId(c.parkId);
   if (!ref) throw new Error(`bad park id ${c.parkId}`);
-  const outcome = await buildPass({ ref, band, day, variant: run, id: passIdFor(c.parkId, band, day, run) }, deps);
+  // Harness guard (S8b): the 2026-10-06 full run hung for 10+ minutes inside one Llama case with no CPU use.
+  // A case that outlives every app deadline is recorded as an error instead of stalling the whole eval.
+  let guardTimer: ReturnType<typeof setTimeout> | undefined;
+  const hung = new Promise<"hung">((resolve) => {
+    guardTimer = setTimeout(() => resolve("hung"), CASE_GUARD_MS);
+  });
+  const built = await Promise.race([buildPass({ ref, band, day, variant: run, id: passIdFor(c.parkId, band, day, run) }, deps), hung]);
+  clearTimeout(guardTimer);
   const wallMs = Math.round(performance.now() - t0);
+  if (built === "hung") {
+    return {
+      ...base,
+      parkName: data.parkName,
+      kind: "error",
+      errorCode: "EVAL_CASE_HUNG",
+      message: `No answer from the pass builder after ${CASE_GUARD_MS / 1000} s (model calls finished: ${calls.length}).`,
+      sections: {},
+      items: [],
+      wallMs,
+    };
+  }
+  const outcome = built;
   if (replay.misses.length > 0) {
     return { ...base, parkName: data.parkName, kind: "error", errorCode: "FIXTURE_MISS", message: replay.misses.join("; "), sections: {}, items: [], wallMs };
   }
@@ -333,6 +358,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
   const notes: string[] = [
     "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
     "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+    "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens).",
   ];
 
   // Silence the app's per-request JSON logs during the eval (they hold no secrets; the eval keeps its own records).

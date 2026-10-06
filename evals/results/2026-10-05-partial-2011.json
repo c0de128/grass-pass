@@ -1,0 +1,476 @@
+{
+ "meta": {
+  "startedAt": "2026-10-06T01:11:01.888Z",
+  "finishedAt": "2026-10-06T01:12:09.718Z",
+  "day": "2026-10-05",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    1,
+    3,
+    13,
+    19
+   ],
+   "budgetUsd": 0.02
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": 30000,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 1,
+   "slug": "connemara-meadow-preserve",
+   "name": "Connemara Meadow Preserve",
+   "parkId": "way/306191453",
+   "note": "",
+   "fixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+   "fetchedAt": "2026-10-05T23:46:35.238Z",
+   "pool": {
+    "park": 1,
+    "wild": 16
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "name": "Arbor Hills Nature Preserve",
+   "parkId": "way/38113837",
+   "note": "",
+   "fixture": "tests/fixtures/evals/arbor-hills-nature-preserve.json",
+   "fetchedAt": "2026-10-05T23:47:26.795Z",
+   "pool": {
+    "park": 10,
+    "wild": 16
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 16
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 19,
+   "slug": "golden-gate-park",
+   "name": "Golden Gate Park",
+   "parkId": "way/158602261",
+   "note": "",
+   "fixture": "tests/fixtures/evals/golden-gate-park.json",
+   "fetchedAt": "2026-10-05T23:55:40.332Z",
+   "pool": {
+    "park": 30,
+    "wild": 16
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":13316,"status":200,"error":null,"poolMatches":false,"promptTokens":1649,"completionTokens":587,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a narrow line of moving water.","difficulty":"easy","itemId":"osm-creek","lookWhere":"by the muddy bank","section":"park","sourceQuote":"narrow line of moving water with a muddy or rocky bank"},{"clue":"Look for a bumpy, yellow-green ball on a tree.","difficulty":"medium","itemId":"inat-58205","lookWhere":"near a large shrub","section":"wild","sourceQuote":"spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter"},{"clue":"Find a tree with thick, corky lumps and spines on the bark.","difficulty":"hard","itemId":"inat-119986","lookWhere":"on a spiny trunk","section":"wild","sourceQuote":"distinctive spined thick, corky lumps 2–3 cm long on the bark"},{"clue":"Look for bright-orange spots with tiny spines around the rim.","difficulty":"hard","itemId":"inat-55553","lookWhere":"on a branch","section":"wild","sourceQuote":"bright-orange with spiny projections (cilia) situated around the rim"},{"clue":"Search for a small land animal with a shell.","difficulty":"medium","itemId":"inat-126257","lookWhere":"on the ground","section":"wild","sourceQuote":"species of land snail with an operculum"},{"clue":"Find a tree with glossy dark green leaves.","difficulty":"easy","itemId":"inat-119793","lookWhere":"under a rounded crown","section":"wild","sourceQuote":"leaves are oval, 4 to 8 cm (1.6 to 3.1 in) long, glossy dark green"},{"clue":"Look for a bright yellow flower.","difficulty":"easy","itemId":"inat-51450","lookWhere":"among the wild plants","section":"wild","sourceQuote":"the yellow passionflower, is a flowering plant"},{"clue":"Find a plant that climbs up other things.","difficulty":"medium","itemId":"inat-62944","lookWhere":"near a river","section":"wild","sourceQuote":"a climbing plant widely distributed"}]}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a narrow line of moving water.","lookWhere":"by the muddy bank","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"Look for a bumpy, yellow-green ball on a tree.","lookWhere":"near a large shrub","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"Find a tree with thick, corky lumps and spines on the bark.","lookWhere":"on a spiny trunk","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"Look for bright-orange spots with tiny spines around the rim.","lookWhere":"on a branch","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"Search for a small land animal with a shell.","lookWhere":"on the ground","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"wild","clue":"Find a tree with glossy dark green leaves.","lookWhere":"under a rounded crown","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"Look for a bright yellow flower.","lookWhere":"among the wild plants","answer":"Yellow passionflower (Passiflora lutea)"},
+    {"section":"wild","clue":"Find a plant that climbs up other things.","lookWhere":"near a river","answer":"Lesser Balloon Vine (Cardiospermum halicacabum)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 0
+   },
+   "wallMs": 14368
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12455,"status":200,"error":null,"poolMatches":false,"promptTokens":2103,"completionTokens":534,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a place with things to climb, slide and swing on!","difficulty":"easy","itemId":"osm-playground","lookWhere":"on the map","section":"park","sourceQuote":"a place with things to climb, slide and swing on"},{"clue":"Look for a long outdoor seat for resting.","difficulty":"easy","itemId":"osm-bench","lookWhere":"along the path","section":"park","sourceQuote":"a long outdoor seat for resting"},{"clue":"Find a roof on posts with tables underneath.","difficulty":"medium","itemId":"osm-shelter","lookWhere":"near the eating area","section":"park","sourceQuote":"a roof on posts and tables underneath"},{"clue":"Can you find a narrow line of moving water?","difficulty":"medium","itemId":"osm-creek","lookWhere":"by the muddy bank","section":"park","sourceQuote":"a narrow line of moving water"},{"clue":"Find a spot with a good view across the park.","difficulty":"medium","itemId":"osm-viewpoint","lookWhere":"at a high point","section":"park","sourceQuote":"a spot with a good view across the park"},{"clue":"Look for a small plant with flowers in the aster family.","difficulty":"medium","itemId":"inat-120483","lookWhere":"in the grass","section":"wild","sourceQuote":"species of flowering plant in the aster family"},{"clue":"Search for a climbing plant in the buckthorn family.","difficulty":"hard","itemId":"inat-119960","lookWhere":"on other plants","section":"wild","sourceQuote":"species of climbing plant in the buckthorn family"},{"clue":"Find a spiny lizard from south central states.","difficulty":"hard","itemId":"inat-36202","lookWhere":"on a rock or log","section":"wild","sourceQuote":"species of phrynosomatid lizard native to the south central United States"}]}
+   ],
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a place with things to climb, slide and swing on!","lookWhere":"on the map","answer":"Playground"},
+    {"section":"park","clue":"Look for a long outdoor seat for resting.","lookWhere":"along the path","answer":"Benches"},
+    {"section":"park","clue":"Find a roof on posts with tables underneath.","lookWhere":"near the eating area","answer":"Picnic shelters"},
+    {"section":"park","clue":"Can you find a narrow line of moving water?","lookWhere":"by the muddy bank","answer":"Creek or stream"},
+    {"section":"park","clue":"Find a spot with a good view across the park.","lookWhere":"at a high point","answer":"Viewpoint"},
+    {"section":"wild","clue":"Look for a small plant with flowers in the aster family.","lookWhere":"in the grass","answer":"Small Palafox (Palafoxia callosa)"},
+    {"section":"wild","clue":"Search for a climbing plant in the buckthorn family.","lookWhere":"on other plants","answer":"Supplejack (Berchemia scandens)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 13483
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12848,"status":200,"error":null,"poolMatches":false,"promptTokens":2205,"completionTokens":537,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a place with things to climb and slide on!","difficulty":"easy","itemId":"osm-playground","lookWhere":"in a play area","section":"park","sourceQuote":"a place with things to climb, slide and swing on"},{"clue":"Look for a roof on posts with tables under it.","difficulty":"medium","itemId":"osm-shelter","lookWhere":"near a picnic spot","section":"park","sourceQuote":"a roof on posts and tables underneath"},{"clue":"Find a long outdoor seat for resting.","difficulty":"easy","itemId":"osm-bench","lookWhere":"along a path","section":"park","sourceQuote":"a long outdoor seat for resting"},{"clue":"Look for a metal box on a post used for cooking.","difficulty":"medium","itemId":"osm-bbq","lookWhere":"near the tables","section":"park","sourceQuote":"a metal box on a post where people cook food"},{"clue":"Find a bug with a chunky white body and checkered wings.","difficulty":"hard","itemId":"inat-84549","lookWhere":"near the water","section":"wild","sourceQuote":"male's chunky white body... give it a checkered look"},{"clue":"Look for a bug that is blue and flies fast.","difficulty":"medium","itemId":"inat-59774","lookWhere":"by the lake","section":"wild","sourceQuote":"The blue dasher... is a dragonfly"},{"clue":"Find a plant with bright red flowers.","difficulty":"hard","itemId":"inat-60210","lookWhere":"in a wet spot","section":"wild","sourceQuote":"flowering plant... known by several common names, including valley redstem"},{"clue":"Look for a tall tree with leaves.","difficulty":"easy","itemId":"inat-52119","lookWhere":"on the grass","section":"wild","sourceQuote":"eastern cottonwood or necklace poplar, is a cottonwood poplar"}]},
+    {"latencyMs":12721,"status":200,"error":null,"poolMatches":false,"promptTokens":2205,"completionTokens":517,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a long seat for resting.","difficulty":"easy","itemId":"osm-bench","lookWhere":"along the paths","section":"park","sourceQuote":"long outdoor seat for resting"},{"clue":"Look for a roof on posts with tables under it.","difficulty":"easy","itemId":"osm-shelter","lookWhere":"near the grassy areas","section":"park","sourceQuote":"roof on posts and tables underneath"},{"clue":"Find a place with things to climb, slide and swing on.","difficulty":"easy","itemId":"osm-playground","lookWhere":"in a play area","section":"park","sourceQuote":"place with things to climb, slide and swing on"},{"clue":"Look for a metal box on a post for cooking.","difficulty":"medium","itemId":"osm-bbq","lookWhere":"near a picnic spot","section":"park","sourceQuote":"metal box on a post where people cook food"},{"clue":"Find a bug with a chunky white body and checkered wings.","difficulty":"hard","itemId":"inat-84549","lookWhere":"by the water","section":"wild","sourceQuote":"chunky white body... give it a checkered look"},{"clue":"Look for a bright red flower.","difficulty":"medium","itemId":"inat-60210","lookWhere":"in wet soil","section":"wild","sourceQuote":"species of flowering plant... scarlet toothcup"},{"clue":"Find a bug that lives in still waters.","difficulty":"medium","itemId":"inat-61495","lookWhere":"near a pond","section":"wild","sourceQuote":"dragonfly of ponds and still waters"},{"clue":"Look for a tall tree native to North America.","difficulty":"easy","itemId":"inat-52119","lookWhere":"near the lake","section":"wild","sourceQuote":"cottonwood poplar native to North America"}]}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a long seat for resting.","lookWhere":"along the paths","answer":"Benches"},
+    {"section":"park","clue":"Look for a roof on posts with tables under it.","lookWhere":"near the grassy areas","answer":"Picnic shelters (Karen’s Gazebo, Jeanne’s Pavilion at the Shadow Garden)"},
+    {"section":"park","clue":"Find a place with things to climb, slide and swing on.","lookWhere":"in a play area","answer":"Playgrounds"},
+    {"section":"park","clue":"Look for a metal box on a post for cooking.","lookWhere":"near a picnic spot","answer":"Barbecue grills"},
+    {"section":"wild","clue":"Find a bug that lives in still waters.","lookWhere":"near a pond","answer":"Eastern Pondhawk (Erythemis simplicicollis)"},
+    {"section":"wild","clue":"Look for a tall tree native to North America.","lookWhere":"near the lake","answer":"Eastern Cottonwood (Populus deltoides)"}
+   ],
+   "removed": {
+    "notGrounded": 2,
+    "other": 0
+   },
+   "wallMs": 26602
+  },
+  {
+   "caseN": 19,
+   "slug": "golden-gate-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12061,"status":200,"error":null,"poolMatches":false,"promptTokens":2264,"completionTokens":531,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a big grass area with a net goal at each end.","difficulty":"easy","itemId":"osm-soccer","lookWhere":"on a big grassy field","section":"park","sourceQuote":"big grass field with a goal with a net at each end"},{"clue":"Look for a place with things to climb, slide and swing on!","difficulty":"easy","itemId":"osm-playground","lookWhere":"at a play area","section":"park","sourceQuote":"place with things to climb, slide and swing on"},{"clue":"Find a roof on posts with tables under it for lunch.","difficulty":"medium","itemId":"osm-shelter","lookWhere":"near the eating areas","section":"park","sourceQuote":"roof on posts and tables underneath where people eat lunch"},{"clue":"Can you spot a low box filled with sand for digging?","difficulty":"medium","itemId":"osm-sandbox","lookWhere":"in a play area","section":"park","sourceQuote":"low box filled with sand for digging"},{"clue":"Look for a slow animal with a shell on its back.","difficulty":"easy","itemId":"inat-480298","lookWhere":"on the ground","section":"wild","sourceQuote":"species of land snail"},{"clue":"Find a yellow and black bug that makes honey.","difficulty":"easy","itemId":"inat-47219","lookWhere":"on flowers","section":"wild","sourceQuote":"production of honey for the winter"},{"clue":"Find a shell animal that likes to swim and slide.","difficulty":"medium","itemId":"inat-39782","lookWhere":"near the water","section":"wild","sourceQuote":"semiaquatic turtle"},{"clue":"Look for a very large bird that stands in shallow water.","difficulty":"hard","itemId":"inat-4956","lookWhere":"near the shores of open water","section":"wild","sourceQuote":"large wading bird"}]}
+   ],
+   "parkName": "Golden Gate Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a big grass area with a net goal at each end.","lookWhere":"on a big grassy field","answer":"Soccer fields"},
+    {"section":"park","clue":"Look for a place with things to climb, slide and swing on!","lookWhere":"at a play area","answer":"Playgrounds (45th & Lincoln Blue Boat Playground, Beach Chalet Athletic Fields Playground, Mother's Meadow Playground)"},
+    {"section":"park","clue":"Find a roof on posts with tables under it for lunch.","lookWhere":"near the eating areas","answer":"Picnic shelters"},
+    {"section":"park","clue":"Can you spot a low box filled with sand for digging?","lookWhere":"in a play area","answer":"Sandbox"},
+    {"section":"wild","clue":"Look for a slow animal with a shell on its back.","lookWhere":"on the ground","answer":"Garden Snail (Cornu aspersum)"},
+    {"section":"wild","clue":"Find a shell animal that likes to swim and slide.","lookWhere":"near the water","answer":"Pond Slider (Trachemys scripta)"},
+    {"section":"wild","clue":"Look for a very large bird that stands in shallow water.","lookWhere":"near the shores of open water","answer":"Great Blue Heron (Ardea herodias)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 13111
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-creek","section":"park","clue":"A ____ is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","sourceQuote":"A creek is a narrow line of moving water with a muddy or rocky bank on each side.","difficulty":"medium"},{"itemId":"inat-135263","section":"wild","clue":"____ is a species of morning glory native to the southeastern United States, Mexico, and South America.","lookWhere":"","sourceQuote":"Ipomoea cordatotriloba is a species of morning glory native to the southeastern United States, Mexico, and South America.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","difficulty":"medium"},{"itemId":"inat-51450","section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","sourceQuote":"Passiflora lutea, the yellow passionflower, is a flowering plant in the family Passifloraceae, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and","difficulty":"medium"},{"itemId":"inat-55553","section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","sourceQuote":"Teloschistes chrysophthalmus, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-62944","section":"wild","clue":"____, known as the ____ plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical","lookWhere":"","sourceQuote":"Cardiospermum halicacabum, known as the balloon plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical Africa and Asia.","difficulty":"medium"},{"itemId":"inat-119793","section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","sourceQuote":"Pyrus calleryana, the Callery pear, is a species of pear native to China and Vietnam, in the family Rosaceae.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"____ is a species of morning glory native to the southeastern United States, Mexico, and South America.","lookWhere":"","answer":"Tievine (Ipomoea cordatotriloba)"},
+    {"section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","answer":"Yellow passionflower (Passiflora lutea)"},
+    {"section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"____, known as the ____ plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical","lookWhere":"","answer":"Lesser Balloon Vine (Cardiospermum halicacabum)"},
+    {"section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","answer":"Callery pear (Pyrus calleryana)"}
+   ]
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-playground","section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","sourceQuote":"A playground is a place with things to climb, slide and swing on.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"A ____ is a seat that hangs from chains or ropes and moves back and forth.","lookWhere":"","sourceQuote":"A swing is a seat that hangs from chains or ropes and moves back and forth.","difficulty":"medium"},{"itemId":"inat-5212","section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","sourceQuote":"The red-tailed hawk (Buteo jamaicensis) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern Canada to as far south as Panama and the West Indies.","difficulty":"medium"},{"itemId":"inat-120483","section":"wild","clue":"____, commonly known as the ____, is a species of flowering plant in the aster family.","lookWhere":"","sourceQuote":"Palafoxia callosa, commonly known as the small palafox, is a species of flowering plant in the aster family.","difficulty":"medium"},{"itemId":"inat-47219","section":"wild","clue":"The ____ or European ____ bee (____) is the most common of the 7–12 species of ____ bee worldwide.","lookWhere":"","sourceQuote":"The western honey bee or European honey bee (Apis mellifera) is the most common of the 7–12 species of honey bee worldwide.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"A picnic ____ has a roof on posts and tables underneath where people eat lunch.","lookWhere":"","sourceQuote":"A picnic shelter has a roof on posts and tables underneath where people eat lunch.","difficulty":"medium"},{"itemId":"inat-53720","section":"wild","clue":"____, commonly known by many names, including ____ tree, Pride of India, bead-tree, Cape lilac, syringa berrytree","lookWhere":"","sourceQuote":"Melia azedarach, commonly known by many names, including chinaberry tree, Pride of India, bead-tree, Cape lilac, syringa berrytree, Persian lilac, and Indian lilac, is a species of deciduous tree in the mahogany family, Meliaceae, that is","difficulty":"medium"},{"itemId":"osm-picnic-table","section":"park","clue":"A ____ is an outdoor table with benches attached.","lookWhere":"","sourceQuote":"A picnic table is an outdoor table with benches attached.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","answer":"Playground"},
+    {"section":"park","clue":"A ____ is a seat that hangs from chains or ropes and moves back and forth.","lookWhere":"","answer":"Swing"},
+    {"section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","answer":"Red-tailed Hawk (Buteo jamaicensis)"},
+    {"section":"wild","clue":"____, commonly known as the ____, is a species of flowering plant in the aster family.","lookWhere":"","answer":"Small Palafox (Palafoxia callosa)"},
+    {"section":"wild","clue":"The ____ or European ____ bee (____) is the most common of the 7–12 species of ____ bee worldwide.","lookWhere":"","answer":"Western Honey Bee (Apis mellifera)"},
+    {"section":"park","clue":"A picnic ____ has a roof on posts and tables underneath where people eat lunch.","lookWhere":"","answer":"Picnic shelters"},
+    {"section":"wild","clue":"____, commonly known by many names, including ____ tree, Pride of India, bead-tree, Cape lilac, syringa berrytree","lookWhere":"","answer":"Chinaberry (Melia azedarach)"},
+    {"section":"park","clue":"A ____ is an outdoor table with benches attached.","lookWhere":"","answer":"Picnic tables"}
+   ]
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"A ____ court is a flat court with a low net across the middle and a tall fence around it.","lookWhere":"","sourceQuote":"A tennis court is a flat court with a low net across the middle and a tall fence around it.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","sourceQuote":"A baseball field has a dirt diamond with bases and a tall fence behind home plate.","difficulty":"medium"},{"itemId":"inat-59774","section":"wild","clue":"The ____ (____) is a dragonfly of the skimmer family.","lookWhere":"","sourceQuote":"The blue dasher (Pachydiplax longipennis) is a dragonfly of the skimmer family.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-3959","section":"wild","clue":"The ____ (____) is a small wader.","lookWhere":"","sourceQuote":"The red-necked phalarope (Phalaropus lobatus) is a small wader.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","sourceQuote":"A playground is a place with things to climb, slide and swing on.","difficulty":"medium"},{"itemId":"inat-61495","section":"wild","clue":"____, the ____, also known as the common ____, is a dragonfly of the family Libellulidae, native to the eastern","lookWhere":"","sourceQuote":"Erythemis simplicicollis, the eastern pondhawk, also known as the common pondhawk, is a dragonfly of the family Libellulidae, native to the eastern two-thirds of the United States and southern Ontario and Quebec, Canada.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"A ____ is a seat that hangs from chains or ropes and moves back and forth.","lookWhere":"","sourceQuote":"A swing is a seat that hangs from chains or ropes and moves back and forth.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ court is a flat court with a low net across the middle and a tall fence around it.","lookWhere":"","answer":"Tennis court"},
+    {"section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"wild","clue":"The ____ (____) is a dragonfly of the skimmer family.","lookWhere":"","answer":"Blue Dasher (Pachydiplax longipennis)"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)"},
+    {"section":"wild","clue":"The ____ (____) is a small wader.","lookWhere":"","answer":"Red-necked Phalarope (Phalaropus lobatus)"},
+    {"section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"wild","clue":"____, the ____, also known as the common ____, is a dragonfly of the family Libellulidae, native to the eastern","lookWhere":"","answer":"Eastern Pondhawk (Erythemis simplicicollis)"},
+    {"section":"park","clue":"A ____ is a seat that hangs from chains or ropes and moves back and forth.","lookWhere":"","answer":"Swing"}
+   ]
+  },
+  {
+   "caseN": 19,
+   "slug": "golden-gate-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"A ____ ____ is a flat ____ with a low net across the middle and a tall fence around it.","lookWhere":"","sourceQuote":"A tennis court is a flat court with a low net across the middle and a tall fence around it.","difficulty":"medium"},{"itemId":"osm-pickleball","section":"park","clue":"A ____ court is a small flat court with a low net across the middle.","lookWhere":"","sourceQuote":"A pickleball court is a small flat court with a low net across the middle.","difficulty":"medium"},{"itemId":"inat-145308","section":"wild","clue":"The ____ (____) is a very small songbird of the Americas.","lookWhere":"","sourceQuote":"The lesser goldfinch (Spinus psaltria) is a very small songbird of the Americas.","difficulty":"medium"},{"itemId":"inat-4956","section":"wild","clue":"The ____ (____) is a large wading bird in the ____ family Ardeidae, common near the shores of open water and in wetlands","lookWhere":"","sourceQuote":"The great blue heron (Ardea herodias) is a large wading bird in the heron family Ardeidae, common near the shores of open water and in wetlands over most of North America and Central America, as well as the Caribbean and the Galápagos","difficulty":"medium"},{"itemId":"inat-8234","section":"wild","clue":"The ____ (____) is a ____ native to western North America, closely related to the blue ____ found in the rest of the","lookWhere":"","sourceQuote":"The Steller's jay (Cyanocitta stelleri) is a jay native to western North America, closely related to the blue jay found in the rest of the continent, but with a black head and upper body.","difficulty":"medium"},{"itemId":"osm-soccer","section":"park","clue":"A ____ field is a big grass field with a goal with a net at each end.","lookWhere":"","sourceQuote":"A soccer field is a big grass field with a goal with a net at each end.","difficulty":"medium"},{"itemId":"inat-480298","section":"wild","clue":"____, known by the common name ____, is a species of land snail.","lookWhere":"","sourceQuote":"Cornu aspersum, known by the common name garden snail, is a species of land snail.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","sourceQuote":"A baseball field has a dirt diamond with bases and a tall fence behind home plate.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Golden Gate Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ ____ is a flat ____ with a low net across the middle and a tall fence around it.","lookWhere":"","answer":"Tennis courts (Taube Family Championship Court, Taube Family Feature Court)"},
+    {"section":"park","clue":"A ____ court is a small flat court with a low net across the middle.","lookWhere":"","answer":"Pickleball courts"},
+    {"section":"wild","clue":"The ____ (____) is a very small songbird of the Americas.","lookWhere":"","answer":"Lesser Goldfinch (Spinus psaltria)"},
+    {"section":"wild","clue":"The ____ (____) is a large wading bird in the ____ family Ardeidae, common near the shores of open water and in wetlands","lookWhere":"","answer":"Great Blue Heron (Ardea herodias)"},
+    {"section":"wild","clue":"The ____ (____) is a ____ native to western North America, closely related to the blue ____ found in the rest of the","lookWhere":"","answer":"Steller's Jay (Cyanocitta stelleri)"},
+    {"section":"park","clue":"A ____ field is a big grass field with a goal with a net at each end.","lookWhere":"","answer":"Soccer fields"},
+    {"section":"wild","clue":"____, known by the common name ____, is a species of land snail.","lookWhere":"","answer":"Garden Snail (Cornu aspersum)"},
+    {"section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","answer":"Baseball field (Big Rec Baseball Diamonds)"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 4,
+   "passes": 4,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 35,
+    "returned": 40,
+    "rate": 0.875,
+    "pass": true
+   },
+   "m3": {
+    "complete": 3,
+    "dataRichRuns": 4,
+    "rate": 0.75,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.4700000000000024,
+    "clues": 28,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 2,
+    "clueLeaks": 2,
+    "returned": 40,
+    "rate": 0.05,
+    "clueRate": 0.05,
+    "pass": true
+   },
+   "m7": {
+    "calls": 5,
+    "p50Ms": 12721,
+    "p95Ms": 13222.4,
+    "passP50": false,
+    "passP95": true,
+    "perPassP50Ms": 12885.5
+   },
+   "m8": {
+    "costPerPass": 0.00080742,
+    "totalUsd": 0.00322968,
+    "promptTokens": 10426,
+    "completionTokens": 2706,
+    "pass": true
+   },
+   "retries": 1
+  },
+  {
+   "model": "no-AI template",
+   "runs": 4,
+   "passes": 4,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 32,
+    "returned": 32,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 4,
+    "dataRichRuns": 4,
+    "rate": 1,
+    "pass": true
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 6.2930718954248395,
+    "clues": 32,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 32,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 4,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "retries": 0
+  }
+ ],
+ "spend": {
+  "usd": 0.00322968,
+  "modelCalls": 5,
+  "promptTokens": 10426,
+  "completionTokens": 2706
+ }
+}

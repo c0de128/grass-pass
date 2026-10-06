@@ -1,0 +1,528 @@
+{
+ "meta": {
+  "startedAt": "2026-10-05T23:52:49.321Z",
+  "finishedAt": "2026-10-05T23:53:26.030Z",
+  "day": "2026-10-05",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it",
+    "llama-4-maverick"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1,
+    "llama-4-maverick": 1
+   },
+   "cases": [
+    1,
+    2,
+    20
+   ],
+   "budgetUsd": 1
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": 30000,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   },
+   {
+    "id": "llama-4-maverick",
+    "runs": 1,
+    "timeoutMs": 60000,
+    "licence": "Llama 4 Community Licence",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference."
+  ]
+ },
+ "cases": [
+  {
+   "n": 1,
+   "slug": "connemara-meadow-preserve",
+   "name": "Connemara Meadow Preserve",
+   "parkId": "way/306191453",
+   "note": "",
+   "fixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+   "fetchedAt": "2026-10-05T23:46:35.238Z",
+   "pool": {
+    "park": 1,
+    "wild": 16
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 2,
+   "slug": "celebration-park",
+   "name": "Celebration Park",
+   "parkId": "way/188145317",
+   "note": "",
+   "fixture": "tests/fixtures/evals/celebration-park.json",
+   "fetchedAt": "2026-10-05T23:44:55.234Z",
+   "pool": {
+    "park": 11,
+    "wild": 0
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 20,
+   "slug": "orchards-park",
+   "name": "Orchards Park",
+   "parkId": "way/517747125",
+   "note": "SPEC asked for < 3 OSM features and 0 iNat. Checked live 2026-10-05: Country Meadows Park (0 species, but a playground and picnic tables mapped), Greenville Hights (0 species, 3 feature kinds), Monarch Park (0 features, 3 species), Reed Park West (4 feature kinds). Orchards Park has 1 mapped kind (playground) and 1 research-grade species within 1.5 km, which is the closest real match and still takes the no-data path (too little for a pass, no model call).",
+   "fixture": "tests/fixtures/evals/orchards-park.json",
+   "fetchedAt": "2026-10-05T23:45:56.318Z",
+   "pool": {
+    "park": 1,
+    "wild": 0
+   },
+   "n_items": null,
+   "dataRich": false,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":17887,"status":200,"error":null,"poolMatches":true,"promptTokens":2307,"completionTokens":673,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a narrow line of moving water with a muddy or rocky bank.","difficulty":"easy","itemId":"osm-creek","lookWhere":"on the map","section":"park","sourceQuote":"A creek is a narrow line of moving water with a muddy or rocky bank on each side."},{"clue":"Look for a tree with bumpy, yellow-green balls in the fall.","difficulty":"medium","itemId":"inat-58205","lookWhere":"near the trees","section":"wild","sourceQuote":"roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green in the fall."},{"clue":"Can you find a tree with thick, corky lumps on the bark?","difficulty":"hard","itemId":"inat-119986","lookWhere":"on the tree trunks","section":"wild","sourceQuote":"has distinctive spined thick, corky lumps 2–3 cm long on the bark."},{"clue":"Find a tree with glossy dark green leaves and white flowers.","difficulty":"easy","itemId":"inat-119793","lookWhere":"near the path","section":"wild","sourceQuote":"The leaves are oval, 4 to 8 cm (1.6 to 3.1 in) long, glossy dark green above, and slightly paler below."},{"clue":"Look for something that grows on trees with bright-orange parts.","difficulty":"hard","itemId":"inat-55553","lookWhere":"on tree branches","section":"wild","sourceQuote":"Their sexual structures, apothecia, are bright-orange with spiny projections (cilia) situated around the rim."},{"clue":"Search for a tiny land snail with a hard shell.","difficulty":"medium","itemId":"inat-126257","lookWhere":"on the ground","section":"wild","sourceQuote":"is a species of land snail with an operculum, a terrestrial gastropod mollusk"},{"clue":"Can you find a plant with bright yellow flowers?","difficulty":"easy","itemId":"inat-51450","lookWhere":"in the sunny grass","section":"wild","sourceQuote":"the yellow passionflower, is a flowering plant"},{"clue":"Look for a fungus that eats dead wood.","difficulty":"hard","itemId":"inat-202438","lookWhere":"on a fallen log","section":"wild","sourceQuote":"This fungus is largely saprophytic, decaying dead wood tissues."}]}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a narrow line of moving water with a muddy or rocky bank.","lookWhere":"on the map","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"Look for a tree with bumpy, yellow-green balls in the fall.","lookWhere":"near the trees","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"Can you find a tree with thick, corky lumps on the bark?","lookWhere":"on the tree trunks","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"Find a tree with glossy dark green leaves and white flowers.","lookWhere":"near the path","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"Look for something that grows on trees with bright-orange parts.","lookWhere":"on tree branches","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"Search for a tiny land snail with a hard shell.","lookWhere":"on the ground","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"wild","clue":"Can you find a plant with bright yellow flowers?","lookWhere":"in the sunny grass","answer":"Yellow passionflower (Passiflora lutea)"},
+    {"section":"wild","clue":"Look for a fungus that eats dead wood.","lookWhere":"on a fallen log","answer":"Hairy Hexagonia (Hexagonia hydnoides)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 0
+   },
+   "wallMs": 19921
+  },
+  {
+   "caseN": 2,
+   "slug": "celebration-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":10227,"status":200,"error":null,"poolMatches":true,"promptTokens":941,"completionTokens":579,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Find a place with things to climb, slide and swing on!","difficulty":"easy","itemId":"osm-playground","lookWhere":"in the play area","section":"park","sourceQuote":"A playground is a place with things to climb, slide and swing on."},{"clue":"Look for a long outdoor seat for resting.","difficulty":"easy","itemId":"osm-bench","lookWhere":"along the path","section":"park","sourceQuote":"A bench is a long outdoor seat for resting."},{"clue":"Can you find a roof on posts with tables underneath?","difficulty":"easy","itemId":"osm-shelter","lookWhere":"near the eating area","section":"park","sourceQuote":"A picnic shelter has a roof on posts and tables underneath where people eat lunch."},{"clue":"Look for still water where you may see ducks or fish.","difficulty":"medium","itemId":"osm-water","lookWhere":"by the bank","section":"park","sourceQuote":"A pond is still water where you may see ducks, turtles or fish."},{"clue":"Find something that sprays or pours water into a pool.","difficulty":"medium","itemId":"osm-fountain","lookWhere":"near a plaza","section":"park","sourceQuote":"A fountain sprays or pours water into a pool or basin."},{"clue":"Find a path that crosses over water or a dip in the ground.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"over the water","section":"park","sourceQuote":"A bridge lets a path cross over water or a dip in the ground."},{"clue":"Look for a big grass field with a goal and a net at each end.","difficulty":"hard","itemId":"osm-soccer","lookWhere":"in the open grass","section":"park","sourceQuote":"A soccer field is a big grass field with a goal with a net at each end."},{"clue":"Find a dirt diamond with bases and a tall fence.","difficulty":"hard","itemId":"osm-baseball","lookWhere":"near the dirt field","section":"park","sourceQuote":"A baseball field has a dirt diamond with bases and a tall fence behind home plate."}]}
+   ],
+   "parkName": "Celebration Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a place with things to climb, slide and swing on!","lookWhere":"in the play area","answer":"Playground"},
+    {"section":"park","clue":"Look for a long outdoor seat for resting.","lookWhere":"along the path","answer":"Benches"},
+    {"section":"park","clue":"Can you find a roof on posts with tables underneath?","lookWhere":"near the eating area","answer":"Picnic shelter"},
+    {"section":"park","clue":"Look for still water where you may see ducks or fish.","lookWhere":"by the bank","answer":"Ponds or lakes"},
+    {"section":"park","clue":"Find something that sprays or pours water into a pool.","lookWhere":"near a plaza","answer":"Fountains"},
+    {"section":"park","clue":"Find a path that crosses over water or a dip in the ground.","lookWhere":"over the water","answer":"Bridge"},
+    {"section":"park","clue":"Look for a big grass field with a goal and a net at each end.","lookWhere":"in the open grass","answer":"Soccer fields (Celebration Park Soccer Fields)"},
+    {"section":"park","clue":"Find a dirt diamond with bases and a tall fence.","lookWhere":"near the dirt field","answer":"Baseball fields (Celebration Park Baseball Diamonds)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 0
+   },
+   "wallMs": 10241
+  },
+  {
+   "caseN": 20,
+   "slug": "orchards-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": null,
+   "dataRich": false,
+   "calls": [],
+   "parkName": "Orchards Park",
+   "kind": "empty",
+   "message": "Not enough real data for a pass at Orchards Park right now. Each section below says why.",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 1 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [],
+   "wallMs": 1012
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "llama-4-maverick",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":15985,"status":200,"error":null,"poolMatches":true,"promptTokens":2247,"completionTokens":623,"finishReason":"stop","answeredModel":"llama-4-maverick","rawItems":[{"clue":"Find a narrow line of moving water with muddy banks.","difficulty":"easy","itemId":"osm-creek","lookWhere":"near the trees","section":"park","sourceQuote":"A creek is a narrow line of moving water with a muddy or rocky bank on each side."},{"clue":"Look for a vine with white flowers that twist around things.","difficulty":"medium","itemId":"inat-135262","lookWhere":"on the vines","section":"wild","sourceQuote":"This is a reference to the plant's vine-like growth."},{"clue":"Find a tree with spiky lumps on its bark.","difficulty":"medium","itemId":"inat-119986","lookWhere":"in the woods","section":"wild","sourceQuote":"It grows to 10–17 m tall and has distinctive spined thick, corky lumps 2–3 cm long on the bark."},{"clue":"Find a small snail with a round shell.","difficulty":"hard","itemId":"inat-126257","lookWhere":"on the ground","section":"wild","sourceQuote":"Globular Drop Snail (Helicina orbiculata)"},{"clue":"Look for a lichen with bright orange dots.","difficulty":"hard","itemId":"inat-55553","lookWhere":"on trees or rocks","section":"wild","sourceQuote":"Their sexual structures, apothecia, are bright-orange with spiny projections (cilia) situated around the rim."},{"clue":"Find a tree with a funny, bumpy fruit.","difficulty":"easy","itemId":"inat-58205","lookWhere":"under trees","section":"wild","sourceQuote":"The distinctive fruit, from a multiple fruit family, is roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter"},{"clue":"Look for a vine with puffy, balloon-like fruits.","difficulty":"medium","itemId":"inat-62944","lookWhere":"near the creek","section":"wild","sourceQuote":"Cardiospermum halicacabum, known as the balloon plant or love in a puff"},{"clue":"Find a tree with shiny, dark green leaves.","difficulty":"medium","itemId":"inat-119793","lookWhere":"in the woods","section":"wild","sourceQuote":"The leaves are oval, glossy dark green above"}]}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"Find a narrow line of moving water with muddy banks.","lookWhere":"near the trees","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"Look for a vine with white flowers that twist around things.","lookWhere":"on the vines","answer":"White Morning-glory (Ipomoea lacunosa)"},
+    {"section":"wild","clue":"Find a tree with spiky lumps on its bark.","lookWhere":"in the woods","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"Find a small snail with a round shell.","lookWhere":"on the ground","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"wild","clue":"Look for a lichen with bright orange dots.","lookWhere":"on trees or rocks","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"Find a tree with a funny, bumpy fruit.","lookWhere":"under trees","answer":"Osage-orange (Maclura pomifera)"}
+   ],
+   "removed": {
+    "notGrounded": 1,
+    "other": 1
+   },
+   "wallMs": 19039
+  },
+  {
+   "caseN": 2,
+   "slug": "celebration-park",
+   "model": "llama-4-maverick",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":17523,"status":200,"error":null,"poolMatches":true,"promptTokens":932,"completionTokens":656,"finishReason":"stop","answeredModel":"llama-4-maverick","rawItems":[{"clue":"A flat court with a low net and a tall fence.","difficulty":"easy","itemId":"osm-tennis","lookWhere":"near the sports fields","section":"park","sourceQuote":"A tennis court is a flat court with a low net across the middle and a tall fence around it."},{"clue":"A big grass field with a goal and a net.","difficulty":"easy","itemId":"osm-soccer","lookWhere":"in the grassy area","section":"park","sourceQuote":"A soccer field is a big grass field with a goal with a net at each end."},{"clue":"A place with things to climb, slide and swing.","difficulty":"easy","itemId":"osm-playground","lookWhere":"near the fun area","section":"park","sourceQuote":"A playground is a place with things to climb, slide and swing on."},{"clue":"Still water where you may see ducks or fish.","difficulty":"easy","itemId":"osm-water","lookWhere":"near the water","section":"park","sourceQuote":"A pond is still water where you may see ducks, turtles or fish."},{"clue":"A roof on posts with tables underneath.","difficulty":"medium","itemId":"osm-shelter","lookWhere":"under the trees","section":"park","sourceQuote":"A picnic shelter has a roof on posts and tables underneath where people eat lunch."},{"clue":"Water sprays or pours into a pool.","difficulty":"medium","itemId":"osm-fountain","lookWhere":"near the water","section":"park","sourceQuote":"A fountain sprays or pours water into a pool or basin."},{"clue":"A path crosses over water or a dip.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"over the water","section":"park","sourceQuote":"A bridge lets a path cross over water or a dip in the ground."},{"clue":"A long outdoor seat for resting.","difficulty":"easy","itemId":"osm-bench","lookWhere":"near the path","section":"park","sourceQuote":"A bench is a long outdoor seat for resting."}]}
+   ],
+   "parkName": "Celebration Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [
+    {"section":"park","clue":"A flat court with a low net and a tall fence.","lookWhere":"near the sports fields","answer":"Tennis courts"},
+    {"section":"park","clue":"A big grass field with a goal and a net.","lookWhere":"in the grassy area","answer":"Soccer fields (Celebration Park Soccer Fields)"},
+    {"section":"park","clue":"A place with things to climb, slide and swing.","lookWhere":"near the fun area","answer":"Playground"},
+    {"section":"park","clue":"Still water where you may see ducks or fish.","lookWhere":"near the water","answer":"Ponds or lakes"},
+    {"section":"park","clue":"A roof on posts with tables underneath.","lookWhere":"under the trees","answer":"Picnic shelter"},
+    {"section":"park","clue":"Water sprays or pours into a pool.","lookWhere":"near the water","answer":"Fountains"},
+    {"section":"park","clue":"A path crosses over water or a dip.","lookWhere":"over the water","answer":"Bridge"},
+    {"section":"park","clue":"A long outdoor seat for resting.","lookWhere":"near the path","answer":"Benches"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 0
+   },
+   "wallMs": 17530
+  },
+  {
+   "caseN": 20,
+   "slug": "orchards-park",
+   "model": "llama-4-maverick",
+   "run": 1,
+   "n": null,
+   "dataRich": false,
+   "calls": [],
+   "parkName": "Orchards Park",
+   "kind": "empty",
+   "message": "Not enough real data for a pass at Orchards Park right now. Each section below says why.",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 1 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected (visitor-review search is not set up on this server)."}
+   },
+   "items": [],
+   "wallMs": 1
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-creek","section":"park","clue":"A ____ is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","sourceQuote":"A creek is a narrow line of moving water with a muddy or rocky bank on each side.","difficulty":"medium"},{"itemId":"inat-135263","section":"wild","clue":"____ is a species of morning glory native to the southeastern United States, Mexico, and South America.","lookWhere":"","sourceQuote":"Ipomoea cordatotriloba is a species of morning glory native to the southeastern United States, Mexico, and South America.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","difficulty":"medium"},{"itemId":"inat-51450","section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","sourceQuote":"Passiflora lutea, the yellow passionflower, is a flowering plant in the family Passifloraceae, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and","difficulty":"medium"},{"itemId":"inat-55553","section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","sourceQuote":"Teloschistes chrysophthalmus, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-62944","section":"wild","clue":"____, known as the ____ plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical","lookWhere":"","sourceQuote":"Cardiospermum halicacabum, known as the balloon plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical Africa and Asia.","difficulty":"medium"},{"itemId":"inat-119793","section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","sourceQuote":"Pyrus calleryana, the Callery pear, is a species of pear native to China and Vietnam, in the family Rosaceae.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"____ is a species of morning glory native to the southeastern United States, Mexico, and South America.","lookWhere":"","answer":"Tievine (Ipomoea cordatotriloba)"},
+    {"section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","answer":"Globular Drop Snail (Helicina orbiculata)"},
+    {"section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","answer":"Yellow passionflower (Passiflora lutea)"},
+    {"section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"____, known as the ____ plant or love in a puff, is a climbing plant widely distributed in tropical and subtropical","lookWhere":"","answer":"Lesser Balloon Vine (Cardiospermum halicacabum)"},
+    {"section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","answer":"Callery pear (Pyrus calleryana)"}
+   ]
+  },
+  {
+   "caseN": 2,
+   "slug": "celebration-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-basketball","section":"park","clue":"A ____ court is a flat hard court with a hoop on a tall pole at each end.","lookWhere":"","sourceQuote":"A basketball court is a flat hard court with a hoop on a tall pole at each end.","difficulty":"medium"},{"itemId":"osm-tennis","section":"park","clue":"A ____ court is a flat court with a low net across the middle and a tall fence around it.","lookWhere":"","sourceQuote":"A tennis court is a flat court with a low net across the middle and a tall fence around it.","difficulty":"medium"},{"itemId":"osm-soccer","section":"park","clue":"A ____ field is a big grass field with a goal with a net at each end.","lookWhere":"","sourceQuote":"A soccer field is a big grass field with a goal with a net at each end.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","sourceQuote":"A baseball field has a dirt diamond with bases and a tall fence behind home plate.","difficulty":"medium"},{"itemId":"osm-sports-field","section":"park","clue":"A sports field is an open marked area where people play games.","lookWhere":"","sourceQuote":"A sports field is an open marked area where people play games.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","sourceQuote":"A playground is a place with things to climb, slide and swing on.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"A picnic ____ has a roof on posts and tables underneath where people eat lunch.","lookWhere":"","sourceQuote":"A picnic shelter has a roof on posts and tables underneath where people eat lunch.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"A ____ is a long outdoor seat for resting.","lookWhere":"","sourceQuote":"A bench is a long outdoor seat for resting.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Celebration Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."}
+   },
+   "items": [
+    {"section":"park","clue":"A ____ court is a flat hard court with a hoop on a tall pole at each end.","lookWhere":"","answer":"Basketball courts"},
+    {"section":"park","clue":"A ____ court is a flat court with a low net across the middle and a tall fence around it.","lookWhere":"","answer":"Tennis courts"},
+    {"section":"park","clue":"A ____ field is a big grass field with a goal with a net at each end.","lookWhere":"","answer":"Soccer fields (Celebration Park Soccer Fields)"},
+    {"section":"park","clue":"A ____ field has a dirt diamond with bases and a tall fence behind home plate.","lookWhere":"","answer":"Baseball fields (Celebration Park Baseball Diamonds)"},
+    {"section":"park","clue":"A sports field is an open marked area where people play games.","lookWhere":"","answer":"Sports fields"},
+    {"section":"park","clue":"A ____ is a place with things to climb, slide and swing on.","lookWhere":"","answer":"Playground"},
+    {"section":"park","clue":"A picnic ____ has a roof on posts and tables underneath where people eat lunch.","lookWhere":"","answer":"Picnic shelter"},
+    {"section":"park","clue":"A ____ is a long outdoor seat for resting.","lookWhere":"","answer":"Benches"}
+   ]
+  },
+  {
+   "caseN": 20,
+   "slug": "orchards-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": null,
+   "dataRich": false,
+   "calls": [],
+   "wallMs": 0,
+   "parkName": "Orchards Park",
+   "kind": "empty",
+   "message": "Not enough real data for a pass (template).",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: only 1 research-grade sightings within 1.5 km in the last 14 days on iNaturalist."}
+   },
+   "items": []
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 3,
+   "passes": 2,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 16,
+    "returned": 16,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 2,
+    "dataRichRuns": 2,
+    "rate": 1,
+    "pass": true
+   },
+   "m4": {
+    "ok": 3,
+    "checked": 3,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.3111111111111136,
+    "clues": 16,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 16,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 2,
+    "p50Ms": 14057,
+    "p95Ms": 17504,
+    "passP50": false,
+    "passP95": true,
+    "perPassP50Ms": 14057
+   },
+   "m8": {
+    "costPerPass": 0.00060532,
+    "totalUsd": 0.00121064,
+    "promptTokens": 3248,
+    "completionTokens": 1252,
+    "pass": true
+   },
+   "retries": 0
+  },
+  {
+   "model": "llama-4-maverick",
+   "runs": 3,
+   "passes": 2,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 15,
+    "returned": 16,
+    "rate": 0.9375,
+    "pass": true
+   },
+   "m3": {
+    "complete": 1,
+    "dataRichRuns": 2,
+    "rate": 0.5,
+    "pass": false
+   },
+   "m4": {
+    "ok": 3,
+    "checked": 3,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.280000000000001,
+    "clues": 14,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 1,
+    "clueLeaks": 1,
+    "returned": 16,
+    "rate": 0.0625,
+    "clueRate": 0.0625,
+    "pass": false
+   },
+   "m7": {
+    "calls": 2,
+    "p50Ms": 16754,
+    "p95Ms": 17446.1,
+    "passP50": false,
+    "passP95": true,
+    "perPassP50Ms": 16754
+   },
+   "m8": {
+    "costPerPass": 0.00095374,
+    "totalUsd": 0.00190748,
+    "promptTokens": 3179,
+    "completionTokens": 1279,
+    "pass": true
+   },
+   "retries": 0
+  },
+  {
+   "model": "no-AI template",
+   "runs": 3,
+   "passes": 2,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 16,
+    "returned": 16,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 2,
+    "dataRichRuns": 2,
+    "rate": 1,
+    "pass": true
+   },
+   "m4": {
+    "ok": 3,
+    "checked": 3,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 6.097436974789918,
+    "clues": 16,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 16,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 2,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "retries": 0
+  }
+ ],
+ "spend": {
+  "usd": 0.00311812,
+  "modelCalls": 4,
+  "promptTokens": 6427,
+  "completionTokens": 2531
+ }
+}

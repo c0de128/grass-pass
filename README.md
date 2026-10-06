@@ -29,6 +29,9 @@ pnpm dev                     # http://localhost:3000
 | `pnpm test` | Vitest unit tests |
 | `pnpm build` / `pnpm start` | production build / server |
 | `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`) |
+| `pnpm eval` | SPEC 6.4 evals: 20 recorded real parks, live open models on DigitalOcean (about $0.06, capped at $1), no-AI baseline; see [`evals/README.md`](evals/README.md) |
+| `pnpm eval:check` | free dry run: every recorded park through the real pass builder, model off |
+| `pnpm eval:record` | re-record the 20 eval parks live from OpenStreetMap and iNaturalist |
 | `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` |
 
 ## Environment variables
@@ -80,8 +83,23 @@ Slice S3, the pass on screen:
   makes up to 3 per day. Limits: 3 new passes/min and 20/day per IP, `AI_DAILY_CAP` model calls a day for everyone,
   checked before any upstream call; a started model call is never cancelled and always counted.
 
+## Evals
+Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026), age band 6-10,
+with the real pass builder: [`evals/results/2026-10-05.md`](evals/results/2026-10-05.md) (what failed and why:
+[`2026-10-05-notes.md`](evals/results/2026-10-05-notes.md)). No closed model was run (open models only).
+
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template |
+|---|---|---|---|
+| Blocked taxa printed | 0 | 0 | 0 |
+| Clues quoting their source word for word | 99.2% | 97.4% | 100% (by construction) |
+| Passes with >= n-1 items (target 90%) | 64.7% | 58.8% | 100% |
+| Reading level, FK grade median (target <= 3.5) | 2.3 | 2.3 | 5.9 |
+| Name leaks before the filter (target <= 5%) | 17.5% | 9.4% | 0% |
+| Model call p50 / p95 (target 10 s / 20 s) | 13.8 s / 24.3 s | 28.8 s / 60 s (4 timeouts) | none |
+| Cost per pass | $0.00086 | $0.00098 | $0 |
+
 ## Why open
-*Coming*, with measured numbers from our evals (open models vs. a no-AI baseline on 20 real parks).
+*Coming*, built on the eval numbers above.
 
 ## Privacy
 *Coming.* Short version of the plan: no accounts, nothing about the child leaves the device, location is rounded

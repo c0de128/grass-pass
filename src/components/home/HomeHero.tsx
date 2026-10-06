@@ -19,11 +19,11 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
         <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">
           <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
             <PhoneOff className="size-3.5" aria-hidden="true" />
-            Phone away, nature ahead
+            Written by Gemma 4 · played on paper
           </p>
 
           <h1 id="hero-title" className="text-6xl leading-[0.92] font-extrabold tracking-tighter text-balance text-ink sm:text-7xl xl:text-8xl">
-            Your ticket to get{" "}
+            AI reads your park. Kids go{" "}
             <span className="relative inline-block text-primary">
               outside.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
@@ -33,9 +33,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            Pick a real park and your kid&apos;s age. Grass Pass makes a one-page scavenger hunt built from that park&apos;s
-            actual map and the last two weeks of wildlife sightings. Print it, and the pencil comes out and the phone stays
-            home.
+            Pick a real park and your kid&apos;s age. Gemma 4, an open-weight AI model, reads that park&apos;s map and the last 14
+            days of wildlife sightings nearby, then writes a one-page pass of things to find there. Code checks every clue
+            against its source. You print it; the pencil does the rest.
           </p>
 
           <ExampleChips examples={examples} />

@@ -46,9 +46,9 @@ import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
 
 export const metadata: Metadata = {
-  title: "About Grass Pass: the open model, the real data, what we measured, privacy",
+  title: "About Grass Pass: the open model, the real data, what we measured and privacy",
   description:
-    "Grass Pass builds a printable park pass from OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi) with the open Gemma 4 model. What we measured, what leaves your device, and every credit.",
+    "Gemma 4, an open-weight model, writes each Grass Pass from one park's real data: OpenStreetMap, iNaturalist, Wikipedia and Google review counts (SerpApi). What we measured, what leaves your device, and every credit.",
 };
 
 const gemma = evalColumn("gemma-4-31B-it");
@@ -82,8 +82,8 @@ export default function AboutPage() {
             About Grass Pass
           </h1>
           <p className="max-w-[60ch] text-xl leading-relaxed text-pretty">
-            A printable scavenger hunt for a <em>real</em> park: written by an open AI model from real, dated data, and
-            checked line by line by code. Half a minute on a screen, then the phone goes away.
+            A one-page pass for a <em>real</em> park. Gemma 4, an open-weight model, writes the clues from that park&apos;s
+            map and recent wildlife sightings, and code checks each clue against its source. The finding happens on paper.
           </p>
           <ul aria-label="Grass Pass in four facts" className="flex flex-wrap gap-2">
             <li>

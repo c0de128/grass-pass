@@ -126,7 +126,7 @@ const listWords = (w: readonly string[]) => (w.length <= 1 ? (w[0] ?? "") : `${w
 
 export const LUCKY_COPY = {
   notConnected: "Lucky Finds: not connected. This server has no SerpApi key, so there are no Lucky Finds from visitor reviews.",
-  dailyCap: "Lucky Finds: off for today. Grass Pass used its free search limit for visitor reviews (SerpApi) today; it resets at midnight Central time.",
+  dailyCap: "Lucky Finds: off for today. Grass Pass has used its free search limit for visitor reviews (SerpApi); it resets at midnight Dallas time.",
   monthlyCap: "Lucky Finds: off until the free monthly searches reset. Grass Pass used its monthly search limit for visitor reviews (SerpApi).",
   storePace: "Lucky Finds: off for today. Grass Pass reached its daily share of its free storage service, so it skipped new visitor-review lookups; they come back tomorrow.",
   paused: "Lucky Finds: paused. The visitor-review service (SerpApi) asked us to wait, so we stopped asking for now.",

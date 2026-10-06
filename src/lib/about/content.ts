@@ -252,7 +252,7 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: "Lucky Finds run on a free plan.",
-      detail: `SerpApi's free plan allows ${SERPAPI_FREE_MONTHLY} searches a month, and a new park uses up to 4 (one to find it on Google Maps, up to 3 review counts). Grass Pass stops at ${serp.daily} searches a day and ${serp.monthly} a month and keeps each park's counts for 30 days. When a limit is reached, the pass says "free search limit reached today" instead of Lucky Finds. A count says how many reviews mention a thing, not that it is there today, so the pass calls them "maybe". No photos are printed.`,
+      detail: `SerpApi's free plan allows ${SERPAPI_FREE_MONTHLY} searches a month, and a new park uses up to 4 (one to find it on Google Maps, up to 3 review counts). Grass Pass stops at ${serp.daily} searches a day and ${serp.monthly} a month and keeps each park's counts for 30 days. When a limit is reached, the pass says Lucky Finds are off for today (free search limit) instead. A count says how many reviews mention a thing, not that it is there today, so the pass calls them "maybe". No photos are printed.`,
     },
     {
       title: "Sparse data happens.",

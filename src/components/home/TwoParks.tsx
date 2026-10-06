@@ -12,14 +12,14 @@ export const TWO_PARKS = [
     slug: "connemara",
     big: { value: "70", label: "wildlife species spotted in 2 weeks" },
     small: { value: "0", label: "playgrounds, courts or shelters" },
-    verdict: "A wild hunt: birds, bugs, blooms.",
+    verdict: "So its pass is wild: birds, bugs, blooms.",
   },
   {
     name: "Celebration Park",
     slug: "celebration",
     big: { value: "25", label: "soccer fields, plus 6 courts" },
     small: { value: "0", label: "recent wildlife sightings" },
-    verdict: "A built hunt: hoops, roofs, bridges.",
+    verdict: "So its pass is built: hoops, nets, a shelter.",
   },
 ] as const;
 
@@ -38,8 +38,9 @@ export function TwoParks() {
             </h2>
           </div>
           <p className="max-w-lg text-lg leading-relaxed text-pretty text-band-muted">
-            We measured two parks a few minutes apart in Allen, TX. They have almost nothing in common. One printable list
-            would fail both, so Grass Pass writes a different hunt for each one, from what&apos;s really there.
+            We measured two parks in the same town, Allen, TX. They have almost nothing in common, so one printed list would
+            fail both. Grass Pass gives each park its own pass: code collects what is really there, and Gemma picks a fair
+            mix and writes the clues.
           </p>
         </div>
 

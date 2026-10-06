@@ -156,8 +156,8 @@ const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
     title: "Read real data",
     body: `That park's map, what people spotted nearby in the last ${WILD_WINDOW_DAYS} days, and what visitor reviews mention.`,
   },
-  { icon: Bot, title: "One AI call", body: "An open model picks a fair mix and writes kid-sized clues. Code checks every one." },
-  { icon: Printer, title: "Print, phone away", body: "One black-and-white page: the kid's pass, a tear line, the grown-up's stub." },
+  { icon: Bot, title: "One AI call", body: "Gemma 4 picks a fair mix from that list and writes kid-sized clues. Code checks every one." },
+  { icon: Printer, title: "Print, phone away", body: "One black-and-white page: the kid's pass, a tear line and the grown-up's stub." },
 ];
 
 export default function HowItWorksPage() {
@@ -407,7 +407,7 @@ export default function HowItWorksPage() {
       more: (
         <>
           <p>
-            A finished pass is saved per park, age band and day (Chicago time) for 30 days, so the next visitor gets it at once
+            A finished pass is saved per park, age band and day (Dallas time) for 30 days, so the next visitor gets it at once
             and the link and print page keep working. &quot;Make a different pass&quot; can make up to {MAX_VARIANTS} per day.
             Park data is saved too: park map features 7 days, park outlines for the map 7 days, the iNaturalist sightings list 6
             hours, species summaries 7 days, Lucky Find counts 30 days, place searches 30 days, park lists 7 days. A failed lookup
@@ -461,7 +461,7 @@ export default function HowItWorksPage() {
             How Grass Pass works
           </h1>
           <p className="max-w-[55ch] text-xl leading-relaxed text-pretty">
-            Real park data in, one call to an open model, every clue checked by code, one printed page out.
+            Real park data in, one call to Gemma 4 (an open-weight model), every clue checked by code, one printed page out.
           </p>
           <nav aria-label="On this page">
             <ul className="flex flex-wrap gap-2">
@@ -716,7 +716,7 @@ export default function HowItWorksPage() {
             </li>
             <li>
               Each audit round runs five separate reviews: contest rules, security, quality, accessibility and design, and a
-              judge simulator. The builders then fix what they found. Three audit rounds have run so far.
+              judge simulator. The builders then fix what they found. Four audit rounds have run so far (Oct 6, 2026).
             </li>
             <li>
               Every change is checked before it is merged: lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API

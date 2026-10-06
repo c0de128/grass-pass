@@ -77,7 +77,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
       </div>
 
       <figcaption className="flex items-center justify-between gap-2 bg-muted px-4 py-1.5 text-[11px] font-medium text-muted-foreground">
-        <span>Parent stub · answers &amp; safety</span>
+        <span>Grown-up&apos;s stub · answers &amp; safety</span>
         {card?.kind === "ready" ? (
           <Link
             href={card.ex.href}

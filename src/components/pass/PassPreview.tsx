@@ -51,7 +51,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
     >
       <div className="flex flex-col gap-5">
         <header className="flex flex-col gap-1">
-          <p className="text-xs font-bold tracking-widest text-primary uppercase">Grass Pass · your ticket to get outside</p>
+          <p className="text-xs font-bold tracking-widest text-primary uppercase">Grass Pass · written for this park</p>
           <h1 id="pass-title" className="text-4xl leading-tight font-extrabold tracking-tight text-ink">
             {parkName}
           </h1>
@@ -137,9 +137,10 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
         <OctoberBox pass={pass} />
 
         <p className="text-sm">
-          Made {madeAt}
+          Clues written {madeAt}
           {reused ? " (reused for this park today)" : ""} by <strong>{pass.model.answered}</strong>
-          {licence ? ` (open model, ${licence})` : " (open model)"}.
+          {licence ? ` (open model, ${licence})` : " (open model)"} from this park&apos;s data. Code checked each one against its
+          source.
           {isLlamaModel(pass.model.answered) ? (
             <>
               {" "}

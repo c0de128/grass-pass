@@ -20,8 +20,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </h2>
           </div>
           <p className="max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
-            Each item on the pass is backed by a real, dated source, printed on the parent stub, so nobody spends an hour
-            hunting for a heron that left in 2019.
+            Every find comes from a real, dated source, listed on the grown-up&apos;s stub, so nobody spends an hour hunting for
+            a heron that left in 2019.
           </p>
         </div>
 
@@ -33,8 +33,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-3xl leading-tight font-extrabold sm:text-4xl">Wild Finds</h3>
             <p className="max-w-md leading-relaxed">
-              Plants and animals people really photographed in and around that park (within 1.5 km) in the past two
-              weeks. Every clue is checked word for word against its source.
+              Plants and animals people really photographed in and around that park (within 1.5 km) in the last 14 days.
+              Gemma must quote each one&apos;s source, and code checks the quote word for word.
             </p>
             <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-paper p-5 text-ink">
               <div className="flex items-start gap-3">
@@ -55,7 +55,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-2xl font-extrabold text-ink">Park Finds</h3>
             <p className="leading-relaxed text-muted-foreground">
-              Hoops, shelters, bridges. Things on the park map, with real counts like &ldquo;2 basketball courts.&rdquo;
+              Hoops, shelters, bridges: things on the park&apos;s OpenStreetMap map, with real counts like &ldquo;2 basketball
+              courts.&rdquo;
             </p>
           </article>
 
@@ -75,7 +76,7 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             <MapIcon className="size-7 text-sun" aria-hidden="true" />
             <h3 className="text-2xl font-extrabold sm:text-3xl">Find This Spot</h3>
             <p className="max-w-lg leading-relaxed text-band-muted">
-              A small black-and-white map of the park with a start point and an X, plus a riddle.
+              Code draws a small black-and-white map of the park with a START and an X. Gemma writes a riddle about the spot.
             </p>
             {spot ? (
               <figure className="mt-auto flex flex-col gap-2" data-testid="spot-quote">
@@ -93,8 +94,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             <p className="text-xs font-bold tracking-widest uppercase">Sept 15 to Nov 15</p>
             <h3 className="text-2xl font-extrabold">October monarch box</h3>
             <p className="text-sm leading-relaxed">
-              Monarchs reported nearby in the past two weeks vs. the same weeks last year. Printed honestly, even when
-              it&apos;s zero.
+              Code counts monarchs reported nearby in the last 14 days, next to the same days last year. Printed honestly,
+              even when it&apos;s zero.
             </p>
           </article>
         </div>

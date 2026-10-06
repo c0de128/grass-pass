@@ -15,19 +15,19 @@ export const HOW_STEPS: readonly Step[] = [
   },
   {
     icon: Sparkles,
-    title: "We build the hunt",
-    body: "Usually 10–30 seconds. We read the park map, check what people spotted nearby in the last 14 days, and an open model writes the clues. Code checks every clue against its source.",
+    title: "Gemma writes, code checks",
+    body: "Usually 10–30 seconds. Code reads the park map and the last 14 days of sightings nearby. Gemma 4, an open model, picks a fair mix and writes the clues. Code checks each clue against its source and drops any that fail.",
     ticker: ["Reading the park map…", "Checking what people spotted…", "Writing clues…"],
   },
   {
     icon: Printer,
     title: "Print one page",
-    body: "Black and white, US Letter. Kid’s pass on top, a dashed tear line, and the parent stub with answers and sources below.",
+    body: "One black-and-white Letter page: the kid’s pass on top, a dashed tear line, and the grown-up’s stub with answers and sources.",
   },
   {
     icon: Smartphone,
     title: "Phone away",
-    body: "The kid ticks things off with a pencil. The screen was the shortest part of the day.",
+    body: "The kid ticks off finds with a pencil. The grown-up keeps the stub, in case anyone needs a hint.",
   },
 ];
 
@@ -38,7 +38,7 @@ export function HowItWorks() {
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
           <h2 id="how-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
-            Under a minute on screen. All afternoon outside.
+            Real park data in. One AI call. Paper out.
           </h2>
           <p>
             <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">

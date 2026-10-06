@@ -46,9 +46,9 @@ const Nunito = localFont({
   fallback: ["ui-rounded", "system-ui", "sans-serif"],
 });
 
-const TITLE = "Grass Pass: your ticket to get outside";
+const TITLE = "Grass Pass: Gemma 4 reads your park and writes a one-page pass";
 const DESCRIPTION =
-  "Pick a park, print a pass, put the phone away. A printable scavenger pass built from real, dated data about that park.";
+  "Pick a park and your kid's age. Gemma 4, an open-weight AI model, reads that park's map and the last 14 days of wildlife sightings and writes a one-page pass to print. Code checks every clue against its source.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl(),

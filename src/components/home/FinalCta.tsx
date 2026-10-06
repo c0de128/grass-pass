@@ -10,7 +10,7 @@ export function FinalCta() {
             Print the pass. Pocket the pencil. Leave the phone.
           </h2>
           <p className="max-w-xl text-lg leading-relaxed text-pretty">
-            Free, one page, black and white. Made for the park down the street, not a park somewhere else.
+            Free, one black-and-white page, written for the park down the street, not a park somewhere else.
           </p>
           <a
             href="#find"

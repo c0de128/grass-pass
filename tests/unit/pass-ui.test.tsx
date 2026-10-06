@@ -48,7 +48,7 @@ describe("PassPreview (screen pass)", () => {
     expect(html).not.toContain('id="sec-lucky"');
     expect(t.split(LUCKY_COPY.notConnected)).toHaveLength(2);
     expect((t.match(/on the park map · OpenStreetMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
-    expect(t).toContain(`Made ${formatTime(pass.generatedAt)} by gemma-4-31B-it (open model, Apache-2.0)`);
+    expect(t).toContain(`Clues written ${formatTime(pass.generatedAt)} by gemma-4-31B-it (open model, Apache-2.0) from this park`);
     expect(t).not.toContain("reused for this park today");
     expect(html).toContain("<details>"); // answer key is folded away from kids
     expect(t).toContain("© OpenStreetMap contributors");

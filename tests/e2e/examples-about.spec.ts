@@ -91,7 +91,7 @@ test.describe("example parks", () => {
     }
   });
 
-  test("v3: the header's Sample parks link jumps to the examples; the hero pass card is a real example or says why", async ({ page }) => {
+  test("v3: the header's Examples link jumps to the examples; the hero pass card is a real example or says why", async ({ page }) => {
     await page.goto("/");
     const card = page.getByTestId("hero-pass-card");
     await expect(card).toBeVisible();
@@ -102,7 +102,7 @@ test.describe("example parks", () => {
       await expect(card).toContainText(/Example pass not ready yet: \S/);
     }
     for (const fake of ["Spot a monarch on the milkweed", "Live park feeds", "3.2 mi"]) await expect(page.getByText(fake)).toHaveCount(0);
-    const sample = page.getByRole("navigation", { name: "Site" }).getByRole("link", { name: "Sample parks" });
+    const sample = page.getByRole("navigation", { name: "Site" }).getByRole("link", { name: "Examples", exact: true });
     if (await sample.isVisible()) {
       await sample.click();
       await expect(page).toHaveURL(/#parks$/);

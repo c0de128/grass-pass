@@ -27,7 +27,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1006, files: 48, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1024, files: 49, day: "Oct 6, 2026" } as const;
 
 export type StatTile = {
   value: string;

@@ -108,7 +108,10 @@ describe("openers (M10: 'I dare you to find' on 16 clues, 'Find a place with a' 
   it("the prompt asks for them, bans the stock openings and 'a place with', and has no 'dares' voice", () => {
     const sys = buildMessages("Celebration Park", celebration, "6-10", planRequest(celebration, "6-10", "Celebration Park")!.ask, null, { month: 10 })[0].content;
     expect(sys).toContain(`For this park use these, one per clue, in any order: ${openersFor("Celebration Park", 8).join(", ")}.`);
-    expect(sys).toContain('Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see".');
+    expect(sys).toContain('Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see", and never with these worn-out starts: "Somewhere you will see"');
+    // Completeness + M10 (run 2026-10-06-5): the frames Gemma repeated across parks are named, and so is the count trailer.
+    for (const f of ["Where can you hear", "Where can you find", "Somewhere you can hear", "Hunt for a tree"]) expect(sys).toContain(`"${f}"`);
+    expect(sys).toContain('Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".');
     expect(sys).toContain('Never write "a place with", "a place where" or "a spot where"');
     expect(sys).toContain("never copy 3 or more words in a row from the SOURCE");
     expect(sys).not.toMatch(/dares/);
@@ -158,8 +161,9 @@ describe("Park Finds facts vary their words per park (M10: copied fact phrases o
 describe("the checks (style is a preference, truth and safety are not)", () => {
   it("copiedRun: a 4-word run of its own source with 2+ describing words; numbers and filler runs are fine", () => {
     const src = byId("osm-playground").sourceText;
-    expect(src).toContain("Kids climb ladders and steps on it to reach the top of the climbing frame.");
-    expect(copiedRun("Peek at the top of the climbing frame.", src)).toBe("top of the climbing");
+    // Run 2026-10-06-5 (M10): the playground fact got more word choices ("kids climb steps and ladders to reach the top" was on 3 parks).
+    expect(src).toContain("Kids climb ladders and steps on it to reach the top of the play tower.");
+    expect(copiedRun("Peek at the top of the play tower.", src)).toBe("top of the play");
     expect(copiedRun("Spy a playset with ladders.", src)).toBeNull();
     expect(copiedRun("Count them. It has 2 of these.", "Celebration Park has 2 playgrounds.")).toBeNull();
     expect(copiedRun("It is in the middle of it.", "It is in the middle of it.")).toBeNull(); // fewer than 2 describing words

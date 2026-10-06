@@ -204,7 +204,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded for audit round 4): Celebration 8 of 8, Connemara 6 then a real refill that keeps none", () => {
+  it("the real recorded Gemma answers (re-recorded for completeness): Celebration 8 of 8, Connemara 6, a refill and a second refill that keep none", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { target, plan } = poolFor(p);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
@@ -217,69 +217,84 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       return { out, plan };
     });
     const [{ out: conn, plan: connPlan }, { out: cel }] = results;
-    // Re-recorded for audit round 4 (2026-10-06, builder R2): the opener bank without rotating fancy verbs, at most
-    // one "I am" riddle, Park Finds' lookWhere left empty, more fact word choices. Celebration (11 Park Finds, not
-    // low data: exactly 8 asked): all 8 pass every check. 3 copy a 4-word run of their fact sheet; with no spare to
-    // replace them they print, flagged (a style preference only).
+    // Re-recorded by builder T (completeness, 2026-10-06): worn-out clue starts named in the prompt, counts inside the
+    // clue's own sentence, the taken first words told to a refill. Celebration (11 Park Finds, not low data: exactly 8
+    // asked): all 8 pass every check. 7 copy a 4-word run of their fact sheet; with no spare to replace them they
+    // print, flagged (a style preference only).
     expect(cel.items).toHaveLength(8);
     expect(cel.drops).toEqual({});
     expect(cel.spares).toBe(0);
-    expect(cel.styleKept).toBe(3);
-    expect(cel.items.filter((i) => i.style === "copies_source").map((i) => i.item.id)).toEqual(["osm-tennis", "osm-water", "osm-baseball"]);
-    // The count clue is a count task with its number (the R2 one was "Guess how many ... There are 2.").
-    expect(cel.items.find((i) => i.item.id === "osm-basketball")?.clue).toBe("Spot 2 smooth spots with rings on tall posts.");
+    expect(cel.styleKept).toBe(7);
+    expect(cel.items.filter((i) => !i.style).map((i) => i.item.id)).toEqual(["osm-bench"]);
+    // The count clues are count tasks with the number inside the sentence (no "Count the 2 of them." trailer).
+    expect(cel.items.find((i) => i.item.id === "osm-basketball")?.clue).toBe("Spot 2 flat smooth courts with a metal ring on a tall post.");
+    expect(cel.items.find((i) => i.item.id === "osm-bench")?.clue).toBe("Hunt for 4 long seats used for resting.");
     // Audit R4: Park Finds leave lookWhere empty, and the pond's "near the water" would give it away anyway.
     expect(cel.items.find((i) => i.item.id === "osm-water")?.lookWhere).toBe("");
     expect(cel.items.map((i) => brokenCountQuestion(i.clue))).toEqual(Array(8).fill(null));
-    expect([cel.openersTrimmed, cel.questionsFixed]).toEqual([0, 0]);
-    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 4 is near water: stay close.");
-    // Every clue starts with a different first word (the per-park openers).
+    expect([cel.openersTrimmed, cel.questionsFixed, cel.trailersTrimmed]).toEqual([0, 0, 0]);
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 7 is near water: stay close.");
+    // Every clue starts with a different first word (the per-park openers). Honest note: the fountain clue still
+    // starts with a worn-out frame the prompt names ("Somewhere you can hear"): a style preference, kept (no spare).
     expect(new Set(cel.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(8);
-    // Connemara (low data: 9 asked), re-recorded for audit round 4: one duplicate id and two generic plant clues
-    // ("fruit or seeds in October" only) are dropped: 6 of 8. "Hunt for a plant with white flowers!" for White
-    // Morning-glory uses a lone colour word of its own name: a style preference (name_trait, PM 1B); with no spare
-    // left to replace it, it prints, flagged.
+    expect(cel.items.find((i) => i.item.id === "osm-fountain")?.clue).toBe("Somewhere you can hear water splashing as you get near.");
+    // Connemara (low data: 9 asked): two generic "fruit or seeds in October" plant clues and one name leak are
+    // dropped: 6 of 8. "Watch for a plant with flowers that are white." for White Morning-glory uses a lone colour
+    // word of its own name: a style preference (name_trait, PM 1B); with no spare left to replace it, it prints, flagged.
     expect(conn.items).toHaveLength(6);
-    expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 2 });
+    expect(conn.drops).toEqual({ generic_clue: 2, name_leak: 1 });
     expect(conn.items.find((i) => i.item.id === "inat-135262")?.style).toBe("name_trait");
-    expect(conn.failedIds).toEqual(["inat-51450", "inat-54504"]);
-    expect(conn.copied).toEqual(["a gentle rushing sound"]); // a style preference only: the creek clue still prints
-    // Audit R4-C2: no rotating fancy verbs and no first word twice; this answer needed no "?" fixes.
-    expect(conn.questionsFixed).toBe(0);
+    expect(conn.failedIds).toEqual(["inat-54504", "inat-51450", "inat-53547"]);
+    expect(conn.copied).toEqual(["a gentle rushing sound", "glossy dark green above"]); // style preferences only
+    // The model ended 5 commands with "?" ("Notice the thick, corky lumps on this tree's bark?"): code made them ".".
+    expect(conn.questionsFixed).toBe(5);
     expect(new Set(conn.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(6);
-    expect(conn.items.find((i) => i.item.id === "inat-119986")?.clue).toBe("Point to a tree with thick, corky lumps on its skin.");
+    expect(conn.items.find((i) => i.item.id === "inat-119986")?.clue).toBe("Notice the thick, corky lumps on this tree's bark.");
     expect(conn.items.length).toBeLessThan(retryThreshold(8));
-    // ... so the app makes its one retry as a refill. The real refill (re-recorded by builder N for PM 1B) was asked
-    // for the 2 missing items + 1 spare from the 5 unused items (the one that failed is left out), and told what went wrong.
+    // ... so the app refills. The real refill was asked for the 2 missing items + spares from the unused items that
+    // did not fail (only 3 are left, so 3 are asked), told what went wrong and which first words are taken.
     const refill = modelRec(PARKS.connemara.slug).refill!;
     const rp = refillPlan(connPlan, conn.items, conn.failedIds)!;
     expect([rp.mix.n, rp.ask.n]).toEqual([2, 3]);
-    expect(rp.pool.map((x) => x.id)).toEqual(["inat-126257", "inat-5206", "inat-143484", "inat-53547"]);
+    expect(rp.pool.map((x) => x.id)).toEqual(["inat-126257", "inat-5206", "inat-143484"]);
     expect(refill.request.response_format.json_schema.schema).toEqual(
       passJsonSchema({ n: rp.ask.n, itemIds: rp.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: null }),
     );
     const sys = refill.request.messages[0].content;
-    expect(sys).toContain('Never use them in a clue: "a gentle rushing sound"');
+    expect(sys).toContain('Never use them in a clue: "a gentle rushing sound", "glossy dark green above"');
     expect(sys).toContain("Some first-try clues were generic.");
-    const rv = validateDraft(
-      PassDraftEnvelope.parse(JSON.parse((refill.response as { choices: { message: { content: string } }[] }).choices[0].message.content)),
-      rp.pool,
-      rp.mix,
-      { ...rp.validate, prior: conn.items },
-    );
-    // The refill keeps nothing: "Which tree has a name like a color?" (American elm) talks about its name (a hard leak
-    // for a Wild Find since audit R4), and "Watch for a medium-sized bird of prey?" (hawk) and "Somewhere, a tiny
-    // creature has a round shell?" carry no trait of their own (R3 generic check). The pass prints 6 of 8, honestly.
+    expect(sys).toContain('Clues already on the pass start with: "Which", "Spot", "Notice", "Who", "Hunt", "Watch". Never start a clue with any of these words.');
+    const answer = (r: { response: unknown }) => PassDraftEnvelope.parse(JSON.parse((r.response as { choices: { message: { content: string } }[] }).choices[0].message.content));
+    const rv = validateDraft(answer(refill), rp.pool, rp.mix, { ...rp.validate, prior: conn.items });
+    // The refill keeps nothing: "Point to a medium-sized bird of prey?" (hawk) and "Somewhere, can you spot a round shell
+    // with a lid?" carry no trait of their own (generic), and "Where is the bug with hollow spots on its wings?" leaks
+    // the moth's name ("hollow-spotted").
     expect(rv.items).toEqual([]);
     expect(rv.drops).toEqual({ generic_clue: 2, name_leak: 1 });
-    expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(6);
+    const after1 = withRefill(conn, rv, connPlan.mix);
+    expect(after1.items).toHaveLength(6);
+    // Completeness (run 2026-10-06-5): still short, so ONE more refill (the third and last call). Every unused item
+    // has failed once, so it offers them all again (the rest could not fill the need), asks for 2 + 2 spares.
+    const refill2 = modelRec(PARKS.connemara.slug).refill2!;
+    const rp2 = refillPlan(connPlan, after1.items, [...(conn.failedIds ?? []), ...(rv.failedIds ?? [])])!;
+    expect([rp2.mix.n, rp2.ask.n]).toEqual([2, 4]);
+    expect(refill2.request.response_format.json_schema.schema).toEqual(
+      passJsonSchema({ n: rp2.ask.n, itemIds: rp2.pool.map((x) => x.id) as [string, ...string[]], spotTargetId: null }),
+    );
+    const rv2 = validateDraft(answer(refill2), rp2.pool, rp2.mix, { ...rp2.validate, prior: after1.items });
+    // It keeps nothing either: 4 generic clues. "Somewhere you can spot fruit or seeds on this vine?" passed when it
+    // was recorded only because "this" lost its "s" ("thi") and matched the code-written season sentence ("from this
+    // area"); traitWords now checks stop words before and after the plural is taken off. The pass prints 6 of 8, honestly.
+    expect(rv2.items).toEqual([]);
+    expect(rv2.drops).toEqual({ generic_clue: 4 });
+    expect(withRefill(after1, rv2, connPlan.mix).items).toHaveLength(6);
     // S5: Celebration's live answer has a riddle for the X at the picnic shelter, and it passes every riddle
-    // check (the shelter fact's words vary per park now: "pillars"); Connemara has no target and no spot.
+    // check; Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "I have pillars and a roof. I keep you dry in the rain while you eat a snack." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "I have a roof and pillars to keep you dry and cool while you eat a meal." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });

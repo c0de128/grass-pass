@@ -86,7 +86,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     // Audit R4 (M10): "with things to climb, swing" was printed on 3 parks.
     "It is a {play area|play space|kids' area|play spot} with {things|parts|pieces} to {climb, slide and swing on|climb up, slide down and swing on|climb, swing on and slide down|swing on, climb and slide down|slide down, swing on and climb|climb on, swing on and slide down}.",
     "The ground under it is {often|usually} soft: {wood chips, sand or rubber|sand, rubber or wood chips|rubber, wood chips or sand}.",
-    "Kids climb {ladders and steps|steps and ladders} on it to reach the top of the {play set|climbing frame}.",
+    // Run 2026-10-06-5 (M10): "kids climb steps and ladders to reach the top" was printed on 3 parks.
+    "Kids {climb ladders and steps|go up steps and ladders|scramble up ladders or steps|use ladders and steps} on it to {reach|get to|get up to} the top of the {play set|climbing frame|play tower}.",
     "It {often|usually} has a {low|short} fence or a border {around|round} it.",
   ],
   slide: [
@@ -278,7 +279,8 @@ const COUNT_NOUNS: Record<FeatureKind, readonly string[]> = {
   zip_line: ["cable", "ride"],
   splash_pad: ["pad", "area"],
   shelter: ["roof", "hut", "building", "cover"],
-  picnic_table: ["table"],
+  // Run 2026-10-06-5: "Count the flat tops with seats joined on the sides. There are 2." (each table has one top).
+  picnic_table: ["table", "top"],
   bench: ["seat"],
   fountain: ["fountain"],
   drinking_water: ["fountain", "spout"],
@@ -292,7 +294,8 @@ const COUNT_NOUNS: Record<FeatureKind, readonly string[]> = {
   artwork: ["piece", "work"],
   info_board: ["board", "sign"],
   viewpoint: ["spot", "view"],
-  water: ["pool", "patch"],
+  // Run 2026-10-06-5: "Count the still waters. There are 2." (its fact sheet: "It is still water ...").
+  water: ["pool", "patch", "water"],
   creek: [],
   bridge: ["way", "crossing", "walkway", "path", "trail"],
   tower: ["structure"],

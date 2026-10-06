@@ -15,6 +15,7 @@
     "eval:record": "vitest run --config evals/vitest.config.mts evals/cli/record.ts",
     "eval:report": "vitest run --config evals/vitest.config.mts evals/cli/report.ts",
     "eval:check": "vitest run --config evals/vitest.config.mts evals/cli/check.ts",
+    "eval:replay": "vitest run --config evals/vitest.config.mts evals/cli/replay.ts",
     "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts"
   },
   "dependencies": {

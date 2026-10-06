@@ -189,9 +189,9 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // The audit R4 live answer prints the pond (a water find) as find 4, so that find carries a safety
+    // The completeness live answer prints the pond (a water find) as find 7, so that find carries a safety
     // line and the stub points to it; nothing was filtered, so there is still no safety footnote.
-    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(3);
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(6);
     expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });

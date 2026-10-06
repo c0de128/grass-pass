@@ -4,7 +4,10 @@
  *   - Park Finds: the fixed kid-level description of that kind ("A ____ court is a flat hard court...");
  *   - Wild Finds: the first sentence of the species' Wikipedia summary;
  * with every name word masked as "____". Grounded by construction (the quote is the source sentence).
- * It is exempt from one check only: copying a 4-word run of its source (it copies by design).
+ * It is exempt from two style checks only: copying a 4-word run of its source (it copies by design), and
+ * (run 2026-10-06-5) the repeated-opening drop: every masked sentence opens "____ is a ...", so since that
+ * drop became hard in audit round 4 it removed 28 template clues and the template's M3 fell from 88.2% to
+ * 17.6% with no change in data. Every safety, grounding, name, number and count check still applies.
  */
 import type { Mix } from "@/lib/ai/prompt";
 import { CLUE_MAX, QUOTE_MAX } from "@/lib/ai/schema";
@@ -110,5 +113,6 @@ export function templatePass(pool: readonly PoolItem[], mix: Mix): { draft: Temp
   const draft = templateDraft(pool, mix);
   // Content tuning: the template copies whole source sentences by design, so only the source-copy check
   // (a style rule for the model's own words) is off for it; every other check is the same.
-  return { draft, result: validateDraft(draft, pool, mix, { hasMap: false, allowSourceCopies: true }) };
+  // Run 2026-10-06-5: the same first words ("____ is") are the template's form, not a model habit.
+  return { draft, result: validateDraft(draft, pool, mix, { hasMap: false, allowSourceCopies: true, allowRepeatedOpenings: true }) };
 }

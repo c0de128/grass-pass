@@ -109,6 +109,8 @@ export type ValidationResult = {
   openersTrimmed?: number;
   /** Audit R3: commands whose "?" code turned into "." ("Track 3 areas for sports?"). */
   questionsFixed?: number;
+  /** Completeness + M10: clues whose bolted-on count sentence ("Count the 2 of them.", "There are 2.") code took off. */
+  trailersTrimmed?: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -305,8 +307,15 @@ export type ValidateOptions = {
   lowData?: boolean;
   /** Eval baseline only: the no-AI template copies its source sentences by design, so the copy check is off for it. */
   allowSourceCopies?: boolean;
+  /**
+   * Eval baseline only (run 2026-10-06-5): every masked template sentence opens "____ is a ...", so the
+   * repeated-opening drop (a style rule for the model's own words) is off for it, like the copy check.
+   */
+  allowRepeatedOpenings?: boolean;
   /** Clues already kept by an earlier call of this pass (the refill): repeats are checked against them too. */
   prior?: readonly Pick<ValidItem, "clue">[];
+  /** Eval tooling (evals/replay.ts): told every drop with the item id and the clue (no effect on the result). */
+  trace?: (drop: { reason: DropReason; itemId: string | null; clue: string | null }) => void;
 };
 
 export function validateDraft(
@@ -320,9 +329,11 @@ export function validateDraft(
   /** Content tuning: ids whose clue failed a content check (the refill offers other items first). */
   const failed = new Set<string>();
   let current: string | null = null;
-  const drop = (r: DropReason) => {
+  let currentClue: string | null = null;
+  const drop = (r: DropReason, clue: string | null = currentClue) => {
     drops[r] = (drops[r] ?? 0) + 1;
     if (current !== null && CONTENT_FAILS.has(r)) failed.add(current);
+    opts.trace?.({ reason: r, itemId: current, clue });
   };
   const used = new Set<string>();
   const kept: ValidItem[] = [];
@@ -330,10 +341,13 @@ export function validateDraft(
   let quotesRepaired = 0;
   let openersTrimmed = 0;
   let questionsFixed = 0;
+  let trailersTrimmed = 0;
   /** Content tuning: the source runs clues copied (the refill call is told not to use them). */
   const copied = new Set<string>();
 
   for (const raw of draft.items) {
+    current = null;
+    currentClue = null;
     const parsed = PassItemDraft.safeParse(raw && typeof raw === "object" ? withCodeSection(tidyStrings(raw as Record<string, unknown>), byId) : raw);
     if (!parsed.success) {
       const id = raw && typeof raw === "object" ? (raw as Record<string, unknown>).itemId : undefined;
@@ -341,6 +355,7 @@ export function validateDraft(
       continue;
     }
     current = parsed.data.itemId;
+    currentClue = parsed.data.clue;
     // Audit R3-C1: a filler opening ("Quick!", "Psst,", "Shh.", "Ready to count?") is taken off by code;
     // a clue that was nothing but filler is dropped.
     const trimmed = trimFillerOpening(parsed.data.clue);
@@ -351,7 +366,11 @@ export function validateDraft(
     if (trimmed !== parsed.data.clue) openersTrimmed++;
     const punctuated = fixCommandQuestion(trimmed);
     if (punctuated !== trimmed) questionsFixed++;
-    const d = { ...parsed.data, clue: punctuated };
+    // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." The
+    // bolted-on count sentence is taken off (code only removes words; the count checks then see the rest).
+    const untailed = trimCountTrailer(punctuated);
+    if (untailed !== punctuated) trailersTrimmed++;
+    const d = { ...parsed.data, clue: untailed };
     // Content tuning: a clue cut off mid-sentence ("Hunt for a ", seen 4 times in one answer of the
     // 2026-10-06 smoke) is broken output, whatever else it says.
     if (isCutOff(d.clue)) {
@@ -460,8 +479,9 @@ export function validateDraft(
       drop("broken_count");
       continue;
     }
-    // Audit R4-C2: "Explore for a bug ..." is not English.
-    if (oddWording(d.clue) !== null) {
+    // Audit R4-C2: "Explore for a bug ..." is not English. Run -5: "Watch for a plant with white blooms. I am
+    // poisonous!" switches from talking to the child to the thing talking.
+    if (oddWording(d.clue) !== null || voiceSwitch(d.clue) !== null) {
       drop("odd_wording");
       continue;
     }
@@ -512,7 +532,7 @@ export function validateDraft(
     }
     // Audit R4-C2: the same first word as an earlier clue on this pass ("Glance at ...", "Glance up for ...")
     // reads machine-made on paper: a drop now (it was a preference, and most passes have no spare).
-    if (earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue))) {
+    if (!opts.allowRepeatedOpenings && earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue))) {
       drop("repeats_opening");
       continue;
     }
@@ -534,10 +554,12 @@ export function validateDraft(
   const ask = opts.ask ?? mix;
   const perSection: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
   const asked: ValidItem[] = [];
+  current = null;
   for (const v of kept) {
     const s = v.item.section;
     if (perSection[s] >= ask.max[s]) {
-      drop("over_section_max");
+      opts.trace?.({ reason: "over_section_max", itemId: v.item.id, clue: v.clue });
+      drops.over_section_max = (drops.over_section_max ?? 0) + 1;
       continue;
     }
     perSection[s]++;
@@ -554,8 +576,10 @@ export function validateDraft(
   for (const v of asked) {
     if (chosen.has(v)) {
       if (v.style) styleKept++;
-    } else if (v.style) drop(v.style);
-    else spares++;
+    } else if (v.style) {
+      drops[v.style] = (drops[v.style] ?? 0) + 1;
+      opts.trace?.({ reason: v.style, itemId: v.item.id, clue: v.clue });
+    } else spares++;
   }
   for (const s of Object.keys(perSection) as Section[]) perSection[s] = items.filter((v) => v.item.section === s).length;
   const belowMin = (Object.keys(perSection) as Section[]).filter((s) => perSection[s] < mix.min[s]);
@@ -578,6 +602,7 @@ export function validateDraft(
     styleKept,
     openersTrimmed,
     questionsFixed,
+    trailersTrimmed,
   };
 }
 
@@ -798,7 +823,9 @@ function headAfter(tokens: readonly string[], i: number): string[] | null {
 }
 
 /** Whole-thing words any count may use ("How many places to cook food...", "spots for resting"). */
-const ANY_COUNT_NOUNS = new Set(["place", "spot", "way", "area", "thing", "one"]);
+// Run 2026-10-06-5: "4 open marked spaces used for games" (sports fields) and "2 spaces for kicking a ball"
+// (soccer fields) were dropped as wrong counts; "space" names the whole thing like "area" does.
+const ANY_COUNT_NOUNS = new Set(["place", "spot", "way", "area", "space", "thing", "one"]);
 
 /** Counted nouns a clue names: after "how many", after "count (the|all the)", and after each number. */
 function countedHeads(text: string): { heads: string[][]; numbers: { n: number; head: string[] | null }[]; isCount: boolean } {
@@ -895,6 +922,14 @@ const TRAIT_STOP = new Set([
   "grasshopper", "cricket", "hawk", "owl", "sparrow", "warbler", "songbird", "mammal", "reptile", "amphibian", "sedge", "reed",
   "medium", "sized", "size", "average", "typical", "usual", "member", "group", "sort",
   "track", "sneak", "tiptoe", "wander", "explore", "glance", "discover", "seek", "scan", "squint", "peek", "point", "follow",
+  // Run 2026-10-06-5 quick win: "Where is the tree animal that helps the forest grow?" (eastern gray squirrel, "natural
+  // forest regenerator") passed on "forest": where it lives or what it does for nature is no trait a child can see.
+  "forest", "forests", "woodland", "woods", "habitat", "ecosystem", "help", "role", "important",
+  // Where to look is not what it looks like ("Somewhere you can spot ...").
+  "somewhere", "anywhere", "nearby", "close", "closely",
+  // Live check (builder T, 2026-10-06): "Who is the only one in its own family?" (yellow-breasted chat) passed on
+  // "own"; "rare" is trivia too. Neither is something to see.
+  "own", "rare",
 ]);
 
 const traitStem = (w: string) => (w.length >= 5 ? w.slice(0, 4) : w);
@@ -913,10 +948,15 @@ export function suffixStem(w: string): string {
 
 /** The describing words of a text: no generic find words, no stop words, no digits (singular). */
 export function traitWords(text: string): string[] {
+  const stop = (w: string) => TRAIT_STOP.has(w) || RUN_STOP.has(w);
+  // Completeness (live re-recording 2026-10-06): a stop word is checked before AND after the plural is taken
+  // off. "this" became "thi" and matched the code-written season sentence ("photos from this area") in every
+  // plant source, so "Somewhere you can spot fruit or seeds on this vine?" passed as not generic.
   return sentencesOf(text)
     .flat()
+    .filter((w) => !stop(w))
     .map(singularWord)
-    .filter((w) => w.length >= 3 && !TRAIT_STOP.has(w) && !RUN_STOP.has(w) && !/^\d+$/.test(w));
+    .filter((w) => w.length >= 3 && !stop(w) && !/^\d+$/.test(w));
 }
 
 /**
@@ -1107,7 +1147,10 @@ export function questionCountMix(clue: string, item: Pick<PoolItem, "count">): s
   const hasNumber = (s: string) => sentencesOf(s).flat().some((w) => numberOf(w) !== null || /^\d/.test(w));
   const firstQ = sentences.findIndex((s) => isQuestion(s) && !hasCount(s));
   if (firstQ >= 0 && sentences.slice(firstQ + 1).some((s) => !isQuestion(s) && hasCount(s))) return "a question, then a count task";
-  if (item.count && sentences.some((s) => isQuestion(s) && /^\s*(?:which|what|who)\b/iu.test(s) && hasNumber(s))) return "a which/what question that states the map count";
+  // Run 2026-10-06-5: "Who can find 2 places of still water with fish or ducks?" is a challenge to the child,
+  // not a question that answers itself: "Who can find/spot/count/see N ..." stays.
+  const challenge = (s: string) => /^\s*who\s+can\s+(?:find|spot|count|see)\b/iu.test(s);
+  if (item.count && sentences.some((s) => isQuestion(s) && /^\s*(?:which|what|who)\b/iu.test(s) && !challenge(s) && hasNumber(s))) return "a which/what question that states the map count";
   return null;
 }
 
@@ -1126,6 +1169,48 @@ export function oddWording(clue: string): string | null {
  */
 export function isRiddleFrame(clue: string): boolean {
   return /(?:^|[^\p{L}'])(?:I|I'm|I've|I'll)(?![\p{L}'])/u.test(clue) || /\b(?:me|my|myself|mine)\b/iu.test(clue);
+}
+
+/**
+ * Run 2026-10-06-5 quick win: a clue that first talks to the child and then lets the thing talk ("Watch for a
+ * plant with white blooms. I am poisonous!", "Watch for a flying bug. I am the only one of my kind in my
+ * genus!"). A riddle that talks as itself from its first sentence ("I have ...") or after a question ("Who
+ * am I? I have ...", "Who has a red back? I am a true bug.") is not a switch.
+ * Returns the sentence that switches, or null.
+ */
+export function voiceSwitch(clue: string): string | null {
+  const sentences = clue.trim().split(/(?<=[.!?])\s+/u).filter(Boolean);
+  // "Who has a red back? I am a true bug." and "Who is this? I have ..." are riddles: a question first, then the thing talks.
+  if (sentences.length < 2 || isRiddleFrame(sentences[0]) || /\?\s*["'”)]*$/u.test(sentences[0])) return null;
+  return sentences.slice(1).find((s) => isRiddleFrame(s)) ?? null;
+}
+
+const COUNT_WORD = `(?:\\d+|${Object.keys(NUMBER_WORDS).join("|")})`;
+/** A whole sentence that only adds a count: "Count them.", "Count the 2 of them.", "Count all 4.", "There are 2.". */
+const COUNT_TRAILER_RE = new RegExp(
+  `^(?:count\\s+(?:them|all\\s+of\\s+them|(?:the|all)\\s+${COUNT_WORD}(?:\\s+of\\s+them)?)|there\\s+(?:are|is)\\s+${COUNT_WORD}(?:\\s+of\\s+them)?)\\s*[.!]*$`,
+  "iu",
+);
+/** A sentence that is itself a count task or question (then a "There are 2." after it is that count's number). */
+const COUNT_TASK_RE = /\b(?:count(?:ing)?|how\s+many)\b/iu;
+
+/**
+ * Completeness + M10 (run 2026-10-06-5): the clue without its bolted-on count sentences ("Notice the long
+ * seats for a rest. Count the 2 of them." -> "Notice the long seats for a rest.", "Where can you hear your
+ * feet clomp on boards? Count them. There are 8." -> the question alone). Only when the rest is not a
+ * count task itself ("Count the benches. There are 9." stays) and keeps at least MIN_CLUE_WORDS words.
+ * "count the 2 of them" was on 4 parks' passes (M10). Code only removes words.
+ */
+export function trimCountTrailer(clue: string): string {
+  const sentences = clue.trim().split(/(?<=[.!?])\s+/u).filter(Boolean);
+  let cut = sentences.length;
+  while (cut > 1 && COUNT_TRAILER_RE.test(sentences[cut - 1].trim())) cut--;
+  if (cut === sentences.length) return clue;
+  const head = sentences.slice(0, cut);
+  if (head.some((s) => COUNT_TASK_RE.test(s))) return clue;
+  const text = head.join(" ");
+  if ((text.match(/[\p{L}\p{N}]+/gu) ?? []).length < MIN_CLUE_WORDS) return clue;
+  return text;
 }
 
 /** Hints that say nothing about where a built thing stands (or point at a creature's place, not a park's). */

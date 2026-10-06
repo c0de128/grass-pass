@@ -104,7 +104,8 @@ Copied from the app's `/about` page ("What did not pass yet"), with the same num
   stricter in this round; see the Evals section.)
 - **Kid check not done yet.** A grown-up reading 10 printed clues as a 7-year-old would ([`evals/results/human-check.md`](evals/results/human-check.md))
   is planned with a real walk on **Sat Oct 10, 2026**. Until then it is pending, not passed.
-- **Lucky Finds are not connected yet.** The section shows "not available yet" on the pass, and no photos are printed.
+- **Lucky Finds are not connected yet.** They are left off the kid's pass, the grown-up's part says "not available yet", and
+  no photos are printed.
 - **Self-hosting is not measured.** The app talks to any OpenAI-compatible server (for example Ollama), but we have
   not measured a self-hosted run for this app.
 - **Llama 4 Maverick is too slow to be the default:** 39.2 s typical per model call in the eval (target 10 s), and

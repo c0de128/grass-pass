@@ -19,6 +19,7 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { createCachePair, createInflight, createJsonCache, getStore, normalizeKey, StoreError, type Store } from "@/lib/cache";
 import { hitRateLimit, limitsConfig, reserveQuota, type QuotaTicket } from "@/lib/limits";
+import { dailyPaceState } from "@/lib/limits/budget";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import { isValidLatLng, roundCoord, type LatLng } from "@/lib/geo";
@@ -241,6 +242,17 @@ async function runSearch(
   /** Reserve one uncached-search slot (per-IP share + global cap) before the first upstream call. */
   async function ensureTicket(): Promise<void> {
     if (ticket) return;
+    // SEC-3-03: today's share of the month's store commands is used: no new (uncached) searches until
+    // Chicago midnight. Cached searches never get here and keep working.
+    const paced = dailyPaceState(now());
+    if (paced.paced) {
+      log("parks_paused_daily_pace", { used: paced.used, pace: paced.pace }, "warn");
+      throw new LimitRefusal(429, {
+        code: "DAILY_LIMIT",
+        message: `Grass Pass has reached its free limit for new park searches today (for everyone). It resets in ${waitText(paced.retryAfter)}. Searches people already made still work.`,
+        retryAfter: paced.retryAfter,
+      });
+    }
     const r = await reserveQuota(store, {
       name: "parks-upstream",
       key: ctx.ip,

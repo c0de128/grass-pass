@@ -4,6 +4,7 @@
  */
 import "@/lib/zod-config";
 import type { z } from "zod";
+import { getStore } from "@/lib/cache/store";
 import { restingError } from "@/lib/limits/budget";
 
 export type GuardFailure = { status: number; code: string; message: string };
@@ -116,6 +117,8 @@ export async function guardJsonPost<T>(
 ): Promise<{ ok: true; data: T } | { ok: false; failure: GuardFailure }> {
   const origin = checkSameOrigin(req);
   if (origin) return { ok: false, failure: origin };
+  // SEC-3-04: a new instance reads the shared command counters once (1 command) before deciding.
+  await getStore("limits").prime?.();
   const resting = checkResting();
   if (resting) return { ok: false, failure: resting };
   const type = checkJsonContentType(req);

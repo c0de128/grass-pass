@@ -415,6 +415,36 @@ describe("R1-m2 / R2-M1: degraded passes are re-made, but capped", { timeout: 60
     expect(OCTOBER_REASONS.badOutput).not.toMatch(/^iNaturalist sent/);
   });
 
+  it("Q-3-03: rebuilds are counted only when they start, so a refused try leaves the day's rebuilds for later", async () => {
+    const start = Date.now();
+    let t = DEC_5;
+    const now = () => t + (Date.now() - start);
+    const r = replayWith((c) => (isInat(c) ? new Response("down", { status: 503 }) : undefined));
+    const body = { parkId: PARKS.celebration.id, ageBand: "6-10" as const };
+    const first = await makePass(body, { ip: ip(), fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env: ENV, now });
+    if (first.kind !== "pass") throw new Error("expected a pass");
+    t += DEGRADED_RETRY_SEC * 1000 + 1;
+
+    // A client whose per-IP minute share is already used: refused, shown the degraded pass, nothing counted.
+    const busy = ip();
+    const { hitRateLimit } = await import("@/lib/limits");
+    const { getStore } = await import("@/lib/cache/store");
+    for (let i = 0; i < 3; i++) await hitRateLimit(getStore("limits"), { name: "pass", key: busy, limit: 3, windowSec: 60, now: now() });
+    const before = r.calls.filter(isModel).length;
+    for (let i = 0; i < 5; i++) {
+      const out = await makePass(body, { ip: busy, fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env: ENV, now });
+      expect(out).toMatchObject({ kind: "pass", cached: true });
+    }
+    expect(r.calls.filter(isModel).length).toBe(before);
+    expect(await mayRebuildDegraded(`${PARKS.celebration.id}|6-10|${first.pass.day}`, first.pass, DEGRADED_RETRY_SEC + 1, now())).toBe(true);
+
+    // Another visitor: the rebuild really runs (a model call), and it is the first one counted today.
+    const ok = await makePass(body, { ip: ip(), fetchImpl: passReplay().fetchImpl, modelFetch: passReplay().fetchImpl, env: ENV, now });
+    if (ok.kind !== "pass") throw new Error("expected a pass");
+    expect(ok.cached).toBe(false);
+    expect(isDegraded(ok.pass)).toBe(false);
+  });
+
   it("R2-M1: a source that stays down all day costs at most 1 + MAX_DEGRADED_REBUILDS model calls, even if asked every 15 min", async () => {
     const start = Date.now();
     let t = DEC_5;

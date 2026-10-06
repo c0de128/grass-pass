@@ -17,7 +17,7 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { createInflight, createJsonCache, getStore, StoreError, WaiterAbortedError, type Store } from "@/lib/cache";
 import { aiCapFor, hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type QuotaTicket } from "@/lib/limits";
-import { restingError } from "@/lib/limits/budget";
+import { dailyPaceState, restingError } from "@/lib/limits/budget";
 import { forgetPassRead, memoPassRead, plausiblePassId, resetPassReads } from "@/lib/limits/pass-read";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
@@ -28,6 +28,7 @@ import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/octobe
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
 import { createDeadline } from "./deadline";
+import { peekFeatures } from "./park-data";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import type { FetchLike } from "@/lib/sources/common";
 import {
@@ -112,10 +113,16 @@ export async function mayRebuildDegraded(key: string, pass: Pass, ageSec: number
   return nowMs - last.lastAt >= waitSec * 1000;
 }
 
-/** Count one rebuild of this degraded pass (before it starts, so concurrent visitors don't all try). */
-async function noteRebuild(key: string, pass: Pass, nowMs: number): Promise<void> {
-  const last = (await rebuildCache.get(key, nowMs))?.value;
-  await rebuildCache.set(key, { tries: (last?.tries ?? 0) + 1, lastAt: nowMs, reasons: degradedReasons(pass) }, { now: nowMs });
+/**
+ * Count one rebuild of this degraded pass, right when it starts (Q-3-03: after every per-IP and global
+ * limit said yes, so a refused request never uses up a rebuild). The count is an atomic store counter,
+ * so two instances can't both take the last rebuild; false = the day's MAX_DEGRADED_REBUILDS are used.
+ */
+async function noteRebuild(store: Store, key: string, pass: Pass, nowMs: number): Promise<boolean> {
+  const tries = await store.incr(`pass-rebuild-n:${key}`, 1, 2 * DAY);
+  if (tries > MAX_DEGRADED_REBUILDS) return false;
+  await rebuildCache.set(key, { tries, lastAt: nowMs, reasons: degradedReasons(pass) }, { now: nowMs });
+  return true;
 }
 
 /** Every request, cached or not, per IP per minute. */
@@ -209,6 +216,8 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
   const cfg = limitsConfig(env);
   const ref = parseParkId(req.parkId);
   if (!ref) return { kind: "error", status: 400, error: { code: "BAD_INPUT", message: "That park id doesn't look right." } };
+  // SEC-3-04: a new instance learns the shared command counters first (1 command, once per process).
+  await store.prime?.();
   // SEC-2-01: the store's monthly command budget is nearly used up: read-only until it resets.
   const resting = restingError(startedAt);
   if (resting) return { kind: "error", status: 503, error: resting };
@@ -236,8 +245,8 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
       const hit = await passCache.get(id, now());
       if (hit && !(await mayRebuildDegraded(key, hit.value, hit.ageSec, now()))) return { kind: "pass", pass: hit.value, cached: true };
       if (hit) {
+        // Q-3-03: the rebuild is counted in build(), once every limit has said yes.
         fallback = hit.value;
-        await noteRebuild(key, hit.value, now());
         log("pass_rebuild_degraded", { id, reasons: degradedReasons(hit.value), ageSec: Math.round(hit.ageSec) });
       }
     }
@@ -263,7 +272,7 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
 
     const out = await inflight().run(
       flightKey,
-      (signal, emit, pin) => build({ req, ref, id, day, variant, key, signal, emit, pin, store, env, now, startedAt, cfg, deps }),
+      (signal, emit, pin) => build({ req, ref, id, day, variant, key, signal, emit, pin, store, env, now, startedAt, cfg, deps, rebuildOf: fallback }),
       deps.signal,
       deps.onStep,
     );
@@ -291,12 +300,31 @@ async function build(ctx: {
   startedAt: number;
   cfg: ReturnType<typeof limitsConfig>;
   deps: MakeDeps;
+  /** The degraded pass this build would replace (R1-m2), or null for a new pass. */
+  rebuildOf: Pass | null;
 }): Promise<BuildOutcome> {
   const { store, now, cfg } = ctx;
   if (ctx.signal.aborted) throw new WaiterAbortedError();
+  const reservedSlice = Boolean(ctx.deps.internal || ctx.deps.reserved);
+
+  // SEC-3-03: today's share of the month's store commands is used: no new visitor passes until Chicago
+  // midnight (0 commands). The example parks and their warm-up keep working; saved passes always do.
+  const paced = reservedSlice ? null : dailyPaceState(now());
+  if (paced?.paced) {
+    log("pass_paused_daily_pace", { used: paced.used, pace: paced.pace }, "warn");
+    return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: `${PASS_COPY.paused} It resets in ${waitText(paced.retryAfter)}.`, retryAfter: paced.retryAfter } };
+  }
+
+  // SEC-3-02: a cached failure (not a park, too heavy, too slow, every Overpass mirror resting) answers
+  // here after ONE store command, before anything is reserved.
+  const featuresPlan = await peekFeatures(ctx.ref, { store, env: ctx.env, now });
+  if (featuresPlan.kind === "fail") {
+    log("pass_not_made", { kind: "error", status: featuresPlan.outcome.status, code: featuresPlan.outcome.error.code, cached: true }, "warn");
+    return featuresPlan.outcome;
+  }
 
   // Caps BEFORE any upstream: the model budget must have room, then the per-IP daily share.
-  const aiCap = aiCapFor(cfg, Boolean(ctx.deps.internal || ctx.deps.reserved));
+  const aiCap = aiCapFor(cfg, reservedSlice);
   const ai = await quotaUsage(store, { name: "ai-calls", period: { kind: "day" }, now: now() });
   if (ai.global >= aiCap) {
     return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 } };
@@ -318,6 +346,12 @@ async function build(ctx: {
     return { kind: "error", status: 429, error: { code: share.scope === "global" ? "DAILY_LIMIT" : "IP_DAILY_LIMIT", message, retryAfter: share.retryAfter } };
   }
   const ticket: QuotaTicket = share.ticket;
+  // Q-3-03: a rebuild is counted only now that it really starts (the finally below gives the share back
+  // when the day's rebuilds are used up; makePass then shows the degraded pass again).
+  if (ctx.rebuildOf && !(await noteRebuild(store, ctx.key, ctx.rebuildOf, now()))) {
+    await ticket.release();
+    return { kind: "error", status: 429, error: { code: "REBUILD_LIMIT", message: "This pass was already remade the most times allowed today." } };
+  }
 
   // October special (S7): free iNaturalist counts, fetched while the model writes clues.
   let october: Promise<OctoberBoxData> | null = null;
@@ -362,6 +396,7 @@ async function build(ctx: {
         startedAt: ctx.startedAt,
         modelLogger: ctx.deps.modelLogger,
         onPoolsReady: startOctober,
+        featuresPlan,
       },
     );
     if (out.kind === "pass") {

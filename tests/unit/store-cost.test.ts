@@ -5,7 +5,7 @@
  * least these numbers, or the per-month math there would not hold.
  */
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { resetStores } from "@/lib/cache/store";
+import { getStore, resetStores } from "@/lib/cache/store";
 import { resetMemo } from "@/lib/cache/memo";
 import { setLogSink } from "@/lib/log";
 import { COSTS, EXTRA } from "@/lib/limits/prelimit";
@@ -13,6 +13,9 @@ import { resetPassReads } from "@/lib/limits/pass-read";
 import { loadPass, resetPassMaking } from "@/lib/pass/make";
 import { resetParksSearch } from "@/lib/parks/search";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
+import { breakerName, overpassEndpoints } from "@/lib/sources/overpass";
+import { EXAMPLE_PARKS } from "@/lib/prewarm";
+import { resetBudget } from "@/lib/limits/budget";
 import * as passRoute from "@/app/api/pass/route";
 import * as parksRoute from "@/app/api/parks/route";
 import { countingUpstash, FAKE_UPSTASH_TOKEN, FAKE_UPSTASH_URL } from "./support/counting-upstash";
@@ -30,6 +33,11 @@ const settle = async () => {
   for (let i = 0; i < 20; i++) await new Promise((r) => setTimeout(r, 5));
 };
 
+/** STORE_COST_REPORT=1 prints the measured numbers (README "Limits" and prelimit.ts quote them). */
+const report = (label: string, n: number) => {
+  if (process.env.STORE_COST_REPORT) console.log(`[store-cost] ${label}: ${n}`);
+};
+
 let up: ReturnType<typeof countingUpstash>;
 let restoreLog: () => void;
 beforeEach(() => {
@@ -38,6 +46,7 @@ beforeEach(() => {
   resetPassReads();
   resetPassMaking();
   resetParksSearch();
+  resetBudget();
   disableSavedOsmForTests();
   vi.stubEnv("UPSTASH_REDIS_REST_URL", FAKE_UPSTASH_URL);
   vi.stubEnv("UPSTASH_REDIS_REST_TOKEN", FAKE_UPSTASH_TOKEN);
@@ -69,11 +78,13 @@ describe("Upstash commands per request (measured)", () => {
     // The cheap part is charged up front (COSTS.apiPass); the rest is bounded per IP per day.
     expect(newPass).toBeGreaterThan(0);
     expect(newPass).toBeLessThanOrEqual(COSTS.apiPass + EXTRA.newPass);
+    report("new pass (Connemara, incl. budget bookkeeping)", newPass);
 
     before = up.counts.total;
     const again = await passRoute.POST(req("/api/pass", body, "203.0.113.11"));
     expect(await again.text()).toContain('"cached":true');
     expect(up.counts.total - before).toBeLessThanOrEqual(COSTS.apiPass);
+    report("same pass again (cache hit)", up.counts.total - before);
 
     // A per-IP refusal: one EVAL, then none while the refusal is remembered.
     const ip = "203.0.113.12";
@@ -82,6 +93,7 @@ describe("Upstash commands per request (measured)", () => {
     const refused = await passRoute.POST(req("/api/pass", body, ip));
     expect(refused.status).toBe(429);
     expect(up.counts.total - before).toBeLessThanOrEqual(COSTS.apiPass);
+    report("per-IP pass refusal", up.counts.total - before);
 
     // The saved-pass page: one GET the first time, none while it is memoized.
     const id = JSON.parse(text.trim().split("\n").at(-1)!).pass.id as string;
@@ -107,16 +119,104 @@ describe("Upstash commands per request (measured)", () => {
     await settle();
     const uncached = up.counts.total - before;
     expect(uncached).toBeLessThanOrEqual(COSTS.apiParks + EXTRA.search);
+    report("uncached park search", uncached);
 
     before = up.counts.total;
     expect((await parksRoute.POST(req("/api/parks", { q: "Allen TX" }, "198.51.100.21"))).status).toBe(200);
     const cached = up.counts.total - before;
     expect(cached).toBeLessThanOrEqual(COSTS.apiParks);
+    report("cached park search", cached);
 
     const ip = "198.51.100.22";
     for (let i = 0; i < 12; i++) await parksRoute.POST(req("/api/parks", { q: "Allen TX" }, ip));
     before = up.counts.total;
     expect((await parksRoute.POST(req("/api/parks", { q: "Allen TX" }, ip))).status).toBe(429);
     expect(up.counts.total - before).toBeLessThanOrEqual(COSTS.apiParks);
+  });
+});
+
+/**
+ * SEC-3-02: the cached-failure paths. Before the fix a negative-cached park cost 9 commands and a
+ * cached "too heavy" one 14-15 (a reserve and its release, plus 4 example GETs every time). Now one MGET
+ * reads every features cache and Overpass breaker before anything is reserved, and readyExample() is
+ * memoized, so each is <= COSTS.apiPass and makes no reserve at all.
+ */
+describe("cached failures cost no more than COSTS.apiPass (SEC-3-02)", () => {
+  const seed = (key: string, v: unknown) => up.mem.set(`gp:${key}`, JSON.stringify({ v, at: Date.now() }), 900);
+  const reserves = () => [...up.counts.byCmd.entries()].filter(([k]) => k.startsWith("EVAL:local n = #KEYS")).reduce((n, [, c]) => n + c, 0);
+
+  async function measure(parkId: string, ip: string): Promise<{ first: number; again: number[]; status: number; code: string }> {
+    // The once-per-process counter read (SEC-3-04) is part of the instance-wide term, not this path.
+    await getStore("limits").prime?.();
+    let before = up.work();
+    const res = await passRoute.POST(req("/api/pass", { parkId, ageBand: "6-10" }, ip));
+    const body = (await res.json()) as { error: { code: string } };
+    await settle();
+    const first = up.work() - before;
+    const again: number[] = [];
+    for (let i = 0; i < 4; i++) {
+      before = up.work();
+      await (await passRoute.POST(req("/api/pass", { parkId, ageBand: "6-10" }, ip))).text();
+      again.push(up.work() - before);
+    }
+    return { first, again, status: res.status, code: body.error.code };
+  }
+
+  beforeEach(() => {
+    vi.stubGlobal(
+      "fetch",
+      up.fetchWith(async (url) => {
+        throw new Error(`no upstream call expected on a cached failure: ${url}`);
+      }),
+    );
+  });
+
+  it("not a park (negative cache): 4 commands, no reserve, no upstream", async () => {
+    await seed("c:park-features-neg:way/900000001", { none: true });
+    const r0 = reserves();
+    const m = await measure("way/900000001", "203.0.113.40");
+    expect([m.status, m.code]).toEqual([404, "NOT_A_PARK"]);
+    report("cached NOT_A_PARK", Math.max(m.first, ...m.again));
+    for (const n of [m.first, ...m.again]) expect(n).toBeLessThanOrEqual(COSTS.apiPass);
+    expect(reserves()).toBe(r0);
+  });
+
+  it("too heavy (heavy cache, no saved answer): 4 commands after the first; the example offer is memoized", async () => {
+    await seed("c:park-heavy:way/900000002", true);
+    const r0 = reserves();
+    const m = await measure("way/900000002", "203.0.113.41");
+    expect([m.status, m.code]).toEqual([503, "PARK_TOO_BIG"]);
+    // The first map-data failure of this process also looks for a ready example (4 GETs, then memoized
+    // READY_EXAMPLE_MEMO_MS: the instance-wide term of the math in prelimit.ts).
+    expect(m.first).toBeLessThanOrEqual(COSTS.apiPass + EXAMPLE_PARKS.length);
+    report("cached PARK_TOO_BIG (first in process, with example lookup)", m.first);
+    report("cached PARK_TOO_BIG (after)", Math.max(...m.again));
+    for (const n of m.again) expect(n).toBeLessThanOrEqual(COSTS.apiPass);
+    expect(reserves()).toBe(r0);
+  });
+
+  it("too slow (slow cache, no saved answer) and every Overpass mirror resting: 4 commands each, no reserve", async () => {
+    await seed("c:park-slow:way/900000003", true);
+    const r0 = reserves();
+    const slow = await measure("way/900000003", "203.0.113.42");
+    expect([slow.status, slow.code]).toEqual([503, "OSM_UNAVAILABLE"]);
+    for (const n of slow.again) expect(n).toBeLessThanOrEqual(COSTS.apiPass);
+    report("cached slow (after)", Math.max(...slow.again));
+
+    const until = String(Date.now() + 120_000);
+    for (const e of overpassEndpoints({})) await up.mem.set(`gp:br:${breakerName(e)}`, until, 120);
+    const open = await measure("way/900000004", "203.0.113.43");
+    expect([open.status, open.code]).toEqual([503, "OSM_UNAVAILABLE"]);
+    for (const n of open.again) expect(n).toBeLessThanOrEqual(COSTS.apiPass);
+    report("every Overpass breaker open (after)", Math.max(...open.again));
+    expect(reserves()).toBe(r0);
+  });
+
+  it("a new instance reads the shared counters once (1 MGET), then never again", async () => {
+    const before = up.counts.total;
+    await getStore("limits").prime?.();
+    await getStore("limits").prime?.();
+    expect(up.counts.total - before).toBe(1);
+    expect([...up.counts.byCmd.keys()].some((k) => k.startsWith("MGET gp:meta:commands:"))).toBe(true);
   });
 });

@@ -39,7 +39,7 @@ import {
 } from "@/lib/sources/inat";
 import type { ParkFeatures, ParkRef } from "@/lib/sources/overpass-features";
 import { createDeadline, eitherSignal } from "@/lib/pass/deadline";
-import { DATA_TOO_SLOW_COPY, loadFeatures } from "@/lib/pass/park-data";
+import { DATA_TOO_SLOW_COPY, loadFeatures, type FeaturesPlan } from "@/lib/pass/park-data";
 import { finishSpot, geometryWithin, loadGeometry, planSpot, spotWaitMs, type GeometryResult, type SpotPlan } from "@/lib/spot/load";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
@@ -89,6 +89,8 @@ export type BuildDeps = {
   modelLogger?: ModelLogger;
   /** Called once the pools are ready and a model call will follow (S7 starts the October box here, in parallel). */
   onPoolsReady?: (park: { id: string; lat: number; lng: number }) => void;
+  /** SEC-3-02: what makePass already read about the park's features (saves reading the same keys again). */
+  featuresPlan?: FeaturesPlan;
 };
 
 export type ApiError = { code: string; message: string; retryAfter?: number };
@@ -296,7 +298,11 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
 async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: BuildDeps, left: () => number): Promise<BuildOutcome> {
   const { band } = input;
   deps.emit("map", stepText("map", deps.env));
-  const fr = await loadFeatures(input.ref, { store: data.store, env: data.env, now: data.now, fetchImpl: data.fetchImpl, signal: data.signal, onUpstream: data.onUpstream });
+  const fr = await loadFeatures(
+    input.ref,
+    { store: data.store, env: data.env, now: data.now, fetchImpl: data.fetchImpl, signal: data.signal, onUpstream: data.onUpstream },
+    data.featuresPlan,
+  );
   if (!fr.ok) return fr.outcome;
   const f = fr.value;
   // SEC-1-01 / Q-1-06: the optional Find This Spot geometry starts only once features confirmed a

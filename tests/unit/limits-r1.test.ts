@@ -249,10 +249,16 @@ describe("Upstash: one EVAL per check, monthly budget alerts", () => {
     expect(f.sent).toHaveLength(2);
   });
 
-  it("adds commands to a shared monthly counter every 50 and logs at 50%, 90% and 95% of UPSTASH_MONTHLY_COMMANDS", async () => {
+  it("adds commands to shared monthly + daily counters every 10 and logs at 50%, 80% and 90% of UPSTASH_MONTHLY_COMMANDS", async () => {
     let total = 0;
+    let day = 0;
     const f = fakeUpstash((cmd) => {
-      if (String(cmd[3]).includes("meta:commands:2026-10")) return (total += Number(cmd[4]));
+      // SEC-3-03/04: one EVAL adds the batch to the monthly (UTC) and the daily (Chicago) counter.
+      if (String(cmd[3]).includes("meta:commands:2026-10") && String(cmd[4]).includes("meta:commands-day:2026-10")) {
+        total += Number(cmd[5]);
+        day += Number(cmd[5]);
+        return [total, day];
+      }
       return null;
     });
     const s = new UpstashStore({ url: "https://x.upstash.io", token: "t", fetch: f.fetchImpl, monthlyBudget: 200, now: () => T0 });
@@ -261,11 +267,13 @@ describe("Upstash: one EVAL per check, monthly budget alerts", () => {
     const budget = lines.filter((l) => l.event === "upstash_budget");
     expect(budget.map((b) => [b.fields.pct, b.level])).toEqual([
       [50, "warn"],
+      [80, "error"],
       [90, "error"],
-      [95, "error"],
     ]);
     expect(total).toBeGreaterThanOrEqual(200);
-    // SEC-2-01: past 95% the app rests (read-only) instead of failing closed at 100%.
+    // Every flush is 10 commands + itself.
+    expect(f.sent.filter((c) => c[0] === "EVAL").length).toBeGreaterThanOrEqual(18);
+    // SEC-2-01 / SEC-3-04: past 90% the app rests (read-only) instead of failing closed at 100%.
     expect(restingState(T0).resting).toBe(true);
     resetBudget();
   });

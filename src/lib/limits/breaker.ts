@@ -9,6 +9,15 @@ export const DEFAULT_OPEN_SEC = 60;
 
 const key = (name: string) => `br:${name}`;
 
+/** The store key of a breaker (SEC-3-02: read together with other keys in one MGET). */
+export const breakerKey = key;
+
+/** Seconds until calls are allowed again, from a raw stored value (see breakerRetryAfter). */
+export function breakerWaitFrom(raw: string | null, now: number): number {
+  const left = (Number(raw) || 0) - now;
+  return left > 0 ? Math.ceil(left / 1000) : 0;
+}
+
 /** Open the breaker for `retryAfterSec` (default 60 s). Never shortens an already longer opening. */
 export async function tripBreaker(store: Store, name: string, now: number, retryAfterSec?: number): Promise<void> {
   const sec = retryAfterSec && retryAfterSec > 0 ? Math.ceil(retryAfterSec) : DEFAULT_OPEN_SEC;

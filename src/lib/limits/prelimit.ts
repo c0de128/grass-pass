@@ -5,30 +5,42 @@
  *
  * Three buckets per client (all must have room; nothing is taken when one is short):
  * - `api`: /api/* requests. A burst of 40, then 4/s (PRELIMIT_BURST, PRELIMIT_PER_SEC): floods only.
- * - `page`: `/` and `/pass/*`. A burst of 20, then 6/min = 0.1/s (PRELIMIT_PAGE_*). A person reading
- *   passes never needs more.
+ * - `page`: `/` and `/pass/*`. A burst of 120, then 2/s (PRELIMIT_PAGE_*): floods only (SEC-3-01: the
+ *   old 20 + 6/min locked out a normal visitor by the 6th page view, because Next `<Link>` RSC
+ *   prefetches go through the proxy too; links to these pages now use prefetch={false}). It adds nothing
+ *   to the monthly bound below: only the `cost` bucket does.
  * - `cost`: store-cost units. A burst of 60, then 45/hour (PRELIMIT_COST_*). Each request is charged
  *   `requestCost()`: at least the Upstash commands of its cheap path (a cache hit or a refusal), measured
  *   in tests/unit/store-cost.test.ts with the real UpstashStore and a command-counting stand-in.
  * An IPv6 client also fills one bucket per /48 with PRELIMIT_NET48_FACTOR x the burst and the refill,
  * so a routed /48 (65,536 /64s) gets 2 clients' worth, not 65,536.
  *
- * ## Per-month math (SEC-2-01): one IPv4 address, one instance, a 31-day month (744 hours)
- * Measured (store-cost.test.ts): a new pass 103 commands (Connemara: 25 iNaturalist taxa; at most 30
- * are looked up), the same pass again <= 4, a refusal <= 1; an uncached park search 13, a cached one 3;
- * a saved-pass page 1 GET, then 0 while memoized; an impossible pass id 0.
+ * ## Per-month math (SEC-2-01, re-measured for SEC-3-02): one IPv4 address, one instance, a 31-day month
+ * Measured 2026-10-06 (store-cost.test.ts, the real UpstashStore against a command-counting stand-in;
+ * STORE_COST_REPORT=1 prints them): a new pass 111 commands with the budget bookkeeping (Connemara: 25
+ * iNaturalist taxa; at most 30 are looked up), the same pass again 3, a per-IP refusal 0-1; a CACHED
+ * FAILURE (not a park, too heavy, too slow, every Overpass mirror resting) 4, because one MGET reads every
+ * features cache and breaker before anything is reserved (SEC-3-02; before: 9 and 14-15); an uncached park
+ * search 15 with bookkeeping, a cached one 3; a saved-pass page 1 GET, then 0 while memoized; an impossible
+ * pass id 0. So COSTS.apiPass = 4 covers every cheap /api/pass path.
  * - Cheap paths, through the cost bucket: <= 60 + 45 x 744 = 33,540 commands.
  * - Expensive paths, beyond what the cost bucket already charged, bounded by the per-IP daily shares
- *   the shared store keeps (PASS_PER_IP_PER_DAY 20, PARKS_PER_IP_PER_DAY 60):
+ *   the shared store keeps (PASS_PER_IP_PER_DAY 20, PARKS_PER_IP_PER_DAY 60). Only a path that started
+ *   an upstream call (and so spent its daily share) can be expensive:
  *   31 x (20 x EXTRA.newPass 120 + 60 x EXTRA.search 20) = 111,600 commands.
- * - The monthly budget counter adds 1 command per 50: x 1.02.
- * - Total <= (33,540 + 111,600) x 1.02 = 148,043 = 29.6% of the free 500,000 (`monthlyCommandBound`).
+ * - The shared budget counters add 1 command per 10 (SEC-3-04): x 1.1.
+ * - Total <= (33,540 + 111,600) x 1.1 = 159,654 = 31.9% of the free 500,000 (`monthlyCommandBound`).
  * Instance-wide, whatever the traffic or the number of addresses: the home page's example check is 4 GETs
- * per 5 min (src/app/page.tsx; every 30 s only while an example is being made) and the example pass reads
- * are memoized 30 min (./pass-read.ts): <= 4 x 8,928 + 4 x 1,488 = 41,664 commands (8.3%).
- * Limits of this bound: it is per instance (several Vercel instances each have their own buckets; the
- * README's optional Vercel Firewall rule is the cross-instance backstop), and an IPv6 /48 gets 2x. At 95%
- * of UPSTASH_MONTHLY_COMMANDS the app rests read-only instead of failing at 100% (./budget.ts).
+ * per 5 min (src/app/page.tsx; every 30 s only while an example is being made), readyExample() (the
+ * example offered after a map-data failure) is 4 GETs per 5 min (SEC-3-02), the example pass reads are
+ * memoized 30 min (./pass-read.ts), and a new instance reads the counters once (1 MGET):
+ * <= 4 x 8,928 x 2 + 4 x 1,488 = 77,376 commands (15.5%).
+ * Across many addresses (SEC-3-03), the daily pace in ./budget.ts stops new passes and uncached searches
+ * once a Chicago day has used 90% / days-in-month of the monthly budget (about 14,500 in October), so the
+ * month cannot be used up in a few days. Limits of this bound: it is per instance (several Vercel
+ * instances each have their own buckets; the daily pace and resting are shared through the store), and
+ * an IPv6 /48 gets 2x. At 90% of UPSTASH_MONTHLY_COMMANDS the app rests read-only instead of failing at
+ * 100% (./budget.ts).
  */
 import { plausiblePassId } from "./pass-read";
 
@@ -40,17 +52,17 @@ export const PRELIMIT_MAX_KEYS = 20_000;
 export const PRELIMIT_NET48_FACTOR = 2;
 
 /**
- * Cost units per request: at least the Upstash commands of its cheap path (cache hit or refusal),
- * measured in tests/unit/limits-r2.test.ts. A pass id that can't exist costs 0 (no store read).
+ * Cost units per request: at least the Upstash commands of its cheap path (cache hit, refusal or cached
+ * failure), measured in tests/unit/store-cost.test.ts. A pass id that can't exist costs 0 (no store read).
  */
 export const COSTS = { home: 0, passPage: 1, apiPass: 4, apiParks: 4, apiOther: 1 } as const;
 /**
- * Upper bounds of the extra commands of the expensive paths, beyond COSTS (measured 99 and 9; margins for
- * 30 taxa, and for the Nominatim and saved-index fallbacks of a search).
+ * Upper bounds of the extra commands of the expensive paths, beyond COSTS (measured <= 106 and 9; margins
+ * for 30 taxa, and for the Nominatim and saved-index fallbacks of a search).
  */
 export const EXTRA = { newPass: 120, search: 20 } as const;
-/** The monthly budget counter costs one command per BUDGET_FLUSH_EVERY (50). */
-export const FLUSH_OVERHEAD = 51 / 50;
+/** The shared budget counters cost one command per BUDGET_FLUSH_EVERY (10, SEC-3-04). */
+export const FLUSH_OVERHEAD = 11 / 10;
 
 function buckets(): Map<string, Bucket> {
   const g = globalThis as unknown as Record<symbol, Holder | undefined>;

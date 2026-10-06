@@ -212,20 +212,33 @@ Every cache, limit and saved pass lives in Upstash Redis, whose free plan allows
 flood of requests must not use that up, or saved pass links would stop opening. So, in front of every page and API
 that reads the store, an in-process limiter (`src/proxy.ts`, `src/lib/limits/prelimit.ts`) answers 429 before any
 store command:
-- **Pages** (`/`, `/pass/*`): 20 at once, then one every 10 seconds per IP.
+- **Pages** (`/`, `/pass/*`): a flood guard only, 120 at once, then 2 a second per IP. Links to these pages don't
+  prefetch (`prefetch={false}`), so one click is one request. An e2e (`pnpm e2e:limits`) walks home, every example
+  pass and its print page three times at the default limits and expects no 429.
 - **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, an API call 4,
-  measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP.
+  measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP. Measured with the real store
+  code: a cache hit 3, a cached failure (not a park, too big, too slow, OpenStreetMap resting) 4, a cached park
+  search 3; a new pass about 100 (111 with the usage bookkeeping) and an uncached park search 15, which only an
+  address's daily share of new passes (20) and searches (60) can reach.
 - **IPv6:** one shared bucket per /48 network (2 clients' worth), not one per /64.
 - **Pass ids that can't exist** (a day in the future or older than the 30-day pass life, a variant above 3, a
   malformed park id) are a 404 with no store read. Saved passes are kept in memory for 30 minutes after a read.
 
-With these defaults one IPv4 address can spend at most **about 148,000 commands a month (29.6%)**, new passes and
+With these defaults one IPv4 address can spend at most **about 160,000 commands a month (31.9%)**, new passes and
 park searches included. The math is in `src/lib/limits/prelimit.ts` and checked by a unit test. The limits are per
 server instance, so the optional firewall rule below is the backstop across instances.
 
-**At 95% of the monthly budget Grass Pass rests instead of breaking.** Saved passes and the example passes still
+**A daily pace across everyone.** Many addresses, each inside its own limits, could still use the month up in a
+few days. So each day (Chicago time) may use at most 90% of the month divided by its days (about 14,500 commands a
+day in October). After that, new passes and new park searches say they are paused for today until midnight
+(Chicago time); saved passes, the example passes and searches already made keep working. The logs get
+`upstash_daily_pace` once when a day reaches it.
+
+**At 90% of the monthly budget Grass Pass rests instead of breaking.** Saved passes and the example passes still
 open. New passes and park searches answer "Grass Pass is resting until <the 1st of next month>", and the home page
-shows the same notice. The logs get `upstash_budget` at 50%, 90% and 95%.
+shows the same notice. The logs get `upstash_budget` at 50%, 80% and 90%. The app counts its own commands (added to
+a shared counter every 10, read by every new server instance first), so its count can run a little behind; 90%
+leaves room for that. **After the deploy, compare the app's count with the Upstash console once** and adjust.
 
 ### Optional: a Vercel Firewall rate-limit rule (not set up)
 Vercel's WAF rate limiting is on every plan; Hobby gets 1 rate-limit rule per project, a fixed window of 10 s to

@@ -8,14 +8,25 @@
  * Key-to-host rule (same idea as the model key): the Upstash token is sent only to an
  * https://*.upstash.io URL, never on a redirect, and is never logged.
  */
-import { noteMonthlyCommands, RESTING_PCT } from "@/lib/limits/budget";
+import { dailyPace, noteDailyCommands, noteMonthlyCommands, RESTING_PCT } from "@/lib/limits/budget";
 import { log, logOnce } from "@/lib/log";
+import { localDay } from "@/lib/time";
 
 export type Clock = () => number;
 
 export interface Store {
   readonly kind: "memory" | "upstash";
   get(key: string): Promise<string | null>;
+  /**
+   * Optional (SEC-3-02): several keys in ONE round trip (Upstash MGET = 1 command). Callers fall back to
+   * get() per key when a store lacks it.
+   */
+  getMany?(keys: readonly string[]): Promise<(string | null)[]>;
+  /**
+   * Optional (SEC-3-04): learn the shared monthly/daily command counters before the first counted
+   * command of this process, so a new instance knows at once whether to rest or pause. Never throws.
+   */
+  prime?(): Promise<void>;
   set(key: string, value: string, ttlSec: number): Promise<void>;
   del(key: string): Promise<void>;
   /**
@@ -92,6 +103,10 @@ export class MemoryStore implements Store {
     return this.live(key)?.value ?? null;
   }
 
+  async getMany(keys: readonly string[]) {
+    return keys.map((k) => this.live(k)?.value ?? null);
+  }
+
   async set(key: string, value: string, ttlSec: number) {
     this.write(key, value, this.now() + ttlMs(ttlSec));
   }
@@ -158,12 +173,27 @@ const RESERVE_SCRIPT =
   "local out = {0} for i = 1, n do local v = redis.call('INCRBY', KEYS[i], 1) " +
   "if redis.call('TTL', KEYS[i]) < 0 then redis.call('EXPIRE', KEYS[i], ARGV[n + 1]) end out[#out + 1] = v end return out";
 
+/**
+ * SEC-3-03/04: add N to the monthly counter (UTC month) and the daily counter (Chicago day) at once; a new
+ * key gets its expiry. Returns {month total, day total}. One round trip.
+ */
+const FLUSH_SCRIPT =
+  "local m = redis.call('INCRBY', KEYS[1], ARGV[1]) if redis.call('TTL', KEYS[1]) < 0 then redis.call('EXPIRE', KEYS[1], ARGV[2]) end " +
+  "local d = redis.call('INCRBY', KEYS[2], ARGV[1]) if redis.call('TTL', KEYS[2]) < 0 then redis.call('EXPIRE', KEYS[2], ARGV[3]) end " +
+  "return {m, d}";
+
 /** Upstash free plan: 500,000 commands a month (upstash.com/pricing/redis, checked 2026-10-05). */
 export const UPSTASH_FREE_MONTHLY_COMMANDS = 500_000;
-/** Commands are counted in process and added to the shared monthly counter in batches of this size. */
-export const BUDGET_FLUSH_EVERY = 50;
-/** 95 = RESTING_PCT: Grass Pass goes read-only there (src/lib/limits/budget.ts, SEC-2-01). */
-export const BUDGET_ALERT_PCTS = [50, 90, RESTING_PCT] as const;
+/**
+ * Commands are counted in process and added to the shared counters in batches of this size. SEC-3-04: 10
+ * (was 50), so a recycled serverless instance loses at most 9 uncounted commands and the counters stay
+ * close to the real count; the flush itself costs 1 command per 10 (FLUSH_OVERHEAD in prelimit.ts).
+ */
+export const BUDGET_FLUSH_EVERY = 10;
+/** 90 = RESTING_PCT: Grass Pass goes read-only there (src/lib/limits/budget.ts, SEC-2-01, SEC-3-04). */
+export const BUDGET_ALERT_PCTS = [50, 80, RESTING_PCT] as const;
+const MONTH_KEY_TTL_SEC = 40 * 24 * 3600;
+const DAY_KEY_TTL_SEC = 3 * 24 * 3600;
 
 const intOr = (v: string | undefined, d: number) => {
   const n = Number(v?.trim());
@@ -207,6 +237,7 @@ export class UpstashStore implements Store {
   /** Commands sent by this process and not yet added to the shared monthly counter. */
   private unflushed = 0;
   private flushing = false;
+  private primed: Promise<void> | null = null;
 
   constructor(opts: {
     url: string;
@@ -229,9 +260,10 @@ export class UpstashStore implements Store {
 
   /**
    * Monthly command budget (SEC-1-02): every BUDGET_FLUSH_EVERY commands, one extra command adds them
-   * to a shared per-month counter. The instance whose batch crosses 50%, 90% or 95% logs it once, so the PM
-   * can react before the free quota runs out, and at 95% the app rests read-only instead of failing closed
-   * at 100% (src/lib/limits/budget.ts). Never throws.
+   * to a shared per-month counter and (SEC-3-03) a shared per-day counter. The instance whose batch crosses
+   * 50%, 80% or 90% of the month logs it once, so the PM can react before the free quota runs out, and at
+   * 90% the app rests read-only instead of failing closed at 100% (src/lib/limits/budget.ts). Crossing
+   * today's pace is logged once too. Never throws.
    */
   private count(): void {
     this.unflushed++;
@@ -239,21 +271,62 @@ export class UpstashStore implements Store {
     void this.flushBudget();
   }
 
-  /** Add this process's unflushed command count to the shared monthly counter; returns the new total. */
+  private monthKey(now: number): { month: string; key: string } {
+    const month = new Date(now).toISOString().slice(0, 7);
+    return { month, key: `${this.prefix}meta:commands:${month}` };
+  }
+
+  private dayKey(now: number): { day: string; key: string } {
+    const day = localDay(now);
+    return { day, key: `${this.prefix}meta:commands-day:${day}` };
+  }
+
+  /**
+   * SEC-3-04: before this process relies on its first command, read the shared counters (1 MGET), so a
+   * new instance knows at once whether Grass Pass rests or is paused for today. Once per process; a
+   * failure is ignored (the next flush reports the totals anyway).
+   */
+  prime(): Promise<void> {
+    this.primed ??= (async () => {
+      const now = this.clock();
+      const m = this.monthKey(now);
+      const d = this.dayKey(now);
+      this.unflushed++; // the read is a command too (added at the next flush)
+      try {
+        const r = await this.send(["MGET", m.key, d.key]);
+        const [mv, dv] = Array.isArray(r) ? r : [];
+        noteMonthlyCommands(Number(mv ?? 0) || 0, this.monthlyBudget, m.month);
+        noteDailyCommands(Number(dv ?? 0) || 0, d.day);
+      } catch {
+        // best effort; the store error is already logged
+      }
+    })();
+    return this.primed;
+  }
+
+  /** Add the unflushed command count of this process to the shared counters; returns the new monthly total. */
   async flushBudget(): Promise<number | null> {
     if (this.flushing || this.unflushed === 0) return null;
     this.flushing = true;
     const n = this.unflushed + 1; // the flush itself is a command too
     this.unflushed = 0;
-    const month = new Date(this.clock()).toISOString().slice(0, 7);
+    const now = this.clock();
+    const m = this.monthKey(now);
+    const d = this.dayKey(now);
     try {
-      const total = Number(await this.send(["EVAL", INCR_SCRIPT, 1, `${this.prefix}meta:commands:${month}`, n, 40 * 24 * 3600]));
+      const r = await this.send(["EVAL", FLUSH_SCRIPT, 2, m.key, d.key, n, MONTH_KEY_TTL_SEC, DAY_KEY_TTL_SEC]);
+      const [total, dayTotal] = Array.isArray(r) ? r.map(Number) : [Number.NaN, Number.NaN];
       if (!Number.isFinite(total)) return null;
-      noteMonthlyCommands(total, this.monthlyBudget, month);
+      noteMonthlyCommands(total, this.monthlyBudget, m.month);
+      if (Number.isFinite(dayTotal)) {
+        noteDailyCommands(dayTotal, d.day);
+        const pace = dailyPace(this.monthlyBudget, now);
+        if (dayTotal - n < pace && dayTotal >= pace) log("upstash_daily_pace", { used: dayTotal, pace, day: d.day }, "error");
+      }
       for (const pct of BUDGET_ALERT_PCTS) {
         const at = Math.ceil((this.monthlyBudget * pct) / 100);
         if (total - n < at && total >= at) {
-          log("upstash_budget", { pct, used: total, budget: this.monthlyBudget, month }, pct >= 90 ? "error" : "warn");
+          log("upstash_budget", { pct, used: total, budget: this.monthlyBudget, month: m.month }, pct >= 80 ? "error" : "warn");
         }
       }
       return total;
@@ -304,6 +377,13 @@ export class UpstashStore implements Store {
   async get(key: string) {
     const r = await this.command(["GET", this.prefix + key]);
     return typeof r === "string" ? r : null;
+  }
+
+  async getMany(keys: readonly string[]) {
+    if (keys.length === 0) return [];
+    const r = await this.command(["MGET", ...keys.map((k) => this.prefix + k)]);
+    if (!Array.isArray(r) || r.length !== keys.length) throw new StoreError("The shared store returned a bad MGET answer.");
+    return r.map((v) => (typeof v === "string" ? v : null));
   }
 
   async set(key: string, value: string, ttlSec: number) {

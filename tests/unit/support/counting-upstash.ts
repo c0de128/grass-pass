@@ -10,11 +10,14 @@ export const FAKE_UPSTASH_TOKEN = "counting-test-token-not-real"; // gitleaks:al
 
 export function countingUpstash() {
   const mem = new MemoryStore({ maxEntries: 1_000_000 });
-  const counts = { total: 0, byCmd: new Map<string, number>() };
+  const counts = { total: 0, budget: 0, byCmd: new Map<string, number>() };
+  /** Commands so far without the budget bookkeeping. */
+  const work = () => counts.total - counts.budget;
 
   async function run(args: unknown[]): Promise<unknown> {
     const [cmd, ...rest] = args.map((a) => (typeof a === "number" ? a : String(a)));
     if (cmd === "GET") return mem.get(String(rest[0]));
+    if (cmd === "MGET") return Promise.all(rest.map((k) => mem.get(String(k))));
     if (cmd === "SET") {
       await mem.set(String(rest[0]), String(rest[1]), Number(rest[3]));
       return "OK";
@@ -29,6 +32,8 @@ export function countingUpstash() {
       const keys = rest.slice(2, 2 + n).map(String);
       const argv = rest.slice(2 + n).map(Number);
       if (script.startsWith("local v = redis.call('INCRBY'")) return mem.incr(keys[0], argv[0], argv[1]);
+      // The budget flush (SEC-3-03/04): monthly + daily counters at once.
+      if (script.startsWith("local m = redis.call('INCRBY'")) return [await mem.incr(keys[0], argv[0], argv[1]), await mem.incr(keys[1], argv[0], argv[2])];
       if (script.startsWith("local c = redis.call('INCRBY'")) {
         const r = await mem.rateHit(keys[0], keys[1], argv[0], argv[1], argv[2]);
         return [r.allowed ? 1 : 0, r.current, r.previous];
@@ -48,6 +53,10 @@ export function countingUpstash() {
       if (!url.startsWith(FAKE_UPSTASH_URL)) return next(url, init);
       const args = JSON.parse(String(init?.body)) as unknown[];
       counts.total++;
+      // SEC-3-04: the budget bookkeeping (the flush every 10 commands, the once-per-process counter read),
+      // kept apart so a per-request count can leave it out (it is the FLUSH_OVERHEAD term of the math).
+      if (String(args[0]) === "EVAL" && String(args[1]).startsWith("local m = redis.call('INCRBY'")) counts.budget++;
+      if (String(args[0]) === "MGET" && String(args[1]).includes("meta:commands")) counts.budget++;
       // Command plus its first key, long hashes shortened (for debugging a count).
       const name = `${String(args[0]) === "EVAL" ? `EVAL:${String(args[1]).slice(0, 18)}` : String(args[0])} ${String(args[0]) === "EVAL" ? String(args[3]) : String(args[1])}`.replace(/[A-Za-z0-9_-]{20,}/g, "#");
       counts.byCmd.set(name, (counts.byCmd.get(name) ?? 0) + 1);
@@ -55,5 +64,5 @@ export function countingUpstash() {
     };
   }
 
-  return { counts, fetchWith, mem };
+  return { counts, work, fetchWith, mem };
 }

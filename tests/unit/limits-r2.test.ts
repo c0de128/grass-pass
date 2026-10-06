@@ -143,11 +143,28 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
     expect(requestCost("/api/parks", T0)).toEqual({ kind: "api", cost: COSTS.apiParks });
   });
 
-  it("pages: a burst of 20, then one every 10 s", () => {
-    for (let i = 0; i < 20; i++) expect(hit("/", T0).ok).toBe(true);
-    expect(hit("/", T0)).toEqual({ ok: false, retryAfter: 10 });
-    expect(hit("/", T0 + 10_000).ok).toBe(true);
-    expect(hit("/", T0 + 10_000).ok).toBe(false);
+  it("pages: a flood guard only (SEC-3-01): a burst of 120, then 2 a second", () => {
+    for (let i = 0; i < 120; i++) expect(hit("/", T0).ok).toBe(true);
+    expect(hit("/", T0)).toEqual({ ok: false, retryAfter: 1 });
+    expect(hit("/", T0 + 500).ok).toBe(true);
+    expect(hit("/", T0 + 500).ok).toBe(false);
+  });
+
+  it("SEC-3-01: a visitor clicking through every example, its print page and home, prefetches included, is never refused", () => {
+    // Worst case per view: the page plus 4 RSC prefetches (old behaviour) for 4 examples x (pass + print + home).
+    const ids = ["w38113837-6to10-20261006-1", "w460905359-6to10-20261006-1", "w188145317-6to10-20261006-1", "w306191453-6to10-20261006-1"];
+    let t = T0;
+    // Round 0 as before the fix (each view also prefetched home, the pass and the print page), then two
+    // rounds as now (prefetch={false} on links to these pages: one request per view).
+    for (let round = 0; round < 3; round++) {
+      for (const id of ids) {
+        for (const view of ["/", `/pass/${id}`, `/pass/${id}/print`]) {
+          const requests = round === 0 ? [view, "/", `/pass/${id}`, `/pass/${id}/print`] : [view];
+          for (const p of requests) expect(hit(p, t).ok, `${p} at round ${round}`).toBe(true);
+          t += 2_500;
+        }
+      }
+    }
   });
 
   it("10 minutes of a curl loop on random pass ids: store reads <= the cost burst + the hourly refill", () => {
@@ -168,8 +185,8 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
 
   it("impossible ids only use the page bucket (no store cost), then the page bucket stops them too", () => {
     let ok = 0;
-    for (let i = 0; i < 100; i++) if (hit("/pass/w1-6to10-19990101-1", T0).ok) ok++;
-    expect(ok).toBe(20);
+    for (let i = 0; i < 200; i++) if (hit("/pass/w1-6to10-19990101-1", T0).ok) ok++;
+    expect(ok).toBe(CFG.preLimitPageBurst);
     // The cost bucket is untouched: 60 API-cost units are still there for this client (15 x 4).
     for (let i = 0; i < 15; i++) expect(hit("/api/pass", T0).ok).toBe(true);
     expect(hit("/api/pass", T0).ok).toBe(false);
@@ -188,17 +205,18 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
 
   it("proxy: a pass-page flood is refused as text, impossible ids included, without touching the store", () => {
     const req = (path: string) => new NextRequest(`http://localhost:3123${path}`, { headers: { "x-forwarded-for": "192.0.2.77" } });
-    const statuses = Array.from({ length: 25 }, (_, i) => proxy(req(`/pass/${randomId(i)}`)).status);
-    expect(statuses.filter((s) => s === 200)).toHaveLength(20);
+    // The cost bucket (60) stops plausible ids first now that the page bucket is a flood guard (SEC-3-01).
+    const statuses = Array.from({ length: 70 }, (_, i) => proxy(req(`/pass/${randomId(i)}`)).status);
+    expect(statuses.filter((s) => s === 200)).toHaveLength(CFG.preLimitCostBurst);
     const refused = proxy(req("/pass/w1-6to10-20261006-1"));
     expect(refused.status).toBe(429);
     expect(refused.headers.get("content-type")).toMatch(/text\/plain/);
   });
 
-  it("per-month math: one IPv4 at the steady rate stays under 30% of the free 500K commands", () => {
+  it("per-month math: one IPv4 at the steady rate stays under a third of the free 500K commands", () => {
     const bound = monthlyCommandBound(CFG, { passPerIpPerDay: CFG.passPerIpPerDay, parksPerIpPerDay: CFG.parksPerIpPerDay });
-    expect(bound).toBe(148_043);
-    expect(bound / UPSTASH_FREE_MONTHLY_COMMANDS).toBeLessThan(0.3);
+    expect(bound).toBe(159_654);
+    expect(bound / UPSTASH_FREE_MONTHLY_COMMANDS).toBeLessThan(0.33);
 
     // Simulated: one address hammering every path for a day spends at most the cost bucket's day share
     // on cheap paths (the expensive extras are capped by the daily shares, counted in the bound).
@@ -210,15 +228,15 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
     }
     expect(units).toBeLessThanOrEqual(CFG.preLimitCostBurst + CFG.preLimitCostPerHour * 24);
     // x 31 days, plus the daily-share extras, is still the bound above.
-    expect((units * 31 + 31 * (20 * 120 + 60 * 20)) * 1.02).toBeLessThanOrEqual(bound + CFG.preLimitCostBurst * 31);
+    expect((units * 31 + 31 * (20 * 120 + 60 * 20)) * 1.1).toBeLessThanOrEqual(bound + CFG.preLimitCostBurst * 31 * 1.1);
   });
 });
 
-describe("resting at 95% of the monthly Upstash budget (SEC-2-01)", () => {
-  it("rests from 95% until the 1st of next month (UTC), with an honest date", () => {
-    noteMonthlyCommands(474_999, 500_000, "2026-10");
+describe("resting at 90% of the monthly Upstash budget (SEC-2-01, SEC-3-04)", () => {
+  it("rests from 90% until the 1st of next month (UTC), with an honest date", () => {
+    noteMonthlyCommands(449_999, 500_000, "2026-10");
     expect(restingState(T0).resting).toBe(false);
-    noteMonthlyCommands(475_000, 500_000, "2026-10");
+    noteMonthlyCommands(450_000, 500_000, "2026-10");
     const r = restingState(T0);
     expect(r).toMatchObject({ resting: true, untilIso: "2026-11-01T00:00:00.000Z", untilText: "November 1" });
     const err = restingError(T0)!;
@@ -243,12 +261,16 @@ describe("resting at 95% of the monthly Upstash budget (SEC-2-01)", () => {
       now: () => T0,
       fetch: async (_u, init) => {
         const cmd = JSON.parse(String(init?.body)) as unknown[];
-        return Response.json({ result: String(cmd[3]).includes("meta:commands") ? (total += Number(cmd[4])) : null });
+        if (String(cmd[3]).includes("meta:commands")) {
+          total += Number(cmd[5]);
+          return Response.json({ result: [total, total] });
+        }
+        return Response.json({ result: null });
       },
     });
     for (let i = 0; i < 100; i++) await s.get(`k${i}`);
     await s.flushBudget();
-    expect(total).toBeGreaterThanOrEqual(95);
+    expect(total).toBeGreaterThanOrEqual(90);
     expect(restingState(T0).resting).toBe(true);
   });
 

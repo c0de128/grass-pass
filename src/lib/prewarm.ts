@@ -24,6 +24,7 @@ import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
 import { createJsonCache, getStore, type Store } from "@/lib/cache";
+import { memoize } from "@/lib/cache/memo";
 import { log } from "@/lib/log";
 import { localDay } from "@/lib/time";
 import type { FetchLike } from "@/lib/sources/common";
@@ -273,10 +274,22 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
 }
 
 /**
+ * SEC-3-02: readyExample() is memoized in process this long, so a stream of map-data failures costs at
+ * most 4 example GETs per instance per 5 minutes (the same rate as the home page check; math in
+ * src/lib/limits/prelimit.ts), not 4 per failed request.
+ */
+export const READY_EXAMPLE_MEMO_MS = 5 * 60_000;
+
+/**
  * A ready example pass to offer when a park search can't answer (R1-B1): the first example whose
  * saved pass still opens. Never starts a refresh. Null when none is ready.
  */
 export async function readyExample(deps: Pick<WarmDeps, "now" | "examples"> = {}): Promise<ExampleLink | null> {
+  if (!deps.now && !deps.examples) return memoize("ready-example", READY_EXAMPLE_MEMO_MS, () => findReadyExample({}));
+  return findReadyExample(deps);
+}
+
+async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promise<ExampleLink | null> {
   const now = deps.now ?? (() => Date.now());
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());

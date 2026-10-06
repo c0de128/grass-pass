@@ -16,7 +16,32 @@ export type JsonCache<V> = {
   get(key: string, now?: number): Promise<CacheHit<V> | null>;
   set(key: string, value: V, opts?: { ttlSec?: number; now?: number }): Promise<void>;
   delete(key: string): Promise<void>;
+  /** SEC-3-02: where `key` lives, for one batched read of several caches (`readMany`). */
+  locate(key: string): { store: Store; key: string };
+  /** SEC-3-02: turn a raw stored string (from `readMany`) into a hit, exactly like get(). */
+  decode(raw: string | null, now?: number): CacheHit<V> | null;
 };
+
+/**
+ * SEC-3-02: read several raw keys with as few store commands as possible: one `getMany` (Upstash MGET,
+ * 1 command) per store that has it, else one get() per key. With Upstash every cache and the limits share
+ * one store, so this is ONE command. Throws StoreError when the store fails.
+ */
+export async function readMany(reads: readonly { store: Store; key: string }[]): Promise<(string | null)[]> {
+  const out: (string | null)[] = new Array(reads.length).fill(null);
+  const groups = new Map<Store, number[]>();
+  reads.forEach((r, i) => {
+    const g = groups.get(r.store);
+    if (g) g.push(i);
+    else groups.set(r.store, [i]);
+  });
+  for (const [store, idx] of groups) {
+    const keys = idx.map((i) => reads[i].key);
+    const vals = store.getMany ? await store.getMany(keys) : await Promise.all(keys.map((k) => store.get(k)));
+    idx.forEach((i, j) => (out[i] = vals[j] ?? null));
+  }
+  return out;
+}
 
 const MAX_KEY_LENGTH = 200;
 
@@ -44,8 +69,26 @@ export function createJsonCache<V>(opts: {
   const store = () => opts.store ?? getStore(`cache:${opts.name}`, { maxEntries: opts.maxEntries });
   const fullKey = (key: string) => `c:${opts.name}:${key}`;
 
+  const decode = (raw: string | null, now: number): CacheHit<V> | null => {
+    if (raw === null) return null;
+    let parsed: unknown;
+    try {
+      parsed = JSON.parse(raw);
+    } catch {
+      return null;
+    }
+    const r = envelope.safeParse(parsed);
+    if (!r.success) {
+      log("cache_entry_invalid", { cache: opts.name }, "warn");
+      return null;
+    }
+    return { value: r.data.v as V, storedAt: r.data.at, ageSec: Math.max(0, Math.floor((now - r.data.at) / 1000)) };
+  };
+
   return {
     name: opts.name,
+    locate: (key) => ({ store: store(), key: fullKey(key) }),
+    decode: (raw, now = Date.now()) => decode(raw, now),
     async get(key, now = Date.now()) {
       let raw: string | null;
       try {
@@ -54,19 +97,7 @@ export function createJsonCache<V>(opts: {
         log("cache_read_failed", { cache: opts.name }, "warn");
         return null;
       }
-      if (raw === null) return null;
-      let parsed: unknown;
-      try {
-        parsed = JSON.parse(raw);
-      } catch {
-        return null;
-      }
-      const r = envelope.safeParse(parsed);
-      if (!r.success) {
-        log("cache_entry_invalid", { cache: opts.name }, "warn");
-        return null;
-      }
-      return { value: r.data.v as V, storedAt: r.data.at, ageSec: Math.max(0, Math.floor((now - r.data.at) / 1000)) };
+      return decode(raw, now);
     },
     async set(key, value, o = {}) {
       try {

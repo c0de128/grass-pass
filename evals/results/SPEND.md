@@ -36,3 +36,8 @@ Audit round 1 follow-up total (Builder E, 2026-10-05/06 CDT): fixture re-recordi
 | 2026-10-06T07:20:54.740Z | 2026-10-06-partial-0220.md | 7 | 12514 | 2596 | $0.0036 |
 
 Audit round 2 (Builder H, 2026-10-06 CDT) total: fixture re-recordings $0.0148 (+ up to about $0.0027 for 4 timed-out calls) + smoke 0120 $0.0077 + smoke 0125 $0.0070 + aborted full run $0.0206 (+ its 10 timed-out calls, tokens unknown) + final-code smoke 0220 $0.0036 = **$0.0537** measured (cap $0.10; with the unknown timed-out calls at most about $0.065). No full run was completed: one would cost about $0.065-0.075 and does not fit in what is left of the cap.
+| 2026-10-06T09:44Z | Post-R2 eval sync (builder): 2 speed probes through callModel (not an eval run) | 2 | 66 | 76 | $0.0001 |
+| 2026-10-06T09:45Z | Post-R2 eval sync: re-recording of the Celebration model fixture in tests/fixtures (not an eval run). 2 answered calls; the first answer was discarded (recorder script crashed on a log line after the call, usage not saved; assumed the same size as the second) | 2 | about 3448 | about 1182 | about $0.0012 |
+| 2026-10-06T09:53:42.263Z | 2026-10-06-2.md | 92 | 184630 | 42692 | $0.0612 |
+
+Post-R2 eval sync total (builder, 2026-10-06 CDT): probes $0.0001 + fixture re-recording about $0.0012 + full run $0.0612 = **about $0.0625** (cap $0.10).

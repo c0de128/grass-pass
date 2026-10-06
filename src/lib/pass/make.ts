@@ -27,7 +27,8 @@ import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-p
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap, judgeLimitMessage, JUDGE_PASSES_PER_IP_PER_DAY } from "@/lib/accounts/config";
+import { JUDGE_QUOTA } from "@/lib/accounts/judge-passes";
 import type { Account } from "@/lib/accounts/session";
 import { excludedRefs, parkReportStats } from "@/lib/reports";
 import { createDeadline, eitherSignal } from "./deadline";
@@ -188,7 +189,9 @@ export type MakeDeps = {
    * Accounts (Kevin, 2026-10-06): the route sets `requireAccount`, so a NEW pass (a cache miss, "Make a
    * different pass", or a rebuild of a degraded pass) needs a signed-in `account`; a saved pass for today
    * is still served to anyone (it costs nothing). Each account may start ACCOUNT_PASSES_PER_DAY new passes
-   * per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP. Counted only when a build really starts.
+   * per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP, at most JUDGE_PASSES_PER_IP_PER_DAY per
+   * connection (SEC-4-02). Counted only when a build really starts. Q-4-03: a rebuild of today's degraded
+   * pass is NOT counted against the account (the per-IP share, AI_DAILY_CAP and MAX_DEGRADED_REBUILDS bound it).
    */
   requireAccount?: boolean;
   account?: Account | null;
@@ -223,34 +226,36 @@ const signInRequired = (): MakeOutcome => ({
 });
 
 /**
- * Accounts: reserve this account's share of today's new passes (the judge demo: the shared demo cap).
- * null = nothing to count (the server's own warm-up, or no account required).
+ * Accounts: reserve this account's share of today's new passes (the judge demo: its per-connection share of
+ * the shared demo cap, SEC-4-02). null = nothing to count (the server's own warm-up, no account required, or
+ * a rebuild of a degraded pass: Q-4-03).
  */
 async function reserveAccountShare(
   store: Store,
   deps: MakeDeps,
   env: Record<string, string | undefined>,
   now: number,
+  rebuild: boolean,
 ): Promise<null | { ok: true; ticket: QuotaTicket } | { ok: false; outcome: MakeOutcome }> {
-  if (deps.internal || !deps.account) return null;
+  if (deps.internal || !deps.account || rebuild) return null;
   const judge = deps.account.judge;
   const r = await reserveQuota(store, {
-    name: judge ? "judge-new" : "acct-new",
-    key: judge ? "all" : deps.account.key,
-    perKey: judge ? Infinity : ACCOUNT_PASSES_PER_DAY,
+    name: judge ? JUDGE_QUOTA : "acct-new",
+    key: judge ? deps.ip : deps.account.key,
+    perKey: judge ? JUDGE_PASSES_PER_IP_PER_DAY : ACCOUNT_PASSES_PER_DAY,
     global: judge ? judgeDailyCap(env) : NO_GLOBAL_CAP,
     period: { kind: "day" },
     now,
   });
   if (r.ok) return { ok: true, ticket: r.ticket };
-  log(judge ? "judge_daily_limit" : "account_daily_limit", {}, "warn");
+  log(judge ? "judge_daily_limit" : "account_daily_limit", judge ? { scope: r.scope } : {}, "warn");
   return {
     ok: false,
     outcome: {
       kind: "error",
       status: 429,
       error: judge
-        ? { code: "JUDGE_DAILY_LIMIT", message: ACCOUNT_COPY.judgeLimit, retryAfter: r.retryAfter }
+        ? { code: "JUDGE_DAILY_LIMIT", message: judgeLimitMessage(r.scope, env), retryAfter: r.retryAfter }
         : { code: "ACCOUNT_DAILY_LIMIT", message: ACCOUNT_COPY.accountLimit, retryAfter: r.retryAfter },
     },
   };
@@ -398,8 +403,9 @@ async function buildCounted(ctx: {
     return featuresPlan.outcome;
   }
 
-  // Accounts: this account's share of today's new passes (2; the judge demo: its shared cap).
-  const acct = await reserveAccountShare(store, ctx.deps, ctx.env, now());
+  // Accounts: this account's share of today's new passes (2; the judge demo: 3 per connection inside its
+  // shared cap). Q-4-03: a rebuild of today's degraded pass doesn't count against the account.
+  const acct = await reserveAccountShare(store, ctx.deps, ctx.env, now(), ctx.rebuildOf !== null);
   if (acct && !acct.ok) return acct.outcome as BuildOutcome;
   held.ticket = acct?.ticket ?? null;
   const accountTicket = held.ticket;

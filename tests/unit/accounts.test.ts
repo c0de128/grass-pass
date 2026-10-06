@@ -5,13 +5,17 @@
  * the provider and a first name).
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { authConfig, firstName, sessionToken } from "@/auth";
-import { ACCOUNT_COPY, enabledOAuthProviders, judgeDailyCap, signInOptions } from "@/lib/accounts/config";
-import { accountKey, judgeAccountKey, ACCOUNT_KEY_PATTERN } from "@/lib/accounts/key";
+import { authConfig, firstName, keepToken, sessionMaxAgeFor, sessionToken } from "@/auth";
+import { ACCOUNT_COPY, enabledOAuthProviders, judgeDailyCap, judgeLeftCopy, judgeLimitMessage, JUDGE_DEMO_DAILY_CAP_DEFAULT, signInOptions } from "@/lib/accounts/config";
+import { judgePassesLeft } from "@/lib/accounts/judge-passes";
+import { OCTOBER_REASONS } from "@/lib/october";
+import { accountKey, judgeAccountKey, ACCOUNT_KEY_PATTERN, JUDGE_SESSION_PATTERN, reporterId } from "@/lib/accounts/key";
 import { allowedReturnPath, safeRedirect } from "@/lib/accounts/redirect";
-import { readAccount, sessionCookie } from "@/lib/accounts/session";
+import { readAccount, readSessionToken, secondsLeft, sessionCookie } from "@/lib/accounts/session";
+import { JUDGE_SESSION_MAX_AGE_SEC, SESSION_MAX_AGE_SEC } from "@/lib/accounts/config";
+import { meResponse } from "@/lib/accounts/endpoints";
 import { getStore, MemoryStore, resetStores } from "@/lib/cache/store";
-import { reserveQuota } from "@/lib/limits";
+import { clientIp, reserveQuota } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { resetPassMaking } from "@/lib/pass/make";
 import { PassLineSchema, PassErrorResponseSchema, type PassLine } from "@/lib/pass/schema";
@@ -52,13 +56,17 @@ describe("jwt/session callbacks keep only the key, the provider and a first name
       { provider: "github", providerAccountId: "777" },
       { name: "Kevin McKay", email: "someone@example.com", avatar_url: "https://avatars.example/x.png", login: "c0de128" },
     );
-    expect(t).toEqual({ k: accountKey("github", "777"), p: "github", n: "Kevin" });
+    expect(t).toEqual({ k: accountKey("github", "777"), p: "github", n: "Kevin", t: expect.any(Number) });
     expect(JSON.stringify(t)).not.toMatch(/example\.com|avatar|c0de128|McKay/);
   });
 
   it("Google: the given name; the judge: no name at all; unknown providers: no session", () => {
     expect(sessionToken({ provider: "google", providerAccountId: "g1" }, { given_name: "Ana", name: "Ana Ruiz", email: "a@example.com" })?.n).toBe("Ana");
-    expect(sessionToken({ provider: "judge", providerAccountId: "anything" }, undefined)).toEqual({ k: judgeAccountKey(), p: "judge" });
+    const j1 = sessionToken({ provider: "judge", providerAccountId: "anything" }, undefined);
+    const j2 = sessionToken({ provider: "judge", providerAccountId: "anything" }, undefined);
+    expect(j1).toEqual({ k: judgeAccountKey(), p: "judge", t: expect.any(Number), s: expect.stringMatching(JUDGE_SESSION_PATTERN) });
+    // UX-4-05: one shared account, but each judge sign-in (browser) has its own id.
+    expect(j1?.s).not.toBe(j2?.s);
     expect(sessionToken({ provider: "twitter", providerAccountId: "1" }, undefined)).toBeNull();
   });
 
@@ -72,7 +80,7 @@ describe("jwt/session callbacks keep only the key, the provider and a first name
 
   it("the session the browser sees has a first name and the provider, never the account key", async () => {
     const cfg = authConfig({ ...ENV, AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "s" });
-    const token = { k: accountKey("github", "1"), p: "github", n: "Kevin" };
+    const token = { k: accountKey("github", "1"), p: "github", n: "Kevin", t: 1 };
     const s = await cfg.callbacks!.session!({ session: { expires: "2026-11-01T00:00:00.000Z", user: {} }, token } as never);
     expect(s).toEqual({ expires: "2026-11-01T00:00:00.000Z", user: { name: "Kevin" }, provider: "github" });
     expect(JSON.stringify(s)).not.toContain(token.k);
@@ -82,8 +90,74 @@ describe("jwt/session callbacks keep only the key, the provider and a first name
     const cfg = authConfig(ENV);
     const jwt = cfg.callbacks!.jwt!;
     const k = accountKey("github", "1");
-    expect(await jwt({ token: { k, p: "github", email: "x@example.com", picture: "p", sub: "1" } } as never)).toEqual({ k, p: "github" });
+    const t = Math.floor(Date.now() / 1000);
+    expect(await jwt({ token: { k, p: "github", t, email: "x@example.com", picture: "p", sub: "1" } } as never)).toEqual({ k, p: "github", t });
     expect(await jwt({ token: { email: "x@example.com" } } as never)).toBeNull();
+    // A token from before the sign-in-time rule (no `t`) is signed out.
+    expect(await jwt({ token: { k, p: "github" } } as never)).toBeNull();
+  });
+
+  it("SEC-4-05: the lifetime is absolute from signing in (7 days; the judge 1 day), however often it is used", () => {
+    const k = accountKey("github", "1");
+    const t0 = Date.parse("2026-10-06T12:00:00Z");
+    const tok = { k, p: "github" as const, t: t0 / 1000 };
+    expect(keepToken(tok, t0 + 6 * 86_400_000)).toEqual(tok);
+    expect(keepToken(tok, t0 + 7 * 86_400_000 + 1000)).toBeNull();
+    const judge = { k: judgeAccountKey(), p: "judge" as const, t: t0 / 1000, s: "abcdefghijklmnop" };
+    expect(keepToken(judge, t0 + 23 * 3600_000)).toEqual(judge);
+    expect(keepToken(judge, t0 + 24 * 3600_000 + 1000)).toBeNull();
+    // A judge token without its session id is not ours.
+    expect(keepToken({ k: judgeAccountKey(), p: "judge", t: t0 / 1000 }, t0)).toBeNull();
+    expect(secondsLeft(judge, t0 + 3600_000)).toBe(23 * 3600);
+    expect([SESSION_MAX_AGE_SEC, JUDGE_SESSION_MAX_AGE_SEC]).toEqual([7 * 86_400, 86_400]);
+  });
+
+  it("SEC-4-05: an old token whose own exp was re-written later is still signed out after its lifetime", async () => {
+    const t0 = Date.now() - 25 * 3600_000; // signed in 25 h ago
+    const judge = { k: judgeAccountKey(), p: "judge" as const, t: Math.floor(t0 / 1000), s: "abcdefghijklmnop" };
+    // Encoded as if Auth.js had just re-written it with a fresh 1-day exp (the old sliding behaviour).
+    const { encode } = await import("next-auth/jwt");
+    const value = await encode({ token: judge, secret: TEST_AUTH_SECRET, salt: "authjs.session-token", maxAge: 86_400 });
+    const req = new Request("http://localhost/", { headers: { cookie: `authjs.session-token=${value}` } });
+    expect(await readSessionToken(req)).toBeNull();
+    const fresh = await judgeCookie();
+    expect((await readSessionToken(new Request("http://localhost/", { headers: { cookie: fresh.cookie } })))?.p).toBe("judge");
+  });
+
+  it("SEC-4-05: the session/cookie maxAge per request: judge callback 1 day, OAuth callback 7 days, a re-write only the time left", async () => {
+    expect(await sessionMaxAgeFor(new Request("http://localhost/api/auth/callback/judge", { method: "POST" }))).toBe(86_400);
+    expect(await sessionMaxAgeFor(new Request("http://localhost/api/auth/callback/github"))).toBe(7 * 86_400);
+    expect(await sessionMaxAgeFor(undefined)).toBe(7 * 86_400);
+    const j = await judgeCookie();
+    const left = await sessionMaxAgeFor(new Request("http://localhost/api/auth/session", { headers: { cookie: j.cookie } }));
+    expect(left).toBeGreaterThan(86_400 - 60);
+    expect(left).toBeLessThanOrEqual(86_400);
+  });
+
+  it("SEC-4-06: GitHub asks for read:user only and never fetches email addresses; Google openid profile only", async () => {
+    const cfg = authConfig({ ...ENV, AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "s", AUTH_GOOGLE_ID: "g", AUTH_GOOGLE_SECRET: "gs" });
+    const ps = cfg.providers.map((p) => (typeof p === "function" ? p() : p)) as unknown as {
+      id: string;
+      options?: { authorization?: { params?: { scope?: string } }; userinfo?: { request: (c: unknown) => Promise<unknown> } };
+    }[];
+    const gh = ps.find((p) => p.id === "github")!;
+    const go = ps.find((p) => p.id === "google")!;
+    expect(gh.options?.authorization?.params?.scope).toBe("read:user");
+    expect(go.options?.authorization?.params?.scope).toBe("openid profile");
+    const urls: string[] = [];
+    vi.stubGlobal("fetch", async (url: string) => {
+      urls.push(String(url));
+      return Response.json({ id: 12345, login: "someone", name: "Some One" });
+    });
+    try {
+      const profile = await gh.options!.userinfo!.request({ tokens: { access_token: "x" }, provider: {} });
+      expect(profile).toMatchObject({ id: 12345 });
+      expect(urls).toEqual(["https://api.github.com/user"]);
+      // The profile callback works without an email.
+      expect(sessionToken({ provider: "github", providerAccountId: "12345" }, profile as Record<string, unknown>)?.n).toBe("Some");
+    } finally {
+      vi.unstubAllGlobals();
+    }
   });
 });
 
@@ -113,9 +187,9 @@ describe("which sign-in buttons exist", () => {
   });
 
   it("JUDGE_DEMO_DAILY_CAP: default 20, bad values fall back", () => {
-    expect(judgeDailyCap({})).toBe(20);
+    expect(judgeDailyCap({})).toBe(60);
     expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "5" })).toBe(5);
-    expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "-1" })).toBe(20);
+    expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "-1" })).toBe(60);
   });
 
   it("session cookies: JWT strategy, Auth.js defaults are httpOnly + SameSite=Lax (+ Secure on https)", () => {
@@ -164,25 +238,25 @@ describe("the session cookie", () => {
   const reqWith = (cookie: string, extra: Record<string, string> = {}) => new Request("http://localhost:3123/api/pass", { headers: { cookie, ...extra } });
 
   it("a valid cookie gives the account key and provider (http and https names)", async () => {
-    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github" })))).toEqual({ key: k(), provider: "github", judge: false });
-    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github" }, process.env, true)))).toEqual({ key: k(), provider: "github", judge: false });
+    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github", t: Math.floor(Date.now() / 1000) })))).toEqual({ key: k(), provider: "github", judge: false });
+    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github", t: Math.floor(Date.now() / 1000) }, process.env, true)))).toEqual({ key: k(), provider: "github", judge: false });
     expect((await readAccount(reqWith((await judgeCookie()).cookie)))?.judge).toBe(true);
   });
 
   it("tampered, foreign-secret, malformed or oversized cookies are signed out; a Bearer header is ignored", async () => {
-    const good = await sessionCookie({ k: k(), p: "github" });
+    const good = await sessionCookie({ k: k(), p: "github", t: Math.floor(Date.now() / 1000) });
     const [name, value] = good.split("=");
     expect(await readAccount(reqWith(`${name}=${value.slice(0, -4)}AAAA`))).toBeNull();
-    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github" }, { AUTH_SECRET: "another-secret-entirely-0123456789" })))).toBeNull();
+    expect(await readAccount(reqWith(await sessionCookie({ k: k(), p: "github", t: Math.floor(Date.now() / 1000) }, { AUTH_SECRET: "another-secret-entirely-0123456789" })))).toBeNull();
     expect(await readAccount(reqWith(`${name}=${"a".repeat(5000)}`))).toBeNull();
     expect(await readAccount(reqWith("other=1"))).toBeNull();
     expect(await readAccount(new Request("http://x/", { headers: { authorization: `Bearer ${value}` } }))).toBeNull();
     // A token we didn't write (no account key) is not a session.
-    expect(await readAccount(reqWith(await sessionCookie({ k: "a:short", p: "github" } as never)))).toBeNull();
+    expect(await readAccount(reqWith(await sessionCookie({ k: "a:short", p: "github", t: Math.floor(Date.now() / 1000) } as never)))).toBeNull();
   });
 
   it("without AUTH_SECRET nobody is signed in", async () => {
-    const c = await sessionCookie({ k: k(), p: "github" });
+    const c = await sessionCookie({ k: k(), p: "github", t: Math.floor(Date.now() / 1000) });
     expect(await readAccount(reqWith(c), {})).toBeNull();
   });
 });
@@ -319,7 +393,41 @@ describe("POST /api/pass: sign-in gate, 2 a day, judge cap", () => {
     expect(Number(await getStore("limits").get(`q:{judge-new:${today()}}:all`))).toBe(3);
     // Over the cap (a different park so the variant limit isn't what stops it).
     const o = await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, j.cookie)));
-    expect([o.status, o.code, o.message]).toEqual([429, "JUDGE_DAILY_LIMIT", ACCOUNT_COPY.judgeLimit]);
+    expect([o.status, o.code, o.message]).toEqual([429, "JUDGE_DAILY_LIMIT", judgeLimitMessage("global")]);
+    expect(o.message).toContain("0 of 3 judge passes left today");
+  });
+
+  it("SEC-4-02: one connection gets at most 3 judge passes a day inside the shared cap; another connection still can", async () => {
+    vi.stubEnv("PASS_PER_IP_PER_MIN", "20");
+    const ip = nextIp();
+    const j = await judgeCookie();
+    const variants = [connemara, { ...connemara, fresh: true }, { ...connemara, fresh: true }];
+    for (const v of variants) expect((await outcome(await route.POST(post(v, j.cookie, ip)))).line?.type).toBe("result");
+    const calls = replay.calls.length;
+    const fourth = await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, j.cookie, ip)));
+    expect([fourth.status, fourth.code, fourth.message]).toEqual([429, "JUDGE_DAILY_LIMIT", judgeLimitMessage("key")]);
+    expect(fourth.message).toContain("0 judge passes left today for your connection");
+    expect(replay.calls.length).toBe(calls);
+    // Another judge on another connection: still fine, and the card's numbers are the real counters.
+    expect((await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, (await judgeCookie()).cookie)))).line?.type).toBe("result");
+    const left = await judgePassesLeft(getStore("limits"), clientIp(new Request("http://x/", { headers: { "x-forwarded-for": ip } })), Date.now());
+    expect(left).toEqual({ cap: JUDGE_DEMO_DAILY_CAP_DEFAULT, perConnection: 3, left: JUDGE_DEMO_DAILY_CAP_DEFAULT - 4, leftForYou: 0 });
+    expect(judgeLeftCopy(left)).toBe(`0 judge passes left today for your connection (${JUDGE_DEMO_DAILY_CAP_DEFAULT - 4} of ${JUDGE_DEMO_DAILY_CAP_DEFAULT} left for other judges).`);
+  });
+
+  it("Q-4-03: rebuilding today's degraded pass for a signed-in grown-up doesn't use one of their 2", async () => {
+    const a = await newAccountCookie();
+    // A degraded pass saved over an hour ago (the October box: iNaturalist was down).
+    const first = await outcome(await route.POST(post(connemara, a.cookie)));
+    if (first.line?.type !== "result") throw new Error("no pass");
+    const degraded = { ...first.line.pass, october: { status: "unavailable" as const, reason: OCTOBER_REASONS.down } };
+    await getStore("cache:pass").set(`c:pass:${degraded.id}`, JSON.stringify({ v: degraded, at: Date.now() - 2 * 3600_000 }), 3600);
+    resetPassMaking();
+    const before = Number(await getStore("limits").get(`q:{acct-new:${today()}}:k:${a.key}`));
+    expect(before).toBe(1);
+    const again = await outcome(await route.POST(post(connemara, a.cookie)));
+    expect(again.line?.type).toBe("result");
+    expect(Number(await getStore("limits").get(`q:{acct-new:${today()}}:k:${a.key}`))).toBe(1);
   });
 
   it("the per-IP limits still apply to signed-in accounts (3 new passes a minute per IP)", async () => {
@@ -328,5 +436,38 @@ describe("POST /api/pass: sign-in gate, 2 a day, judge cap", () => {
     for (const p of parks) expect((await outcome(await route.POST(post(p, (await newAccountCookie()).cookie, ip)))).line?.type).toBe("result");
     const o = await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, (await newAccountCookie()).cookie, ip)));
     expect([o.status, o.code]).toEqual([429, "RATE_LIMITED"]);
+  });
+});
+
+describe("SEC-4-04: GET /api/me reads the cookie only and never sets one", () => {
+  it("signed out: { signedIn: false } and no Set-Cookie; signed in: provider + first name, never the key", async () => {
+    const anon = await meResponse(new Request("http://localhost:3123/api/me"));
+    expect(await anon.json()).toEqual({ signedIn: false });
+    expect(anon.headers.get("set-cookie")).toBeNull();
+    expect(anon.headers.get("cache-control")).toContain("no-store");
+
+    const a = await newAccountCookie();
+    const res = await meResponse(new Request("http://localhost:3123/api/me", { headers: { cookie: a.cookie } }));
+    const body = await res.json();
+    expect(body).toEqual({ signedIn: true, provider: "github", name: null });
+    expect(JSON.stringify(body)).not.toContain(a.key);
+    expect(res.headers.get("set-cookie")).toBeNull();
+
+    const j = await judgeCookie();
+    const jr = await meResponse(new Request("http://localhost:3123/api/me", { headers: { cookie: j.cookie } }));
+    expect(await jr.json()).toEqual({ signedIn: true, provider: "judge", name: null });
+    expect(JSON.stringify(await (await meResponse(new Request("http://localhost:3123/api/me", { headers: { cookie: j.cookie } }))).json())).not.toContain(j.session);
+  });
+});
+
+describe("SEC-4-01: reporter ids", () => {
+  it("one id per account per park: stable in a park, different across parks and accounts, never the key", () => {
+    const k1 = accountKey("github", "1");
+    const k2 = accountKey("github", "2");
+    expect(reporterId(k1, "way/1")).toBe(reporterId(k1, "way/1"));
+    expect(reporterId(k1, "way/1")).not.toBe(reporterId(k1, "way/2"));
+    expect(reporterId(k1, "way/1")).not.toBe(reporterId(k2, "way/1"));
+    expect(reporterId(k1, "way/1")).toMatch(/^[A-Za-z0-9_-]{12}$/);
+    expect(k1).not.toContain(reporterId(k1, "way/1"));
   });
 });

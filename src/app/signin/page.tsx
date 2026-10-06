@@ -1,10 +1,10 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { auth } from "@/auth";
+import { currentSession } from "@/lib/accounts/current";
 import { signOutAction } from "@/app/actions/auth";
 import { SignInCard } from "@/components/account/SignInCard";
 import { buttonClassName } from "@/components/ui/Button";
-import { ACCOUNT_COPY, PROVIDER_LABELS, signInOptions, type ProviderId } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, judgeShareCopy, PROVIDER_LABELS, signInOptions, type ProviderId } from "@/lib/accounts/config";
 import { allowedReturnPath } from "@/lib/accounts/redirect";
 
 export const metadata: Metadata = { title: "Sign in · Grass Pass", robots: { index: false, follow: false } };
@@ -44,7 +44,8 @@ export default async function SignInPage(props: PageProps<"/signin">) {
   const one = (v: string | string[] | undefined) => (Array.isArray(v) ? v[0] : v);
   const from = allowedReturnPath(pathOnly(one(sp.from) ?? one(sp.callbackUrl)), "http://grass-pass.invalid") ?? "/";
   const error = one(sp.error);
-  const session = (await auth()) as { provider?: ProviderId; user?: { name?: string | null } } | null;
+  const token = await currentSession();
+  const session: { provider?: ProviderId } | null = token ? { provider: token.p } : null;
   const options = signInOptions();
 
   return (
@@ -84,8 +85,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           <li>{ACCOUNT_COPY.privacy}</li>
           <li>{ACCOUNT_COPY.grownUps}</li>
           <li>
-            Judges: <strong>Try as a judge</strong> signs you in to a shared demo account with one click. All judges together can make a limited number
-            of new passes a day.
+            Judges: <strong>Try as a judge</strong> signs you in to a shared demo account with one click, for 1 day. {judgeShareCopy()}
           </li>
         </ul>
         <p>

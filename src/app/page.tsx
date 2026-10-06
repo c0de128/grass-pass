@@ -12,7 +12,7 @@ import { heroCard, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { restingState } from "@/lib/limits/budget";
 import { exampleStatuses, prewarmEnabled, prewarmIdle } from "@/lib/prewarm";
 import { signInOptions } from "@/lib/accounts/config";
-import { auth } from "@/auth";
+import { currentSession } from "@/lib/accounts/current";
 
 /** A background example refresh (one real pass) may run after the page is sent. */
 export const maxDuration = 90;
@@ -42,8 +42,8 @@ export default async function Home() {
   // SEC-2-01: near the store's monthly budget the site is read-only until the month ends; say so.
   const resting = restingState();
   // Accounts: signed in or not (the session cookie only, no store command), and which sign-in buttons exist.
-  const session = await auth();
-  const account = { signedIn: Boolean((session as { provider?: string } | null)?.provider), options: signInOptions() };
+  const session = await currentSession();
+  const account = { signedIn: session !== null, options: signInOptions() };
   // Keep any background refresh this visit started alive after the response (serverless).
   after(() => prewarmIdle());
   return (

@@ -5,12 +5,16 @@
  * server) and the big one-click "Try as a judge". Each button submits a form to a server action, then tells
  * the header to read the session again; `onBeforeSignIn` lets the pass maker remember the park + age so the home
  * page can restore them after the round trip (sessionStorage, this tab only).
+ * SEC-4-02: under the judge button, the real number of judge passes left today (GET /api/judge-passes), or
+ * an honest line when it can't be checked.
  */
 import { Gavel, LogIn } from "lucide-react";
+import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
+import { z } from "@/lib/zod-config";
 import { signInAction } from "@/app/actions/auth";
 import { buttonClassName } from "@/components/ui/Button";
-import { ACCOUNT_COPY, PROVIDER_LABELS, type SignInOptions } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, judgeLeftCopy, PROVIDER_LABELS, type SignInOptions } from "@/lib/accounts/config";
 import { announceSessionChange } from "./session-event";
 
 function ProviderButton({ provider, label, judge, onClick }: { provider: string; label: string; judge?: boolean; onClick?: () => void }) {
@@ -28,6 +32,35 @@ function ProviderButton({ provider, label, judge, onClick }: { provider: string;
       {judge ? <Gavel className="size-5" aria-hidden="true" /> : <LogIn className="size-5" aria-hidden="true" />}
       {mine ? "Signing in…" : label}
     </button>
+  );
+}
+
+const LeftSchema = z.object({
+  cap: z.number().int().nonnegative(),
+  perConnection: z.number().int().nonnegative(),
+  left: z.number().int().nonnegative(),
+  leftForYou: z.number().int().nonnegative(),
+});
+
+/** "N of 60 judge passes left today": read when the card shows; nothing made up when it can't be read. */
+export function JudgePassesLeft() {
+  const [text, setText] = useState<string | null>(null);
+  useEffect(() => {
+    let live = true;
+    fetch("/api/judge-passes", { cache: "no-store", credentials: "same-origin" })
+      .then(async (r) => {
+        const parsed = LeftSchema.safeParse(r.ok ? await r.json() : null);
+        if (live) setText(parsed.success ? judgeLeftCopy(parsed.data) : "We couldn't check how many judge passes are left today right now.");
+      })
+      .catch(() => live && setText("We couldn't check how many judge passes are left today right now."));
+    return () => {
+      live = false;
+    };
+  }, []);
+  return (
+    <p className="min-h-5 text-sm font-semibold" data-testid="judge-left" aria-live="polite">
+      {text ?? ""}
+    </p>
   );
 }
 
@@ -81,7 +114,12 @@ export function SignInCard({
           <ProviderButton key={p} provider={p} label={`Sign in with ${PROVIDER_LABELS[p]}`} onClick={onBeforeSignIn} />
         ))}
       </form>
-      {options.judge ? <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.judgeNote}</p> : null}
+      {options.judge ? (
+        <>
+          <JudgePassesLeft />
+          <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.judgeNote}</p>
+        </>
+      ) : null}
       <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.privacy}</p>
     </section>
   );

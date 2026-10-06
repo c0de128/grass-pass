@@ -2,8 +2,9 @@
 
 /**
  * Header account control (accounts, 2026-10-06): "Sign in" when signed out; when signed in, who (a first name
- * if the provider gave one, else "Signed in with GitHub") and a "Sign out" button. Reads /api/auth/session
- * after the page loads, so every page can stay static; it shows nothing until it knows.
+ * if the provider gave one, else "Signed in with GitHub") and a "Sign out" button. Reads /api/me after the
+ * page loads, so every page can stay static; it shows nothing until it knows. SEC-4-04: /api/me only reads
+ * the session cookie and never sets one (Auth.js's /api/auth/session gave anonymous visitors 2 cookies).
  */
 import { LogIn, LogOut } from "lucide-react";
 import Link from "next/link";
@@ -14,12 +15,10 @@ import { signOutAction } from "@/app/actions/auth";
 import { PROVIDER_LABELS } from "@/lib/accounts/config";
 import { announceSessionChange, SESSION_EVENT } from "./session-event";
 
-const SessionSchema = z
-  .object({
-    user: z.object({ name: z.string().max(40).nullable().optional() }).optional(),
-    provider: z.enum(["github", "google", "judge"]).optional(),
-  })
-  .nullable();
+const MeSchema = z.discriminatedUnion("signedIn", [
+  z.object({ signedIn: z.literal(false) }),
+  z.object({ signedIn: z.literal(true), provider: z.enum(["github", "google", "judge"]), name: z.string().max(40).nullable() }),
+]);
 
 type Who = { signedIn: false } | { signedIn: true; label: string };
 
@@ -42,12 +41,11 @@ export function AccountMenu() {
 
   useEffect(() => {
     let live = true;
-    fetch("/api/auth/session", { cache: "no-store", credentials: "same-origin" })
+    fetch("/api/me", { cache: "no-store", credentials: "same-origin" })
       .then((r) => (r.ok ? r.json() : null))
       .then((j: unknown) => {
-        const s = SessionSchema.safeParse(j);
-        const signedIn = s.success && s.data !== null && s.data.provider !== undefined;
-        if (live) setWho(signedIn && s.success && s.data ? { signedIn: true, label: whoLabel(s.data.user?.name, s.data.provider) } : { signedIn: false });
+        const s = MeSchema.safeParse(j);
+        if (live) setWho(s.success && s.data.signedIn ? { signedIn: true, label: whoLabel(s.data.name, s.data.provider) } : { signedIn: false });
       })
       .catch(() => live && setWho({ signedIn: false }));
     return () => {

@@ -1,6 +1,6 @@
 /**
  * Browser event fired after a sign-in or sign-out server action finishes, so the header's account control
- * (in the static layout, which a server action's redirect doesn't re-render) reads /api/auth/session again.
+ * (in the static layout, which a server action's redirect doesn't re-render) reads /api/me again.
  */
 export const SESSION_EVENT = "grass-pass:session";
 

@@ -3,7 +3,7 @@
  * `sessionCookie`), with the unit-test AUTH_SECRET from ./setup.ts. `primeAccountCookies(n)` makes n
  * different accounts up front so request builders can stay synchronous (`nextAccountCookie()`).
  */
-import { accountKey } from "@/lib/accounts/key";
+import { accountKey, newJudgeSessionId } from "@/lib/accounts/key";
 import { sessionCookie } from "@/lib/accounts/session";
 
 export const TEST_AUTH_SECRET = "unit-test-auth-secret-not-a-real-one-0123456789"; // gitleaks:allow
@@ -14,12 +14,16 @@ const pool: string[] = [];
 /** A cookie for a new GitHub account (a different account each call). */
 export async function newAccountCookie(provider: "github" | "google" = "github"): Promise<{ cookie: string; key: string }> {
   const key = accountKey(provider, `test-${process.pid}-${++seq}`);
-  return { cookie: await sessionCookie({ k: key, p: provider }), key };
+  return { cookie: await sessionCookie({ k: key, p: provider, t: nowSec() }), key };
 }
 
-export async function judgeCookie(): Promise<{ cookie: string; key: string }> {
+const nowSec = () => Math.floor(Date.now() / 1000);
+
+/** A judge demo sign-in: the shared account key, and its own random session id (one judge browser). */
+export async function judgeCookie(): Promise<{ cookie: string; key: string; session: string }> {
   const key = accountKey("judge", "shared-demo");
-  return { cookie: await sessionCookie({ k: key, p: "judge" }), key };
+  const session = newJudgeSessionId();
+  return { cookie: await sessionCookie({ k: key, p: "judge", t: nowSec(), s: session }), key, session };
 }
 
 export async function primeAccountCookies(n: number): Promise<void> {

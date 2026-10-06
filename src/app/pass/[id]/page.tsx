@@ -10,7 +10,7 @@ import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
 import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
-import { auth } from "@/auth";
+import { currentSession } from "@/lib/accounts/current";
 
 /**
  * A saved pass, read from the pass cache only (never calls OpenStreetMap, iNaturalist or the model).
@@ -37,8 +37,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   const pass = await getPass(id);
   // Unknown or expired id: HTTP 404 with the honest "No pass here" copy (./not-found.tsx).
   if (!pass) notFound();
-  const session = await auth();
-  const signedIn = Boolean((session as { provider?: string } | null)?.provider);
+  const signedIn = (await currentSession()) !== null;
   // Report counts are shown to signed-in grown-ups (the ones who report); 1 read per park per 5 min.
   const stats = signedIn ? await passItemStats(pass) : {};
 

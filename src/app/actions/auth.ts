@@ -7,7 +7,7 @@
  */
 import { AuthError } from "next-auth";
 import { redirect } from "next/navigation";
-import { signIn, signOut } from "@/auth";
+import { signIn, signInJudge, signOut } from "@/auth";
 import { enabledOAuthProviders, judgeDemoEnabled, authConfigured } from "@/lib/accounts/config";
 import { allowedReturnPath } from "@/lib/accounts/redirect";
 
@@ -22,7 +22,9 @@ export async function signInAction(form: FormData): Promise<void> {
   const allowed: string[] = authConfigured() ? [...enabledOAuthProviders(), ...(judgeDemoEnabled() ? ["judge"] : [])] : [];
   if (!allowed.includes(provider)) redirect(`/signin?error=unavailable`);
   try {
-    await signIn(provider, { redirectTo: to });
+    // SEC-4-05: the judge demo signs in through its own 1-day config (the cookie lasts 1 day too).
+    if (provider === "judge") await signInJudge("judge", { redirectTo: to });
+    else await signIn(provider, { redirectTo: to });
   } catch (err) {
     // signIn() redirects by throwing; only Auth.js errors (e.g. too many judge sign-ins) are handled here.
     if (err instanceof AuthError) {

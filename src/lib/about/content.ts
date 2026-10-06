@@ -27,7 +27,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1409, files: 52, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1480, files: 53, day: "Oct 6, 2026" } as const;
 
 /**
  * The Gemma copy rewrite (docs/COPY-BY-GEMMA.md, 2026-10-06): blocks sent, drafts shipped (accepted + edited),

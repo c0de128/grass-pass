@@ -13,7 +13,8 @@
     "eval": "vitest run --config evals/vitest.config.mts evals/cli/eval.ts",
     "eval:record": "vitest run --config evals/vitest.config.mts evals/cli/record.ts",
     "eval:report": "vitest run --config evals/vitest.config.mts evals/cli/report.ts",
-    "eval:check": "vitest run --config evals/vitest.config.mts evals/cli/check.ts"
+    "eval:check": "vitest run --config evals/vitest.config.mts evals/cli/check.ts",
+    "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts"
   },
   "dependencies": {
     "next": "16.3.8",

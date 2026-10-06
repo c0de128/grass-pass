@@ -28,3 +28,11 @@ Audit round 1 total (Builder B, 2026-10-05 CDT): fixture re-recordings $0.0021 +
 | 2026-10-06T05:13:16.346Z | 2026-10-06.md | 78 | 179143 | 35965 | $0.0581 |
 
 Audit round 1 follow-up total (Builder E, 2026-10-05/06 CDT): fixture re-recording $0.0011 + smoke $0.0114 + full run $0.0581 = **$0.0706** (cap $0.10).
+| 2026-10-06T06:20:30.048Z | 2026-10-06-partial-0120.md | 11 | 28510 | 5123 | $0.0077 |
+| 2026-10-06T06:25:23.952Z | 2026-10-06-partial-0125.md | 10 | 25546 | 4760 | $0.0070 |
+| 2026-10-06T06:10Z-07:00Z | Audit R2 (Builder H) re-recordings of the two model fixtures in tests/fixtures while the R2-M5 prompt changed (not an eval run): 23 answered calls counted from `usage` (50,251 prompt + 11,519 completion tokens), plus 4 calls that timed out at 30 s (tokens unknown; at most about $0.0027 if each was billed in full) | 23 | 50251 | 11519 | $0.0148 |
+| 2026-10-06T06:57Z | **Aborted** full run (Builder H): DigitalOcean was about 3x slower than earlier that night (Gemma 18-30 s per call, 10 of the first 22 Gemma calls timed out at 30 s; a 150-word probe ran at about 15 tokens/s vs about 50 earlier), so the numbers would have measured the provider, not the change. Stopped after Gemma run 2 case 2; no results file. Spend meter at the stop (answered calls only) | ~35 | n/a | n/a | $0.0206 |
+
+| 2026-10-06T07:20:54.740Z | 2026-10-06-partial-0220.md | 7 | 12514 | 2596 | $0.0036 |
+
+Audit round 2 (Builder H, 2026-10-06 CDT) total: fixture re-recordings $0.0148 (+ up to about $0.0027 for 4 timed-out calls) + smoke 0120 $0.0077 + smoke 0125 $0.0070 + aborted full run $0.0206 (+ its 10 timed-out calls, tokens unknown) + final-code smoke 0220 $0.0036 = **$0.0537** measured (cap $0.10; with the unknown timed-out calls at most about $0.065). No full run was completed: one would cost about $0.065-0.075 and does not fit in what is left of the cap.

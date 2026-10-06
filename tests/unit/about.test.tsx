@@ -91,7 +91,7 @@ describe("/about", () => {
     }
     expect(t).toContain("No closed model was compared");
     expect(t).toContain("Find This Spot");
-    expect(t).toMatch(/Lucky Finds .*not connected/);
+    expect(t).toMatch(/Lucky Finds .*not available yet/);
     expect(t).not.toContain("known bug we are fixing");
     expect(t).toContain("We have not measured a self-hosted run for this app yet.");
   });
@@ -109,9 +109,20 @@ describe("/about", () => {
 
   it("states the privacy facts honestly (no 'never leaves your device' claim)", () => {
     expect(t).toContain("about 1 km");
-    expect(t).toContain("Saved on our server for 30 days");
+    expect(t).toContain("Saved in our storage (Upstash Redis) for 30 days");
+    // SEC-1-03: the third-party storage and the hosting provider's request logs are named.
+    expect(t).toContain("Upstash Redis");
+    expect(t).toContain("request logs (Vercel)");
+    expect(t).toContain("never the address itself");
+    expect(t).not.toContain("Our server only");
     expect(t).toContain("the park facts and the age band do leave your device");
     expect(t.toLowerCase()).not.toContain("never leaves your device");
+  });
+
+  it("explains every results row in plain words, and keeps the numbers", () => {
+    expect(t).toContain("In short:");
+    expect(t).toContain("3 means a 3rd grader can read them");
+    expect(t).toContain("a usual wait / a slow wait");
   });
 
   it("links to the GitHub repo", () => {

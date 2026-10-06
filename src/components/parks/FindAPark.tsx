@@ -40,7 +40,7 @@ type Phase =
   | { kind: "locating" }
   | { kind: "searching"; label: string }
   | { kind: "done"; result: ParksResult }
-  | { kind: "failed"; message: string };
+  | { kind: "failed"; message: string; code: string };
 
 export type FindAParkProps = {
   /** Called when a park is chosen (the pass step, S3). Without it the list says what happens next. */
@@ -124,7 +124,8 @@ export function FindAPark({ onPick }: FindAParkProps) {
     locButtonRef.current?.focus();
   }
 
-  async function runSearch(params: URLSearchParams, label: string, from: "q" | "location") {
+  /** POST, so what was typed (or the rounded location) never goes in a URL or a request log (SEC-1-03). */
+  async function runSearch(body: { q: string } | { lat: string; lng: string }, label: string, from: "q" | "location") {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
@@ -137,13 +138,18 @@ export function FindAPark({ onPick }: FindAParkProps) {
     let res: Response;
     let json: unknown;
     try {
-      res = await fetch(`/api/parks?${params.toString()}`, { headers: { Accept: "application/json" }, signal: ac.signal });
+      res = await fetch("/api/parks", {
+        method: "POST",
+        headers: { Accept: "application/json", "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+        signal: ac.signal,
+      });
       json = await res.json().catch(() => null);
     } catch {
       clearTimeout(timeout);
       if (abortRef.current !== ac) return; // a newer search replaced this one
       stopSlowTimer();
-      setPhase({ kind: "failed", message: COPY.offline });
+      setPhase({ kind: "failed", message: COPY.offline, code: ac.signal.aborted ? "CLIENT_TIMEOUT" : "OFFLINE" });
       return;
     }
     clearTimeout(timeout);
@@ -157,12 +163,12 @@ export function FindAPark({ onPick }: FindAParkProps) {
       setPhase({ kind: "idle" });
       if (res.status === 400 && field === "q") return showFieldError(message);
       if (res.status === 400 && field === "location") return showLocError(message);
-      setPhase({ kind: "failed", message });
+      setPhase({ kind: "failed", message, code: err.success ? err.data.error.code : "BAD_ANSWER" });
       return;
     }
     const parsed = ParksResultSchema.safeParse(json);
     if (!parsed.success) {
-      setPhase({ kind: "failed", message: COPY.badAnswer });
+      setPhase({ kind: "failed", message: COPY.badAnswer, code: "BAD_ANSWER" });
       return;
     }
     const result = parsed.data;
@@ -184,7 +190,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
     if (problem) return showFieldError(problem);
     setFieldError(null);
     const clean = q.replace(/\s+/g, " ").trim();
-    void runSearch(new URLSearchParams({ q: clean }), `Searching OpenStreetMap for “${clean}” and parks within 5 km…`, "q");
+    void runSearch({ q: clean }, `Searching OpenStreetMap for “${clean}” and parks within 5 km…`, "q");
   }
 
   function onUseLocation() {
@@ -199,7 +205,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
         const lat = roundCoord(pos.coords.latitude, LOCATION_DECIMALS);
         const lng = roundCoord(pos.coords.longitude, LOCATION_DECIMALS);
         void runSearch(
-          new URLSearchParams({ lat: lat.toFixed(LOCATION_DECIMALS), lng: lng.toFixed(LOCATION_DECIMALS) }),
+          { lat: lat.toFixed(LOCATION_DECIMALS), lng: lng.toFixed(LOCATION_DECIMALS) },
           "Searching OpenStreetMap for parks within 5 km of you…",
           "location",
         );
@@ -297,7 +303,7 @@ export function FindAPark({ onPick }: FindAParkProps) {
       </p>
 
       {phase.kind === "failed" ? (
-        <div role="alert" className="rounded-ticket border-2 border-line bg-surface p-4">
+        <div role="alert" data-error-code={phase.code} className="rounded-ticket border-2 border-line bg-surface p-4">
           <p className="font-semibold">{phase.message}</p>
         </div>
       ) : null}

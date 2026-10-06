@@ -52,11 +52,11 @@ Built so far (slice S0):
 - Security headers (CSP, no framing, nosniff, referrer policy) on every route.
 
 Slice S2, find a park:
-- `GET /api/parks?q=` or `?lat=&lng=`: up to 10 named OpenStreetMap parks and nature reserves within 5 km,
+- `POST /api/parks` with `{"q": ...}` or `{"lat": ..., "lng": ...}` (a POST so typed text and location stay out of URLs and request logs): up to 10 named OpenStreetMap parks and nature reserves within 5 km,
   nearest first. Place text goes to Nominatim on submit only (no autocomplete) through one 1 request/second queue
   and is cached 30 days. Parks come from Overpass (three public servers tried in order, at most 50 seconds in total,
-  a circuit breaker per server, at most 2 queries at once) and are cached 7 days. Empty answers have their own 15-minute cache. Same-origin only,
-  10 searches per minute per IP, plus a daily budget of uncached searches per IP and for everyone.
+  a circuit breaker per server, at most 2 queries at once) and are cached 7 days. Empty answers have their own 15-minute cache. Same-origin and JSON only,
+  2 KB body cap, 10 searches per minute per IP, plus a daily budget of uncached searches per IP and for everyone.
 - "Use my location" is rounded to 2 decimals (about 1 km) in the browser, and again on the server.
 - Every request to OpenStreetMap services sends `User-Agent: GrassPass/0.1 (+https://github.com/c0de128/grass-pass)`.
 
@@ -134,14 +134,17 @@ leave the device (also on `/about`):
 
 | What | Where it goes | Why |
 |---|---|---|
-| Typed place text | our server, then Nominatim (answers cached 30 days by the text, not by who typed it) | find the town or park |
+| Typed place text | our server (in the request body, never in the web address), then Nominatim; answers are cached 30 days in our storage (Upstash Redis) by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
 | The chosen park (public place + map position) | our server, then Overpass and iNaturalist | park map, sightings, monarch counts |
 | Age band | our server, then the model on DigitalOcean (inside the prompt) | item count and reading level |
-| IP address | our server only, as a rate-limit counter that expires within about a day (IPv6 by /64) | abuse and cost limits |
-| The finished pass | saved on our server for 30 days | the pass link and print page |
+| IP address | our server; in our storage (Upstash Redis) only as a keyed hash (HMAC), never the address itself, inside rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
+| Every request (IP address, web address, time) | our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on the Hobby plan). Park searches are POSTs, so these logs never hold the typed place or location | running the site |
+| The finished pass | saved in our storage (Upstash Redis) for 30 days | the pass link and print page |
 
-Server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.
+Our own server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.
+Storage: Upstash Redis (free plan) holds the caches, the saved passes and the rate-limit counters. The IP hash key is
+`LIMITER_KEY_SECRET`; if it is not set, it is derived from the Upstash token (and is random per process without Upstash).
 The browser keeps only the light/dark choice and the last age band (localStorage).
 
 ## Limitations

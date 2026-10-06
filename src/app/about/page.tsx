@@ -47,36 +47,56 @@ function Section({ id, title, children }: { id: string; title: string; children:
 const ext = "underline underline-offset-2";
 
 function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
-  const rows: { label: string; cell: (c: EvalColumn) => string; target?: string }[] = [
-    { label: "Blocked (dangerous) species printed", cell: (c) => String(c.blockedPrinted), target: "0, always" },
+  const rows: { label: string; plain: string; cell: (c: EvalColumn) => string; target?: string }[] = [
+    {
+      label: "Blocked (dangerous) species printed",
+      plain: "Did a pass ever show something risky, like a snake or poison ivy? It must be zero.",
+      cell: (c) => String(c.blockedPrinted),
+      target: "0, always",
+    },
     {
       label: "Clues quoting their source word for word, before any filter",
+      plain: "How often the model copied its fact exactly from the real data, so it didn't make things up.",
       cell: (c) => `${pct(c.groundedPct)} (${c.grounded}/${c.returned})`,
       target: `${EVAL_THRESHOLDS.groundedPct}% or more`,
     },
     {
       label: "Complete passes (kept at least n-1 items)",
+      plain: "How often a pass came out full: at most one find missing.",
       cell: (c) => `${pct(c.completePct)} (${c.complete}/${c.dataRichRuns})`,
       target: `${EVAL_THRESHOLDS.completePct}% or more`,
     },
-    { label: "Honest empty sections", cell: (c) => pct(c.honestEmptiesPct), target: "100%" },
+    {
+      label: "Honest empty sections",
+      plain: "When there was no data, did the pass say so instead of filling the gap?",
+      cell: (c) => pct(c.honestEmptiesPct),
+      target: "100%",
+    },
     {
       label: "Reading level (Flesch-Kincaid grade, median)",
+      plain: "How hard the words are. 3 means a 3rd grader can read them.",
       cell: (c) => c.fkGrade.toFixed(1),
       target: `${EVAL_THRESHOLDS.fkGrade} or lower`,
     },
     {
       label: "Clues or hints naming their own answer, before the filter",
+      plain: "How often a clue gave away the answer (code removes those before printing).",
       cell: (c) => `${pct(c.nameLeakPct)} (clue only ${pct(c.clueLeakPct)})`,
       target: `${EVAL_THRESHOLDS.nameLeakPct}% or lower`,
     },
     {
       label: "Model time per call, p50 / p95",
+      plain: "How long the model took: a usual wait / a slow wait (1 in 20 is slower).",
       cell: (c) => (c.p50s === null ? "no model call" : `${secs(c.p50s)} / ${secs(c.p95s)}`),
       target: `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`,
     },
-    { label: "Cost per pass", cell: (c) => usd(c.costPerPass), target: `$${EVAL_THRESHOLDS.costPerPass} or less` },
-    { label: "Licence", cell: (c) => c.licence },
+    {
+      label: "Cost per pass",
+      plain: "What one pass costs us at the provider's list price.",
+      cell: (c) => usd(c.costPerPass),
+      target: `${EVAL_THRESHOLDS.costPerPass} or less`,
+    },
+    { label: "Licence", plain: "The rules for using the model's weights.", cell: (c) => c.licence },
   ];
   return (
     <div className="overflow-x-auto rounded-control border-2 border-line" role="region" aria-labelledby="eval-caption" tabIndex={0}>
@@ -108,6 +128,7 @@ function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
             <tr key={r.label} className="border-b border-line last:border-b-0">
               <th scope="row" className="px-4 py-2 font-semibold">
                 {r.label}
+                <span className="block text-sm font-normal">{r.plain}</span>
               </th>
               {columns.map((c) => (
                 <td key={c.model} className="px-4 py-2">
@@ -126,7 +147,8 @@ function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
 const PRIVACY: { what: string; where: string; why: string }[] = [
   {
     what: "The place you type (for example \"Allen TX\")",
-    where: "Our server, then OpenStreetMap's Nominatim search. Answers are cached for 30 days by the text typed, not by who typed it.",
+    where:
+      "Our server (inside the request, never in the web address), then OpenStreetMap's Nominatim search. Answers are cached for 30 days in our storage (Upstash Redis) by the text typed, not by who typed it.",
     why: "To find the town or park.",
   },
   {
@@ -146,19 +168,26 @@ const PRIVACY: { what: string; where: string; why: string }[] = [
   },
   {
     what: "Your IP address",
-    where: "Our server only, as a rate-limit counter that deletes itself within about a day (IPv6 by its /64 network).",
+    where:
+      "Our server. Our storage (Upstash Redis) gets only a scrambled code made from it (a keyed hash), never the address itself, inside rate-limit counters that delete themselves within about a day (IPv6 by its /64 and /48 network).",
     why: "To stop abuse and keep the free model budget fair.",
   },
   {
+    what: "Every page or search request (your IP address, the web address, the time)",
+    where:
+      "Our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on our plan). Park searches are sent inside the request, so these logs never show the place you typed or your location.",
+    why: "Running the website.",
+  },
+  {
     what: "The finished pass (park, age band, items, clues, times)",
-    where: "Saved on our server for 30 days, so the pass link and the print page work.",
+    where: "Saved in our storage (Upstash Redis) for 30 days, so the pass link and the print page work.",
     why: "Nothing in it is about you or your child.",
   },
 ];
 
 export default function AboutPage() {
   return (
-    <main className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-5 py-8">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-5 py-8 focus:outline-none">
       <TicketCard as="section" aria-labelledby="about-title">
         <div className="flex flex-col gap-3">
           <h1 id="about-title" className="text-4xl font-bold">
@@ -272,6 +301,11 @@ export default function AboutPage() {
           No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
           answered &quot;403 Forbidden&quot; when we tried them on {EVAL_DAY}.
         </p>
+        <p>
+          <strong>In short:</strong> we made passes for {EVAL_PARKS} real parks with each model and counted how often the
+          clues were safe, true to the data, complete, easy to read, quick and cheap. Each row says in plain words what
+          it counts; the last column is the goal we set before the test.
+        </p>
         <EvalTable columns={EVAL_COLUMNS} />
 
         <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
@@ -302,7 +336,7 @@ export default function AboutPage() {
             automated.
           </li>
           <li>
-            <strong>Not built yet:</strong> Lucky Finds (visitor-review counts) show &quot;not connected&quot; on the pass,
+            <strong>Not built yet:</strong> Lucky Finds (visitor-review counts) show &quot;not available yet&quot; on the pass,
             and no photos are printed.
           </li>
           <li>
@@ -350,8 +384,9 @@ export default function AboutPage() {
         </div>
         <p>
           The model runs on DigitalOcean&apos;s servers in the US, so the park facts and the age band do leave your device.
-          Our server logs say what happened (which source or model, how long it took, the outcome, the pass id) and never
-          the prompt, your IP address or the text you typed.
+          Our own server logs say what happened (which source or model, how long it took, the outcome, the pass id) and
+          never the prompt, your IP address or the text you typed. Our storage is Upstash Redis (caches, saved passes and
+          rate-limit counters). Our hosting provider (Vercel) keeps its own short request logs, as every website host does.
         </p>
       </Section>
 

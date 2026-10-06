@@ -7,9 +7,17 @@ import * as route from "@/app/api/parks/route";
 import { osmReplay } from "./support/osm-replay";
 
 let n = 0;
-function get(query: string, headers: Record<string, string> = {}) {
-  return new Request(`http://localhost:3123/api/parks?${query}`, {
-    headers: { host: "localhost:3123", "sec-fetch-site": "same-origin", "x-forwarded-for": `198.51.100.${++n % 250}`, ...headers },
+function post(body: unknown, headers: Record<string, string> = {}) {
+  return new Request("http://localhost:3123/api/parks", {
+    method: "POST",
+    headers: {
+      host: "localhost:3123",
+      "sec-fetch-site": "same-origin",
+      "content-type": "application/json",
+      "x-forwarded-for": `198.51.100.${++n % 250}`,
+      ...headers,
+    },
+    body: typeof body === "string" ? body : JSON.stringify(body),
   });
 }
 
@@ -27,14 +35,14 @@ afterEach(() => {
   restoreLog();
 });
 
-describe("GET /api/parks", () => {
-  it("exports only the handler plus runtime/maxDuration (maxDuration covers 2 Overpass attempts)", () => {
-    expect(Object.keys(route).sort()).toEqual(["GET", "maxDuration", "runtime"]);
+describe("POST /api/parks", () => {
+  it("exports only POST plus runtime/maxDuration (no GET: typed text never goes in the URL)", () => {
+    expect(Object.keys(route).sort()).toEqual(["POST", "maxDuration", "runtime"]);
     expect(route.maxDuration).toBe(90);
   });
 
   it("Allen TX -> 200 with real parks, no-store", async () => {
-    const res = await route.GET(get("q=Allen%20TX"));
+    const res = await route.POST(post({ q: "Allen TX" }));
     expect(res.status).toBe(200);
     expect(res.headers.get("cache-control")).toBe("no-store");
     const body = ParksResultSchema.parse(await res.json());
@@ -42,29 +50,37 @@ describe("GET /api/parks", () => {
     expect(body.parks.map((p) => p.name)).toContain("Allen Station Park");
   });
 
-  it("refuses cross-site requests before any upstream call (403)", async () => {
-    const res = await route.GET(get("q=Allen%20TX", { "sec-fetch-site": "cross-site" }));
-    expect(res.status).toBe(403);
-    const res2 = await route.GET(get("q=Allen%20TX", { origin: "https://evil.example" }));
-    expect(res2.status).toBe(403);
+  it("refuses cross-site requests and non-JSON bodies before any upstream call (403 / 415)", async () => {
+    expect((await route.POST(post({ q: "Allen TX" }, { "sec-fetch-site": "cross-site" }))).status).toBe(403);
+    expect((await route.POST(post({ q: "Allen TX" }, { origin: "https://evil.example" }))).status).toBe(403);
+    expect((await route.POST(post("q=Allen", { "content-type": "application/x-www-form-urlencoded" }))).status).toBe(415);
+    expect(replay.calls).toHaveLength(0);
+  });
+
+  it("oversized, non-JSON or unknown-field bodies -> 413 / 400, no upstream call", async () => {
+    expect((await route.POST(post({ q: "x".repeat(3000) }))).status).toBe(413);
+    expect((await route.POST(post("{not json"))).status).toBe(400);
+    expect((await route.POST(post({ q: "Allen TX", extra: 1 }))).status).toBe(400);
     expect(replay.calls).toHaveLength(0);
   });
 
   it("bad input -> 400 naming the field, no upstream call", async () => {
-    const res = await route.GET(get("q=a"));
+    const res = await route.POST(post({ q: "a" }));
     expect(res.status).toBe(400);
     const body = ApiErrorSchema.parse(await res.json());
     expect(body.error.field).toBe("q");
     expect(body.error.message).toMatch(/at least 2/);
-    const res2 = await route.GET(get("lat=north&lng=1"));
+    const res2 = await route.POST(post({ lat: "north", lng: "1" }));
     expect(ApiErrorSchema.parse(await res2.json()).error.field).toBe("location");
+    const res3 = await route.POST(post({}));
+    expect(res3.status).toBe(400);
     expect(replay.calls).toHaveLength(0);
   });
 
   it("429 carries Retry-After", async () => {
     const ip = "192.0.2.77";
-    for (let i = 0; i < 10; i++) await route.GET(get("q=Allen%20TX", { "x-forwarded-for": ip }));
-    const res = await route.GET(get("q=Allen%20TX", { "x-forwarded-for": ip }));
+    for (let i = 0; i < 10; i++) await route.POST(post({ q: "Allen TX" }, { "x-forwarded-for": ip }));
+    const res = await route.POST(post({ q: "Allen TX" }, { "x-forwarded-for": ip }));
     expect(res.status).toBe(429);
     expect(Number(res.headers.get("retry-after"))).toBeGreaterThan(0);
     expect(ApiErrorSchema.parse(await res.json()).error.code).toBe("RATE_LIMITED");

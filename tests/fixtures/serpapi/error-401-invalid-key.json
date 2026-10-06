@@ -1,0 +1,19 @@
+{
+  "_recording": {
+    "what": "SerpApi answer to a deliberately invalid key (64 zeros, not a real key; spends no search on any account)",
+    "request": {
+      "engine": "google_maps",
+      "type": "search",
+      "q": "Arbor Hills Nature Preserve",
+      "ll": "@33.04894,-96.85205,15z",
+      "hl": "en",
+      "gl": "us"
+    },
+    "httpStatus": 401,
+    "fetchedAt": "2026-10-06T13:49:21.183Z",
+    "headers": {
+      "content-type": "application/json; charset=utf-8"
+    }
+  },
+  "error": "Invalid API key. Your API key should be here: https://serpapi.com/manage-api-key"
+}

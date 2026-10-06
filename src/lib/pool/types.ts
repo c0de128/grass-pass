@@ -20,7 +20,7 @@ export type PoolItem = {
   /** Code-written evidence line, e.g. "seen 2 times since Sep 21 · iNaturalist". */
   evidence: string;
   /** Data source name for the pass, e.g. "OpenStreetMap" or "iNaturalist". */
-  source: "OpenStreetMap" | "iNaturalist";
+  source: "OpenStreetMap" | "iNaturalist" | "Google reviews via SerpApi";
   /** Words a clue must not contain (it would give the answer away). Lower case. */
   nameWords: string[];
   /** Fixed safety line printed with the item, or null. */
@@ -51,7 +51,7 @@ export type SectionState =
   | { status: "empty"; message: string }
   /** The source didn't answer. */
   | { status: "unavailable"; message: string }
-  /** Not switched on for this pass (Lucky Finds without SerpApi). */
+  /** Switched off for this pass (Lucky Finds: no SerpApi key, a search cap reached, or SerpApi refused). */
   | { status: "off"; message: string };
 
 /** Words that only name a category ("a flower", "a bird") and do not give the answer away. */

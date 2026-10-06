@@ -1,0 +1,55 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps answer, recorded live",
+    "request": {
+      "engine": "google_maps",
+      "type": "search",
+      "q": "Zqxwv Plimbort Meadow Preserve",
+      "ll": "@31.80000,-103.20000,15z",
+      "hl": "en",
+      "gl": "us"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:47:03.316Z",
+    "latencyMs": 6791,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fbd65c93016c771d5799",
+    "status": "Success",
+    "created_at": "2026-10-06 13:47:02 UTC",
+    "processed_at": "2026-10-06 13:47:02 UTC",
+    "total_time_taken": 6.64
+  },
+  "search_parameters": {
+    "engine": "google_maps",
+    "type": "search",
+    "q": "Zqxwv Plimbort Meadow Preserve",
+    "ll": "@31.80000,-103.20000,15z",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us"
+  },
+  "search_information": {
+    "local_results_state": "Showing results for type: \"place\" instead of type: \"search\"",
+    "query_displayed": "Zqxwv Plimbort Meadow Preserve"
+  },
+  "place_results": {
+    "title": "Plum Creek Meadow",
+    "place_id": "ChIJL5ttrvcdDogR4aBpiOl0H8k",
+    "data_id": "0x880e1df7ae6d9b2f:0xc91f74e98869a0e1",
+    "data_cid": "14492430672266371297",
+    "gps_coordinates": {
+      "latitude": 41.4846729,
+      "longitude": -87.5386468
+    },
+    "type": [
+      "Nature preserve"
+    ],
+    "rating": 4.3,
+    "reviews": 155,
+    "address": "22300 Burnham Ave, Chicago Heights, IL 60411"
+  }
+}

@@ -65,6 +65,24 @@ export function secondsUntilLocalMidnight(ms: number): number {
   return Math.max(1, Math.ceil((at - ms) / 1000));
 }
 
+/**
+ * A monthly cycle that starts on day `startDay` (1-28) at Chicago midnight, like a plan that renews on the
+ * 16th (S6: SerpApi's free searches reset on the plan's renewal day, not on the 1st). `id` is the cycle's
+ * first day ("2026-10-16"); `resetSec` = seconds until the next cycle starts (at least 1).
+ */
+export function localCycle(ms: number, startDay: number): { id: string; resetSec: number } {
+  const d = Math.min(28, Math.max(1, Math.trunc(startDay) || 1));
+  const p = localParts(ms);
+  // This cycle began this month if today is on/after the start day, else last month (Date.UTC normalizes month 0/-1).
+  const start = new Date(Date.UTC(p.year, p.month - 1 - (p.day >= d ? 0 : 1), d));
+  const next = new Date(Date.UTC(start.getUTCFullYear(), start.getUTCMonth() + 1, d));
+  const at = localMidnightUtc(next.getUTCFullYear(), next.getUTCMonth() + 1, d);
+  return {
+    id: `${start.getUTCFullYear()}-${pad(start.getUTCMonth() + 1)}-${pad(d)}`,
+    resetSec: Math.max(1, Math.ceil((at - ms) / 1000)),
+  };
+}
+
 /** Seconds until the 1st of next month, Chicago midnight (at least 1). */
 export function secondsUntilNextLocalMonth(ms: number): number {
   const p = localParts(ms);

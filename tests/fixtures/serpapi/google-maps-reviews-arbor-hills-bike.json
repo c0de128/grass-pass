@@ -1,0 +1,220 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps_reviews answer, recorded live",
+    "request": {
+      "engine": "google_maps_reviews",
+      "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+      "sort_by": "newestFirst",
+      "query": "bike",
+      "num": 20,
+      "hl": "en"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:46:30.235Z",
+    "latencyMs": 2749,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fbb503610a233e08210c",
+    "status": "Success",
+    "created_at": "2026-10-06 13:46:29 UTC",
+    "processed_at": "2026-10-06 13:46:29 UTC",
+    "total_time_taken": 2.61
+  },
+  "search_parameters": {
+    "engine": "google_maps_reviews",
+    "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+    "hl": "en",
+    "num": "20",
+    "sort_by": "newestFirst",
+    "query": "bike"
+  },
+  "reviews": [
+    {
+      "position": 1,
+      "rating": 5,
+      "date": "Edited 2 months ago",
+      "iso_date": "2025-07-23T23:33:15Z",
+      "iso_date_of_last_edit": "2026-07-06T14:55:27Z",
+      "source": "Google",
+      "snippet": "Arbor Hills Nature Preserve: A Quiet Triumph in Plano, Texas\n\n📍 Location: 6701 W Parker Rd, Plano, TX 75093\n\n🕒 Hours: Open daily, 5:00 AM – 11:00 PM\n\n🐾 Dog-Friendly | 🚲 Bike Trails | 🌳 Wildlife Viewing | 🧺 Picnic Areas\n⭐ Rated 4.6/5 on TripAdvisor and Yelp\n\nNestled in the heart of Plano, Texas, Arbor Hills Nature Preserve is a 200-acre sanctuary where the wild and the weary meet. Here, the trails—both paved and earthen—wind through prairies, woodlands, and creeks, offering a rare communion with nature just minutes from the city’s pulse.\n\nThe preserve welcomes hikers, joggers, mountain bikers, and families alike. Dog-friendly paths, shaded loops, and scenic overlooks make it a favorite for locals and travelers seeking a peaceful retreat. The playground and picnic pavilions near the entrance hum with laughter and quiet joy. Wildlife sightings—hawks, deer, armadillos—are not uncommon, and the air carries the scent of cedar and sun-warmed stone.\n\nOn weekends, the preserve can be crowded. Arrive early to find parking and solitude. The 2.7-mile mountain bike trail, maintained by DORBA, offers quick drops and banked turns for beginners and seasoned riders. The main loop trail, partially shaded, is ideal for walking meditation or a brisk jog.\n\nIn the evening, the light softens. Shadows stretch across the prairie. The world exhales.\n\nArbor Hills is not just a park. It is a place to remember that silence is not empty—it is full of meaning."
+    },
+    {
+      "position": 2,
+      "rating": 5,
+      "date": "4 months ago",
+      "iso_date": "2026-05-13T11:46:54Z",
+      "iso_date_of_last_edit": "2026-05-13T11:46:54Z",
+      "source": "Google",
+      "snippet": "Fun place to walk , hike , or mountain bike."
+    },
+    {
+      "position": 3,
+      "rating": 5,
+      "date": "5 months ago",
+      "iso_date": "2026-04-28T12:44:53Z",
+      "iso_date_of_last_edit": "2026-04-28T12:44:53Z",
+      "source": "Google",
+      "snippet": "Good for hike/run/bike\nGet water"
+    },
+    {
+      "position": 4,
+      "rating": 5,
+      "date": "6 months ago",
+      "iso_date": "2026-03-23T16:17:49Z",
+      "iso_date_of_last_edit": "2026-03-23T16:17:49Z",
+      "source": "Google",
+      "snippet": "This is such a great park to walk or ride a bike. Lots of trails, just beautiful!"
+    },
+    {
+      "position": 5,
+      "rating": 5,
+      "date": "11 months ago",
+      "iso_date": "2025-10-21T17:17:46Z",
+      "iso_date_of_last_edit": "2025-10-21T17:17:46Z",
+      "source": "Google",
+      "snippet": "Came for the Mountain Bike trail. Parking was ample, rest rooms clean and the trail was in great shape 👌"
+    },
+    {
+      "position": 6,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-09-08T01:10:59Z",
+      "iso_date_of_last_edit": "2025-09-08T01:10:59Z",
+      "source": "Google",
+      "snippet": "This park is on a smaller scale, but diverse. There are three types of habitats, with various fauna and flora. The paths are well maintained, easily accessible by strollers, or wheelchairs. There are bike trails.\nWe walked the cca 2-mile loop in about 40 minutes, but there are more paths for longer walks. There are occasional elevation changes.\nThe restrooms are not the best looking, but had soap, water and toilet paper.\nThe best feature is the ice cream truck positioned at the parking lot. The parking lot is quite large, for about 100 vehicles."
+    },
+    {
+      "position": 7,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-08-27T14:26:51Z",
+      "iso_date_of_last_edit": "2025-08-27T14:26:51Z",
+      "source": "Google",
+      "snippet": "Great bike trail"
+    },
+    {
+      "position": 8,
+      "rating": 5,
+      "date": "Edited a year ago",
+      "iso_date": "2019-03-08T03:52:32Z",
+      "iso_date_of_last_edit": "2025-08-23T14:51:18Z",
+      "source": "Google",
+      "snippet": "Love this place right in the heart of the city of Plano, TX. Great 3 miles paved trail you can walk or bike ride. Many come with their dogs\nLots of graded trails along covered shaded paths, many dirt trails.\nIt’s getting super popular crowded to park, the path though is plentiful."
+    },
+    {
+      "position": 9,
+      "rating": 5,
+      "date": "Edited a year ago",
+      "iso_date": "2023-06-09T15:51:03Z",
+      "iso_date_of_last_edit": "2025-07-12T13:33:48Z",
+      "source": "Google",
+      "snippet": "If you're looking quick lunchtime walk or a 3 mile hike, this is your place. Concrete path or trails in the woods guide you along. Restrooms are close to parking lots and the look outs are fun little places to stop. Weekends tend to get very crowded so I don't suggest trying to ride a bike through the paths. Whenever it is you choose to go, you are surrounded by nature and come out just a tad bit more relaxed."
+    },
+    {
+      "position": 10,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-06-03T01:59:35Z",
+      "iso_date_of_last_edit": "2025-06-03T01:59:35Z",
+      "source": "Google",
+      "snippet": "This trail is so versatile and easy for beginners and the trail pros I love coming here to walk with my baby or ride my bike the bike trail is awesome!!!"
+    },
+    {
+      "position": 11,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-05-27T21:30:11Z",
+      "iso_date_of_last_edit": "2025-05-27T21:30:11Z",
+      "source": "Google",
+      "snippet": "A beautiful, well-kept nature spot with great trails, wildlife, and views. Can get crowded, but perfect for a peaceful walk or bike ride."
+    },
+    {
+      "position": 12,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-05-19T18:36:57Z",
+      "iso_date_of_last_edit": "2025-05-19T18:36:57Z",
+      "source": "Google",
+      "snippet": "Great paved trails and plenty of hiking in the woods, with a great playground for kids. I brought my now 6yo here when he first started riding a bike, thinking the paved trails would be a great place. Not here. The pavement isn't very wide, there's a lot of walking traffic and lots of hills. It's just too much for a new rider. Came back now that he's 6 and left the bikes at home. We walked the paved trails and set off into the woods to explore the stream and find some trusty walking sticks. Stopped at a bench for water and snacks while listening to the birds. One of the first places in DFW you can find yourself not able to hear traffic with all the trees. We didn't consult a map, but didn't find it difficult to meander around the wooded trails and find ourselves back on the paved trail back to the playground, which he also loved. Even at 9am, parking lot was packed."
+    },
+    {
+      "position": 13,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-05-16T16:51:12Z",
+      "iso_date_of_last_edit": "2025-05-16T16:51:12Z",
+      "source": "Google",
+      "snippet": "A north Dallas area go-to for walking or running, photography or chillin. 4+ terrain types. Paved and dirt. You can get to places w low foot traffic or you can stay in common walks. Some crazy wild fruit growing in different places different times of year. And wild life. Bobcat sightings over 6 times thru 8+ years of exploring. Walking down near the water is best. Be mindful in spring summer when taking smaller trails.\nSnakes like to sun. Lots of good memories and on-going trail running especially on bike paths (if you do this- run against the grain so you can see bikes coming)."
+    },
+    {
+      "position": 14,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-05-08T01:15:51Z",
+      "iso_date_of_last_edit": "2025-05-08T01:15:51Z",
+      "source": "Google",
+      "snippet": "It's a great place for a walk run or hike. It also has a mountain bike trail which I enjoy. This place has a play area for kids. Its nice park for families to spend time."
+    },
+    {
+      "position": 15,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-04-27T23:52:17Z",
+      "iso_date_of_last_edit": "2025-04-27T23:52:17Z",
+      "source": "Google",
+      "snippet": "I visited Arbor Hills today. I used to frequent this area just to spend time in nature and enjoy my walk. I haven’t been to this area in a while until today because I moved out of the area. But today was a special day because I decided to come back and visit this beautiful nature preserve.\n\nIndeed, Arbor Hills is a nature preserve. As you’re walking this season, you will notice the beautiful grassy plains swaying in the wind. There are an abundant of trails that you can take to explore different areas of the preserve. It is a great place to casually ride your bike and is also a popular destination for photography.\n\nThe nature preserve also has a well equipped playground for children to play and bathrooms for men and women and a family bathroom. There is also a picnic area that you can reserve to have gatherings.\n\nArbor Hills is a great place to walk your dog as they provide poop bags along the main path.\n\nAfter finishing your walks and explorations, treat yourself to some ice cream from the ice cream truck that usually is parked near the restrooms in the afternoons, ready to happily serve customers."
+    },
+    {
+      "position": 16,
+      "rating": 1,
+      "date": "a year ago",
+      "iso_date": "2025-04-27T15:46:59Z",
+      "iso_date_of_last_edit": "2025-04-27T15:46:59Z",
+      "source": "Google",
+      "snippet": "If you love hiking alongside a million people, this is the place for you. If you live in Plano, I could see this being a decent option for an outdoor walk. But I'm spoiled with Eagle Mountain being so close, which is more scenic and WAY less people. Also the mountain bike trail is closed, which is a shame because that trail seemed a lot more interesting."
+    },
+    {
+      "position": 17,
+      "rating": 5,
+      "date": "a year ago",
+      "iso_date": "2025-04-02T17:56:17Z",
+      "iso_date_of_last_edit": "2025-04-02T17:56:17Z",
+      "source": "Google",
+      "snippet": "Great place to ride your mountain bike"
+    },
+    {
+      "position": 18,
+      "rating": 4,
+      "date": "a year ago",
+      "iso_date": "2025-03-21T17:14:04Z",
+      "iso_date_of_last_edit": "2025-03-21T17:14:04Z",
+      "source": "Google",
+      "snippet": "Nice place for a short walk,bike ride, or to bring kids to a nice playground"
+    },
+    {
+      "position": 19,
+      "rating": 5,
+      "date": "Edited a year ago",
+      "iso_date": "2018-04-28T09:19:20Z",
+      "iso_date_of_last_edit": "2025-03-19T15:44:56Z",
+      "source": "Google",
+      "snippet": "Gooood place where you can hike, jog, and bike all in one spot. If you live nearby, you should definitely check it out!"
+    },
+    {
+      "position": 20,
+      "rating": 5,
+      "date": "Edited a year ago",
+      "iso_date": "2023-01-28T03:03:24Z",
+      "iso_date_of_last_edit": "2025-01-13T04:30:20Z",
+      "source": "Google",
+      "snippet": "Nice easy hiking trails and bike trails (separate trails). Good for a day hike, or just a couple of hours."
+    }
+  ],
+  "serpapi_pagination": {
+    "next": "https://serpapi.com/search.json?data_id=0x864c24be898ce109%3A0xc3d18322006a4923&engine=google_maps_reviews&hl=en&next_page_token=CjEIARIpCgoAP72GuiErK9__EhAiQs_fMYmYEoV6AqoAAAAAGgn92ZoCa6ISsr0YACIA%3A20&num=20&query=bike&sort_by=newestFirst",
+    "next_page_token": "CjEIARIpCgoAP72GuiErK9__EhAiQs_fMYmYEoV6AqoAAAAAGgn92ZoCa6ISsr0YACIA:20"
+  }
+}

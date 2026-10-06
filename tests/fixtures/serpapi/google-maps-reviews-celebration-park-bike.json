@@ -1,0 +1,162 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps_reviews answer, recorded live",
+    "request": {
+      "engine": "google_maps_reviews",
+      "data_id": "0x864c10f458a11fdb:0xf0f51397eb1115b6",
+      "sort_by": "newestFirst",
+      "query": "bike",
+      "num": "20",
+      "hl": "en"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:59:36.360Z",
+    "latencyMs": 1185,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fec76561a646a1024a8c",
+    "status": "Success",
+    "created_at": "2026-10-06 13:59:35 UTC",
+    "processed_at": "2026-10-06 13:59:35 UTC",
+    "total_time_taken": 1.04
+  },
+  "search_parameters": {
+    "engine": "google_maps_reviews",
+    "data_id": "0x864c10f458a11fdb:0xf0f51397eb1115b6",
+    "hl": "en",
+    "num": "20",
+    "sort_by": "newestFirst",
+    "query": "bike"
+  },
+  "reviews": [
+    {
+      "position": 1,
+      "rating": 5,
+      "date": "Edited 2 years ago",
+      "iso_date": "2024-04-17T14:36:23Z",
+      "iso_date_of_last_edit": "2024-09-28T03:25:24Z",
+      "source": "Google",
+      "snippet": "Let your kids play in the field with teams or play with them or have a walk or bike."
+    },
+    {
+      "position": 2,
+      "rating": 5,
+      "date": "2 years ago",
+      "iso_date": "2024-05-08T21:25:00Z",
+      "iso_date_of_last_edit": "2024-05-08T21:25:00Z",
+      "source": "Google",
+      "snippet": "The place of my childhood. I learned to ride my bike here, and I have so many core memories here. The grass is super super nice 😍😍"
+    },
+    {
+      "position": 3,
+      "rating": 4,
+      "date": "Edited 3 years ago",
+      "iso_date": "2023-06-25T19:49:21Z",
+      "iso_date_of_last_edit": "2023-06-28T16:26:09Z",
+      "source": "Google",
+      "snippet": "Nice open fields (used for soccer during the fall/spring months). Lots of sidewalk for bike riding, which is pretty nice.\n\n(Edit:) the baskeyball courts on edge with me because the material of the court is made with all sorts of rocks which will really wear shoes down. Along with that, every rim is messed up in some sort of way (either slightly shorter or completely bent)"
+    },
+    {
+      "position": 4,
+      "rating": 4,
+      "date": "4 years ago",
+      "iso_date": "2022-05-24T18:27:57Z",
+      "iso_date_of_last_edit": "2022-05-24T18:28:04Z",
+      "source": "Google",
+      "snippet": "Such a beautiful park! Its huge with a  splashpark for the little ones! Also has big fields great for outdoor sport soccer football badminton! It has a tiny lake nearby with some ducks and turtles too. A nice long trail that goes around great for walking or running maybe even bike riding."
+    },
+    {
+      "position": 5,
+      "rating": 5,
+      "date": "Edited 4 years ago",
+      "iso_date": "2022-03-20T23:05:51Z",
+      "iso_date_of_last_edit": "2022-04-01T20:34:12Z",
+      "source": "Google",
+      "snippet": "I love this park! Lots of play equipment. Trails to walk and bike. Maybe a little more shade would be great."
+    },
+    {
+      "position": 6,
+      "rating": 4,
+      "date": "5 years ago",
+      "iso_date": "2021-03-16T00:41:54Z",
+      "iso_date_of_last_edit": "2021-03-16T00:42:29Z",
+      "source": "Google",
+      "snippet": "Great place to picnic,walk,bike.\nDuck ponds,playgrounds"
+    },
+    {
+      "position": 7,
+      "rating": 5,
+      "date": "6 years ago",
+      "iso_date": "2020-01-12T01:34:37Z",
+      "iso_date_of_last_edit": "2020-01-12T01:34:37Z",
+      "source": "Google",
+      "snippet": "Always fun to bike the trail and take grand kids to play tennis!"
+    },
+    {
+      "position": 8,
+      "rating": 4,
+      "date": "7 years ago",
+      "iso_date": "2019-09-15T15:13:56Z",
+      "iso_date_of_last_edit": "2019-09-15T15:13:56Z",
+      "source": "Google",
+      "snippet": "Nice park and a great place to walk, run and handcycle. If you ride a bike and are fast, this is not the place. It's almost always busy. I love it, since I'm slow and can ride on my handcycle or roll in my wheelchair safely from my house to the park via a path."
+    },
+    {
+      "position": 9,
+      "rating": 5,
+      "date": "7 years ago",
+      "iso_date": "2019-07-10T04:58:53Z",
+      "iso_date_of_last_edit": "2019-07-10T04:58:53Z",
+      "source": "Google",
+      "snippet": "Safe, fun, and lots of space to run and play/bike. Bathrooms are always clean."
+    },
+    {
+      "position": 10,
+      "rating": 4,
+      "date": "Edited 7 years ago",
+      "iso_date": "2017-09-22T17:12:32Z",
+      "iso_date_of_last_edit": "2018-10-10T15:24:13Z",
+      "source": "Google",
+      "snippet": "Great place to walk, run, bike, play, etc"
+    },
+    {
+      "position": 11,
+      "rating": 5,
+      "date": "8 years ago",
+      "iso_date": "2018-08-21T22:04:51Z",
+      "iso_date_of_last_edit": "2018-08-21T22:13:26Z",
+      "source": "Google",
+      "snippet": "The Celebration Park consists of approximately 106 acres of land. It has hike and bike trails surrounding the park and crisscrossing through the park, there is a huge pavilion in the center of the park with a concession booth open during the weekend, and restrooms, a playground, and splash park is near the pavilion, one large and one small water holding ponds are located on the perimeter of the park, and four tennis courts are located on the west side of the park off Malone. Approximately 25 soccer fields are set up for weekend ASA team play by the City of Allen Parks Department. A very beautiful park."
+    },
+    {
+      "position": 12,
+      "rating": 4,
+      "date": "8 years ago",
+      "iso_date": "2018-07-31T15:25:18Z",
+      "iso_date_of_last_edit": "2018-07-31T15:27:06Z",
+      "source": "Google",
+      "snippet": "Nice place for family and other activities.  There is waterpark.  Tennis- baseball- basketball and a pond to fish in. You can rent pavilion and have parties. There is bike trails. Jogging"
+    },
+    {
+      "position": 13,
+      "rating": 5,
+      "date": "8 years ago",
+      "iso_date": "2018-01-28T08:55:34Z",
+      "iso_date_of_last_edit": "2018-01-28T08:55:34Z",
+      "source": "Google",
+      "snippet": "Amazing park. Clean and has many lights for night time adventures.  Tennis courts, empty fields with soccer fields (sometimes) and massive play area. Good for walking and bike riding."
+    },
+    {
+      "position": 14,
+      "rating": 5,
+      "date": "8 years ago",
+      "iso_date": "2018-01-25T03:05:20Z",
+      "iso_date_of_last_edit": "2018-01-25T03:06:04Z",
+      "source": "Google",
+      "snippet": "Go to park to run, bike, jog, or play at the park with kids. Summer they have a small splash area. My tax dollars hard at work"
+    }
+  ]
+}

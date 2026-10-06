@@ -1,0 +1,136 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps_reviews answer, recorded live",
+    "request": {
+      "engine": "google_maps_reviews",
+      "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+      "sort_by": "newestFirst",
+      "hl": "en"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:45:40.214Z",
+    "latencyMs": 957,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fb836561a63ad04078e9",
+    "status": "Success",
+    "created_at": "2026-10-06 13:45:39 UTC",
+    "processed_at": "2026-10-06 13:45:39 UTC",
+    "total_time_taken": 0.83
+  },
+  "search_parameters": {
+    "engine": "google_maps_reviews",
+    "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+    "hl": "en",
+    "sort_by": "newestFirst"
+  },
+  "place_info": {
+    "title": "Arbor Hills Nature Preserve",
+    "address": "6701 W Parker Rd, Plano, TX 75093",
+    "rating": 4.8,
+    "reviews": 8147,
+    "type": "Nature preserve"
+  },
+  "topics": [
+    {
+      "keyword": "paved trails",
+      "mentions": 160,
+      "id": "QqD7vebirt4"
+    },
+    {
+      "keyword": "creek",
+      "mentions": 162,
+      "id": "At7EJqwDhe4"
+    },
+    {
+      "keyword": "dirt trails",
+      "mentions": 68,
+      "id": "KozvnGaLrvY"
+    },
+    {
+      "keyword": "playground",
+      "mentions": 306,
+      "id": "QAlITbHKvNQ"
+    },
+    {
+      "keyword": "walking trails",
+      "mentions": 120,
+      "id": "QLlrRIfO7MQ"
+    },
+    {
+      "keyword": "concrete trails",
+      "mentions": 40,
+      "id": "COHzJE5O6P4"
+    },
+    {
+      "keyword": "biking trails",
+      "mentions": 52,
+      "id": "QLBqke3J1PQ"
+    },
+    {
+      "keyword": "mountain biking",
+      "mentions": 32,
+      "id": "KpQL16_k3NA"
+    },
+    {
+      "keyword": "wooded trails",
+      "mentions": 34,
+      "id": "GKBqF88vrtY"
+    },
+    {
+      "keyword": "picnic areas",
+      "mentions": 61,
+      "id": "ExnO5fvu-JU"
+    }
+  ],
+  "reviews": [
+    {
+      "position": 1,
+      "rating": 5,
+      "date": "18 hours ago",
+      "iso_date": "2026-10-05T18:57:29Z",
+      "iso_date_of_last_edit": "2026-10-05T18:57:29Z",
+      "source": "Google",
+      "snippet": "A beautiful 10/10 trails!"
+    },
+    {
+      "position": 2,
+      "rating": 5,
+      "date": "23 hours ago",
+      "iso_date": "2026-10-05T14:31:11Z",
+      "iso_date_of_last_edit": "2026-10-05T14:31:11Z",
+      "source": "Google"
+    },
+    {
+      "position": 3,
+      "rating": 5,
+      "date": "a day ago",
+      "iso_date": "2026-10-04T21:40:40Z",
+      "iso_date_of_last_edit": "2026-10-04T21:40:40Z",
+      "source": "Google"
+    },
+    {
+      "position": 4,
+      "rating": 5,
+      "date": "a day ago",
+      "iso_date": "2026-10-04T14:03:34Z",
+      "iso_date_of_last_edit": "2026-10-04T14:03:34Z",
+      "source": "Google"
+    },
+    {
+      "position": 5,
+      "rating": 5,
+      "date": "2 days ago",
+      "iso_date": "2026-10-04T04:00:53Z",
+      "iso_date_of_last_edit": "2026-10-04T04:00:53Z",
+      "source": "Google"
+    }
+  ],
+  "serpapi_pagination": {
+    "next": "https://serpapi.com/search.json?data_id=0x864c24be898ce109%3A0xc3d18322006a4923&engine=google_maps_reviews&hl=en&next_page_token=Ci8IARInCgoAP72F8GdJ9y__EhC-xV7LsUyz5tPW7lEAAAAAGgf_Al8GdJ9yGAAiAA&sort_by=newestFirst",
+    "next_page_token": "Ci8IARInCgoAP72F8GdJ9y__EhC-xV7LsUyz5tPW7lEAAAAAGgf_Al8GdJ9yGAAiAA"
+  }
+}

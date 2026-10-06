@@ -1,0 +1,223 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps answer, recorded live",
+    "request": {
+      "engine": "google_maps",
+      "type": "search",
+      "q": "Celebration Park",
+      "ll": "@33.10824,-96.62468,15z",
+      "hl": "en",
+      "gl": "us"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:46:50.840Z",
+    "latencyMs": 601,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fbcaf5d5acbdec9d6a4e",
+    "status": "Success",
+    "created_at": "2026-10-06 13:46:50 UTC",
+    "processed_at": "2026-10-06 13:46:50 UTC",
+    "total_time_taken": 0.43
+  },
+  "search_parameters": {
+    "engine": "google_maps",
+    "type": "search",
+    "q": "Celebration Park",
+    "ll": "@33.10824,-96.62468,15z",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us"
+  },
+  "search_information": {
+    "local_results_state": "Results for exact spelling",
+    "query_displayed": "Celebration Park"
+  },
+  "local_results": [
+    {
+      "position": 1,
+      "title": "Celebration Park",
+      "place_id": "ChIJ2x-hWPQQTIYRthUR65cT9fA",
+      "data_id": "0x864c10f458a11fdb:0xf0f51397eb1115b6",
+      "data_cid": "17362805481601570230",
+      "gps_coordinates": {
+        "latitude": 33.1074291,
+        "longitude": -96.6240878
+      },
+      "type": "City park",
+      "types": [
+        "City park",
+        "Park",
+        "Tourist attraction"
+      ],
+      "rating": 4.8,
+      "reviews": 3472,
+      "address": "701 N Angel Pkwy, Allen, TX 75002"
+    },
+    {
+      "position": 2,
+      "title": "Celebration Park Tennis Courts",
+      "place_id": "ChIJmd-vbUARTIYROvDqgX0eDpQ",
+      "data_id": "0x864c11406dafdf99:0x940e1e7d81eaf03a",
+      "data_cid": "10668498091686686778",
+      "gps_coordinates": {
+        "latitude": 33.1070784,
+        "longitude": -96.62772509999999
+      },
+      "type": "Tennis court",
+      "types": [
+        "Tennis court"
+      ],
+      "rating": 4.7,
+      "reviews": 23,
+      "address": "1530 Rivercrest Blvd, Allen, TX 75002"
+    },
+    {
+      "position": 3,
+      "title": "Celebration Park -Volleyball",
+      "place_id": "ChIJm7RpSAARTIYRai6zpw7qIaA",
+      "data_id": "0x864c11004869b49b:0xa021ea0ea7b32e6a",
+      "data_cid": "11538761068963901034",
+      "gps_coordinates": {
+        "latitude": 33.1067868,
+        "longitude": -96.6250678
+      },
+      "type": "Park",
+      "types": [
+        "Park"
+      ],
+      "rating": 5,
+      "reviews": 2,
+      "address": "701 N Angel Pkwy, Allen, TX 75002"
+    },
+    {
+      "position": 4,
+      "title": "Celebration Park Baseball Fields",
+      "place_id": "ChIJ0-KMHQARTIYRaEIgpm0by0Q",
+      "data_id": "0x864c11001d8ce2d3:0x44cb1b6da6204268",
+      "data_cid": "4957085972603880040",
+      "gps_coordinates": {
+        "latitude": 33.1102426,
+        "longitude": -96.62752019999999
+      },
+      "type": "Park",
+      "types": [
+        "Park"
+      ],
+      "rating": 5,
+      "reviews": 1,
+      "address": "701 N Angel Pkwy, Allen, TX 75002"
+    },
+    {
+      "position": 5,
+      "title": "Celebration Park Soccer Field",
+      "place_id": "ChIJHyb7UQARTIYRYwvzXAsvxS4",
+      "data_id": "0x864c110051fb261f:0x2ec52f0b5cf30b63",
+      "data_cid": "3370151622007262051",
+      "gps_coordinates": {
+        "latitude": 33.1059783,
+        "longitude": -96.625993
+      },
+      "rating": 5,
+      "reviews": 1,
+      "address": "1530 Rivercrest Blvd, Allen, TX 75002"
+    },
+    {
+      "position": 6,
+      "title": "Celebration Park Basketball Courts",
+      "place_id": "ChIJe2RgZgARTIYR-StCeY1wCiU",
+      "data_id": "0x864c11006660647b:0x250a708d79422bf9",
+      "data_cid": "2669069482097519609",
+      "gps_coordinates": {
+        "latitude": 33.108413999999996,
+        "longitude": -96.62554899999999
+      },
+      "type": "Basketball court",
+      "types": [
+        "Basketball court"
+      ],
+      "rating": 5,
+      "reviews": 1,
+      "address": "495F+9Q, Allen, TX 75002"
+    },
+    {
+      "position": 7,
+      "title": "Allen Station Park",
+      "place_id": "ChIJ9QIrtzIXTIYRyNifq2pMmAg",
+      "data_id": "0x864c1732b72b02f5:0x8984c6aab9fd8c8",
+      "data_cid": "619328969793067208",
+      "gps_coordinates": {
+        "latitude": 33.1123142,
+        "longitude": -96.6658167
+      },
+      "type": "City park",
+      "types": [
+        "City park",
+        "Athletic field",
+        "Playground",
+        "Tourist attraction"
+      ],
+      "rating": 4.7,
+      "reviews": 1065,
+      "address": "1120 N Cedar Dr, Allen, TX 75002"
+    },
+    {
+      "position": 8,
+      "title": "Bethany Lakes Park",
+      "place_id": "ChIJW_RqgKEQTIYR6ksAzq8k0cI",
+      "data_id": "0x864c10a1806af45b:0xc2d124afce004bea",
+      "data_cid": "14038041850984549354",
+      "gps_coordinates": {
+        "latitude": 33.0877536,
+        "longitude": -96.6456188
+      },
+      "type": "City park",
+      "types": [
+        "City park",
+        "Park",
+        "Tourist attraction"
+      ],
+      "rating": 4.7,
+      "reviews": 1342,
+      "address": "745 S Allen Heights Dr, Allen, TX 75002"
+    },
+    {
+      "position": 9,
+      "title": "Orchards Park",
+      "place_id": "ChIJL6QXWYYQTIYRNILYq9zP6Pc",
+      "data_id": "0x864c10865917a42f:0xf7e8cfdcabd88234",
+      "data_cid": "17863756468647920180",
+      "gps_coordinates": {
+        "latitude": 33.092180299999995,
+        "longitude": -96.6247787
+      },
+      "type": "Park",
+      "types": [
+        "Park",
+        "Tourist attraction"
+      ],
+      "rating": 4.7,
+      "reviews": 109,
+      "address": "1705 Lake Travis Dr, Allen, TX 75002"
+    },
+    {
+      "position": 10,
+      "title": "Celebration Park, Lucas, Tx",
+      "place_id": "ChIJMylbXgAVTIYRyZ7UfMvfLS8",
+      "data_id": "0x864c15005e5b2933:0x2f2ddfcb7cd49ec9",
+      "data_cid": "3399619358800256713",
+      "gps_coordinates": {
+        "latitude": 33.2288116,
+        "longitude": -96.6669129
+      },
+      "type": "Park",
+      "types": [
+        "Park"
+      ],
+      "address": "4020 Explorer Wy, McKinney, TX 75071"
+    }
+  ]
+}

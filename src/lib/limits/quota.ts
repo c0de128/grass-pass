@@ -19,7 +19,7 @@
  */
 import type { Store } from "@/lib/cache/store";
 import { log } from "@/lib/log";
-import { localDay, localMonth, secondsUntilLocalMidnight, secondsUntilNextLocalMonth } from "@/lib/time";
+import { localCycle, localDay, localMonth, secondsUntilLocalMidnight, secondsUntilNextLocalMonth } from "@/lib/time";
 import { networkKey } from "./ip";
 import { refusalWait, rememberRefusal } from "./rate";
 
@@ -29,11 +29,16 @@ export const NET48_FACTOR = 2;
 export const REFUSAL_MEMO_SEC = 60;
 export const QUOTA_ALERT_PCTS = [50, 90] as const;
 
-export type Period = { kind: "day" } | { kind: "month" } | { kind: "window"; seconds: number };
+/** `cycle` (S6): a month that starts on day `startDay` (a plan's renewal day, e.g. SerpApi's). */
+export type Period = { kind: "day" } | { kind: "month" } | { kind: "cycle"; startDay: number } | { kind: "window"; seconds: number };
 
 export function periodOf(period: Period, now: number): { id: string; resetSec: number } {
   if (period.kind === "day") return { id: localDay(now), resetSec: secondsUntilLocalMidnight(now) };
   if (period.kind === "month") return { id: localMonth(now), resetSec: secondsUntilNextLocalMonth(now) };
+  if (period.kind === "cycle") {
+    const c = localCycle(now, period.startDay);
+    return { id: `c${c.id}`, resetSec: c.resetSec };
+  }
   const ms = period.seconds * 1000;
   const bucket = Math.floor(now / ms);
   return { id: `w${period.seconds}-${bucket}`, resetSec: Math.max(1, Math.ceil(((bucket + 1) * ms - now) / 1000)) };

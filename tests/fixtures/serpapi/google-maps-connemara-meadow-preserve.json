@@ -1,0 +1,78 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps answer, recorded live",
+    "request": {
+      "engine": "google_maps",
+      "type": "search",
+      "q": "Connemara Meadow Preserve",
+      "ll": "@33.08485,-96.70155,15z",
+      "hl": "en",
+      "gl": "us"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:47:02.421Z",
+    "latencyMs": 752,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fbd5f6e9267c1b39aa95",
+    "status": "Success",
+    "created_at": "2026-10-06 13:47:01 UTC",
+    "processed_at": "2026-10-06 13:47:01 UTC",
+    "total_time_taken": 0.62
+  },
+  "search_parameters": {
+    "engine": "google_maps",
+    "type": "search",
+    "q": "Connemara Meadow Preserve",
+    "ll": "@33.08485,-96.70155,15z",
+    "google_domain": "google.com",
+    "hl": "en",
+    "gl": "us"
+  },
+  "search_information": {
+    "local_results_state": "Results for exact spelling",
+    "query_displayed": "Connemara Meadow Preserve"
+  },
+  "local_results": [
+    {
+      "position": 1,
+      "title": "Connemara Meadow Nature Preserve",
+      "place_id": "ChIJAf66Hd0XTIYRUH9_ysDHcKk",
+      "data_id": "0x864c17dd1dbafe01:0xa970c7c0ca7f7f50",
+      "data_cid": "12209478220646416208",
+      "gps_coordinates": {
+        "latitude": 33.0918594,
+        "longitude": -96.70611869999999
+      },
+      "type": "Nature preserve",
+      "types": [
+        "Nature preserve",
+        "Tourist attraction"
+      ],
+      "rating": 4.7,
+      "reviews": 82,
+      "address": "Alma Dr, Allen, TX 75013"
+    },
+    {
+      "position": 2,
+      "title": "Connemara Meadow",
+      "place_id": "ChIJ7buhKAwXTIYRnMOwIPf63pE",
+      "data_id": "0x864c170c28a1bbed:0x91defaf720b0c39c",
+      "data_cid": "10511114519641637788",
+      "gps_coordinates": {
+        "latitude": 33.0837652,
+        "longitude": -96.70307199999999
+      },
+      "type": "Hiking area",
+      "types": [
+        "Hiking area"
+      ],
+      "rating": 4.8,
+      "reviews": 8,
+      "address": "Plano, TX 75025"
+    }
+  ]
+}

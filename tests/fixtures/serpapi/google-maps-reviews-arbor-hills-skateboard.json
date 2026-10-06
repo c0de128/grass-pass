@@ -1,0 +1,45 @@
+{
+  "_recording": {
+    "what": "SerpApi google_maps_reviews answer, recorded live",
+    "request": {
+      "engine": "google_maps_reviews",
+      "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+      "sort_by": "newestFirst",
+      "query": "skateboard",
+      "num": 20,
+      "hl": "en"
+    },
+    "httpStatus": 200,
+    "fetchedAt": "2026-10-06T13:46:40.980Z",
+    "latencyMs": 547,
+    "note": "api_key removed from the request; the answer was scanned for the key and it was not present unless marked [redacted].",
+    "keyFoundInBody": false,
+    "trimmed": "Trimmed by the builder before commit: only the fields Grass Pass reads are kept (plus ids and metadata). Reviewer names, profile links, photos, thumbnails, review ids and likes were removed (personal data, public repo). Review snippets are kept only because the counting test checks each review's own text; the app never shows, stores or sends them."
+  },
+  "search_metadata": {
+    "id": "6ac4fbc07223f4f46197cbab",
+    "status": "Success",
+    "created_at": "2026-10-06 13:46:40 UTC",
+    "processed_at": "2026-10-06 13:46:40 UTC",
+    "total_time_taken": 0.41
+  },
+  "search_parameters": {
+    "engine": "google_maps_reviews",
+    "data_id": "0x864c24be898ce109:0xc3d18322006a4923",
+    "hl": "en",
+    "num": "20",
+    "sort_by": "newestFirst",
+    "query": "skateboard"
+  },
+  "reviews": [
+    {
+      "position": 1,
+      "rating": 5,
+      "date": "8 years ago",
+      "iso_date": "2018-03-29T14:54:56Z",
+      "iso_date_of_last_edit": "2018-03-29T14:54:56Z",
+      "source": "Google",
+      "snippet": "One of my favorite nature parks. They have wide paved trails that are far from boring with the twists, turns, and hills. Some of it is covered by trees, some of it is not. They have great unpaved trails that will surely send you on hours of adventures.  The worst thing about it is it can get VERY crowded, so I tend to trek on the dirt trails. Also, if you accidentally stay even 5mins after closing you have to call the fire department to let you out, who will potentially call the cops to come and that can be problematic. Lastly, they do not allow skateboards/longboards which is a huge bummer considering the amazing hills and turns. They should have designated days where people can skateboard without putting themselves or others in danger!"
+    }
+  ]
+}

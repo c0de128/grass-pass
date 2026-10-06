@@ -12,7 +12,7 @@ export default function NotFound() {
             Page not found
           </h1>
           <p>There is no page at this address. It may have been typed wrong.</p>
-          <Link href="/" className={buttonClassName("primary", "self-start")}>
+          <Link href="/" prefetch={false} className={buttonClassName("primary", "self-start")}>
             Make a pass
           </Link>
         </div>

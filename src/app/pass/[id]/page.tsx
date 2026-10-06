@@ -38,7 +38,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
       {/* Print first: on a phone the pass is long, and printing is the point (R1 judge/UX). */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Opens the one-page print layout, which opens the print dialog once (ADR 0004). */}
-        <Link href={`/pass/${pass.id}/print?print=1`} className={buttonClassName("primary")}>
+        <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
           Print pass
         </Link>
         <p className="text-base">One black-and-white page. Cut it in two: the kid takes the top.</p>
@@ -46,7 +46,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
       <PassPreview pass={pass} reused={sp.reused === "1"} />
       <div className="flex flex-col gap-4">
         <DifferentPassButton parkId={pass.park.id} ageBand={pass.ageBand} variant={pass.variant} />
-        <Link href="/" className={buttonClassName("secondary", "self-start")}>
+        <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
           Pick another park
         </Link>
       </div>

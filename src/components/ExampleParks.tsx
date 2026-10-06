@@ -40,6 +40,7 @@ export function ExampleParks({ statuses, enabled = true }: { statuses: readonly 
             {s.pass ? (
               <Link
                 href={`/pass/${s.pass.passId}?example=1`}
+                prefetch={false}
                 className="flex min-h-11 w-full flex-col items-start rounded-control border-2 border-line bg-surface px-4 py-2 text-left text-fg hover:bg-secondary-hover focus-visible:outline-offset-2"
               >
                 <span className="font-display text-lg font-semibold">{s.example.name}</span>
@@ -85,6 +86,7 @@ export function ExampleChips({ statuses }: { statuses: readonly ExampleStatus[] 
           <li key={s.example.slug}>
             <Link
               href={`/pass/${s.pass!.passId}?example=1`}
+              prefetch={false}
               className="inline-flex min-h-11 items-center rounded-control border-2 border-line bg-surface px-3 text-base font-semibold text-fg hover:bg-secondary-hover"
             >
               {s.example.name}

@@ -32,7 +32,11 @@ export type LimitsConfig = {
   /** In-process pre-limiter (SEC-1-02): burst size and refill per second, per IP, per instance (/api/* requests). */
   preLimitBurst: number;
   preLimitPerSec: number;
-  /** SEC-2-01: page requests (`/`, `/pass/*`) per IP: a burst, then this many per minute (6 = 0.1/s). */
+  /**
+   * Page requests (`/`, `/pass/*`) per IP: a burst, then this many per minute. SEC-3-01: a flood guard
+   * only (120, then 120/min = 2/s): a real browser also sends RSC prefetches and a school or phone
+   * carrier shares one address. The store-cost bucket below carries the monthly math.
+   */
   preLimitPageBurst: number;
   preLimitPagePerMin: number;
   /**
@@ -56,8 +60,8 @@ export const LIMIT_DEFAULTS: LimitsConfig = {
   aiReservePct: 10,
   preLimitBurst: 40,
   preLimitPerSec: 4,
-  preLimitPageBurst: 20,
-  preLimitPagePerMin: 6,
+  preLimitPageBurst: 120,
+  preLimitPagePerMin: 120,
   preLimitCostBurst: 60,
   preLimitCostPerHour: 45,
 };

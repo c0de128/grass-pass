@@ -272,8 +272,8 @@ describe("limitsConfig", () => {
       aiReservePct: 10,
       preLimitBurst: 40,
       preLimitPerSec: 4,
-      preLimitPageBurst: 20,
-      preLimitPagePerMin: 6,
+      preLimitPageBurst: 120,
+      preLimitPagePerMin: 120,
       preLimitCostBurst: 60,
       preLimitCostPerHour: 45,
     });

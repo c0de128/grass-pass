@@ -62,7 +62,7 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
         </p>
         <div className="flex flex-wrap gap-3">
           <PrintButton auto={sp.print === "1"} />
-          <Link href={`/pass/${pass.id}`} className={buttonClassName("secondary", "self-start")}>
+          <Link href={`/pass/${pass.id}`} prefetch={false} className={buttonClassName("secondary", "self-start")}>
             Back to the pass
           </Link>
         </div>

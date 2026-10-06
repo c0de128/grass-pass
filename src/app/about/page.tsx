@@ -478,7 +478,7 @@ export default function AboutPage() {
           <a className={buttonClassName("secondary")} href={REPO_URL}>
             Grass Pass on GitHub
           </a>
-          <Link className={buttonClassName("primary")} href="/">
+          <Link className={buttonClassName("primary")} href="/" prefetch={false}>
             Make a pass
           </Link>
         </p>

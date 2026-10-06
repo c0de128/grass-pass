@@ -33,6 +33,12 @@ jobs:
         env:
           E2E_BASE_URL: http://localhost:3123
           PREWARM_EXAMPLES: "0"
+      # SEC-3-01: a visitor's walk at the DEFAULT per-IP limits (its own server, no raised PRELIMIT_*).
+      - run: pnpm e2e:limits
+        timeout-minutes: 10
+        env:
+          E2E_LIMITS_BASE_URL: http://localhost:3124
+          PREWARM_EXAMPLES: "0"
 
   gitleaks:
     runs-on: ubuntu-latest

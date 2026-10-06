@@ -13,7 +13,7 @@ export default function PassNotFound() {
             No pass here
           </h1>
           <p>{PASS_COPY.passGone}</p>
-          <Link href="/" className={buttonClassName("primary", "self-start")}>
+          <Link href="/" prefetch={false} className={buttonClassName("primary", "self-start")}>
             Make a pass
           </Link>
         </div>

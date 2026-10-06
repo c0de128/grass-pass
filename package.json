@@ -10,6 +10,7 @@
     "typecheck": "next typegen && tsc --noEmit",
     "test": "vitest run",
     "e2e": "playwright test",
+    "e2e:limits": "playwright test -c playwright.limits.config.ts",
     "eval": "vitest run --config evals/vitest.config.mts evals/cli/eval.ts",
     "eval:record": "vitest run --config evals/vitest.config.mts evals/cli/record.ts",
     "eval:report": "vitest run --config evals/vitest.config.mts evals/cli/report.ts",

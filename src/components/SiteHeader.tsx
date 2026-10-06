@@ -9,7 +9,7 @@ export function SiteHeader() {
     <header className="w-full">
       <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 pt-4 pb-2">
         {/* min-w-0 + max-w-full: at 360 px the logo gives up a few px for the About link instead of overflowing. */}
-        <Link href="/" className="inline-flex min-h-11 min-w-0 shrink items-center rounded-control" aria-label="Grass Pass home">
+        <Link href="/" prefetch={false} className="inline-flex min-h-11 min-w-0 shrink items-center rounded-control" aria-label="Grass Pass home">
           <span className="block w-[200px] max-w-full sm:w-[250px]">
             <Logo height={57} decorative eager />
           </span>

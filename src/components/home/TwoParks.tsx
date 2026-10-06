@@ -34,7 +34,7 @@ export function TwoParks() {
           <div className="flex flex-col gap-4">
             <p className="text-xs font-bold tracking-widest text-sun uppercase">The problem</p>
             <h2 id="why-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              Why &ldquo;Find a pinecone&rdquo; fails by age five.
+              Why &ldquo;Find a pinecone&rdquo; fails.
             </h2>
           </div>
           <div className="flex max-w-lg flex-col gap-3 text-lg leading-relaxed text-pretty text-band-muted">

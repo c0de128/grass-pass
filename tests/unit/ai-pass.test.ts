@@ -196,7 +196,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded R1, no section in the answer): Connemara 8/8, Celebration 7/8", () => {
+  it("the real recorded Gemma answers (re-recorded R1 follow-up, no section in the answer): 7/8 each, one invented count dropped", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool, target } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
@@ -205,16 +205,16 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       expect(out.returned).toBe(8);
       // S8c: the answer has no section field; code filled it from the pool for every item.
       expect((draft.items as Record<string, unknown>[]).every((i) => !("section" in i))).toBe(true);
-      if (p === PARKS.connemara) {
-        expect(out.items).toHaveLength(8);
-        expect(out.drops).toEqual({});
-        expect(out.belowMin).toEqual([]);
-      } else {
-        // "Find a dirt diamond." for the baseball fields mapped as "Celebration Diamonds" (R1-m3 stem check).
-        expect(out.items).toHaveLength(7);
-        expect(out.drops).toEqual({ name_leak: 1 });
-        expect(out.items.some((i) => i.item.id === "osm-baseball")).toBe(false);
-      }
+      // Each live answer wrote one count its SOURCE does not have, and code dropped it: Connemara's creek
+      // ("There is 1." - a creek is never counted, one creek is often mapped in pieces) and Celebration's
+      // soccer goals ("There are 2."). 7 of 8 is n-1, so no retry. The new count-clue rule held: no clue
+      // names its thing ("How many ways over the water can you find?" for the bridge).
+      expect(out.items).toHaveLength(7);
+      expect(out.drops).toEqual({ number_not_in_source: 1 });
+      // Both drops were Park Finds, so Park Finds ends below its minimum (Connemara: its only one, the creek;
+      // Celebration: all 8 must be Park Finds). Logged; the pass prints what is valid.
+      expect(out.belowMin).toEqual(["park"]);
+      expect(out.items.some((i) => i.item.id === (p === PARKS.connemara ? "osm-creek" : "osm-soccer"))).toBe(false);
       expect(out.quotesRepaired).toBe(0);
       for (const i of out.items) expect(i.sourceQuote.length).toBeLessThanOrEqual(QUOTE_WIRE_MAX);
     }
@@ -224,7 +224,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables underneath!" });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables for lunch." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -363,7 +363,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(passMaxTokens("gemma-4-31B-it")).toBe(1_200);
     expect(passMaxTokens("gpt-oss-120b")).toBe(2_000);
     const sys = systemPrompt("6-10", computeMix({ park: 3, wild: 8, lucky: 0 }, "6-10")!);
-    expect(sys).toContain("lookWhere must not use a word from the item's name either");
+    expect(sys).toContain("It must not use a word from the item's name either");
     expect(sys).toContain('word for word in one piece. Never skip words or write "...".');
   });
 

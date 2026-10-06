@@ -5,7 +5,7 @@
  */
 import { FEATURE_KINDS, FEATURE_KIND_IDS, type FeatureKind, type ParkFeatures } from "@/lib/sources/overpass-features";
 import { hasUrlOrMarkup } from "@/lib/ai/validate";
-import { distinctiveWords, type PoolItem, type SectionState } from "./types";
+import { distinctiveWords, kindLabelWords, type PoolItem, type SectionState } from "./types";
 
 /** SPEC §5.4, Park Finds empty copy. */
 export function parkFindsEmptyCopy(parkName: string): string {
@@ -51,7 +51,12 @@ export function parkPool(f: ParkFeatures): { items: PoolItem[]; state: SectionSt
       answer,
       evidence,
       source: "OpenStreetMap",
-      nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...names.flatMap((nm) => distinctiveWords(nm, { place: true }))])],
+      nameWords: [
+        ...new Set([
+          ...info.nameWords.map((w) => w.toLowerCase()),
+          ...names.flatMap((nm) => distinctiveWords(nm, { place: true, allowed: kindLabelWords(info) })),
+        ]),
+      ],
       safety: kind === "water" || kind === "creek" ? "Stay with your grown-up near water." : null,
       stationary: true,
     });

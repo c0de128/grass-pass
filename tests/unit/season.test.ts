@@ -11,7 +11,7 @@ import { parkPool } from "@/lib/pool/park";
 import {
   monthOfDay,
   seasonFrom,
-  seasonNote,
+  seasonSentence,
   seasonProblem,
   SEASON_MIN_COUNT,
   type Season,
@@ -145,19 +145,25 @@ describe("R1-M4 season check: iNaturalist 'Flowers and Fruits' annotations (live
     expect(out.drops).toEqual({ out_of_season: 1 });
   });
 
-  it("the prompt gives the month and a code-written season note per plant", () => {
+  it("the prompt gives the month; each plant's SOURCE ends with a code-written season sentence (no tag attribute)", () => {
     const pool = connemaraWild();
     const mix = computeMix({ park: 0, wild: pool.length, lucky: 0 }, "6-10")!;
     const [sys, user] = buildMessages("Connemara Meadow Preserve", pool, "6-10", mix, null, { month: monthOfDay("2026-10-05") });
     expect(sys.content).toContain("Today is in October.");
-    expect(sys.content).toContain("ONLY when that plant's season note says they are seen in October");
-    expect(user.content).toContain('kind="plant" season="no flowers in October; no fruit or seeds in October">Callery pear');
-    expect(user.content).toContain('season="flowers seen in October; no fruit or seeds in October">Maximilian sunflower');
-    expect(seasonNote({ month: 4, flowers: false, fruit: false, known: false })).toBe("season unknown: do not describe flowers or fruit");
+    expect(sys.content).toContain(`ONLY when that plant's SOURCE says "iNaturalist photos from this area show it with flowers"`);
+    expect(user.content).not.toContain("season=");
+    const pear = byAnswer(pool, /^Callery pear/);
+    const sun = byAnswer(pool, /^Maximilian sunflower/);
+    expect(pear.sourceText.endsWith(" In October, iNaturalist photos from this area do not show it with flowers or fruit.")).toBe(true);
+    expect(sun.sourceText.endsWith(" In October, iNaturalist photos from this area show it with flowers, not fruit.")).toBe(true);
+    expect(user.content).toContain("show it with flowers, not fruit.</source>");
+    expect(seasonSentence({ month: 4, flowers: false, fruit: false, known: false })).toBe("We could not check its flowers or fruit for April.");
+    expect(seasonSentence({ month: 5, flowers: true, fruit: true, known: true })).toBe("In May, iNaturalist photos from this area show it with flowers and with fruit or seeds.");
+    expect(seasonSentence({ month: 9, flowers: false, fruit: true, known: true })).toBe("In September, iNaturalist photos from this area show it with fruit or seeds, not flowers.");
     // No plants in the pool: no season rule.
     const park = parkPool(parseFeatures(rec("overpass-features-celebration-park").body, parseParkId(PARKS.celebration.id)!)!).items;
     const [sys2] = buildMessages("Celebration Park", park, "6-10", computeMix({ park: park.length, wild: 0, lucky: 0 }, "6-10")!, null, { month: OCT });
-    expect(sys2.content).not.toContain("season note");
+    expect(sys2.content).not.toContain("iNaturalist photos from this area");
     expect(() => monthOfDay("2026-13-01")).toThrow();
   });
 
@@ -279,7 +285,7 @@ describe("R1-m10 Park Finds that make a child look closely", () => {
   const pool = parkPool(f).items;
   const mix = (band: "4-6" | "6-10" | "10-13") => computeMix({ park: pool.length, wild: 0, lucky: 0 }, band)!;
   it("asked for 6-10 and 10-13, not for 4-6 (read aloud), and only when the pass has Park Finds", () => {
-    expect(systemPrompt("6-10", mix("6-10"))).toContain('Bad: "Find a place to sit."');
+    expect(systemPrompt("6-10", mix("6-10"))).toContain('"Find a place to sit."');
     expect(systemPrompt("10-13", mix("10-13"))).toContain("a count to check or a detail to look for");
     expect(systemPrompt("4-6", mix("4-6"))).not.toContain("look closely");
     expect(systemPrompt("6-10", computeMix({ park: 0, wild: 8, lucky: 0 }, "6-10")!)).not.toContain("look closely");

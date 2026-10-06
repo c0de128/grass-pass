@@ -142,9 +142,11 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // Connemara (8 finds) with 5 of its clues just over one printed line lands in between.
+    // Connemara (7 finds since the R1 follow-up recording) with every clue just over one printed line and
+    // four long hints lands in between.
     const connemara = await realPass(PARKS.connemara.id);
-    const mid = connemara.items.map((it, i) => (i < 5 ? { ...it, clue: it.clue.padEnd(70, " x") } : it));
+    expect(connemara.items).toHaveLength(7);
+    const mid = connemara.items.map((it, i) => ({ ...it, clue: it.clue.padEnd(70, " x"), ...(i < 4 ? { lookWhere: it.lookWhere.padEnd(60, " x") } : {}) }));
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);
@@ -181,9 +183,10 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // Water finds carry their own line on the kid's pass; the stub points to those lines.
-    expect(pass.items.some((it) => it.safety === "Stay with your grown-up near water.")).toBe(true);
-    expect(t).toContain(STUB_EACH_LINE);
+    // This live answer has no water find, so no find carries a safety line and the stub does not point
+    // to any (Connemara's stub test covers the line when there are some).
+    expect(pass.items.every((it) => it.safety === null)).toBe(true);
+    expect(t).not.toContain(STUB_EACH_LINE);
   });
 
   it("missing and removed clues are stated honestly, never padded", async () => {

@@ -73,13 +73,20 @@ export function seasonFrom(count: PhenologyCount | undefined, month: number, kno
   return { month, flowers: supported(count.flowers, count.annotated), fruit: supported(count.fruits, count.annotated), known };
 }
 
-/** The code-written season note the model sees on a plant's <source> tag. */
-export function seasonNote(s: Season): string {
+/**
+ * The code-written season sentence at the end of a plant's SOURCE text (audit R1 follow-up). Like the
+ * OpenStreetMap counts in Park Finds, it is true, written by code from real records, and quotable: a
+ * flower clue may quote "photos from this area show it with flowers". It replaced a separate
+ * season="..." tag attribute, which the Llama fallback copied as its sourceQuote 22 times (run 4).
+ * No digits (the number check), no name words (the leak check).
+ */
+export function seasonSentence(s: Season): string {
   const m = monthName(s.month);
-  if (!s.known) return `season unknown: do not describe flowers or fruit`;
-  const flowers = s.flowers ? `flowers seen in ${m}` : `no flowers in ${m}`;
-  const fruit = s.fruit ? `fruit or seeds seen in ${m}` : `no fruit or seeds in ${m}`;
-  return `${flowers}; ${fruit}`;
+  if (!s.known) return `We could not check its flowers or fruit for ${m}.`;
+  if (s.flowers && s.fruit) return `In ${m}, iNaturalist photos from this area show it with flowers and with fruit or seeds.`;
+  if (s.flowers) return `In ${m}, iNaturalist photos from this area show it with flowers, not fruit.`;
+  if (s.fruit) return `In ${m}, iNaturalist photos from this area show it with fruit or seeds, not flowers.`;
+  return `In ${m}, iNaturalist photos from this area do not show it with flowers or fruit.`;
 }
 
 /**

@@ -152,10 +152,14 @@ export const STEM_MIN_LETTERS = 5;
 /**
  * The stem a derived word must start with: the whole word up to 6 letters, else the word minus its
  * last 2 letters ("passiflora" -> "passiflo" catches "Passifloraceae"; "maximiliani" -> "maximilia"
- * catches "Maximilian"). Null for multi-word names and words under 5 letters.
+ * catches "Maximilian"). Null for multi-word names and words under 5 letters, and (R1 follow-up) for
+ * describing words that end in "-ed" ("throated", "painted", "striped", "crested"): their stem is the
+ * plain describing word a clue should use ("a bright throat" for a ruby-throated hummingbird was
+ * flagged in run 4). The whole word itself ("throated") is still a leak.
  */
 export function nameStem(word: string): string | null {
   if (!/^\p{L}+$/u.test(word) || word.length < STEM_MIN_LETTERS) return null;
+  if (word.endsWith("ed")) return null;
   return word.length <= 6 ? word : word.slice(0, -2);
 }
 

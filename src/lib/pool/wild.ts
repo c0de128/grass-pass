@@ -5,7 +5,7 @@
  */
 import { blockedBy, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
 import type { Species, SpeciesList, TaxonSummary } from "@/lib/sources/inat";
-import { seasonFrom, type PhenologyCount } from "./season";
+import { seasonFrom, seasonSentence, type PhenologyCount } from "./season";
 import { distinctiveWords, type PoolItem, type SectionState } from "./types";
 
 /** Fewer eligible species than this -> the section shows its "No data available" line (SPEC §5.4). */
@@ -147,7 +147,10 @@ export function wildPool(
     }
     if (!sum?.summary || sum.summary.length < MIN_SUMMARY_CHARS) continue;
     const label = s.commonName ? `${cap(s.commonName)} (${s.name})` : s.name;
-    const sourceText = `${label}. ${leadSentences(sum.summary)}`;
+    const plantSeason =
+      season && s.iconic === "Plantae" ? seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) : undefined;
+    // R1-M4 follow-up: the season fact is part of the SOURCE (a code-written sentence, quotable and true).
+    const sourceText = `${label}. ${leadSentences(sum.summary)}${plantSeason ? ` ${seasonSentence(plantSeason)}` : ""}`;
     items.push({
       id: `inat-${s.taxonId}`,
       section: "wild",
@@ -166,9 +169,7 @@ export function wildPool(
       safety: safetyLineFor(taxon, sum.summary),
       stationary: isStationary(taxon),
       taxon,
-      ...(season && s.iconic === "Plantae"
-        ? { season: seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) }
-        : {}),
+      ...(plantSeason ? { season: plantSeason } : {}),
     });
   }
   const eligible = items.length;

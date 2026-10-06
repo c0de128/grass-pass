@@ -5,7 +5,7 @@
  * <source> tags, and the system prompt says that text is data, not instructions.
  */
 import { AGE_BAND_INFO, type AgeBand } from "@/lib/pass/schema";
-import { monthName, seasonNote } from "@/lib/pool/season";
+import { monthName } from "@/lib/pool/season";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { CLUE_MAX, LOOK_WHERE_MAX, MIN_PASS_ITEMS, QUOTE_WIRE_MAX, RIDDLE_MAX } from "./schema";
 
@@ -91,7 +91,7 @@ function mixRules(mix: Mix): string {
 export type PromptContext = {
   /** 1-12, the pass day's month in Chicago time. */
   month: number;
-  /** True when some pool plant carries a code-written season note. */
+  /** True when some pool plant carries a code-written season sentence (R1-M4). */
   hasSeasonNotes?: boolean;
 };
 
@@ -109,22 +109,23 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Exactly ${mix.n} items, each id at most once: ${mixRules(mix)}. An item's section is the section of its source.`,
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks, resident animals) over birds that fly away.",
-    // R1-M4: a plant's flowers or fruit only when the code-written season note says they are out now.
+    // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
     ...(month && ctx?.hasSeasonNotes
       ? [
-          `- Plants: write about flowers, blooms, petals, fruit, berries, seeds or pods ONLY when that plant's season note says they are seen in ${month}. Otherwise describe leaves, bark, stems, shape or size. The season note is not SOURCE text: never copy it into sourceQuote.`,
+          `- Plants: write about flowers, blooms, petals, fruit, berries, seeds or pods ONLY when that plant's SOURCE says "iNaturalist photos from this area show it with flowers" (or "with fruit or seeds") in ${month}. Otherwise describe leaves, bark, stems, shape or size.`,
         ]
       : []),
-    // R1-m10: Park Finds a child has to look for, not "a place to sit".
+    // R1-m10: Park Finds a child has to look for, not "a place to sit". Run 4: count clues named the thing ("Count the bridges").
     ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
       ? [
-          `- Park Finds: make the child look closely, using facts in that SOURCE: a count to check or a detail to look for (Good: "Count the hoops on the court."). Bad: "Find a place to sit."`,
+          `- Park Finds: make the child look closely, using facts in that SOURCE: a count to check or a detail to look for. A count clue must NOT name the thing: count it with describing words. Good: "Count the hoops on the court.", "How many ways over the water can you find? There are 8." Bad: "Count the bridges.", "Count the ponds.", "Find a place to sit."`,
         ]
       : []),
     // R1-m4: a pass with no Find This Spot map must not send the child to one.
     ...(spot ? [] : ["- This pass has NO map. Never write map, mapped or \"on the map\" in a clue or lookWhere."]),
-    "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, not even one word of its name (for a honey bee, never say honey or bee). Describe what it looks like or what it does.",
-    `- lookWhere must not use a word from the item's name either. Bad: "at the pond" for a pond, "in a garden" for a garden spider. Good: "near the water", "on tall plants".`,
+    "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, no family name, not even one word of its name or of its kind (for a honey bee, never say honey or bee; for a pond or lake, never say pond or lake). Describe what it looks like or what it does.",
+    `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
+    `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine.`,
     `- Write at reading level grade ${info.grade}: short words, short sentences, fun and friendly.`,
     `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look, e.g. "near the water").`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
@@ -143,10 +144,10 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
 }
 
 export function userPrompt(parkName: string, pool: readonly PoolItem[], spot: PromptSpot | null = null): string {
-  const lines = pool.map((p) => {
-    const season = p.season ? ` season="${escapeSource(seasonNote(p.season))}"` : "";
-    return `<source id="${escapeSource(p.id)}" section="${p.section}" kind="${escapeSource(p.kind)}"${season}>${escapeSource(p.sourceText)}</source>`;
-  });
+  // The season fact is a code-written sentence inside the plant's sourceText (wild.ts), not a tag attribute.
+  const lines = pool.map(
+    (p) => `<source id="${escapeSource(p.id)}" section="${p.section}" kind="${escapeSource(p.kind)}">${escapeSource(p.sourceText)}</source>`,
+  );
   const spotLines = spot
     ? ["SPOT:", `<source id="${escapeSource(spot.id)}" section="spot" kind="${escapeSource(spot.label)}">${escapeSource(spot.sourceText)}</source>`]
     : [];

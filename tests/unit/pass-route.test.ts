@@ -118,15 +118,17 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    expect(p.items).toHaveLength(8);
+    // The live answer's "How many lines of moving water can you find? There is 1." is dropped (a creek is
+    // never counted in its source). 7 of 8 is n-1, so no retry (R1-m1).
+    expect(p.items).toHaveLength(7);
     expect(p.target).toBe(8);
-    expect(p.removed).toEqual({ notGrounded: 0, other: 0 });
+    expect(p.removed).toEqual({ notGrounded: 0, other: 1 });
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: PASS_COPY.luckyOff });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
-    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    expect(p.items.map((i) => i.section)).toEqual(["wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
@@ -161,7 +163,7 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
 
     // The pass page reads it back from the cache only.
     expect(await loadPass(p.id)).toEqual(p);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":8'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":7'))).toBe(true);
   });
 
   it("the same park + age today is answered from the cache: one line, cached:true, no upstream call", async () => {
@@ -232,8 +234,8 @@ describe("POST /api/pass: honest empties and failures", () => {
   it("Celebration: 7 of 8 Park Finds, and Wild Finds shows the exact SPEC 5.4 copy", async () => {
     const f = final(await lines(await route.POST(post(celebration))));
     if (f.type !== "result") throw new Error(f.type);
-    // The live answer's "Find a dirt diamond" is dropped: the fields are mapped as "Celebration Diamonds"
-    // (R1-m3 stem check). 7 of 8 survive, which is n-1, so no retry (R1-m1).
+    // The live answer's soccer clue ("There are 2." goals) is dropped: that number is not in its source.
+    // 7 of 8 survive, which is n-1, so no retry (R1-m1).
     expect(f.pass.items).toHaveLength(7);
     expect(f.pass.removed).toEqual({ notGrounded: 0, other: 1 });
     expect(modelCalls(replay.calls)).toHaveLength(1);
@@ -318,7 +320,7 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(ls.some((l) => l.type === "step" && l.step === "retry")).toBe(true);
     const f = final(ls);
     if (f.type !== "result") throw new Error(f.type);
-    expect(f.pass.items).toHaveLength(8); // the real retry answer: 8 of 8 pass the checks
+    expect(f.pass.items).toHaveLength(7); // the real retry answer: 7 of 8 pass the checks
     expect(f.pass.model.attempts).toBe(2);
     expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(logs.filter((l) => l.includes('"event":"pass_checks"'))).toHaveLength(2);

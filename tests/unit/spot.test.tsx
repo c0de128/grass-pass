@@ -347,10 +347,10 @@ describe("makePass with Find This Spot (live recordings)", () => {
     const p = await pass(CEL.id);
     const s = p.spot as SpotOk;
     expect(s.status).toBe("ok");
-    expect(s.riddle).toBe("Find the place with a roof on posts and tables underneath!");
+    expect(s.riddle).toBe("Find the place with a roof on posts and tables for lunch.");
     expect(s.riddleBy).toBe("model");
     expect(s.target.osmId).toBe("way/536185861");
-    expect(p.items).toHaveLength(7); // "Find a dirt diamond." dropped: the fields are mapped as "Celebration Diamonds" (R1-m3)
+    expect(p.items).toHaveLength(7); // the soccer clue's "There are 2." goals is not in its source: dropped
   });
 
   it("a riddle that names the place is dropped and the fixed line is printed (test-built from the real answer)", async () => {

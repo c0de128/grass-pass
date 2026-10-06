@@ -195,17 +195,52 @@ export const PLACE_WORDS = new Set([
   "family",
   "memorial",
   "loop",
+  // R1 follow-up (run 4: "near a garden" for "Jeanne's Pavilion at the Shadow Garden" was counted as a
+  // leak of a picnic shelter). Landscape words in a name say where the thing is, not what it is.
+  "garden",
+  "gardens",
+  "meadow",
+  "meadows",
+  "field",
+  "fields",
+  "grove",
+  "hill",
+  "hills",
+  "woods",
+  "forest",
+  "ridge",
+  "point",
+  "plaza",
+  "square",
+  "commons",
+  "spring",
+  "springs",
 ]);
+
+/**
+ * R1 follow-up: the words of a feature kind's own label that its nameWords do NOT forbid ("court" for
+ * a tennis court, "field" for a soccer field). The design lets a clue say them ("Count the hoops on the
+ * court."), so an OpenStreetMap name that contains them ("Taube Family Championship Court") must not
+ * forbid them either. Words the kind does forbid stay forbidden: "Baseball Diamonds" still blocks
+ * "diamond" (a real giveaway for a baseball field, and in that kind's nameWords).
+ */
+export function kindLabelWords(kind: { label: string; plural: string; nameWords: readonly string[] }): Set<string> {
+  const forbidden = new Set(kind.nameWords.flatMap((w) => w.toLowerCase().split(/[^\p{L}\p{N}]+/u)));
+  const words = `${kind.label} ${kind.plural}`.toLowerCase().split(/[^\p{L}\p{N}]+/u);
+  return new Set(words.filter((w) => w.length > 0 && !forbidden.has(w)));
+}
 
 /**
  * Distinct lower-case words of a name that would give it away: whole words of 3+ letters and
  * hyphen parts of 4+ letters ("red-shouldered hawk" -> red-shouldered, shouldered, hawk), minus
  * generic category words ("tree", "bird", "eastern") and stopwords ("and", "the").
  * `place: true` (OpenStreetMap names of park features) also drops generic place words ("park", "trail").
+ * `allowed` drops words the caller allows (a feature kind's own label words, `kindLabelWords`).
  */
-export function distinctiveWords(name: string, opts: { place?: boolean } = {}): string[] {
+export function distinctiveWords(name: string, opts: { place?: boolean; allowed?: ReadonlySet<string> } = {}): string[] {
   const out: string[] = [];
-  const skip = (w: string) => GENERIC_WORDS.has(w) || NAME_STOPWORDS.has(w) || (opts.place === true && PLACE_WORDS.has(w));
+  const skip = (w: string) =>
+    GENERIC_WORDS.has(w) || NAME_STOPWORDS.has(w) || (opts.place === true && PLACE_WORDS.has(w)) || opts.allowed?.has(w) === true;
   const clean = (w: string) => w.replace(/^'+|'+$/g, "").replace(/'s$/, "");
   for (const raw of name.toLowerCase().normalize("NFKC").split(/[^\p{L}\p{N}'-]+/u)) {
     const w = clean(raw.replace(/^-+|-+$/g, ""));

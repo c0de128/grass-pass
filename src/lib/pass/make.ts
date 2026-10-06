@@ -27,7 +27,7 @@ import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-p
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
-import { createDeadline } from "./deadline";
+import { createDeadline, eitherSignal } from "./deadline";
 import { peekFeatures } from "./park-data";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import type { FetchLike } from "@/lib/sources/common";
@@ -357,9 +357,13 @@ async function build(ctx: {
   let october: Promise<OctoberBoxData> | null = null;
   // R1-M1: the October box's iNaturalist calls stop at the pass deadline too (never after the answer).
   const octoberDeadline = createDeadline(ctx.startedAt + PASS_DEADLINE_MS - now());
+  // Audit Q-3-05: once the pass has failed (no model key, model down, quota), the box's iNaturalist
+  // requests that haven't been sent yet are not sent (the box would never be shown).
+  const octoberStop = new AbortController();
   const startOctober = (park: OctoberPark) => {
     if (october || !isOctoberDay(ctx.day)) return;
-    october = octoberBox(park, { store, fetchImpl: ctx.deps.fetchImpl, env: ctx.env, now, signal: octoberDeadline.signal, onStart: () => ticket.commit() }).catch(
+    const signal = eitherSignal(octoberDeadline.signal, octoberStop.signal);
+    october = octoberBox(park, { store, fetchImpl: ctx.deps.fetchImpl, env: ctx.env, now, signal, onStart: () => ticket.commit() }).catch(
       (err: unknown): OctoberBoxData => {
         log("october_box_failed", { error: err instanceof Error ? err.name : "unknown" }, "error");
         return { status: "unavailable", reason: OCTOBER_REASONS.down };
@@ -410,6 +414,7 @@ async function build(ctx: {
       await latestCache.set(ctx.key, ctx.variant, { now: now() });
       log("pass_made", { id: ctx.id, items: out.pass.items.length, model: out.pass.model.answered, ms: now() - ctx.startedAt, degraded: isDegraded(out.pass) });
     } else {
+      octoberStop.abort(new Error("pass not made"));
       log("pass_not_made", { kind: out.kind, status: out.kind === "error" ? out.status : 200, code: out.kind === "error" ? out.error.code : "EMPTY" }, "warn");
     }
     return out;

@@ -1,9 +1,9 @@
 /**
  * October monarch box data (SPEC F10, ADR 0002 D3): real iNaturalist counts, never estimated.
  *
- * - Monarchs (taxon 48662) reported within 25 km of the park in the last 14 days (Oct 5 -> since Sep 21),
- *   and in the same calendar days last year. ONE histogram call (`observations/histogram`,
- *   interval=day, from last year's first day to today) gives both sums.
+ * - Monarchs (taxon 48662) reported within 25 km of the park in the 14 full days before today (Q-3-04:
+ *   on Oct 6 -> Sep 22..Oct 5), and in the same calendar days last year. ONE histogram call
+ *   (`observations/histogram`, interval=day, from last year's first day to yesterday) gives both sums.
  *   Live 2026-10-05 near Connemara: 9 since Sep 21 vs 63 in 2025 (the ADR's numbers).
  * - R2-M1: "today" is today in PACIFIC time (iNaturalist's server day; measured 2026-10-06: at 00:30 CDT
  *   the answer ends at the Pacific day, yesterday in Chicago). And iNaturalist zero-fills only between
@@ -69,12 +69,15 @@ function minusDays(day: string, days: number): string {
 }
 
 /**
- * Oct 5, 2026 (Pacific) -> this year Sep 21..Oct 5 2026, last year Sep 21..Oct 5 2025.
- * At 00:30 CDT on Oct 6 it is still Oct 5 in Pacific time, so the window still ends on Oct 5.
+ * Audit Q-3-04: the last WILD_WINDOW_DAYS FULL days, ending yesterday (Pacific, iNaturalist's day), and
+ * the same calendar days last year. Oct 6, 2026 (Pacific) -> this year Sep 22..Oct 5 2026 (14 days),
+ * last year Sep 22..Oct 5 2025. Before, the window ran Sep 22..Oct 6: 15 days, and this year's last day
+ * was only partly over while last year's was a full day (tilting the comparison toward last year).
+ * At 00:30 CDT on Oct 6 it is still Oct 5 in Pacific time, so the window ends on Oct 4 then.
  */
 export function monarchWindows(nowMs: number): MonarchWindows {
-  const d2 = pacificDay(nowMs);
-  const d1 = minusDays(d2, WILD_WINDOW_DAYS);
+  const d2 = minusDays(pacificDay(nowMs), 1);
+  const d1 = minusDays(d2, WILD_WINDOW_DAYS - 1);
   return { thisYear: { d1, d2 }, lastYear: { d1: sameDayLastYear(d1), d2: sameDayLastYear(d2) } };
 }
 

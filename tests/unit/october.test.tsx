@@ -32,12 +32,21 @@ import {
   parseTotal,
   sameDayLastYear,
 } from "@/lib/sources/inat-monarch";
-import { PARKS, passReplay, rec } from "./support/pass-replay";
+import { histogramWithin, PARKS, passReplay, rec } from "./support/pass-replay";
 
 // Live recordings made 2026-10-05 ~23:39 UTC (6:39 PM CDT) by octoberBox() itself (see tests/fixtures/README.md).
 const hist = (slug: string) => rec(`inat-monarch-histogram-${slug}`);
 const milk = (slug: string) => rec(`inat-milkweed-count-${slug}`);
 const AT = hist(PARKS.connemara.slug)._recording.recordedAtMs as number;
+/** Audit Q-3-04: the live recording cut to the window the app asks for now (derived; only days outside it removed). */
+const cutHist = (slug: string, w: { lastYear: { d1: string }; thisYear: { d2: string } }) => {
+  const u = new URL(String(hist(slug)._recording.url));
+  u.searchParams.set("d1", w.lastYear.d1);
+  u.searchParams.set("d2", w.thisYear.d2);
+  const cut = histogramWithin(hist(slug), u);
+  if (!cut) throw new Error("recording does not cover the window");
+  return cut;
+};
 const CENTER = {
   connemara: { id: PARKS.connemara.id, lat: 33.08485, lng: -96.70155 },
   celebration: { id: PARKS.celebration.id, lat: 33.10824, lng: -96.62468 },
@@ -80,19 +89,22 @@ function ticking(start: number): () => number {
 const within = (iso: string, from: number, ms = 60_000) => Date.parse(iso) >= from && Date.parse(iso) < from + ms;
 
 describe("monarch windows and URLs", () => {
-  it("Oct 5 (Pacific, iNaturalist's day) -> the last 14 days, and the same days last year", () => {
+  it("Oct 5 (Pacific, iNaturalist's day) -> the 14 full days before it, and the same days last year (Q-3-04)", () => {
+    // Audit Q-3-04: the window ends YESTERDAY (a full day both years) and is exactly 14 days (Sep 21..Oct 4).
     expect(monarchWindows(AT)).toEqual({
-      thisYear: { d1: "2026-09-21", d2: "2026-10-05" },
-      lastYear: { d1: "2025-09-21", d2: "2025-10-05" },
+      thisYear: { d1: "2026-09-21", d2: "2026-10-04" },
+      lastYear: { d1: "2025-09-21", d2: "2025-10-04" },
     });
+    const days = (w: { d1: string; d2: string }) => (Date.parse(w.d2) - Date.parse(w.d1)) / 86_400_000 + 1;
+    expect([days(monarchWindows(AT).thisYear), days(monarchWindows(AT).lastYear)]).toEqual([14, 14]);
     // 11:30 PM CDT on Oct 5 is 04:30 UTC Oct 6: still Oct 5 in Chicago and in Pacific time.
-    expect(monarchWindows(Date.UTC(2026, 9, 6, 4, 30)).thisYear.d2).toBe("2026-10-05");
+    expect(monarchWindows(Date.UTC(2026, 9, 6, 4, 30)).thisYear.d2).toBe("2026-10-04");
     // R2-M1: 00:30 CDT on Oct 6 (05:30 UTC) is 10:30 PM PDT on Oct 5. iNaturalist's histogram ends at
-    // its own (Pacific) day, so the window still ends Oct 5 (it asked for Oct 6 before and broke).
+    // its own (Pacific) day, so the window still ends the day before Oct 5 (it asked for Oct 6 before and broke).
     expect(pacificDay(Date.UTC(2026, 9, 6, 5, 30))).toBe("2026-10-05");
-    expect(monarchWindows(Date.UTC(2026, 9, 6, 5, 30)).thisYear).toEqual({ d1: "2026-09-21", d2: "2026-10-05" });
-    // 00:30 PDT on Oct 6 (07:30 UTC): Oct 6 in Pacific time too.
-    expect(monarchWindows(Date.UTC(2026, 9, 6, 7, 30)).thisYear).toEqual({ d1: "2026-09-22", d2: "2026-10-06" });
+    expect(monarchWindows(Date.UTC(2026, 9, 6, 5, 30)).thisYear).toEqual({ d1: "2026-09-21", d2: "2026-10-04" });
+    // 00:30 PDT on Oct 6 (07:30 UTC): Oct 6 in Pacific time too, so Sep 22..Oct 5 (the auditor's case, 14 days not 15).
+    expect(monarchWindows(Date.UTC(2026, 9, 6, 7, 30)).thisYear).toEqual({ d1: "2026-09-22", d2: "2026-10-05" });
   });
 
   it("same day last year clamps Feb 29 and rejects junk", () => {
@@ -101,11 +113,14 @@ describe("monarch windows and URLs", () => {
     expect(() => sameDayLastYear("10/05/2026")).toThrow(RangeError);
   });
 
-  it("the URLs are exactly the ones recorded live (taxon 48662 within 25 km; 47906 within 1.5 km)", () => {
+  it("the URLs are the ones recorded live (taxon 48662 within 25 km; 47906 within 1.5 km); Q-3-04 asks one day less", () => {
     const w = monarchWindows(AT);
     for (const p of ["connemara", "celebration"] as const) {
       const slug = PARKS[p].slug;
-      expect(monarchHistogramUrl(CENTER[p], w.lastYear.d1, w.thisYear.d2)).toBe(hist(slug)._recording.url);
+      const url = monarchHistogramUrl(CENTER[p], w.lastYear.d1, w.thisYear.d2);
+      // The live recording asked 2025-09-21..2026-10-05; the same request now ends a day earlier.
+      expect(url).toBe(String(hist(slug)._recording.url).replace("d2=2026-10-05", "d2=2026-10-04"));
+      expect(histogramWithin(hist(slug), new URL(url))).not.toBeNull();
       expect(milkweedCountUrl(CENTER[p])).toBe(milk(slug)._recording.url);
     }
     const u = new URL(monarchHistogramUrl(CENTER.connemara, "2025-09-21", "2026-10-05"));
@@ -117,14 +132,18 @@ describe("monarch windows and URLs", () => {
 });
 
 describe("parsing the live recordings", () => {
-  it("Connemara: 9 monarchs since Sep 21 vs 63 in 2025 (the ADR 0002 numbers); Celebration: 9 vs 56", () => {
+  it("Connemara: 8 monarchs Sep 21-Oct 4 vs 57 in 2025; Celebration: 8 vs 50 (Q-3-04: the ADR's 9 vs 63 included Oct 5)", () => {
     const w = monarchWindows(AT);
-    expect(parseMonarchHistogram(hist(PARKS.connemara.slug).body, w)).toEqual({
-      thisYear: { d1: "2026-09-21", d2: "2026-10-05", count: 9 },
-      lastYear: { d1: "2025-09-21", d2: "2025-10-05", count: 63 },
+    expect(parseMonarchHistogram(cutHist(PARKS.connemara.slug, w), w)).toEqual({
+      thisYear: { d1: "2026-09-21", d2: "2026-10-04", count: 8 },
+      lastYear: { d1: "2025-09-21", d2: "2025-10-04", count: 57 },
     });
-    const c = parseMonarchHistogram(hist(PARKS.celebration.slug).body, w);
-    expect([c.thisYear.count, c.lastYear.count]).toEqual([9, 56]);
+    const c = parseMonarchHistogram(cutHist(PARKS.celebration.slug, w), w);
+    expect([c.thisYear.count, c.lastYear.count]).toEqual([8, 50]);
+    // The full recording still answers its own (old, 15-day) window with the ADR numbers.
+    const old = { thisYear: { d1: "2026-09-21", d2: "2026-10-05" }, lastYear: { d1: "2025-09-21", d2: "2025-10-05" } };
+    const o = parseMonarchHistogram(hist(PARKS.connemara.slug).body, old);
+    expect([o.thisYear.count, o.lastYear.count]).toEqual([9, 63]);
   });
 
   it("milkweed totals: Connemara 199, Celebration 7", () => {
@@ -134,14 +153,14 @@ describe("parsing the live recordings", () => {
 
   it("R2-M1: a day missing from the answer is a real 0 (iNat zero-fills only between sighting days)", () => {
     const w = monarchWindows(AT);
-    const body = hist(PARKS.connemara.slug).body as { results: { day: Record<string, number> } };
+    const body = cutHist(PARKS.connemara.slug, w) as { results: { day: Record<string, number> } };
     const days = body.results.day;
     const without = (pred: (d: string) => boolean) => ({ ...body, results: { day: Object.fromEntries(Object.entries(days).filter(([d]) => !pred(d))) } });
     // The recorded answer: the last asked day is there only because it had sightings.
     const full = parseMonarchHistogram(body, w);
     // Missing trailing days (no sightings yet today / the Pacific day hasn't started): same sums minus those days.
-    const trailing = parseMonarchHistogram(without((d) => d === "2026-10-05"), w);
-    expect(trailing.thisYear.count).toBe(full.thisYear.count - (days["2026-10-05"] ?? 0));
+    const trailing = parseMonarchHistogram(without((d) => d === "2026-10-04"), w);
+    expect(trailing.thisYear.count).toBe(full.thisYear.count - (days["2026-10-04"] ?? 0));
     expect(trailing.lastYear).toEqual(full.lastYear);
     // Missing leading days (no sightings early in last year's window): still read, those days count 0.
     const leading = parseMonarchHistogram(without((d) => d < "2025-09-25"), w);
@@ -179,8 +198,8 @@ describe("octoberBox() (replaying the live recordings)", () => {
     expect(box).toMatchObject({
       status: "ok",
       radiusKm: 25,
-      thisYear: { d1: "2026-09-21", d2: "2026-10-05", count: 9 },
-      lastYear: { d1: "2025-09-21", d2: "2025-10-05", count: 63 },
+      thisYear: { d1: "2026-09-21", d2: "2026-10-04", count: 8 },
+      lastYear: { d1: "2025-09-21", d2: "2025-10-04", count: 57 },
       milkweed: { status: "ok", count: 199, radiusKm: 1.5 },
     });
     if (box.status !== "ok") throw new Error("expected ok");
@@ -257,8 +276,8 @@ describe("octoberBox() (replaying the live recordings)", () => {
     const r = passReplay();
     clockAt(at);
     const box = await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl: r.fetchImpl, queue: noWait, now: stepping(at) });
-    expect(new URL(r.calls[0].url).searchParams.get("d2")).toBe("2026-10-05");
-    expect(box).toMatchObject({ status: "ok", thisYear: { d1: "2026-09-21", d2: "2026-10-05", count: 9 }, lastYear: { count: 63 } });
+    expect(new URL(r.calls[0].url).searchParams.get("d2")).toBe("2026-10-04");
+    expect(box).toMatchObject({ status: "ok", thisYear: { d1: "2026-09-21", d2: "2026-10-04", count: 8 }, lastYear: { count: 57 } });
     expect(logs.some((l) => l.includes("october_source_failed"))).toBe(false);
   });
 
@@ -271,7 +290,7 @@ describe("octoberBox() (replaying the live recordings)", () => {
     const box = await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl, queue: noWait, now: stepping(AT) });
     if (box.status !== "ok") throw new Error(`expected ok, got ${JSON.stringify(box)}`);
     expect([box.thisYear.count, box.lastYear.count]).toEqual([0, 0]);
-    expect(octoberDetail(box, "Oct 5")).toMatch(/^No monarch sightings reported within 25 km in the last 14 days/);
+    expect(octoberDetail(box, "Oct 5")).toMatch(/^No monarch sightings reported within 25 km in the 14 days before today \(Sep 21-Oct 4\)/);
     expect(octoberCompare(box)).toMatch(/rare find/);
   });
 
@@ -280,15 +299,15 @@ describe("octoberBox() (replaying the live recordings)", () => {
     const fetchImpl = async (u: string, i?: RequestInit) =>
       new URL(u).pathname === "/v1/observations" ? new Response("", { status: 503 }) : r.fetchImpl(u, i);
     const box = await octoberBox(CENTER.connemara, { store: new MemoryStore(), fetchImpl, queue: noWait, now: stepping(AT) });
-    expect(box).toMatchObject({ status: "ok", thisYear: { count: 9 }, milkweed: { status: "unavailable", reason: OCTOBER_REASONS.milkweedDown } });
+    expect(box).toMatchObject({ status: "ok", thisYear: { count: 8 }, milkweed: { status: "unavailable", reason: OCTOBER_REASONS.milkweedDown } });
   });
 });
 
 const okBox = (n: number, m: number): Extract<OctoberBoxData, { status: "ok" }> => ({
   status: "ok",
   radiusKm: 25,
-  thisYear: { d1: "2026-09-21", d2: "2026-10-05", count: n },
-  lastYear: { d1: "2025-09-21", d2: "2025-10-05", count: m },
+  thisYear: { d1: "2026-09-21", d2: "2026-10-04", count: n },
+  lastYear: { d1: "2025-09-21", d2: "2025-10-04", count: m },
   checkedAt: new Date(AT).toISOString(),
   milkweed: { status: "ok", count: 199, radiusKm: 1.5, checkedAt: new Date(AT).toISOString() },
 });
@@ -296,10 +315,10 @@ const okBox = (n: number, m: number): Extract<OctoberBoxData, { status: "ok" }> 
 describe("October copy (code-written, honest when low)", () => {
   it("headline and detail with the real numbers and check time", () => {
     const b = okBox(9, 63);
-    expect(octoberHeadline(b)).toBe("9 monarchs seen since Sep 21 vs 63 in 2025");
-    expect(octoberHeadline(okBox(1, 0))).toBe("1 monarch seen since Sep 21 vs 0 in 2025");
+    expect(octoberHeadline(b)).toBe("9 monarchs seen Sep 21-Oct 4 vs 63 in 2025");
+    expect(octoberHeadline(okBox(1, 0))).toBe("1 monarch seen Sep 21-Oct 4 vs 0 in 2025");
     expect(octoberDetail(b, "Oct 5, 6:39 PM CDT")).toBe(
-      "Monarch butterflies reported within 25 km in the last 14 days (since Sep 21): 9 (iNaturalist, checked Oct 5, 6:39 PM CDT). Same two weeks last year (Sep 21-Oct 5, 2025): 63.",
+      "Monarch butterflies reported within 25 km in the 14 days before today (Sep 21-Oct 4): 9 (iNaturalist, checked Oct 5, 6:39 PM CDT). Same two weeks last year (Sep 21-Oct 4, 2025): 63.",
     );
     expect(octoberCompare(b)).toBe("That's fewer than last year, so a monarch would be a lucky find.");
     expect(octoberCompare(okBox(70, 63))).toBe("That's more than last year, so keep your eyes open.");
@@ -308,9 +327,9 @@ describe("October copy (code-written, honest when low)", () => {
 
   it("zero is printed as zero, with the SPEC 5.4 sentence", () => {
     const b = okBox(0, 63);
-    expect(octoberHeadline(b)).toBe("0 monarchs seen since Sep 21 vs 63 in 2025");
+    expect(octoberHeadline(b)).toBe("0 monarchs seen Sep 21-Oct 4 vs 63 in 2025");
     expect(octoberDetail(b, "Oct 5, 6:39 PM CDT")).toBe(
-      "No monarch sightings reported within 25 km in the last 14 days (iNaturalist, checked Oct 5, 6:39 PM CDT). Same two weeks last year (Sep 21-Oct 5, 2025): 63.",
+      "No monarch sightings reported within 25 km in the 14 days before today (Sep 21-Oct 4) (iNaturalist, checked Oct 5, 6:39 PM CDT). Same two weeks last year (Sep 21-Oct 4, 2025): 63.",
     );
     expect(octoberCompare(b)).toBe("None reported nearby yet this year, so a monarch would be a lucky find.");
     expect(octoberCompare(okBox(0, 0))).toBe("None were reported in these two weeks last year either, so a monarch would be a rare find.");
@@ -359,7 +378,7 @@ describe("<OctoberBox> (screen and print)", () => {
     expect(html).toContain('data-variant="screen"');
     expect(html).toMatch(/<h2 id="october-title"/);
     expect(t).toContain("October special: monarch butterflies");
-    expect(t).toContain("9 monarchs seen since Sep 21 vs 63 in 2025");
+    expect(t).toContain("9 monarchs seen Sep 21-Oct 4 vs 63 in 2025");
     expect(t).toContain("That's fewer than last year, so a monarch would be a lucky find.");
     expect(t).toContain(`checked ${formatTime(b.checkedAt)}`);
     expect(t).toContain("Milkweed seen near this park: yes (199");
@@ -375,9 +394,9 @@ describe("<OctoberBox> (screen and print)", () => {
     // Paper (PM decision 2026-10-05): headline + one tip line on the kid's side; the window, check time
     // and milkweed line move to the parent stub (octoberStubText).
     const t = text(html);
-    expect(t).toContain("0 monarchs seen since Sep 21 vs 63 in 2025");
+    expect(t).toContain("0 monarchs seen Sep 21-Oct 4 vs 63 in 2025");
     expect(t).toContain(OCTOBER_TIP);
-    expect(t).not.toContain("No monarch sightings reported within 25 km in the last 14 days");
+    expect(t).not.toContain("No monarch sightings reported within 25 km in the 14 days before today");
     expect(t).not.toContain("Milkweed");
     expect(html.match(/<p[ >]/g)).toHaveLength(2);
   });
@@ -385,7 +404,7 @@ describe("<OctoberBox> (screen and print)", () => {
   it("stub text: the SPEC F10 sentence with window and check time and milkweed; nothing without counts", () => {
     const box = okBox(0, 63);
     const stub = octoberStubText({ day: "2026-10-05", october: box })!;
-    expect(stub).toMatch(/^October box: No monarch sightings reported within 25 km in the last 14 days \(iNaturalist, checked /);
+    expect(stub).toMatch(/^October box: No monarch sightings reported within 25 km in the 14 days before today \(Sep 21-Oct 4\) \(iNaturalist, checked /);
     expect(stub).not.toContain(octoberCompare(box));
     expect(stub).toContain("Milkweed seen near this park:");
     expect(octoberStubText({ day: "2026-10-05", october: { status: "unavailable", reason: OCTOBER_REASONS.down } })).toBeNull();
@@ -414,15 +433,26 @@ describe("<OctoberBox> (screen and print)", () => {
 describe("makePass() adds the box only Sep 15 - Nov 15 (clock set to the recording time, live recordings)", () => {
   const env = { DO_INFERENCE_API_KEY: "test-key-not-real" };
 
-  it("Oct 5: the Connemara pass carries 9 vs 63 and the milkweed count, fetched in parallel with the model", async () => {
+  it("Oct 5: the Connemara pass carries 8 vs 57 (Sep 21-Oct 4) and the milkweed count, fetched in parallel with the model", async () => {
     const r = passReplay();
     const out = await makePass({ parkId: PARKS.connemara.id, ageBand: "6-10" }, { ip: "192.0.2.70", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, now: ticking(AT) });
     if (out.kind !== "pass") throw new Error(out.kind);
-    expect(PassSchema.parse(out.pass).october).toMatchObject({ status: "ok", thisYear: { count: 9 }, lastYear: { count: 63 }, milkweed: { status: "ok", count: 199 } });
+    expect(PassSchema.parse(out.pass).october).toMatchObject({ status: "ok", thisYear: { count: 8 }, lastYear: { count: 57 }, milkweed: { status: "ok", count: 199 } });
     const order = r.calls.map((c) => (c.host === "inference.do-ai.run" ? "model" : new URL(c.url).pathname));
     // The box starts when the pools are ready, i.e. before the model answer arrives.
     expect(order.indexOf("/v1/observations/histogram")).toBeGreaterThan(-1);
     expect(order.indexOf("/v1/observations/histogram")).toBeLessThan(order.length - 1);
+  }, 20_000);
+
+  it("Q-3-05: when the pass fails (no model key), the box's iNaturalist requests are not sent", async () => {
+    const r = passReplay();
+    const out = await makePass({ parkId: PARKS.connemara.id, ageBand: "6-10" }, { ip: "192.0.2.73", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env: {}, now: ticking(AT) });
+    expect(out.kind === "error" && out.error.code).toBe("MODEL_NOT_CONFIGURED");
+    // Give a queued request time to go out if it were still allowed (the polite queue spaces calls 1 s apart).
+    await new Promise((res) => setTimeout(res, 1_500));
+    const paths = r.calls.map((c) => new URL(c.url).pathname);
+    expect(paths).toContain("/v1/observations/species_counts"); // the pools were made (real data shown on the error)
+    expect(paths.filter((p) => p === "/v1/observations/histogram" || p === "/v1/observations")).toEqual([]);
   }, 20_000);
 
   it("Nov 16 (the day after the window): no box, and no monarch or milkweed request", async () => {

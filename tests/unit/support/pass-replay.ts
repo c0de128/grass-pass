@@ -115,6 +115,12 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
       for (const p of Object.values(PARKS)) {
         const r = rec(`inat-${kind}-${p.slug}`);
         if (r._recording.url === url) return json(r.body);
+        // Audit Q-3-04 moved the window's end to yesterday: a recorded histogram whose range covers the
+        // asked one answers it, cut to the asked days (derived from the live answer, nothing added).
+        if (kind === "monarch-histogram") {
+          const cut = histogramWithin(r, u);
+          if (cut) return json(cut);
+        }
       }
       throw new Error(`no ${kind} recording for ${u.search}`);
     }
@@ -124,4 +130,20 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
     throw new Error(`no recording for ${url}`);
   };
   return { fetchImpl, calls };
+}
+
+/**
+ * A recorded monarch histogram cut to a smaller asked range (same park point, radius and filters; only
+ * d1/d2 differ and lie inside the recorded range), or null. Derived from the live recording: only days
+ * outside the asked range are removed (audit Q-3-04 moved the window's end to yesterday).
+ */
+export function histogramWithin(r: { _recording: Record<string, unknown>; body: unknown }, asked: URL): unknown | null {
+  const recUrl = new URL(String(r._recording.url));
+  const other = (u: URL) => [...u.searchParams].filter(([k]) => k !== "d1" && k !== "d2").sort().join("&");
+  if (recUrl.origin + recUrl.pathname !== asked.origin + asked.pathname || other(recUrl) !== other(asked)) return null;
+  const [d1, d2] = [asked.searchParams.get("d1") ?? "", asked.searchParams.get("d2") ?? ""];
+  if (d1 < (recUrl.searchParams.get("d1") ?? "") || d2 > (recUrl.searchParams.get("d2") ?? "")) return null;
+  const body = r.body as { results: { day: Record<string, number> } };
+  const day = Object.fromEntries(Object.entries(body.results.day).filter(([k]) => k >= d1 && k <= d2));
+  return { ...body, results: { ...body.results, day } };
 }

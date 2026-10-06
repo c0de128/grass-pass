@@ -107,10 +107,10 @@ export function shortDay(day: string): string {
 const yearOf = (day: string) => day.slice(0, 4);
 const plural = (n: number, one: string, many: string) => (n === 1 ? one : many);
 
-/** "9 monarchs seen since Sep 21 vs 63 in 2025" (always the real numbers, zero included). */
+/** "9 monarchs seen Sep 21-Oct 4 vs 63 in 2025" (always the real numbers, zero included; Q-3-04: full days only). */
 export function octoberHeadline(box: Extract<OctoberBoxData, { status: "ok" }>): string {
   const n = box.thisYear.count;
-  return `${n} ${plural(n, "monarch", "monarchs")} seen since ${shortDay(box.thisYear.d1)} vs ${box.lastYear.count} in ${yearOf(box.lastYear.d1)}`;
+  return `${n} ${plural(n, "monarch", "monarchs")} seen ${shortDay(box.thisYear.d1)}-${shortDay(box.thisYear.d2)} vs ${box.lastYear.count} in ${yearOf(box.lastYear.d1)}`;
 }
 
 /** The SPEC F10 / §5.4 sentence with the source and the check time. `checked` is already formatted. */
@@ -120,8 +120,10 @@ export function octoberDetail(box: Extract<OctoberBoxData, { status: "ok" }>, ch
   const r = box.radiusKm;
   const at = checked ? `iNaturalist, checked ${checked}` : "iNaturalist";
   const last = `Same two weeks last year (${shortDay(box.lastYear.d1)}-${shortDay(box.lastYear.d2)}, ${yearOf(box.lastYear.d1)}): ${m}.`;
-  if (n === 0) return `No monarch sightings reported within ${r} km in the last 14 days (${at}). ${last}`;
-  return `Monarch butterflies reported within ${r} km in the last 14 days (since ${shortDay(box.thisYear.d1)}): ${n} (${at}). ${last}`;
+  // Audit Q-3-04: the window is the 14 full days before today (inat-monarch.ts monarchWindows).
+  const days = `the 14 days before today (${shortDay(box.thisYear.d1)}-${shortDay(box.thisYear.d2)})`;
+  if (n === 0) return `No monarch sightings reported within ${r} km in ${days} (${at}). ${last}`;
+  return `Monarch butterflies reported within ${r} km in ${days}: ${n} (${at}). ${last}`;
 }
 
 /** One honest sentence comparing the two windows. Low numbers are said plainly. */

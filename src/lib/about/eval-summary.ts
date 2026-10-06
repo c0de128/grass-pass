@@ -1,17 +1,17 @@
 /**
  * The measured numbers the /about page quotes (SPEC §6.4 / §6.5, F14).
  *
- * Copied from the committed eval run `evals/results/2026-10-06-2.json` (summary: `2026-10-06-2.md`), the
- * run after audit round 2 (no copyable example clues, a writing voice per park, rotating facts per kind, the count
- * rule, a spare item, code-written grown-up tip; M10 and M11 added). The earlier runs (`2026-10-05.json`, `-2`, `-3`,
- * `-4`, `2026-10-06.json`) stay in the repo for comparison.
+ * Copied from the committed eval run `evals/results/2026-10-06-3.json` (summary: `2026-10-06-3.md`, notes:
+ * `2026-10-06-3-notes.md`), the run after the content tuning (per-park clue openers, word variants in the Park
+ * Finds facts, spares scaled to the pool, the retry as a refill, drop reasons in the results). The earlier runs
+ * (`2026-10-05.json`, `-2`, `-3`, `-4`, `2026-10-06.json`, `2026-10-06-2.json`) stay in the repo for comparison.
  * tests/unit/about.test.tsx re-reads that JSON and fails if any number here drifts from it, so the page
  * can never show a number that was not measured. When the eval is re-run, point EVAL_RESULTS_FILE at the new
  * results and update the numbers; FAILs stay on the page as current limitations.
  */
 
-export const EVAL_RESULTS_FILE = "evals/results/2026-10-06-2.json";
-export const EVAL_SUMMARY_FILE = "evals/results/2026-10-06-2.md";
+export const EVAL_RESULTS_FILE = "evals/results/2026-10-06-3.json";
+export const EVAL_SUMMARY_FILE = "evals/results/2026-10-06-3.md";
 /** Chicago day of the run. */
 export const EVAL_DAY = "2026-10-06";
 /** Chicago day the closed models on our DigitalOcean tier answered 403. */
@@ -58,7 +58,7 @@ export type EvalColumn = {
 
 export const EVAL_PARKS = 20;
 export const EVAL_AGE_BAND = "6-10";
-export const EVAL_TOTAL_USD = 0.0612;
+export const EVAL_TOTAL_USD = 0.0508;
 
 export const EVAL_COLUMNS: readonly EvalColumn[] = [
   {
@@ -67,26 +67,26 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Apache-2.0",
     runs: 60,
     blockedPrinted: 0,
-    groundedPct: 99.1,
-    grounded: 549,
-    returned: 554,
-    completePct: 86.3,
-    complete: 44,
+    groundedPct: 98.9,
+    grounded: 436,
+    returned: 441,
+    completePct: 90.2,
+    complete: 46,
     dataRichRuns: 51,
     honestEmptiesPct: 100,
     fkGrade: 1.7,
-    nameLeakPct: 2.7,
-    clueLeakPct: 2.2,
-    p50s: 10.1,
-    p95s: 20.8,
-    timeouts: 1,
-    costPerPass: 0.00078,
-    repeatPct: 29.2,
-    repeated: 112,
-    printedClues: 383,
+    nameLeakPct: 2,
+    clueLeakPct: 2,
+    p50s: 10,
+    p95s: 20.5,
+    timeouts: 3,
+    costPerPass: 0.0007,
+    repeatPct: 6.8,
+    repeated: 25,
+    printedClues: 366,
     wrongCounts: 0,
-    countClues: 124,
-    wrongCountsRemoved: 1,
+    countClues: 135,
+    wrongCountsRemoved: 11,
   },
   {
     model: "llama-4-maverick",
@@ -94,26 +94,26 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     licence: "Llama 4 Community Licence",
     runs: 20,
     blockedPrinted: 0,
-    groundedPct: 98.1,
-    grounded: 155,
-    returned: 158,
-    completePct: 41.2,
-    complete: 7,
+    groundedPct: 95.6,
+    grounded: 86,
+    returned: 90,
+    completePct: 47.1,
+    complete: 8,
     dataRichRuns: 17,
     honestEmptiesPct: 100,
-    fkGrade: 0.8,
-    nameLeakPct: 10.8,
-    clueLeakPct: 10.8,
-    p50s: 39.5,
-    p95s: 56.6,
-    timeouts: 0,
-    costPerPass: 0.00106,
-    repeatPct: 5.9,
-    repeated: 6,
-    printedClues: 102,
+    fkGrade: 2.2,
+    nameLeakPct: 11.1,
+    clueLeakPct: 10,
+    p50s: 39.4,
+    p95s: 60,
+    timeouts: 9,
+    costPerPass: 0.00073,
+    repeatPct: 0,
+    repeated: 0,
+    printedClues: 66,
     wrongCounts: 0,
-    countClues: 11,
-    wrongCountsRemoved: 7,
+    countClues: 10,
+    wrongCountsRemoved: 1,
   },
   {
     model: "no-AI template",
@@ -129,15 +129,15 @@ export const EVAL_COLUMNS: readonly EvalColumn[] = [
     dataRichRuns: 17,
     honestEmptiesPct: 100,
     fkGrade: 3.8,
-    nameLeakPct: 2.8,
-    clueLeakPct: 2.8,
+    nameLeakPct: 3.5,
+    clueLeakPct: 3.5,
     p50s: null,
     p95s: null,
     timeouts: 0,
     costPerPass: 0,
-    repeatPct: 30.6,
-    repeated: 41,
-    printedClues: 134,
+    repeatPct: 23.1,
+    repeated: 30,
+    printedClues: 130,
     wrongCounts: 0,
     countClues: 6,
     wrongCountsRemoved: 0,

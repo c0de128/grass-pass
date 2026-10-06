@@ -328,17 +328,17 @@ export default function AboutPage() {
         <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
-            <strong>Complete passes: Gemma does not pass ({pct(gemma.completePct)}, {gemma.complete} of {gemma.dataRichRuns};
-            target {EVAL_THRESHOLDS.completePct}% or more).</strong> The stricter clue checks drop more clues, and parks with
-            little data (few mapped features and few wild sightings) sometimes end up 2 or 3 finds short even after a second
-            try; {gemma.timeouts} model call ran past the time limit. A short pass says how many finds are missing; it is
-            never padded.
+            <strong>Complete passes: Gemma just passes ({pct(gemma.completePct)}, {gemma.complete} of {gemma.dataRichRuns};
+            target {EVAL_THRESHOLDS.completePct}% or more).</strong> 4 of the 5 short or missing passes were the AI service,
+            not the clues: {gemma.timeouts} model calls ran past the 30 s limit in the last of the three runs, and one call was
+            refused at once. The fifth (Klyde Warren Park, a park with little data) ended 2 finds short even after its second
+            try. A short pass says how many finds are missing; it is never padded.
           </li>
           <li>
-            <strong>Clues still repeat across parks: Gemma {pct(gemma.repeatPct)}</strong> of printed clues share 5 words in a
-            row with clues on at least 2 other parks (target {EVAL_THRESHOLDS.repeatPct}% or lower). That is down from 45.7%
-            before the last change, but it does not pass. Wrong counts now pass: {gemma.wrongCounts} of {gemma.countClues}{" "}
-            printed count clues (24 of 88 before).
+            <strong>Clues still repeat across parks a little: Gemma {pct(gemma.repeatPct)}</strong> of printed clues share 5
+            words in a row with clues on at least 2 other parks (target {EVAL_THRESHOLDS.repeatPct}% or lower). That is down
+            from 29.2% in the run before, but it does not pass yet. Wrong counts pass: {gemma.wrongCounts} of {gemma.countClues}{" "}
+            printed count clues ({gemma.wrongCountsRemoved} wrong ones were removed by code before printing).
           </li>
           <li>
             <strong>Answers that name themselves:</strong> Gemma passes ({pct(gemma.nameLeakPct)} of its clues or
@@ -349,9 +349,10 @@ export default function AboutPage() {
           </li>
           <li>
             <strong>Speed: neither model passes.</strong> Gemma took {secs(gemma.p50s)} typical and {secs(gemma.p95s)}{" "}
-            slow-case per model call (target {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s), just over both marks; most of
-            that wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: {secs(llama.p50s)}{" "}
-            typical, with {pct(llama.completePct)} complete passes.
+            slow-case per model call (target {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s): just over both marks (the
+            typical wait was 10.04 s), and the slow case includes the {gemma.timeouts} calls that hit the 30 s limit. Most of
+            the wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: {secs(llama.p50s)}{" "}
+            typical, with {pct(llama.completePct)} complete passes ({llama.timeouts} of its calls hit its 60 s limit).
           </li>
           <li>
             <strong>A model glitch we saw in an earlier run:</strong> in 3 of Gemma&apos;s 56 answers, all for the same park,

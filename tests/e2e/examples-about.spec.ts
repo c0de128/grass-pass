@@ -98,7 +98,7 @@ test.describe("example parks", () => {
   });
 });
 
-test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds not available yet", async ({ page }) => {
+test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds and their free-plan limit", async ({ page }) => {
   const res = await page.goto("/about");
   expect(res?.status()).toBe(200);
   await expect(page.getByRole("heading", { level: 1, name: "About Grass Pass" })).toBeVisible();
@@ -106,7 +106,8 @@ test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds 
     await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
   }
   await expect(page.getByText(/Find This Spot/).first()).toBeVisible();
-  await expect(page.getByText(/Lucky Finds .*not available yet/)).toBeVisible();
+  await expect(page.getByText(/Lucky Finds run on a free plan/)).toBeVisible();
+  await expect(page.getByText(/review text is never shown or sent to the AI/).first()).toBeVisible();
   await expect(page.getByRole("table").first()).toContainText("Gemma 4 31B");
 });
 

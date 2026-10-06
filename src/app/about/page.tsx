@@ -20,11 +20,13 @@ import { OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
+import { serpapiCaps } from "@/lib/limits/serpapi";
+import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 
 export const metadata: Metadata = {
   title: "About Grass Pass: how a pass is made, why open, privacy",
   description:
-    "How Grass Pass builds a printable park pass from OpenStreetMap and iNaturalist data with the open Gemma 4 model, what we measured, and what leaves your device.",
+    "How Grass Pass builds a printable park pass from OpenStreetMap, iNaturalist and Google review counts (SerpApi) with the open Gemma 4 model, what we measured, and what leaves your device.",
 };
 
 const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
@@ -48,6 +50,8 @@ function Section({ id, title, children }: { id: string; title: string; children:
 }
 
 const ext = "underline underline-offset-2";
+/** S6: the SerpApi caps in force (env, clamped under the free plan). */
+const serp = serpapiCaps();
 
 function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
   const rows: { label: string; plain: string; cell: (c: EvalColumn) => string; target?: string }[] = [
@@ -173,8 +177,9 @@ const PRIVACY: { what: string; where: string; why: string }[] = [
   },
   {
     what: "The park you pick (a public place and its map position)",
-    where: "Our server, then OpenStreetMap (Overpass) and iNaturalist.",
-    why: "To read the park map, recent wildlife sightings and monarch counts.",
+    where:
+      "Our server, then OpenStreetMap (Overpass), iNaturalist and SerpApi (its name and map position, to find the same park on Google Maps and count its reviews).",
+    why: "To read the park map, recent wildlife sightings, monarch counts and how often visitors' reviews mention dogs or bikes.",
   },
   {
     what: "The age band (for example 6-10)",
@@ -242,7 +247,15 @@ export default function AboutPage() {
             </a>
             , each with its Wikipedia summary (through the iNaturalist API). From {OCTOBER_WINDOW_LABEL} the{" "}
             <em>October special</em> box adds real monarch butterfly counts from iNaturalist (within 25 km, the last 14 days,
-            next to the same days last year) and whether milkweed has been seen near the park.
+            next to the same days last year) and whether milkweed has been seen near the park. <em>Lucky Finds</em> are
+            &quot;maybe&quot; finds (a dog out for a walk, someone on a bike): code finds the same park on Google Maps and
+            counts how many of its visitor reviews from the last 2 years mention dogs, bikes, and ducks or skateboards,
+            through{" "}
+            <a className={ext} href="https://serpapi.com/">
+              SerpApi
+            </a>
+            . A Lucky Find needs at least 3 such reviews. We count mentions in Google Maps reviews via SerpApi; review text
+            is never shown or sent to the AI, only the word, the count and the newest month.
           </li>
           <li>
             <strong>Code draws a Find This Spot map.</strong> Code picks one real place inside the park from OpenStreetMap: a
@@ -368,8 +381,11 @@ export default function AboutPage() {
             automated.
           </li>
           <li>
-            <strong>Not built yet:</strong> Lucky Finds (visitor-review counts) are left off the kid&apos;s pass; only the
-            grown-up&apos;s part says &quot;not available yet&quot;, and no photos are printed.
+            <strong>Lucky Finds run on a free plan.</strong> SerpApi&apos;s free plan allows {SERPAPI_FREE_MONTHLY} searches a
+            month, and a new park uses up to 4 (one to find it on Google Maps, up to 3 review counts). Grass Pass stops at{" "}
+            {serp.daily} searches a day and {serp.monthly} a month and keeps each park&apos;s counts for 30 days. When a limit is reached, the pass says &quot;free search limit reached today&quot; instead of Lucky
+            Finds. A count says how many reviews mention a thing, not that it is there today, so the pass calls them
+            &quot;maybe&quot;. No photos are printed.
           </li>
           <li>
             <strong>Sparse data happens.</strong> 3 of the 17 North Texas parks in the test had no research-grade
@@ -416,6 +432,8 @@ export default function AboutPage() {
         </div>
         <p>
           The model runs on DigitalOcean&apos;s servers in the US, so the park facts and the age band do leave your device.
+          For Lucky Finds we count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI,
+          and nothing about you is sent to SerpApi (only the park&apos;s name and map position).
           Our own server logs say what happened (which source or model, how long it took, the outcome, the pass id) and
           never the prompt, your IP address or the text you typed. Our storage is Upstash Redis (caches, saved passes and
           rate-limit counters). Our hosting provider (Vercel) keeps its own short request logs, as every website host does.
@@ -439,6 +457,13 @@ export default function AboutPage() {
             observers (we show species names and counts only, no photos).
           </li>
           <li>Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API.</li>
+          <li>
+            Lucky Finds: Google Maps review counts via{" "}
+            <a className={ext} href="https://serpapi.com/">
+              SerpApi
+            </a>{" "}
+            (we show counts and months only, never review text or reviewer names).
+          </li>
           <li>
             Clues:{" "}
             <a className={ext} href="https://huggingface.co/google/gemma-4-31B-it">

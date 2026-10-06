@@ -130,7 +130,13 @@ describe("/about", () => {
     }
     expect(t).toContain("No closed model was compared");
     expect(t).toContain("Find This Spot");
-    expect(t).toMatch(/Lucky Finds .*left off the kid's pass; only the grown-up's part says "not available yet"/);
+    // S6: Lucky Finds are built; the page states the free-plan limits and the review-text rule.
+    expect(t).toContain("Lucky Finds run on a free plan.");
+    expect(t).toContain("allows 250 searches a month");
+    expect(t).toContain("stops at 12 searches a day and 200 a month");
+    expect(t).toContain("We count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI");
+    expect(t).toContain("Lucky Finds: Google Maps review counts via SerpApi");
+    expect(t).not.toContain("not available yet");
     expect(t).not.toContain("known bug we are fixing");
     expect(t).toContain("We have not measured a self-hosted run for this app yet.");
   });

@@ -10,6 +10,9 @@ Every item on a pass is backed by real, dated data about **that** park:
 - **Park Finds:** what is mapped inside the park on OpenStreetMap (courts, playgrounds, shelters, bridges, ponds...).
 - **Wild Finds:** species people photographed within 1.5 km in the last 14 days (iNaturalist, research grade only).
 - **Find This Spot:** a black-and-white map of the park's paths with an X on one real landmark, drawn by code.
+- **Lucky Finds:** "maybe" finds (a dog out for a walk, someone on a bike), only when at least 3 Google visitor
+  reviews of that park from the last 2 years mention them. Code counts the reviews through SerpApi; review text is
+  never shown or sent to the AI.
 - **October special:** real monarch butterfly counts near the park, next to the same days last year.
 
 An open-weight model (**Gemma 4**, Apache-2.0) picks a fair mix for each park and writes kid-level clues. Code checks
@@ -35,7 +38,7 @@ own name instead, or use "Use my location".
 ## How it works
 ```mermaid
 flowchart LR
-  S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries"] --> P["Pools, by code<br/>what is really in this park"]
+  S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries<br/>Google review counts (SerpApi)"] --> P["Pools, by code<br/>what is really in this park"]
   P --> F["Code safety<br/>blocked species removed<br/>by iNaturalist taxon"]
   F --> AI["Gemma 4 31B<br/>ONE model call<br/>strict JSON schema"]
   AI --> V["Code checks<br/>quote must be in the source,<br/>no answer names, no added numbers"]
@@ -44,7 +47,11 @@ flowchart LR
 
 1. **You pick a park.** Typed text goes to Nominatim (OpenStreetMap search); nearby parks come from the Overpass API.
 2. **Code collects real facts** for the park: mapped features (Overpass) and recent sightings with their Wikipedia
-   summaries (iNaturalist). From Sep 15 to Nov 15 it also counts monarchs near the park.
+   summaries (iNaturalist). From Sep 15 to Nov 15 it also counts monarchs near the park. For Lucky Finds it finds
+   the same park on Google Maps (SerpApi `google_maps`: the name must match, within 1 km of the map centre, and be a
+   park, not a court inside it), then counts the reviews from the last 24 months whose own text mentions dogs, bikes,
+   and ducks (parks with a pond) or skateboards (SerpApi `google_maps_reviews`, newest first, up to 3 searches). A
+   keyword needs 3 or more. Only the word, the count and the newest month go into the pool; the counts are kept 30 days.
 3. **Code decides what is safe.** Venomous snakes, recluse and widow spiders, fire ants, poison ivy and the other
    blocked groups in `src/lib/safety/danger-taxa.ts` are removed by iNaturalist taxon id and ancestor ids before the
    model sees the list, and checked again after. Every Wild Find gets a fixed "look, don't touch" line from code.
@@ -67,7 +74,8 @@ cp .env.example .env.local   # add DO_INFERENCE_API_KEY, or point MODEL_BASE_URL
 pnpm dev                     # http://localhost:3000
 ```
 
-Every environment variable is explained in [`.env.example`](.env.example). Keys are server-only. Without
+Every environment variable is explained in [`.env.example`](.env.example). Keys are server-only. Lucky Finds need
+`SERPAPI_API_KEY` (a free SerpApi account); `SERPAPI_DAILY_CAP` and `SERPAPI_MONTHLY_CAP` cap the searches. Without
 `UPSTASH_REDIS_REST_URL`/`_TOKEN`, caches and limits live in memory (fine locally). Without a model key, park search
 still works and a new pass says the model is not configured.
 
@@ -116,8 +124,14 @@ Copied from the app's `/about` page ("What did not pass yet"), with the same num
   lost.
 - **Kid check not done yet.** A grown-up reading 10 printed clues as a 7-year-old would ([`evals/results/human-check.md`](evals/results/human-check.md))
   is planned with a real walk on **Sat Oct 10, 2026**. Until then it is pending, not passed.
-- **Lucky Finds are not connected yet.** They are left off the kid's pass, the grown-up's part says "not available yet", and
-  no photos are printed.
+- **Lucky Finds run on SerpApi's free plan (250 searches a month).** A new park uses up to 4 searches (1 to find it on
+  Google Maps, up to 3 review counts); Grass Pass stops at `SERPAPI_DAILY_CAP` (12) a day and `SERPAPI_MONTHLY_CAP`
+  (200, never above 250) a month, counted from the plan's renewal day (`SERPAPI_RENEWS_DAY`), and keeps each park's
+  counts for 30 days. When a limit is reached, the pass says
+  "free search limit reached today" (or this month) instead of Lucky Finds. A count means visitors wrote about it,
+  not that it is there today, so the pass prints "Maybe!". Google's own text filter is not trusted alone: a review
+  counts only if its text names the thing. A page holds 20 reviews, so a busy park's count can read "at least 20".
+  Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed.
 - **Self-hosting is not measured.** The app talks to any OpenAI-compatible server (for example Ollama), but we have
   not measured a self-hosted run for this app.
 - **Find This Spot is not in the eval** (its map data was not recorded for the 20 test parks).
@@ -262,13 +276,15 @@ leave the device (also on `/about`):
 |---|---|---|
 | Typed place text | our server (in the request body, never in the web address), then Nominatim; answers are cached 30 days in our storage (Upstash Redis) by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
-| The chosen park (public place + map position) | our server, then Overpass and iNaturalist | park map, sightings, monarch counts |
+| The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (its name and map position only) | park map, sightings, monarch counts, Google review counts for Lucky Finds |
 | Age band | our server, then the model on DigitalOcean (inside the prompt) | item count and reading level |
 | IP address | our server; in our storage (Upstash Redis) only as a keyed hash (HMAC), never the address itself, inside rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP address, web address, time) | our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on the Hobby plan). Park searches are POSTs, so these logs never hold the typed place or location | running the site |
 | The finished pass | saved in our storage (Upstash Redis) for 30 days | the pass link and print page |
 
 Our own server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.
+For Lucky Finds we count mentions in Google Maps reviews via SerpApi; review text is never shown, stored or sent to the AI
+(only the keyword, the count and the newest month), and the SerpApi key never leaves the server or appears in a log.
 Storage: Upstash Redis (free plan) holds the caches, the saved passes and the rate-limit counters. The IP hash key is
 `LIMITER_KEY_SECRET`; if it is not set, it is derived from the Upstash token (and is random per process without Upstash).
 The browser keeps only the light/dark choice and the last age band (localStorage).
@@ -319,7 +335,8 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   serverless inference.
 - Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It answers
   visitors only if `MODEL_ID` is switched to it; then the pass and `/about` show "Built with Llama".
-- Data credits for SerpApi will be added if Lucky Finds are connected.
+- Lucky Finds: Google Maps review counts via [SerpApi](https://serpapi.com/) (`google_maps` and `google_maps_reviews`
+  engines; we show counts and months only, never review text or reviewer names).
 
 ## Licence
 The code is [MIT](LICENSE). MIT covers the code only: recorded data in this repo keeps its source licence.

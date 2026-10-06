@@ -22,7 +22,7 @@ function Icon({ children, className = "h-5 w-5", ...rest }: IconProps) {
   );
 }
 
-/** Park Finds: a basketball hoop. */
+/** A basketball hoop (Park Finds rows for a basketball court). */
 export function HoopIcon(props: IconProps) {
   return (
     <Icon {...props}>
@@ -30,6 +30,16 @@ export function HoopIcon(props: IconProps) {
       <rect x="9" y="7" width="6" height="4" />
       <path d="M7.5 13h9" />
       <path d="M8.5 13l1.5 7M15.5 13L14 20M12 13v7M9.5 17h5" />
+    </Icon>
+  );
+}
+
+/** Park Finds: a map pin (neutral: benches, ponds, bridges, playgrounds). */
+export function PinIcon(props: IconProps) {
+  return (
+    <Icon {...props}>
+      <path d="M12 21s-6.5-6.2-6.5-11.2a6.5 6.5 0 0 1 13 0C18.5 14.8 12 21 12 21z" />
+      <circle cx="12" cy="9.8" r="2.4" />
     </Icon>
   );
 }

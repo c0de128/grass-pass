@@ -1,6 +1,6 @@
 import Image from "next/image";
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { HoopIcon, MagnifierIcon, PawIcon } from "@/components/art/icons";
+import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icons";
 import { SECTION_LABELS } from "@/components/ui/Chip";
 import { formatDay } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
@@ -12,11 +12,22 @@ import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/p
 export const PRINT_LOGO_SRC = "/logo-print-1c.svg";
 const PRINT_LOGO_RATIO = 394 / 90;
 
-const SECTION_ICON: Record<SectionId, ComponentType<SVGProps<SVGSVGElement>>> = {
-  park: HoopIcon,
+type IconC = ComponentType<SVGProps<SVGSVGElement>>;
+
+const SECTION_ICON: Record<SectionId, IconC> = {
+  park: PinIcon,
   wild: MagnifierIcon,
   lucky: PawIcon,
 };
+
+/** Park Finds with their own picture; every other mapped feature gets the neutral map pin. */
+const FEATURE_ICON: Partial<Record<string, IconC>> = {
+  basketball: HoopIcon,
+};
+
+export function rowIcon(it: Pick<PassItem, "section" | "feature">): IconC {
+  return (it.section === "park" && it.feature ? FEATURE_ICON[it.feature] : undefined) ?? SECTION_ICON[it.section];
+}
 
 /** Singular section names for the screen-reader text on each row ("Park Find"). */
 const SECTION_ONE: Record<SectionId, string> = {
@@ -118,7 +129,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
         {n > 0 ? (
           <ol className="gp-finds" aria-label="Things to find">
             {pass.items.map((it, i) => {
-              const IconFor = SECTION_ICON[it.section];
+              const IconFor = rowIcon(it);
               return (
                 <li key={i} className="gp-find" data-section={it.section}>
                   <span className="gp-box" aria-hidden="true" />

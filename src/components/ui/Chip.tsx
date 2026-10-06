@@ -1,5 +1,5 @@
 import type { ComponentType, ReactNode, SVGProps } from "react";
-import { ButterflyIcon, HoopIcon, MagnifierIcon, MapXIcon, PawIcon } from "@/components/art/icons";
+import { ButterflyIcon, MagnifierIcon, MapXIcon, PawIcon, PinIcon } from "@/components/art/icons";
 
 export type SectionKind = "park" | "wild" | "lucky" | "spot" | "october";
 
@@ -12,7 +12,7 @@ export const SECTION_LABELS: Record<SectionKind, string> = {
 };
 
 const ICONS: Record<SectionKind, ComponentType<SVGProps<SVGSVGElement>>> = {
-  park: HoopIcon,
+  park: PinIcon,
   wild: MagnifierIcon,
   lucky: PawIcon,
   spot: MapXIcon,

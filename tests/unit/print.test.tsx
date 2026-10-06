@@ -3,7 +3,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OctoberBox } from "@/components/pass/OctoberBox";
 import { isOctoberDay } from "@/lib/october";
-import { KID_STAY_CLOSE, KidPass, PRINT_LOGO_SRC, SNUG_LINE_BUDGET, TIGHT_LINE_BUDGET, estimatedLines, passDensity } from "@/components/pass/KidPass";
+import { KID_STAY_CLOSE, KidPass, PRINT_LOGO_SRC, SNUG_LINE_BUDGET, TIGHT_LINE_BUDGET, estimatedLines, passDensity, rowIcon } from "@/components/pass/KidPass";
+import { HoopIcon, MagnifierIcon, PinIcon } from "@/components/art/icons";
 import { MIN_FIT, PRINT_HEIGHT_PX, bestFit, fitFor } from "@/components/pass/PrintFit";
 import { ParentStub, STUB_EACH_LINE, STUB_LOOK_ONLY, TearLine, shortDay } from "@/components/pass/ParentStub";
 import { resetStores } from "@/lib/cache/store";
@@ -134,9 +135,9 @@ describe("KidPass (top of the printed sheet)", () => {
       expect(passDensity(pass.items, false)).toBe("roomy");
       expect(passDensity(pass.items, true)).toBe("snug");
     }
-    const pass = await realPass(PARKS.connemara.id);
-    // The same real pass with every clue at the 120-character maximum the schema allows.
-    const long = pass.items.map((it) => ({ ...it, clue: it.clue.padEnd(120, " x") }));
+    const pass = await realPass(PARKS.celebration.id);
+    // A real 8-item pass with every clue at the 120-character maximum the schema allows.
+    const long = pass.items.map((it) => ({ ...it, clue: it.clue.padEnd(120, " x"), lookWhere: it.lookWhere.padEnd(60, " x") }));
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
@@ -177,7 +178,7 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     const pass = await realPass(PARKS.celebration.id);
     const t = text(renderToStaticMarkup(<ParentStub pass={pass} passUrl={URL_TEXT} />));
     expect(t).toContain("Not on this pass");
-    expect(t).toContain("No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
+    expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
     // Water finds carry their own line on the kid's pass; the stub points to those lines.
     expect(pass.items.some((it) => it.safety === "Stay with your grown-up near water.")).toBe(true);
@@ -276,5 +277,23 @@ describe("PrintFit (one-page safety net)", () => {
     expect(bestFit(() => 900)).toBe(1);
     expect(bestFit(() => null)).toBeNull();
     expect(bestFit(() => 50_000)).toBe(MIN_FIT);
+  });
+});
+
+describe("row icons (S8b: no basketball hoop on a bench or a pond)", () => {
+  it("Park Finds get the neutral map pin unless the feature has its own icon", () => {
+    expect(rowIcon({ section: "park", feature: "bench" })).toBe(PinIcon);
+    expect(rowIcon({ section: "park", feature: "water" })).toBe(PinIcon);
+    expect(rowIcon({ section: "park" })).toBe(PinIcon); // passes saved before S8b
+    expect(rowIcon({ section: "park", feature: "basketball" })).toBe(HoopIcon);
+    expect(rowIcon({ section: "wild" })).toBe(MagnifierIcon);
+  });
+
+  it("a real pass stores the feature kind of each Park Find", async () => {
+    const pass = await realPass(PARKS.celebration.id);
+    const park = pass.items.filter((i) => i.section === "park");
+    expect(park.length).toBeGreaterThan(0);
+    for (const it of park) expect(it.feature).toMatch(/^[a-z_]+$/);
+    expect(pass.items.filter((i) => i.section !== "park").every((i) => i.feature === undefined)).toBe(true);
   });
 });

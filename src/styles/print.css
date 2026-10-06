@@ -186,7 +186,8 @@
  */
 .gp-extras[data-spot="true"] {
   display: grid;
-  grid-template-columns: 3.2in minmax(0, 1fr);
+  /* 3.27 in: the map still prints >= 3.1 in wide (its thinnest line >= 1 pt) at a 0.95 fit. */
+  grid-template-columns: 3.27in minmax(0, 1fr);
   grid-template-areas:
     "map text"
     "map oct";
@@ -339,7 +340,13 @@
 }
 
 .gp-kid[data-density="snug"] .gp-finds {
-  gap: 0.04in;
+  gap: 0.03in;
+}
+
+/* S8b: a complete 8-find pass with the map and the October box measured 0.93; tighter leading keeps it >= 0.95. */
+.gp-kid[data-density="snug"] .gp-clue,
+.gp-kid[data-density="snug"] .gp-hint {
+  line-height: 1.08;
 }
 
 /* Only reachable with near-maximum clue lengths: scale the kid half so the sheet stays one page. */

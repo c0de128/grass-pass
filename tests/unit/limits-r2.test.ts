@@ -215,7 +215,7 @@ describe("page and store-cost buckets (SEC-2-01)", () => {
 
   it("per-month math: one IPv4 at the steady rate stays under a third of the free 500K commands", () => {
     const bound = monthlyCommandBound(CFG, { passPerIpPerDay: CFG.passPerIpPerDay, parksPerIpPerDay: CFG.parksPerIpPerDay });
-    expect(bound).toBe(159_654);
+    expect(bound).toBe(163_064); // SEC-4-07: EXTRA.newPass 125 (a new pass with a fresh Lucky Finds lookup)
     expect(bound / UPSTASH_FREE_MONTHLY_COMMANDS).toBeLessThan(0.33);
 
     // Simulated: one address hammering every path for a day spends at most the cost bucket's day share

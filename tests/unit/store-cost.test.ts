@@ -26,6 +26,9 @@ import * as reportRoute from "@/app/api/report/route";
 import { forgetReportStats, passItemStats } from "@/lib/reports/stats";
 import { signInRate } from "@/lib/accounts/signin-rate";
 import { localDay } from "@/lib/time";
+import { clientIp } from "@/lib/limits";
+import { recordedSerp, serpBody, serpFixture, serpReplay } from "./support/serpapi-replay";
+import { judgePassesResponse, meResponse } from "@/lib/accounts/endpoints";
 
 beforeAll(() => primeAccountCookies(300));
 
@@ -149,6 +152,42 @@ describe("Upstash commands per request (measured)", () => {
  * reads every features cache and Overpass breaker before anything is reserved, and readyExample() is
  * memoized, so each is <= COSTS.apiPass and makes no reserve at all.
  */
+/**
+ * SEC-4-07: a new pass that also starts a fresh Lucky Finds lookup (SerpApi: 1 place search + up to 3
+ * review searches, each with its caps, breaker and caches). Replayed from the live SerpApi recordings.
+ * Celebration Park has every recording (a complete lookup). Connemara (the biggest test park: 25
+ * iNaturalist taxa) has only its place recording; for the worst case (the biggest park AND a complete
+ * lookup) its review searches are answered with Celebration's real dog-review recording. That only feeds
+ * the command count here; no test checks Connemara's Lucky content.
+ */
+describe("a new pass with a fresh Lucky Finds lookup (SEC-4-07)", () => {
+  const SERP_KEY = "fedcba9876543210".repeat(4);
+  for (const park of ["celebration", "connemara"] as const) {
+    it(`${park}: within COSTS.apiPass + EXTRA.newPass`, async () => {
+      vi.stubEnv("SERPAPI_API_KEY", SERP_KEY);
+      vi.stubEnv("SERPAPI_DAILY_CAP", "12");
+      const stand = serpBody(serpFixture("google-maps-reviews-celebration-park-dog"));
+      const serp = serpReplay({
+        next: passReplay().fetchImpl,
+        answer: (c) =>
+          park === "connemara" && c.params.engine === "google_maps_reviews" && !recordedSerp(c.params)
+            ? new Response(JSON.stringify(stand), { status: 200, headers: { "content-type": "application/json" } })
+            : undefined,
+      });
+      vi.stubGlobal("fetch", up.fetchWith(serp.fetchImpl));
+      await getStore("limits").prime?.();
+      const before = up.work();
+      const res = await passRoute.POST(req("/api/pass", { parkId: PARKS[park].id, ageBand: "6-10" }, `203.0.113.${park === "celebration" ? 80 : 81}`));
+      expect(await res.text()).toContain('"type":"result"');
+      await settle();
+      const n = up.work() - before;
+      expect(serp.calls.length).toBeGreaterThan(0); // the lookup really ran
+      report(`new pass with a Lucky lookup (${park}, ${serp.calls.length} SerpApi searches)`, n);
+      expect(n).toBeLessThanOrEqual(COSTS.apiPass + EXTRA.newPass);
+    });
+  }
+});
+
 describe("cached failures cost no more than COSTS.apiPass (SEC-3-02)", () => {
   const seed = (key: string, v: unknown) => up.mem.set(`gp:${key}`, JSON.stringify({ v, at: Date.now() }), 900);
   const reserves = () => [...up.counts.byCmd.entries()].filter(([k]) => k.startsWith("EVAL:local n = #KEYS")).reduce((n, [, c]) => n + c, 0);
@@ -338,6 +377,47 @@ describe("accounts: Upstash commands per request (measured)", () => {
     report("judge new pass", up.work() - before);
     expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass + EXTRA.newPass);
     expect(Number(await up.mem.get(`gp:q:{judge-new:${localDay(Date.now())}}:all`))).toBe(1);
+  });
+
+  it("SEC-4-02: a judge over its 3 per connection is refused within COSTS.apiPass; the card's count costs COSTS.apiJudgePasses; /api/me costs 0", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(async (url) => {
+      throw new Error(`no upstream call expected: ${url}`);
+    }));
+    const j = await judgeCookie();
+    const ip = "203.0.113.68";
+    const key = clientIp(new Request("http://x/", { headers: { "x-forwarded-for": ip } }));
+    await up.mem.set(`gp:q:{judge-new:${localDay(Date.now())}}:k:${key}`, "3", 3600);
+    await getStore("limits").prime?.();
+    let before = up.work();
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, ip, j.cookie));
+    const body = (await res.json()) as { error: { code: string } };
+    expect([res.status, body.error.code]).toEqual([429, "JUDGE_DAILY_LIMIT"]);
+    report("judge over its 3 per connection", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass);
+
+    before = up.work();
+    const left = await judgePassesResponse(new Request("http://localhost:3123/api/judge-passes", { headers: { "x-forwarded-for": ip } }));
+    expect(await left.json()).toMatchObject({ leftForYou: 0 });
+    report("GET /api/judge-passes", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiJudgePasses);
+
+    before = up.work();
+    await meResponse(new Request("http://localhost:3123/api/me", { headers: { cookie: j.cookie } }));
+    expect(up.work() - before).toBe(COSTS.apiMe);
+  });
+
+  it("SEC-4-01: a judge report costs within COSTS.apiReport (one dedupe INCR, no report EVAL)", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(passReplay().fetchImpl));
+    const made = await passRoute.POST(req("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.69"));
+    const pass = JSON.parse((await made.text()).trim().split("\n").at(-1)!).pass as { id: string; items: { ref?: string }[] };
+    await settle();
+    const ref = pass.items.find((i) => i.ref)!.ref!;
+    const j = await judgeCookie();
+    const before = up.work();
+    const res = await reportRoute.POST(reqAs("/api/report", { passId: pass.id, ref, kind: "notfound" }, "203.0.113.70", j.cookie));
+    expect(((await res.json()) as { status: string }).status).toBe("logged");
+    report("judge report (logged)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiReport);
   });
 
   it("a sign-in attempt: 1 command, then none while a refusal is remembered", async () => {

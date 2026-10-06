@@ -26,16 +26,19 @@
  * Accounts (re-measured 2026-10-06): a new pass 113 (+ the account count and the report lookup), a signed-out
  * new-pass request 2, an account over its 2 a day 5 the first time (then 4 while the refusal is remembered), so
  * COSTS.apiPass = 5; a report 4 (a repeat 3, a not-safe that hides the item 4-5) = COSTS.apiReport 5; a signed-in
- * pass page 2 (the pass + the report counts) = passPage + passStats; a sign-in attempt 1. The bound below does
- * not change: the cost bucket's refill bounds the cheap paths whatever each request is charged, and a new pass
- * is still bounded by the per-IP daily share (113 <= EXTRA.newPass 120 + COSTS.apiPass).
+ * pass page 2 (the pass + the report counts) = passPage + passStats; a sign-in attempt 1.
+ * Round 4 (re-measured 2026-10-06, SEC-4-07): a new pass that ALSO starts a fresh Lucky Finds lookup (SerpApi:
+ * place + 3 review searches, each with its caps, breaker and caches): Celebration 55, Connemara (25 taxa, the
+ * biggest test park) 118; a judge over its 3 per connection 5; a judge report (logged only) 4; GET
+ * /api/judge-passes 1; GET /api/me 0. EXTRA.newPass is now 125 (was 120): 125 + COSTS.apiPass 5 = 130 leaves
+ * 12 commands of room over the 118 measured, for parks with up to 30 taxa.
  * - Cheap paths, through the cost bucket: <= 60 + 45 x 744 = 33,540 commands.
  * - Expensive paths, beyond what the cost bucket already charged, bounded by the per-IP daily shares
  *   the shared store keeps (PASS_PER_IP_PER_DAY 20, PARKS_PER_IP_PER_DAY 60). Only a path that started
  *   an upstream call (and so spent its daily share) can be expensive:
- *   31 x (20 x EXTRA.newPass 120 + 60 x EXTRA.search 20) = 111,600 commands.
+ *   31 x (20 x EXTRA.newPass 125 + 60 x EXTRA.search 20) = 114,700 commands.
  * - The shared budget counters add 1 command per 10 (SEC-3-04): x 1.1.
- * - Total <= (33,540 + 111,600) x 1.1 = 159,654 = 31.9% of the free 500,000 (`monthlyCommandBound`).
+ * - Total <= (33,540 + 114,700) x 1.1 = 163,064 = 32.6% of the free 500,000 (`monthlyCommandBound`).
  * Instance-wide, whatever the traffic or the number of addresses: the home page's example check is 4 GETs
  * per 5 min (src/app/page.tsx; every 30 s only while an example is being made), readyExample() (the
  * example offered after a map-data failure) is 4 GETs per 5 min (SEC-3-02), the example pass reads are
@@ -80,15 +83,20 @@ export const COSTS = {
   apiReport: 5,
   /** /api/auth/signin|callback/*: 1 rate-limit EVAL. The session and CSRF reads cost 0 (no store command). */
   apiAuth: 1,
+  /** GET /api/me (SEC-4-04): the header's "who is signed in", cookie only: 0 store commands. */
+  apiMe: 0,
+  /** GET /api/judge-passes (SEC-4-02): 1 MGET of the judge pool counters. */
+  apiJudgePasses: 1,
   apiOther: 1,
   /** A server action (sign in / sign out) posted to a page: the judge sign-in's rate-limit EVAL. */
   action: 1,
 } as const;
 /**
- * Upper bounds of the extra commands of the expensive paths, beyond COSTS (measured <= 106 and 9; margins
- * for 30 taxa, and for the Nominatim and saved-index fallbacks of a search).
+ * Upper bounds of the extra commands of the expensive paths, beyond COSTS (measured: a new pass with a fresh
+ * Lucky Finds lookup 118 in all, SEC-4-07; a search 15; margins for 30 taxa, and for the Nominatim and
+ * saved-index fallbacks of a search).
  */
-export const EXTRA = { newPass: 120, search: 20 } as const;
+export const EXTRA = { newPass: 125, search: 20 } as const;
 /** The shared budget counters cost one command per BUDGET_FLUSH_EVERY (10, SEC-3-04). */
 export const FLUSH_OVERHEAD = 11 / 10;
 
@@ -147,6 +155,8 @@ export function requestCost(pathname: string, now: number, opts: { action?: bool
   if (pathname === "/api/pass") return { kind: "api", cost: COSTS.apiPass };
   if (pathname === "/api/parks") return { kind: "api", cost: COSTS.apiParks };
   if (pathname === "/api/report") return { kind: "api", cost: COSTS.apiReport };
+  if (pathname === "/api/me") return { kind: "api", cost: COSTS.apiMe };
+  if (pathname === "/api/judge-passes") return { kind: "api", cost: COSTS.apiJudgePasses };
   // Only an OAuth start or callback spends a store command; the session/CSRF reads (header, every page) don't.
   if (pathname.startsWith("/api/auth/")) return { kind: "api", cost: /^\/api\/auth\/(signin|callback)\//.test(pathname) ? COSTS.apiAuth : 0 };
   if (pathname.startsWith("/api/")) return { kind: "api", cost: COSTS.apiOther };

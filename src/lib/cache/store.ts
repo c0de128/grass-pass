@@ -146,18 +146,23 @@ export class MemoryStore implements Store {
     this.map.delete(key);
   }
 
-  async incr(key: string, by: number, ttlSec: number) {
+  /** Synchronous add: the multi-key operations below run without yielding, so they are atomic like the Lua scripts. */
+  private incrNow(key: string, by: number, ttlSec: number): number {
     const e = this.live(key);
     const next = (e ? Number(e.value) || 0 : 0) + by;
     this.write(key, String(next), e ? e.expiresAt : this.now() + ttlMs(ttlSec));
     return next;
   }
 
+  async incr(key: string, by: number, ttlSec: number) {
+    return this.incrNow(key, by, ttlSec);
+  }
+
   async rateHit(current: string, previous: string, elapsed: number, limit: number, ttlSec: number): Promise<RateHit> {
-    const c = await this.incr(current, 1, ttlSec);
+    const c = this.incrNow(current, 1, ttlSec);
     const p = Number(this.live(previous)?.value) || 0;
     if (p * (1 - elapsed) + c > limit) {
-      await this.incr(current, -1, ttlSec);
+      this.incrNow(current, -1, ttlSec);
       return { allowed: false, current: c - 1, previous: p };
     }
     return { allowed: true, current: c, previous: p };
@@ -168,7 +173,8 @@ export class MemoryStore implements Store {
       if ((Number(this.live(keys[i])?.value) || 0) + 1 > caps[i]) return { failed: i + 1, counts: [] };
     }
     const counts: number[] = [];
-    for (const k of keys) counts.push(await this.incr(k, 1, ttlSec));
+    // No await between the check and the adds (accounts audit: concurrent reserves overshot a per-key share).
+    for (const k of keys) counts.push(this.incrNow(k, 1, ttlSec));
     return { failed: 0, counts };
   }
 

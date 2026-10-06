@@ -58,11 +58,18 @@ test.describe("example parks", () => {
   });
 
   test("R2-m9 + R2-m4: a complete park comes first, and every ready example prints on ONE page at scale >= 0.91", async ({ page }) => {
-    test.setTimeout(120_000);
+    test.setTimeout(300_000);
     await page.goto("/");
     const list = page.getByRole("list", { name: "Example parks" });
     await expect(list.getByRole("listitem").first()).toContainText("Arbor Hills Nature Preserve");
     await expect(list.getByRole("listitem").last()).toContainText("Connemara Meadow Preserve");
+    // Let the warm-up finish (cards say "making" while a pass is being made), so every example that CAN be
+    // made is checked, not just the first one ready.
+    const states = async () => list.getByRole("listitem").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
+    for (let i = 0; i < 40 && (await states()).includes("making"); i++) {
+      await page.waitForTimeout(5_000);
+      await page.reload();
+    }
     const hrefs = await list.getByRole("link").evaluateAll((els) => els.map((e) => e.getAttribute("href") ?? ""));
     if (hrefs.length === 0) test.skip(true, `No example pass is ready on this server; the cards say: ${(await list.textContent())?.slice(0, 300)}`);
     const pdfPages = (pdf: Buffer) => (pdf.toString("latin1").match(/\/Type\s*\/Page[^s]/g) ?? []).length;
@@ -77,6 +84,7 @@ test.describe("example parks", () => {
       });
       const fit = Number(await page.locator(".gp-sheet").getAttribute("data-fit"));
       test.info().annotations.push({ type: "note", description: `${id}: print scale ${fit}` });
+      console.log(`example print: ${id} scale ${fit}`);
       expect(fit, `${id} print scale`).toBeGreaterThanOrEqual(0.91);
       expect(pdfPages(await page.pdf({ preferCSSPageSize: true, printBackground: false })), `${id} Letter pages`).toBe(1);
     }

@@ -257,3 +257,28 @@ describe("R2-m2: a park whose live query ran into our client timeout is not sent
     expect(first.ok && first.from).toBe("saved");
   });
 });
+
+describe("R2-M3: the recorded DFW files", () => {
+  it("every saved park file is valid for the app, belongs to a park in the index, and dfw-coverage.json counts what is on disk", async () => {
+    const { readdirSync, readFileSync } = await import("node:fs");
+    const index = JSON.parse(readFileSync("src/data/osm/dfw-parks.json", "utf8")) as { parks: [string][] };
+    const ids = new Set(index.parks.map((r) => r[0]));
+    const coverage = JSON.parse(readFileSync("src/data/osm/dfw-coverage.json", "utf8")) as { features: { ok: number }; geometry: { ok: number } };
+    let features = 0;
+    let geometry = 0;
+    for (const name of readdirSync("src/data/osm/parks")) {
+      const id = name.replace(/\.json\.br$/, "").replace("-", "/");
+      expect(ids.has(id), name).toBe(true);
+      const file = dfwParkFile(id);
+      expect(file, name).not.toBeNull(); // parsed with DfwParkFileSchema; an invalid file would be null
+      if (file?.features) {
+        features++;
+        expect(file.features.value.park.id).toBe(id);
+        expect(Date.parse(file.features.fetchedAt)).toBeGreaterThan(Date.parse("2026-10-06T00:00:00Z"));
+      }
+      if (file?.geometry) geometry++;
+    }
+    expect(features).toBe(coverage.features.ok);
+    expect(geometry).toBe(coverage.geometry.ok);
+  });
+});

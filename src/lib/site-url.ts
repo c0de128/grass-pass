@@ -17,3 +17,6 @@ export function siteUrl(env: Record<string, string | undefined> = process.env): 
   }
   return new URL(`http://localhost:${env.PORT || "3000"}`);
 }
+
+/** The public source repo (MIT). Client-safe; the same URL is the default contact in the data-source User-Agent. */
+export const REPO_URL = "https://github.com/c0de128/grass-pass";

@@ -14,7 +14,7 @@ Code then fact-checks every clue against its source, drops any that fail, and wr
 line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the
 answers, safety notes and sources. The phone stays in your pocket.
 
-Why not a generic printable hunt? Because "Find a pinecone" fails by age five, and parks aren't generic. Two parks in Allen, TX, measured on
+Why not a generic printable hunt? Because "Find a pinecone" fails, and parks aren't generic. Two parks in Allen, TX, measured on
 Oct 5, 2026: Connemara Meadow had 70 wildlife species photographed in 14 days and no playgrounds, courts or
 shelters on the map; Celebration Park had 25 soccer fields and no recent sightings. Each gets its own pass, from:
 - **Park Finds:** what is mapped inside the park on OpenStreetMap (courts, playgrounds, shelters, bridges, ponds...).

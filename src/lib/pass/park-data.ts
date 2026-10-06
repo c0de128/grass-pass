@@ -46,6 +46,13 @@ const featuresCache = createCachePair({
   maxEntries: 2_000,
 });
 const heavyCache = createJsonCache({ name: "park-heavy", schema: z.literal(true), ttlSec: HEAVY_TTL_SEC, maxEntries: 500 });
+/**
+ * R2-m2 (SEC-2-03): a park whose features query ran into our client timeout is not sent again for
+ * SLOW_TTL_SEC (a huge park would otherwise keep tripping the shared per-mirror breakers). Only the
+ * live query is skipped: a saved DFW answer is still used.
+ */
+export const SLOW_TTL_SEC = 15 * 60;
+const slowCache = createJsonCache({ name: "park-slow", schema: z.literal(true), ttlSec: SLOW_TTL_SEC, maxEntries: 500 });
 
 export type ParkDataDeps = {
   store: Store;
@@ -56,6 +63,8 @@ export type ParkDataDeps = {
   signal?: AbortSignal;
   /** Called right before the first upstream request (charges the per-IP daily share). */
   onUpstream?: () => void;
+  /** Tests: Overpass per-attempt timeout for the live features query (default OVERPASS_CLIENT_TIMEOUT_MS). */
+  timeoutMs?: number;
 };
 
 export type ApiError = { code: string; message: string; retryAfter?: number };
@@ -89,6 +98,7 @@ async function liveFeatures(ref: ParkRef, deps: ParkDataDeps, priority: "normal"
     onStart: deps.onUpstream,
     now: deps.now,
     priority,
+    ...(deps.timeoutMs ? { timeoutMs: deps.timeoutMs } : {}),
     ...(priority === "low" ? { totalBudgetMs: REFRESH_BUDGET_MS } : {}),
   });
 }
@@ -127,6 +137,12 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps): Promise<Fe
     return { ok: true, value: saved.value, at: saved.fetchedAt, from: "saved" };
   }
 
+  if (await slowCache.get(key, deps.now())) {
+    const dfw = savedDfwFeatures(key);
+    if (dfw) return fromSavedDfw(ref, key, dfw, deps, "slow_cached");
+    return fail(503, { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown, retryAfter: SLOW_TTL_SEC });
+  }
+
   try {
     const f = await liveFeatures(ref, deps, "normal");
     const at = deps.now();
@@ -140,6 +156,7 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps): Promise<Fe
     if (!(err instanceof SourceError)) throw err;
     log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
     if (err.code === "too_heavy") await heavyCache.set(key, true, { now: deps.now() });
+    if (err.code === "timeout") await slowCache.set(key, true, { now: deps.now() });
     const dfw = savedDfwFeatures(key);
     if (dfw) return fromSavedDfw(ref, key, dfw, deps, err.code);
     return { ok: false, outcome: featuresFailure(err) };

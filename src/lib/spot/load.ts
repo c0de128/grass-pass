@@ -136,7 +136,8 @@ export async function loadGeometry(ref: ParkRef, deps: GeometryDeps): Promise<Ge
   } catch (err) {
     // Optional section: any failure (busy server, bad answer, store hiccup) means "no map today", never a failed pass.
     const code = err instanceof SourceError ? err.code : err instanceof Error ? err.name : "unknown";
-    if (err instanceof SourceError && err.code === "too_heavy") await heavyCache.set(key, true, { now: deps.now() });
+    // R2-m2: a client timeout on this park's map query is negative-cached like "too heavy" (15 min).
+    if (err instanceof SourceError && (err.code === "too_heavy" || err.code === "timeout")) await heavyCache.set(key, true, { now: deps.now() });
     log("spot_geometry_failed", { park: key, code }, err instanceof SourceError ? "warn" : "error");
     const message =
       err instanceof SourceError && err.code === "aborted"

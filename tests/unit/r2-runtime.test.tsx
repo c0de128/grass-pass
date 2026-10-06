@@ -222,3 +222,38 @@ describe("R2-M3: a pass that failed on map data offers a ready example and tries
     expect(plain).not.toContain("example");
   });
 });
+
+describe("R2-m2: a park whose live query ran into our client timeout is not sent again for 15 min", () => {
+  /** Never answers: only our own per-attempt timeout ends it (a built condition; a real one takes 30 s per mirror). */
+  const hang = (calls: string[]) => (u: string, init?: RequestInit) => {
+    calls.push(u);
+    return new Promise<Response>((_, reject) => {
+      const s = init?.signal;
+      const stop = () => reject(s?.reason ?? new DOMException("aborted", "AbortError"));
+      if (s?.aborted) stop();
+      s?.addEventListener("abort", stop);
+    });
+  };
+
+  it("outside DFW: the second try answers OSM_UNAVAILABLE at once, with no request", async () => {
+    const store = new MemoryStore();
+    const calls: string[] = [];
+    const deps = { store, env: {}, now: () => Date.now(), fetchImpl: hang(calls), timeoutMs: 50 };
+    const first = await loadFeatures({ type: "way", id: 1 }, deps);
+    expect(first.ok).toBe(false);
+    const sent = calls.length;
+    expect(sent).toBeGreaterThan(0);
+    const second = await loadFeatures({ type: "way", id: 1 }, { ...deps, store });
+    expect(second.ok).toBe(false);
+    if (!second.ok) expect(second.outcome.error).toMatchObject({ code: "OSM_UNAVAILABLE", retryAfter: 15 * 60 });
+    expect(calls.length).toBe(sent);
+  });
+
+  it("a DFW park still gets its saved answer while it is negative-cached", async () => {
+    const store = new MemoryStore();
+    const calls: string[] = [];
+    const deps = { store, env: {}, now: () => Date.now(), fetchImpl: hang(calls), timeoutMs: 50 };
+    const first = await loadFeatures(parseParkId(DFW_PARK)!, deps);
+    expect(first.ok && first.from).toBe("saved");
+  });
+});

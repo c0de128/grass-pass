@@ -66,6 +66,7 @@ export function SignInCard({
   headingLevel = 3,
   onBeforeSignIn,
   id,
+  compact = false,
 }: {
   options: SignInOptions;
   returnTo: string;
@@ -73,6 +74,8 @@ export function SignInCard({
   headingLevel?: 2 | 3;
   onBeforeSignIn?: () => void;
   id?: string;
+  /** UX-5-06: /signin keeps the card to the reason, the buttons and the live counter; its "Why sign in?" list has the details. */
+  compact?: boolean;
 }) {
   const H = headingLevel === 2 ? "h2" : "h3";
   const headingId = id ? `${id}-heading` : undefined;
@@ -92,8 +95,14 @@ export function SignInCard({
         {heading}
       </H>
       <p className="text-base">
-        Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved
-        passes need no sign-in. {ACCOUNT_COPY.grownUps}
+        {compact ? (
+          "Each new pass wakes up a real AI model, so a grown-up signs in first."
+        ) : (
+          <>
+            Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved
+            passes need no sign-in. {ACCOUNT_COPY.grownUps}
+          </>
+        )}
       </p>
       <form
         action={async (fd: FormData) => {
@@ -113,10 +122,10 @@ export function SignInCard({
       {options.judge ? (
         <>
           <JudgePassesLeft />
-          <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.judgeNote}</p>
+          {compact ? null : <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.judgeNote}</p>}
         </>
       ) : null}
-      <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.privacy}</p>
+      {compact ? null : <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.privacy}</p>}
     </section>
   );
 }

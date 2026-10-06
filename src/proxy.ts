@@ -9,6 +9,7 @@
  * Nothing here relies on state shared with render code (Next 16: the proxy may run apart from it).
  */
 import { NextResponse, type NextRequest } from "next/server";
+import { busyActionResponse, busyPageResponse } from "@/lib/http/busy-page";
 import { jsonError, waitText } from "@/lib/http/respond";
 import { clientIp, networkKey } from "@/lib/limits/ip";
 import { limitsConfig } from "@/lib/limits/config";
@@ -24,14 +25,14 @@ export function proxy(req: NextRequest): Response {
     session: SESSION_COOKIES.some((n) => req.cookies.has(n)),
   });
   if (r.ok) return NextResponse.next();
-  const message = `That's a lot of requests from your connection. Please wait ${waitText(r.retryAfter)} and try again.`;
-  if (req.nextUrl.pathname.startsWith("/api/")) {
+  const { pathname } = req.nextUrl;
+  if (pathname.startsWith("/api/")) {
+    const message = `That's a lot of requests from your connection. Please wait ${waitText(r.retryAfter)} and try again.`;
     return jsonError(429, { code: "RATE_LIMITED", message, retryAfter: r.retryAfter });
   }
-  return new Response(`${message}\n`, {
-    status: 429,
-    headers: { "Content-Type": "text/plain; charset=utf-8", "Cache-Control": "no-store", "Retry-After": String(r.retryAfter) },
-  });
+  // RULES-5-04 / UX-5-02: a sign-in button (server action) goes to /signin with the wait; a page gets a styled page.
+  if (req.method === "POST" && req.headers.has("next-action")) return busyActionResponse(r.retryAfter, pathname);
+  return busyPageResponse(r.retryAfter, pathname);
 }
 
 export const config = {

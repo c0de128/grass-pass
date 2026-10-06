@@ -25,12 +25,16 @@ import { encode as encodeJwt } from "next-auth/jwt";
 import { enabledOAuthProviders, judgeDemoEnabled, SESSION_MAX_AGE_SEC, sessionLifetimeSec, type ProviderId } from "@/lib/accounts/config";
 import { accountKey, JUDGE_ACCOUNT_ID, newJudgeSessionId } from "@/lib/accounts/key";
 import { safeRedirect } from "@/lib/accounts/redirect";
-import { checkSignInRate } from "@/lib/accounts/signin-rate";
+import { signInRate } from "@/lib/accounts/signin-rate";
 import { readSessionToken, secondsLeft, TokenSchema, type SessionToken } from "@/lib/accounts/session";
 import { log } from "@/lib/log";
 
+/** RULES-5-04: the code carries the wait (seconds), so /signin can say how long ("rate_limited:47"). */
 class SignInRateLimited extends CredentialsSignin {
-  code = "rate_limited";
+  constructor(retryAfter: number) {
+    super();
+    this.code = `rate_limited:${Math.max(1, Math.ceil(retryAfter))}`;
+  }
 }
 
 /** A first name for the header, or undefined. Never stored server-side. */
@@ -102,8 +106,8 @@ export function authConfig(env: Env = process.env, opts: { sessionMaxAgeSec?: nu
         name: "Judge demo",
         credentials: {},
         async authorize(_input, request) {
-          const ok = await checkSignInRate(request);
-          if (!ok) throw new SignInRateLimited();
+          const rate = await signInRate(request);
+          if (!rate.ok) throw new SignInRateLimited(rate.retryAfter);
           log("signin", { provider: "judge" });
           return { id: JUDGE_ACCOUNT_ID };
         },

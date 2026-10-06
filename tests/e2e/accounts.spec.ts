@@ -181,6 +181,9 @@ test("the header's sign-in / sign-out control fits a 320 px phone (no sideways s
   await page.goto("/signin");
   await page.getByTestId("sign-in-card").getByRole("button", { name: "Try as a judge" }).click();
   await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible();
+  // UX-5-05: signing in from /signin is announced (polite status), and the address is clean again.
+  await expect(page.getByTestId("signin-announce")).toHaveText("Signed in as a judge. You can make a pass now.");
+  await expect(page).toHaveURL(/\/$/);
   for (const path of ["/", "/about", "/how-it-works"]) {
     await page.goto(path);
     await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible();

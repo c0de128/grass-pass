@@ -10,6 +10,7 @@ import { redirect } from "next/navigation";
 import { signIn, signInJudge, signOut } from "@/auth";
 import { enabledOAuthProviders, judgeDemoEnabled, authConfigured } from "@/lib/accounts/config";
 import { allowedReturnPath } from "@/lib/accounts/redirect";
+import { signInBusyPath } from "@/lib/http/busy-page";
 
 /** Our own paths only; anything else becomes "/". */
 function returnPath(v: FormDataEntryValue | null): string {
@@ -28,8 +29,10 @@ export async function signInAction(form: FormData): Promise<void> {
   } catch (err) {
     // signIn() redirects by throwing; only Auth.js errors (e.g. too many judge sign-ins) are handled here.
     if (err instanceof AuthError) {
-      const code = (err as { code?: string }).code === "rate_limited" ? "rate_limited" : "failed";
-      redirect(`/signin?error=${code}`);
+      // RULES-5-04: too many judge sign-ins: /signin says how long to wait (and keeps the way back).
+      const m = /^rate_limited(?::(\d{1,6}))?$/.exec(String((err as { code?: unknown }).code ?? ""));
+      if (m) redirect(signInBusyPath(Number(m[1] ?? 60), to));
+      redirect("/signin?error=failed");
     }
     throw err;
   }

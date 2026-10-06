@@ -25,8 +25,21 @@ export function whoLabel(name: string | null | undefined, provider: "github" | "
   return provider ? `Signed in with ${PROVIDER_LABELS[provider]}` : "Signed in";
 }
 
+/** UX-5-05: what the header says (polite status) after a sign-in from /signin lands with ?signedin=1. */
+export function signedInAnnouncement(provider: "github" | "google" | "judge"): string {
+  return provider === "judge" ? "Signed in as a judge. You can make a pass now." : "Signed in. You can make a pass now.";
+}
+
+/** The current address without ?signedin=1 (other query parts kept). */
+export function withoutSignedInFlag(href: string): string {
+  const u = new URL(href);
+  u.searchParams.delete("signedin");
+  return `${u.pathname}${u.search}${u.hash}`;
+}
+
 export function AccountMenu() {
   const [who, setWho] = useState<Who | null>(null);
+  const [announce, setAnnounce] = useState("");
   const [version, setVersion] = useState(0);
   const path = usePathname();
 
@@ -42,7 +55,16 @@ export function AccountMenu() {
       .then((r) => (r.ok ? r.json() : null))
       .then((j: unknown) => {
         const s = parseMe(j);
-        if (live) setWho(s.success && s.data.signedIn ? { signedIn: true, label: whoLabel(s.data.name, s.data.provider) } : { signedIn: false });
+        if (!live) return;
+        setWho(s.success && s.data.signedIn ? { signedIn: true, label: whoLabel(s.data.name, s.data.provider) } : { signedIn: false });
+        // UX-5-05: back from the sign-in page: say so, move focus to the page's main content, clean the address.
+        if (new URLSearchParams(window.location.search).get("signedin") === "1") {
+          window.history.replaceState(window.history.state, "", withoutSignedInFlag(window.location.href));
+          if (s.success && s.data.signedIn) {
+            setAnnounce(signedInAnnouncement(s.data.provider));
+            document.getElementById("main")?.focus();
+          }
+        }
       })
       .catch(() => live && setWho({ signedIn: false }));
     return () => {
@@ -50,9 +72,23 @@ export function AccountMenu() {
     };
   }, [path, version]);
 
-  if (!who) return <span className="inline-block min-h-11 w-0" aria-hidden="true" />;
+  const status = (
+    <p role="status" className="sr-only" data-testid="signin-announce">
+      {announce}
+    </p>
+  );
+  if (!who) {
+    return (
+      <>
+        <span className="inline-block min-h-11 w-0" aria-hidden="true" />
+        {status}
+      </>
+    );
+  }
   if (!who.signedIn) {
     return (
+      <>
+      {status}
       <Link
         href="/signin"
         prefetch={false}
@@ -62,10 +98,13 @@ export function AccountMenu() {
         <LogIn className="size-4" aria-hidden="true" />
         Sign in
       </Link>
+      </>
     );
   }
   const returnTo = path && path.startsWith("/pass/") && !path.endsWith("/print") ? path : "/";
   return (
+    <>
+    {status}
     <form
       action={async (fd: FormData) => {
         try {
@@ -86,5 +125,6 @@ export function AccountMenu() {
         Sign out<span className="sr-only md:hidden"> ({who.label})</span>
       </button>
     </form>
+    </>
   );
 }

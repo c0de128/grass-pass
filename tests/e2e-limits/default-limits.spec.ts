@@ -105,3 +105,44 @@ test("the server runs the DEFAULT page limit (a flood of 200 requests from one a
   expect(refused, "this server must run the default PRELIMIT_PAGE_* (120 + 2/s), not the raised e2e values").toBeGreaterThan(0);
   expect(ok).toBeGreaterThanOrEqual(120);
 });
+
+test("UX-5-02: a page over the limit is a styled page with the wait and a way home (not plain text)", async ({ request, page }) => {
+  const ip = "198.51.100.233";
+  let last = null as Awaited<ReturnType<typeof request.get>> | null;
+  for (let i = 0; i < 200; i++) {
+    const res = await request.get(`/pass/not-a-pass-${i}`, { headers: { "x-forwarded-for": ip }, maxRedirects: 0 });
+    if (res.status() === 429) {
+      last = res;
+      break;
+    }
+  }
+  expect(last, "the page limit never refused").not.toBeNull();
+  expect(last!.headers()["content-type"]).toMatch(/text\/html/);
+  const html = await last!.text();
+  expect(html).toContain("Whoa, lots of visits!");
+  expect(html).toMatch(/Please wait about \d+ (seconds|minutes)/);
+  // The same page in a browser: readable, with its links (and no script needed).
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
+  await page.goto("/pass/not-a-pass-x");
+  await expect(page.getByRole("heading", { level: 1, name: "Whoa, lots of visits!" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Go to the home page" })).toHaveAttribute("href", "/");
+});
+
+test("RULES-5-04: 'Try as a judge' over the limit lands on /signin with the wait (never Next's crash page)", async ({ page, request }) => {
+  const ip = "198.51.100.234";
+  await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
+  await page.goto("/signin");
+  const judge = page.getByTestId("sign-in-card").getByRole("button", { name: "Try as a judge" });
+  test.skip((await judge.count()) === 0, "No data available: this server has no judge sign-in (AUTH_SECRET unset or JUDGE_DEMO=0)");
+  // Use up this address's store-cost bucket (60) with possible pass ids (1 each); the sign-in action then costs 1 more.
+  let refused = false;
+  for (let i = 0; i < 80 && !refused; i++) {
+    const res = await request.get(`/pass/w38113837-6to10-${chicagoDay()}-1`, { headers: { "x-forwarded-for": ip }, maxRedirects: 0 });
+    refused = res.status() === 429;
+  }
+  expect(refused, "the store-cost limit never refused").toBe(true);
+  await judge.click();
+  await expect(page).toHaveURL(/\/signin\?error=rate_limited&wait=\d+/);
+  await expect(page.locator('[data-error-code="rate_limited"]')).toContainText(/Please wait about \d+ (seconds|minutes), then press the button again\./);
+  await expect(page.getByText("This page couldn't load")).toHaveCount(0);
+});

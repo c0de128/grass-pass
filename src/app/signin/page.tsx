@@ -5,20 +5,10 @@ import { signOutAction } from "@/app/actions/auth";
 import { SignInCard } from "@/components/account/SignInCard";
 import { buttonClassName } from "@/components/ui/Button";
 import { ACCOUNT_COPY, judgeShareCopy, PROVIDER_LABELS, signInOptions, type ProviderId } from "@/lib/accounts/config";
-import { allowedReturnPath } from "@/lib/accounts/redirect";
+import { allowedReturnPath, withSignedInFlag } from "@/lib/accounts/redirect";
+import { errorText } from "@/lib/accounts/signin-errors";
 
 export const metadata: Metadata = { title: "Sign in · Grass Pass", robots: { index: false, follow: false } };
-
-/** Auth.js error codes (pages.error) and ours, as plain words. Unknown codes get the general line. */
-const ERRORS: Record<string, string> = {
-  rate_limited: "Whoa, that's a lot of sign-in attempts from your connection. Please wait a few minutes and try again.",
-  unavailable: "That sign-in option is not set up here. Try another one below.",
-  AccessDenied: "Sign-in was cancelled. Nothing changed, but you can try again below.",
-  OAuthCallbackError: "The sign-in page didn't finish. Please try again.",
-  Configuration: "Sign-in isn't set up right on this server. Examples and saved passes still work.",
-  Verification: "That sign-in link didn't work. Please try again.",
-};
-const GENERAL_ERROR = "Sign-in didn't work this time. Give it another try.";
 
 /**
  * Auth.js passes an absolute callbackUrl: keep only its path + query (the sign-in buttons send a path, and
@@ -53,7 +43,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
       <h1 className="text-4xl leading-tight font-extrabold tracking-tight text-ink">Sign in</h1>
       {error ? (
         <div role="alert" className="rounded-2xl bg-muted p-4" data-error-code={error}>
-          <p className="font-semibold">{ERRORS[error] ?? GENERAL_ERROR}</p>
+          <p className="font-semibold">{errorText(error, one(sp.wait))}</p>
         </div>
       ) : null}
       {session?.provider ? (
@@ -74,14 +64,21 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           </div>
         </section>
       ) : (
-        <SignInCard options={options} returnTo={from} heading="Sign in to make new passes and report your finds" headingLevel={2} id="signin-page" />
+        <SignInCard
+          options={options}
+          returnTo={withSignedInFlag(from)}
+          heading="Sign in to make new passes and report your finds"
+          headingLevel={2}
+          id="signin-page"
+          compact
+        />
       )}
       <section aria-labelledby="why-sign-in" className="flex flex-col gap-2">
         <h2 id="why-sign-in" className="text-xl font-extrabold text-ink">
           Why sign in?
         </h2>
         <ul className="flex list-disc flex-col gap-1 pl-5">
-          <li>Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.</li>
+          <li>Only to make a new pass or to tell us what you found. Examples, shared links and printing work without it.</li>
           <li>{ACCOUNT_COPY.privacy}</li>
           <li>{ACCOUNT_COPY.grownUps}</li>
           <li>

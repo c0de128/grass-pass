@@ -3,9 +3,18 @@
  * origin (no open redirects). Anything else goes to the home page.
  * - `/` and `/?resume=1` (the home page restores the park + age picked before signing in);
  * - `/pass/<id>` (a saved pass, e.g. after signing in to send a report or make a different pass);
+ * - `/?signedin=1` and `/pass/<id>?signedin=1` (UX-5-05: back from /signin, the header announces the sign-in);
  * - `/signin`.
  */
 import { PASS_ID_PATTERN } from "@/lib/pass/schema";
+
+/** UX-5-05: added to the way back from /signin so the header can announce the sign-in. */
+export const SIGNED_IN_QUERY = "?signedin=1";
+
+/** `from` (an allowed path) with ?signedin=1 when it has no query yet ("/?resume=1" keeps its own announcement). */
+export function withSignedInFlag(from: string): string {
+  return from.includes("?") || from === "/signin" ? from : `${from}${SIGNED_IN_QUERY}`;
+}
 
 const PASS_PATH = new RegExp(`^/pass/${PASS_ID_PATTERN.source.slice(1, -1)}$`);
 
@@ -26,9 +35,9 @@ export function allowedReturnPath(target: string | null | undefined, baseUrl: st
   if (u.username || u.password) return null;
   const path = u.pathname;
   const query = u.search;
-  if (path === "/" && (query === "" || query === "?resume=1")) return `${path}${query}`;
+  if (path === "/" && (query === "" || query === "?resume=1" || query === SIGNED_IN_QUERY)) return `${path}${query}`;
   if (path === "/signin" && query === "") return path;
-  if (PASS_PATH.test(path) && query === "") return path;
+  if (PASS_PATH.test(path) && (query === "" || query === SIGNED_IN_QUERY)) return `${path}${query}`;
   return null;
 }
 

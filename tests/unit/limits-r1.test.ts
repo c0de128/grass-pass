@@ -210,7 +210,7 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
     expect(preLimit("a", T0 + 1000, cfg).ok).toBe(false);
   });
 
-  it("proxy: 429 with Retry-After before any store call; JSON on /api, text on pages; matcher covers store pages", () => {
+  it("proxy: 429 with Retry-After before any store call; JSON on /api, a styled page on pages; matcher covers store pages", async () => {
     process.env.PRELIMIT_BURST = "3";
     process.env.PRELIMIT_PER_SEC = "1";
     // SEC-2-01: pages have their own (slower) bucket.
@@ -221,7 +221,19 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
       const page = proxy(req("/pass/w1-6to10-20261005-1"));
       expect(page.status).toBe(429);
       expect(Number(page.headers.get("retry-after"))).toBeGreaterThan(0);
-      expect(page.headers.get("content-type")).toMatch(/text\/plain/);
+      // UX-5-02: a styled page in the site's voice with the wait and a way home (not plain text).
+      expect(page.headers.get("content-type")).toMatch(/text\/html/);
+      expect(page.headers.get("cache-control")).toBe("no-store");
+      const html = await page.text();
+      expect(html).toContain("<h1>Whoa, lots of visits!</h1>");
+      expect(html).toMatch(/Please wait about \d+ seconds/);
+      expect(html).toContain('href="/"');
+      expect(html).toContain('href="/pass/w1-6to10-20261005-1"');
+      expect(html).not.toMatch(/<script/i);
+      // RULES-5-04: a refused sign-in button (server action POST) goes to /signin with the wait, never a crash page.
+      const action = proxy(new NextRequest("http://localhost:3123/signin", { method: "POST", headers: { "x-forwarded-for": "192.0.2.200", "next-action": "abc123" } }));
+      expect(action.status).toBe(429);
+      expect(action.headers.get("x-action-redirect")).toMatch(/^\/signin\?error=rate_limited&wait=\d+;push$/);
       for (let i = 0; i < 3; i++) expect(proxy(req("/api/nothing")).status).toBe(200);
       const api = proxy(req("/api/pass"));
       expect(api.status).toBe(429);

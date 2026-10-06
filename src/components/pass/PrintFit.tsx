@@ -9,6 +9,29 @@ export const PRINT_WIDTH_PX = 7.7 * 96;
 /** Never shrink below this: a second page is more honest than unreadable text. */
 export const MIN_FIT = 0.85;
 
+/** The map column at 100% (print.css default), in inches. */
+export const MAP_COL_IN = 3.27;
+/**
+ * The map must PRINT at least 3.1 in wide, so its thinnest line (2.2 of 420 map units) is >= 1 pt (ADR 0004).
+ * 3.12 leaves a little room for rounding.
+ */
+export const MAP_MIN_PRINTED_IN = 3.12;
+
+/**
+ * Width of the Find This Spot map column (inches, 2 decimals, rounded up) so the map still prints
+ * >= MAP_MIN_PRINTED_IN after the print scale `fit` and the kid half's own zoom (0.86 when its density is tight).
+ */
+export function mapColumnFor(fit: number, kidZoom = 1): number {
+  const scale = fit * kidZoom;
+  if (!(scale > 0)) return MAP_COL_IN;
+  return Math.max(MAP_COL_IN, Math.ceil((MAP_MIN_PRINTED_IN / scale) * 100) / 100);
+}
+
+/** The kid half's own zoom, from its server-picked density (print.css: tight = zoom 0.86). */
+function kidZoomOf(root: ParentNode): number {
+  return root.querySelector<HTMLElement>(".gp-kid")?.dataset.density === "tight" ? 0.86 : 1;
+}
+
 /**
  * Scale factor so content `heightPx` tall fits one printed page: 1 when it already fits, else the
  * ratio rounded DOWN to 2 decimals, never below MIN_FIT.
@@ -29,6 +52,7 @@ function measuringCopy(sheet: HTMLElement): { height: (zoom: number) => number |
   document.body.appendChild(copy);
   const kid = copy.querySelector(".gp-kid");
   const stub = copy.querySelector(".gp-stub");
+  const kidZoom = kidZoomOf(copy);
   return {
     height: (zoom) => {
       if (!kid || !stub) return null;
@@ -36,6 +60,9 @@ function measuringCopy(sheet: HTMLElement): { height: (zoom: number) => number |
       // into the extra room. Model that: the zoomed copy must still render exactly 7.7 in wide.
       copy.style.zoom = String(zoom);
       copy.style.width = `${PRINT_WIDTH_PX / zoom}px`;
+      // A smaller print scale gets a wider map column, so the map never prints under 3.1 in (and the
+      // taller map is part of what is measured).
+      copy.style.setProperty("--gp-map-col", `${mapColumnFor(zoom, kidZoom)}in`);
       return stub.getBoundingClientRect().bottom - kid.getBoundingClientRect().top;
     },
     done: () => copy.remove(),
@@ -52,6 +79,13 @@ export function bestFit(height: (zoom: number) => number | null, pageHeightPx: n
   if (full === null) return null;
   let fit = fitFor(full, pageHeightPx);
   if (fit === 1) return 1;
+  // The plain ratio can be a little too big when a smaller scale also makes something taller (the
+  // wider map column): step down until the copy really fits, never below the floor.
+  while (fit > MIN_FIT) {
+    const h = height(fit);
+    if (h === null || h <= pageHeightPx) break;
+    fit = Math.max(MIN_FIT, Math.round((fit - 0.01) * 100) / 100);
+  }
   for (let next = Math.round((fit + 0.01) * 100) / 100; next < 1; next = Math.round((next + 0.01) * 100) / 100) {
     const h = height(next);
     if (h === null || h > pageHeightPx) break;
@@ -83,6 +117,7 @@ export function PrintFit() {
       if (fit === null) return;
       sheet.dataset.fit = String(fit);
       sheet.style.setProperty("--gp-fit", String(fit));
+      sheet.style.setProperty("--gp-map-col", `${mapColumnFor(fit, kidZoomOf(sheet))}in`);
     };
     void document.fonts?.ready.then(measure);
     return () => {

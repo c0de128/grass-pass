@@ -189,8 +189,9 @@
  */
 .gp-extras[data-spot="true"] {
   display: grid;
-  /* 3.27 in: the map still prints >= 3.1 in wide (its thinnest line >= 1 pt) at a 0.95 fit. */
-  grid-template-columns: 3.27in minmax(0, 1fr);
+  /* 3.27 in at 100%. PrintFit sets --gp-map-col wider when the print scale is below 0.95 (or the kid half is
+     tight), so the map always prints >= 3.1 in wide (its thinnest line >= 1 pt). */
+  grid-template-columns: var(--gp-map-col, 3.27in) minmax(0, 1fr);
   grid-template-areas:
     "map text"
     "map oct";

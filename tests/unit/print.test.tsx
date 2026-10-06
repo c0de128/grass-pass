@@ -5,7 +5,7 @@ import { OctoberBox } from "@/components/pass/OctoberBox";
 import { isOctoberDay } from "@/lib/october";
 import { KID_STAY_CLOSE, KidPass, PRINT_LOGO_SRC, SNUG_LINE_BUDGET, TIGHT_LINE_BUDGET, estimatedLines, passDensity, rowIcon } from "@/components/pass/KidPass";
 import { HoopIcon, MagnifierIcon, PinIcon } from "@/components/art/icons";
-import { MIN_FIT, PRINT_HEIGHT_PX, bestFit, fitFor } from "@/components/pass/PrintFit";
+import { MAP_COL_IN, MAP_MIN_PRINTED_IN, MIN_FIT, PRINT_HEIGHT_PX, bestFit, fitFor, mapColumnFor } from "@/components/pass/PrintFit";
 import { ParentStub, STUB_EACH_LINE, STUB_LOOK_ONLY, TearLine, shortDay } from "@/components/pass/ParentStub";
 import { resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
@@ -304,6 +304,33 @@ describe("PrintFit (one-page safety net)", () => {
     expect(bestFit(() => 900)).toBe(1);
     expect(bestFit(() => null)).toBeNull();
     expect(bestFit(() => 50_000)).toBe(MIN_FIT);
+  });
+
+  it("bestFit steps DOWN from the ratio when a smaller scale makes the sheet taller (the wider map column)", () => {
+    // 1000 px at 100%, but every step below 1 adds 30 px (a wider, taller map): the plain ratio (0.97) doesn't fit.
+    const height = (z: number) => (1000 + (z < 1 ? 30 : 0)) * z;
+    const fit = bestFit(height)!;
+    expect(fit).toBeLessThan(fitFor(1000));
+    expect(height(fit)).toBeLessThanOrEqual(PRINT_HEIGHT_PX);
+    expect(height(Math.round((fit + 0.01) * 100) / 100)).toBeGreaterThan(PRINT_HEIGHT_PX);
+    expect(bestFit((z) => (z < 1 ? 50_000 : 1100))).toBe(MIN_FIT);
+  });
+
+  it("the map column widens at a smaller print scale so the map always prints >= 3.1 in (lines >= 1 pt)", () => {
+    expect(MAP_MIN_PRINTED_IN).toBeGreaterThanOrEqual(3.1);
+    expect(mapColumnFor(1)).toBe(MAP_COL_IN);
+    expect(mapColumnFor(0.96)).toBe(MAP_COL_IN);
+    for (const fit of [0.95, 0.93, 0.92, 0.9, MIN_FIT]) {
+      for (const kidZoom of [1, 0.86]) {
+        const col = mapColumnFor(fit, kidZoom);
+        expect(col).toBeGreaterThanOrEqual(MAP_COL_IN);
+        expect(col * fit * kidZoom).toBeGreaterThanOrEqual(3.1);
+      }
+    }
+    expect(mapColumnFor(0.92)).toBe(3.4);
+    expect(mapColumnFor(0)).toBe(MAP_COL_IN);
+    const printCss = readFileSync(new URL("../../src/styles/print.css", import.meta.url), "utf8");
+    expect(printCss).toContain("grid-template-columns: var(--gp-map-col, 3.27in) minmax(0, 1fr);");
   });
 });
 

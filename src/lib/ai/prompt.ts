@@ -339,6 +339,32 @@ export const CLUE_VOICES = [
   "Voice for this park: start with what the child will see first.",
 ] as const;
 
+/**
+ * R3 (10-13 smoke 2026-10-06, FK grade 2.2 against a grade-5 target, "Wander to a seat that hangs from
+ * ropes"): the 10-13 band gets voices that carry a detail and a reason, not "short, curious questions"
+ * or "tiny one-sentence stories".
+ */
+export const OLDER_VOICES = [
+  "Voice for this park: a nature detective's field notes: the trait first, then exactly where on the thing to check it.",
+  "Voice for this park: riddles in which the thing talks about itself (I and my), each with one precise detail.",
+  "Voice for this park: a park ranger explaining one detail and what it is for.",
+  "Voice for this park: start with what the child will see from far away, then a closer detail to check.",
+] as const;
+
+/**
+ * The reading-level rule. 4-6 and 6-10 keep the original line (the recorded fixtures and eval runs use
+ * it). R3: for 10-13 the old "short words, short sentences" wrote grade-2 clues (median FK 2.2 in the
+ * 2026-10-06 smoke), so the older band is asked for fuller sentences with the SOURCE's exact describing
+ * words; the length cap, grounding and every other check are unchanged.
+ */
+export function readingRules(band: AgeBand, grade: string): string[] {
+  if (band !== "10-13") return [`- Write at reading level grade ${grade}: short words, short sentences, fun and friendly.`];
+  return [
+    `- Write for a 10-13-year-old at reading level grade ${grade} to 6, never babyish: each clue is one or two complete sentences of 10 to 18 words in all.`,
+    "- Use the exact describing words the SOURCE uses (part names, shapes, textures, colours, sizes) instead of easy stand-ins, and add a comparison or what the part is for when the SOURCE says it. No filler words: every word helps the child check the find.",
+  ];
+}
+
 /** FNV-1a 32-bit (stable: the same park name always gets the same voice). */
 function hash32(s: string): number {
   let h = 2166136261;
@@ -346,9 +372,10 @@ function hash32(s: string): number {
   return h >>> 0;
 }
 
-/** The writing voice for a park (R2-M5). */
-export function voiceFor(seed: string): string {
-  return CLUE_VOICES[hash32(seed) % CLUE_VOICES.length];
+/** The writing voice for a park (R2-M5); the 10-13 band picks from OLDER_VOICES (R3). */
+export function voiceFor(seed: string, band?: AgeBand): string {
+  const voices: readonly string[] = band === "10-13" ? OLDER_VOICES : CLUE_VOICES;
+  return voices[hash32(seed) % voices.length];
 }
 
 /** Every full example clue in any prompt variant (for the copy check in validate.ts). */
@@ -384,7 +411,12 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     ...(mix.max.lucky > 0
       ? ['- Lucky Finds (section "lucky") come and go: the clue must say the child MIGHT see it today, and describe how it looks, sounds or moves from its SOURCE.']
       : []),
-    ...(mix.max.wild > 0 ? [`- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals. Bad: ${bad(0)}, ${bad(1)}.`] : []),
+    // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
+    ...(mix.max.wild > 0
+      ? [
+          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for a green anole never say green, for an amberwing never say amber). Bad: ${bad(0)}, ${bad(1)}.`,
+        ]
+      : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
     ...(month && ctx?.hasSeasonNotes
       ? [
@@ -403,7 +435,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, no family name, not even one word of its name or of its kind (for a honey bee, never say honey or bee; for a pond or lake, never say pond or lake). Describe what it looks like or what it does.",
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
     `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine.`,
-    `- Write at reading level grade ${info.grade}: short words, short sentences, fun and friendly.`,
+    ...readingRules(band, info.grade),
     `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look).`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
     "- Do not write numbers unless that number is in the item's SOURCE. No links.",
@@ -435,7 +467,7 @@ export function buildMessages(parkName: string, pool: readonly PoolItem[], band:
   const full: PromptContext = {
     ...ctx,
     hasSeasonNotes: pool.some((p) => p.season !== undefined),
-    voice: ctx.voice ?? voiceFor(parkName),
+    voice: ctx.voice ?? voiceFor(parkName, band),
     openers: ctx.openers ?? openersFor(parkName, mix.n),
   };
   return [

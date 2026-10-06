@@ -432,7 +432,8 @@ export function validateDraft(
       style = "copies_source";
     }
     const earlier = [...(opts.prior ?? []), ...kept];
-    if (earlier.some((k) => trigramOverlap(k.clue, d.clue) >= COPY_OVERLAP)) {
+    // R3: the same sentence frame twice on one pass ("Count them. There are 2." / "... There are 4.") is a repeat too.
+    if (earlier.some((k) => trigramOverlap(k.clue, d.clue) >= COPY_OVERLAP || sharedFrame(k.clue, d.clue) !== null)) {
       if (!opts.lowData) {
         drop("repeats_clue");
         continue;
@@ -798,6 +799,13 @@ const TRAIT_STOP = new Set([
   "common", "native", "north", "south", "east", "west", "america", "american", "found", "known", "widespread", "species",
   "genus", "family", "range", "prey", "region", "world", "united", "state", "europe", "asia", "africa", "mexico", "canada",
   "continent", "country", "throughout", "worldwide",
+  // R3 (example passes): what sort of thing it is, its size class and the clue's own command word are no
+  // trait either. "Track a grass moth." passed on "moth"; "Sneak up on a medium-sized bird of prey." on "medium".
+  "moth", "butterfly", "beetle", "fly", "bee", "wasp", "ant", "spider", "snake", "lizard", "frog", "toad", "turtle", "fish",
+  "duck", "mushroom", "fungus", "fungi", "lichen", "moss", "fern", "snail", "slug", "worm", "dragonfly", "damselfly",
+  "grasshopper", "cricket", "hawk", "owl", "sparrow", "warbler", "songbird", "mammal", "reptile", "amphibian", "sedge", "reed",
+  "medium", "sized", "size", "average", "typical", "usual", "member", "group", "sort",
+  "track", "sneak", "tiptoe", "wander", "explore", "glance", "discover", "seek", "scan", "squint", "peek", "point", "follow",
 ]);
 
 const traitStem = (w: string) => (w.length >= 5 ? w.slice(0, 4) : w);
@@ -883,6 +891,24 @@ export function stockOpening(clue: string): string | null {
 export function sameOpening(a: string, b: string): boolean {
   const fa = firstWords(a, 3);
   return fa.split(" ").length === 3 && fa === firstWords(b, 3);
+}
+
+/** A shared sentence frame needs at least this many words (all shared sentences together): "There are #." alone is not one. */
+export const FRAME_MIN_WORDS = 4;
+
+/**
+ * R3 (Arbor Hills example, 2026-10-06): "Wander to a long seat for a rest. Count them. There are 2." and
+ * "Track a place with a roof and tables below. Count them. There are 4." share no trigram run long
+ * enough for the near-repeat check, but read machine-made side by side. Sentences are compared with
+ * numbers replaced by "#"; whole sentences both clues have, together at least FRAME_MIN_WORDS words,
+ * are a repeated frame. Returns the shared sentences, or null.
+ */
+export function sharedFrame(a: string, b: string): string | null {
+  const frames = (t: string) => new Set(sentencesOf(t).map((s) => s.map((w) => (numberOf(w) !== null || /^\d/.test(w) ? "#" : w)).join(" ")));
+  const fb = frames(b);
+  const shared = [...frames(a)].filter((s) => fb.has(s));
+  const words = shared.reduce((n, s) => n + s.split(" ").length, 0);
+  return words >= FRAME_MIN_WORDS ? shared.join(" / ") : null;
 }
 
 /** Audit R3-C1: two clues that start with the same first word ("Peek ...", "Peek ..."). */

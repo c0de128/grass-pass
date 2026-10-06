@@ -162,6 +162,35 @@ export function looksOutsideNames(text: string, nameWords: readonly string[]): n
   return out.size;
 }
 
+/**
+ * Describing words that `distinctiveWords` leaves out of a name on purpose (GENERIC_WORDS: colours,
+ * patterns, sizes), plus colours a clue might use for a compound name word.
+ */
+const NAME_TRAIT_WORDS = new Set([
+  "white", "black", "brown", "green", "yellow", "orange", "red", "blue", "purple", "golden", "gold", "amber", "silver",
+  "grey", "gray", "pink", "scarlet", "crimson", "violet", "ruby", "rusty", "copper", "bronze", "tawny", "spotted",
+  "dotted", "striped", "banded", "hairy", "little", "great", "greater", "lesser", "small", "large", "giant",
+]);
+/** Colours that start compound name words ("amberwing", "redcedar", "bluebonnet", "goldenrod", "blackberry"). */
+const COLOUR_PREFIXES = ["amber", "black", "blue", "brown", "golden", "gold", "green", "grey", "gray", "orange", "pink", "purple", "red", "silver", "white", "yellow"];
+
+/**
+ * Audit R3 (example passes, 2026-10-06): describing words that are part of a species' own common name
+ * are name words too. "Hunt for a plant with white flowers." for White Morning-glory and "orange or
+ * amber wings" for Eastern Amberwing used only their own name as the trait: the child reads the
+ * answer, and the clue fits nothing else in the source. Returns the name's colour, pattern and size
+ * words, and the colour a compound word starts with ("amberwing" -> "amber"; at least 4 letters left).
+ */
+export function nameTraitWords(name: string): string[] {
+  const out = new Set<string>();
+  for (const w of name.toLowerCase().normalize("NFKC").split(/[^\p{L}]+/u).filter(Boolean)) {
+    if (NAME_TRAIT_WORDS.has(w)) out.add(w);
+    const pre = COLOUR_PREFIXES.filter((c) => w.startsWith(c) && w.length - c.length >= 4).sort((a, b) => b.length - a.length)[0];
+    if (pre) out.add(pre);
+  }
+  return [...out];
+}
+
 /** 0 = two or more looks-like words outside the names, 1 = one, 2 = none: describable species go first in the prompt. */
 const looksTier = (n: number) => (n >= 2 ? 0 : n === 1 ? 1 : 2);
 
@@ -206,6 +235,9 @@ export function wildPool(
         ...distinctiveWords(s.name),
         // Audit R3: Wikipedia's bolded other names ("mossycup oak" for bur oak) give the answer away too.
         ...(sum.names ?? []).flatMap((n) => distinctiveWords(n)),
+        // Audit R3: a colour, pattern or size word of its own common name ("white" for White Morning-glory).
+        ...(s.commonName ? nameTraitWords(s.commonName) : []),
+        ...(sum.names ?? []).flatMap((n) => nameTraitWords(n)),
       ]),
     ];
     items.push({

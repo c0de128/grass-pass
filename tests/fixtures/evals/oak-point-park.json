@@ -16,7 +16,8 @@
    "totalSpecies": 67,
    "totalObservations": 95,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:22.956Z"
  },
  "exchanges": [
   {
@@ -206,6 +207,86 @@
      {"id":58205,"name":"Maclura pomifera","preferred_common_name":"Osage-orange","wikipedia_summary":"<i><b>Maclura pomifera</b></i>, commonly known as the <b>Osage orange</b>, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall. The distinctive fruit, from a multiple fruit family, is roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green in the fall. The fruits secrete a sticky white latex when cut or damaged. Despite the name \"Osage orange\", it is only distantly related to the orange, but rather...","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206]},
      {"id":58371,"name":"Cynodon dactylon","preferred_common_name":"Bermuda grass","wikipedia_summary":"<i><b>Cynodon dactylon</b></i>, also known as <i><b>Vilfa stellata</b></i> <b><i>dūrvā</i> grass</b>, <i><b>Dhoob</b></i>, <b>Bermuda grass</b>, <i><b>dubo</b></i>, <b>dog's tooth grass</b>, <b>Bahama grass</b>, <b>devil's grass</b>, <b>couch grass</b>, <b>Indian <i>doab</i></b>, <i><b>arugampul</b></i>, <i><b>grama</b></i>, <b>wiregrass</b> and <b>scutch grass</b>, is a grass that originated in the Middle East. Although it is not native to Bermuda, it is an abundant invasive species there. It is presumed to have arrived in North America from Bermuda, resulting in its common name. In Bermuda it has been known as...","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,975051,975052,1136759,58375]},
      {"id":60210,"name":"Ammannia coccinea","preferred_common_name":"Scarlet Toothcup","wikipedia_summary":"<i><b>Ammannia coccinea</b></i> is a species of flowering plant in the loosestrife family known by several common names, including <b>valley redstem</b>, <b>scarlet toothcup</b>, and <b>purple ammannia</b>. It is native to most of the contiguous United States, with the exception of the Pacific Northwest and New England. It is generally found in moist areas, such as riverbanks and pond margins. It is weedy in some areas. This is an annual herb growing erect to heights approaching one meter...","ancestor_ids":[48460,47126,211194,47125,47124,47791,58935,60211]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C78453%2C128701%2C135263%2C142653%2C164861%2C499559&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:20.725Z",
+   "latencyMs": 158,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":102,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":43,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":25,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":18,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":14,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":7,"taxon":{"id":54797,"name":"Gleditsia triacanthos","rank":"species","preferred_common_name":"honey locust","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,48498,54797]}},
+     {"count":6,"taxon":{"id":52599,"name":"Pontederia cordata","rank":"species","preferred_common_name":"pickerelweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,52601,52602,962644,52599]}},
+     {"count":6,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}},
+     {"count":3,"taxon":{"id":54808,"name":"Fraxinus pennsylvanica","rank":"species","preferred_common_name":"green ash","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,54806,1324541,54808]}},
+     {"count":2,"taxon":{"id":78453,"name":"Persicaria hydropiperoides","rank":"species","preferred_common_name":"swamp smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,78453]}},
+     {"count":1,"taxon":{"id":164861,"name":"Ludwigia octovalvis","rank":"species","preferred_common_name":"Mexican Primrose-willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,50339,1647660,164861]}},
+     {"count":1,"taxon":{"id":499559,"name":"Dermatophyllum secundiflorum","rank":"species","preferred_common_name":"Texas mountain laurel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,746869,468609,499559]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C78453%2C128701%2C135263%2C142653%2C164861%2C499559&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:21.726Z",
+   "latencyMs": 160,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 7,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":28,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":25,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":14,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":11,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":5,"taxon":{"id":52599,"name":"Pontederia cordata","rank":"species","preferred_common_name":"pickerelweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,52601,52602,962644,52599]}},
+     {"count":2,"taxon":{"id":78453,"name":"Persicaria hydropiperoides","rank":"species","preferred_common_name":"swamp smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,78453]}},
+     {"count":1,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C78453%2C128701%2C135263%2C142653%2C164861%2C499559&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:22.738Z",
+   "latencyMs": 213,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 7,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":42,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":27,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":7,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":6,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}},
+     {"count":4,"taxon":{"id":54797,"name":"Gleditsia triacanthos","rank":"species","preferred_common_name":"honey locust","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,48498,54797]}},
+     {"count":2,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":164861,"name":"Ludwigia octovalvis","rank":"species","preferred_common_name":"Mexican Primrose-willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,50339,1647660,164861]}}
     ]
    }
   }

@@ -16,7 +16,8 @@
    "totalSpecies": 56,
    "totalObservations": 76,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:19.914Z"
  },
  "exchanges": [
   {
@@ -182,6 +183,99 @@
      {"id":77603,"name":"Kallstroemia parviflora","preferred_common_name":"Warty Caltrop","wikipedia_summary":"<i><b>Kallstroemia parviflora</b></i>, also called <b>small-flowered carpetweed</b> or <b>warty caltrop</b>, is found in the United States, and extends as far south as Central America. From east to west, it can be found from Illinois to Arizona. It is an orange or yellow small-flowered annual, with zygomorphic flowers consistent with the Zygophyllaceae, or creosote-bush family, to which it belongs. Leaves are compound and are 3–6 cm, with 4 pairs leaflets. The stem is pubescent and 30–60 cm. Flowers measure at...","ancestor_ids":[48460,47126,211194,47125,47124,68220,68207,783670,72202]},
      {"id":79148,"name":"Solidago altissima","preferred_common_name":"tall goldenrod","wikipedia_summary":"<i><b>Solidago altissima</b></i>, the <b>Canada goldenrod</b> or <b>late goldenrod</b>, is a North American species of goldenrod widespread across much of Canada, the United States, and northern Mexico. It is common in much of its range, and fairly tolerant of landscapes which have been disturbed by humans. It has become naturalized in many parts of the world.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972606,48678,1454394,1454407,1455736]},
      {"id":85398,"name":"Leucocoprinus birnbaumii","preferred_common_name":"flowerpot parasol","wikipedia_summary":"<i><b>Leucocoprinus birnbaumii</b></i> is a species of gilled mushroom in the family Agaricaceae. It is common in the tropics and subtropics, but in temperate regions frequently occurs in greenhouses and flowerpots, hence its common names of <b>flowerpot parasol</b> and <b>plantpot dapperling</b>. The fruit bodies are poisonous, if consumed.","ancestor_ids":[48460,47170,47169,492000,50814,1094814,47167,785517,47394,1641203,85399,1641199]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.04894&lng=-96.85205&radius=50&verifiable=true&month=10&taxon_id=51453%2C53034%2C53720%2C54764%2C54781%2C57983%2C62944%2C69714%2C77603%2C79148%2C84364%2C119960%2C120483%2C126424%2C153490%2C204420&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:17.711Z",
+   "latencyMs": 178,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 16,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":139,"taxon":{"id":54764,"name":"Rhus glabra","rank":"species","preferred_common_name":"smooth sumac","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,54765,54764]}},
+     {"count":108,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":42,"taxon":{"id":79148,"name":"Solidago altissima","rank":"species","preferred_common_name":"tall goldenrod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972606,48678,1454394,1454407,1455736,79148]}},
+     {"count":36,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":23,"taxon":{"id":57983,"name":"Helianthus annuus","rank":"species","preferred_common_name":"Common Sunflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,901801,56955,57983]}},
+     {"count":21,"taxon":{"id":53720,"name":"Melia azedarach","rank":"species","preferred_common_name":"Chinaberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,53724,1510860,1510861,53725,53720]}},
+     {"count":20,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":20,"taxon":{"id":119960,"name":"Berchemia scandens","rank":"species","preferred_common_name":"Supplejack","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,119962,119960]}},
+     {"count":17,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":11,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":7,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":6,"taxon":{"id":120483,"name":"Palafoxia callosa","rank":"species","preferred_common_name":"Small Palafox","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632798,50201,120483]}},
+     {"count":6,"taxon":{"id":126424,"name":"Parthenium hysterophorus","rank":"species","preferred_common_name":"Santa Maria feverfew","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,83894,126424]}},
+     {"count":4,"taxon":{"id":69714,"name":"Rubus trivialis","rank":"species","preferred_common_name":"southern dewberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,415343,922171,47544,1360636,1474976,69714]}},
+     {"count":2,"taxon":{"id":153490,"name":"Paronychia virginica","rank":"species","preferred_common_name":"Whitlow-wort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48567,791430,71144,153490]}},
+     {"count":1,"taxon":{"id":77603,"name":"Kallstroemia parviflora","rank":"species","preferred_common_name":"Warty Caltrop","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,68220,68207,783670,72202,77603]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.04894&lng=-96.85205&radius=50&verifiable=true&month=10&taxon_id=51453%2C53034%2C53720%2C54764%2C54781%2C57983%2C62944%2C69714%2C77603%2C79148%2C84364%2C119960%2C120483%2C126424%2C153490%2C204420&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:18.713Z",
+   "latencyMs": 184,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":40,"taxon":{"id":79148,"name":"Solidago altissima","rank":"species","preferred_common_name":"tall goldenrod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972606,48678,1454394,1454407,1455736,79148]}},
+     {"count":28,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":23,"taxon":{"id":57983,"name":"Helianthus annuus","rank":"species","preferred_common_name":"Common Sunflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,901801,56955,57983]}},
+     {"count":13,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":6,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":5,"taxon":{"id":120483,"name":"Palafoxia callosa","rank":"species","preferred_common_name":"Small Palafox","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632798,50201,120483]}},
+     {"count":5,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":4,"taxon":{"id":126424,"name":"Parthenium hysterophorus","rank":"species","preferred_common_name":"Santa Maria feverfew","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,83894,126424]}},
+     {"count":2,"taxon":{"id":153490,"name":"Paronychia virginica","rank":"species","preferred_common_name":"Whitlow-wort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48567,791430,71144,153490]}},
+     {"count":1,"taxon":{"id":77603,"name":"Kallstroemia parviflora","rank":"species","preferred_common_name":"Warty Caltrop","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,68220,68207,783670,72202,77603]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.04894&lng=-96.85205&radius=50&verifiable=true&month=10&taxon_id=51453%2C53034%2C53720%2C54764%2C54781%2C57983%2C62944%2C69714%2C77603%2C79148%2C84364%2C119960%2C120483%2C126424%2C153490%2C204420&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:19.725Z",
+   "latencyMs": 183,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 13,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":54,"taxon":{"id":54764,"name":"Rhus glabra","rank":"species","preferred_common_name":"smooth sumac","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,54765,54764]}},
+     {"count":33,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":32,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":15,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":10,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":8,"taxon":{"id":119960,"name":"Berchemia scandens","rank":"species","preferred_common_name":"Supplejack","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,119962,119960]}},
+     {"count":7,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":7,"taxon":{"id":53720,"name":"Melia azedarach","rank":"species","preferred_common_name":"Chinaberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,53724,1510860,1510861,53725,53720]}},
+     {"count":7,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":5,"taxon":{"id":57983,"name":"Helianthus annuus","rank":"species","preferred_common_name":"Common Sunflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,901801,56955,57983]}},
+     {"count":3,"taxon":{"id":79148,"name":"Solidago altissima","rank":"species","preferred_common_name":"tall goldenrod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972606,48678,1454394,1454407,1455736,79148]}},
+     {"count":1,"taxon":{"id":77603,"name":"Kallstroemia parviflora","rank":"species","preferred_common_name":"Warty Caltrop","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,68220,68207,783670,72202,77603]}},
+     {"count":1,"taxon":{"id":120483,"name":"Palafoxia callosa","rank":"species","preferred_common_name":"Small Palafox","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632798,50201,120483]}}
     ]
    }
   }

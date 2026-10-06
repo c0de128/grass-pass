@@ -16,7 +16,8 @@
    "totalSpecies": 29,
    "totalObservations": 31,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:25.939Z"
  },
  "exchanges": [
   {
@@ -151,6 +152,79 @@
      {"id":48662,"name":"Danaus plexippus","preferred_common_name":"Monarch","wikipedia_summary":"The <b>monarch butterfly</b> or simply <b>monarch</b> (<i>Danaus plexippus</i>) is a milkweed butterfly (subfamily Danainae) in the family Nymphalidae. Other common names depending on region include <b>milkweed</b>, <b>common tiger</b>, <b>wanderer</b>, and <b>black veined brown</b>. It may be the most familiar North American butterfly, and is considered an iconic pollinator species. Its wings feature an easily recognizable black, orange, and white pattern, with a wingspan of 8.9–10.2 cm (​3 1⁄2–4 in) The viceroy butterfly is similar in color and...","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47922,61244,134169,522900,48663]},
      {"id":72458,"name":"Actitis macularius","preferred_common_name":"Spotted Sandpiper","wikipedia_summary":"The <b>spotted sandpiper</b> (<i>Actitis macularius</i>) is a small shorebird, 18–20 cm (7.1–7.9 in) long. The genus name <i>Actitis</i> is from Ancient Greek <i>aktites</i>, \"coast-dweller\", derived from <i>akte</i>, \"coast\", and <i>macularius</i> is Latin from <i>macula</i>, \"spot\".","ancestor_ids":[48460,1,2,355675,3,67561,3835,3977]},
      {"id":73788,"name":"Plestiodon fasciatus","preferred_common_name":"Common Five-lined Skink","wikipedia_summary":"The <b>(American) five-lined skink</b> (<i>Plestiodon fasciatus</i>) is a species of lizard endemic to North America. It is one of the most common lizards in the eastern U.S. and one of the seven native species of lizards in Canada.","ancestor_ids":[48460,1,2,355675,26036,26172,85552,1563904,36982,787700,37763]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.03714&lng=-96.66271&radius=50&verifiable=true&month=10&taxon_id=53034%2C54781%2C62944%2C79064%2C117442%2C119145%2C164190&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:23.754Z",
+   "latencyMs": 132,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 7,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":31,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":17,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":12,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":8,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":7,"taxon":{"id":164190,"name":"Iva annua","rank":"species","preferred_common_name":"Sumpweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53037,164190]}},
+     {"count":3,"taxon":{"id":117442,"name":"Verbesina alternifolia","rank":"species","preferred_common_name":"Wingstem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,117442]}},
+     {"count":2,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.03714&lng=-96.66271&radius=50&verifiable=true&month=10&taxon_id=53034%2C54781%2C62944%2C79064%2C117442%2C119145%2C164190&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:24.757Z",
+   "latencyMs": 158,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":10,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":8,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":5,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":3,"taxon":{"id":117442,"name":"Verbesina alternifolia","rank":"species","preferred_common_name":"Wingstem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,117442]}},
+     {"count":3,"taxon":{"id":164190,"name":"Iva annua","rank":"species","preferred_common_name":"Sumpweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53037,164190]}},
+     {"count":2,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.03714&lng=-96.66271&radius=50&verifiable=true&month=10&taxon_id=53034%2C54781%2C62944%2C79064%2C117442%2C119145%2C164190&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:25.769Z",
+   "latencyMs": 166,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":28,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":9,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":7,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":4,"taxon":{"id":164190,"name":"Iva annua","rank":"species","preferred_common_name":"Sumpweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53037,164190]}},
+     {"count":1,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}},
+     {"count":1,"taxon":{"id":117442,"name":"Verbesina alternifolia","rank":"species","preferred_common_name":"Wingstem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,117442]}}
     ]
    }
   }

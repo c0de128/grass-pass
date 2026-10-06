@@ -16,7 +16,8 @@
    "totalSpecies": 79,
    "totalObservations": 104,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:16.991Z"
  },
  "exchanges": [
   {
@@ -189,6 +190,96 @@
      {"id":53034,"name":"Ambrosia trifida","preferred_common_name":"giant ragweed","wikipedia_summary":"<i><b>Ambrosia trifida</b></i>, the <b>giant ragweed</b>, is a species of flowering plant in the sunflower family. It is native to North America, where it is widespread in Canada, the United States, and northern Mexico. It is present in Europe and Asia as an introduced species, and it is known as a common weed in many regions. Its common names include <b>great ragweed</b>, <b>Texan great ragweed</b>, <b>giant ragweed</b>, <b>tall ragweed</b>, <b>blood ragweed</b>, <b>perennial ragweed</b>, <b>horseweed</b>, <b>buffaloweed</b>, and <b>kinghead</b>.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036]},
      {"id":53547,"name":"Ulmus americana","preferred_common_name":"American elm","wikipedia_summary":"<i><b>Ulmus americana</b></i>, generally known as the <b>American elm</b> or, less commonly, as the <b>white elm</b> or <b>water elm</b>, is a species native to eastern North America, naturally occurring from Nova Scotia west to Alberta and Montana, and south to Florida and central Texas. The American elm is an extremely hardy tree that can withstand winter temperatures as low as −42 °C (−44 °F). Trees in areas unaffected by Dutch elm disease can live for several hundred...","ancestor_ids":[48460,47126,211194,47125,47124,47132,53548,53549,1664435,1664437]},
      {"id":54504,"name":"Juglans nigra","preferred_common_name":"eastern black walnut","wikipedia_summary":"<i><b>Juglans nigra</b></i>, the <b>eastern black walnut</b>, is a species of deciduous tree in the walnut family, Juglandaceae, native to eastern North America. It grows mostly in riparian zones, from southern Ontario, west to southeast South Dakota, south to Georgia, northern Florida and southwest to central Texas. Wild trees in the upper Ottawa Valley may be an isolated native population or may have derived from planted trees.","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54495]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:14.680Z",
+   "latencyMs": 477,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 16,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":115,"taxon":{"id":51450,"name":"Passiflora lutea","rank":"species","preferred_common_name":"yellow passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878746,1234460,51450]}},
+     {"count":84,"taxon":{"id":128755,"name":"Prunus mexicana","rank":"species","preferred_common_name":"Mexican Plum","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,922110,922113,47351,128755]}},
+     {"count":43,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":32,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":27,"taxon":{"id":130192,"name":"Helianthus maximiliani","rank":"species","preferred_common_name":"Maximilian sunflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,901801,56955,130192]}},
+     {"count":25,"taxon":{"id":286324,"name":"Sapindus drummondii","rank":"species","preferred_common_name":"Western Soapberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62832,286324]}},
+     {"count":22,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":17,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":15,"taxon":{"id":119986,"name":"Zanthoxylum clava-herculis","rank":"species","preferred_common_name":"Hercules' club","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,50623,1363294,54837,119986]}},
+     {"count":13,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}},
+     {"count":10,"taxon":{"id":53547,"name":"Ulmus americana","rank":"species","preferred_common_name":"American elm","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53548,53549,1664435,1664437,53547]}},
+     {"count":10,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}},
+     {"count":6,"taxon":{"id":50278,"name":"Parthenocissus quinquefolia","rank":"species","preferred_common_name":"Virginia creeper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,50280,50278]}},
+     {"count":4,"taxon":{"id":54504,"name":"Juglans nigra","rank":"species","preferred_common_name":"eastern black walnut","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54495,54504]}},
+     {"count":3,"taxon":{"id":126424,"name":"Parthenium hysterophorus","rank":"species","preferred_common_name":"Santa Maria feverfew","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,83894,126424]}},
+     {"count":2,"taxon":{"id":119793,"name":"Pyrus calleryana","rank":"species","preferred_common_name":"Callery pear","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,922110,723302,58736,119793]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:15.693Z",
+   "latencyMs": 273,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 9,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":26,"taxon":{"id":130192,"name":"Helianthus maximiliani","rank":"species","preferred_common_name":"Maximilian sunflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,901801,56955,130192]}},
+     {"count":22,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":12,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}},
+     {"count":11,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":9,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}},
+     {"count":5,"taxon":{"id":51450,"name":"Passiflora lutea","rank":"species","preferred_common_name":"yellow passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878746,1234460,51450]}},
+     {"count":5,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":3,"taxon":{"id":126424,"name":"Parthenium hysterophorus","rank":"species","preferred_common_name":"Santa Maria feverfew","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,83894,126424]}},
+     {"count":1,"taxon":{"id":119793,"name":"Pyrus calleryana","rank":"species","preferred_common_name":"Callery pear","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,922110,723302,58736,119793]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:16.699Z",
+   "latencyMs": 281,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 11,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":46,"taxon":{"id":128755,"name":"Prunus mexicana","rank":"species","preferred_common_name":"Mexican Plum","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,922110,922113,47351,128755]}},
+     {"count":42,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":29,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":23,"taxon":{"id":51450,"name":"Passiflora lutea","rank":"species","preferred_common_name":"yellow passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878746,1234460,51450]}},
+     {"count":14,"taxon":{"id":286324,"name":"Sapindus drummondii","rank":"species","preferred_common_name":"Western Soapberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62832,286324]}},
+     {"count":6,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":4,"taxon":{"id":54504,"name":"Juglans nigra","rank":"species","preferred_common_name":"eastern black walnut","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54495,54504]}},
+     {"count":4,"taxon":{"id":119986,"name":"Zanthoxylum clava-herculis","rank":"species","preferred_common_name":"Hercules' club","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,50623,1363294,54837,119986]}},
+     {"count":1,"taxon":{"id":53547,"name":"Ulmus americana","rank":"species","preferred_common_name":"American elm","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53548,53549,1664435,1664437,53547]}},
+     {"count":1,"taxon":{"id":119793,"name":"Pyrus calleryana","rank":"species","preferred_common_name":"Callery pear","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,47148,922110,723302,58736,119793]}},
+     {"count":1,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}}
     ]
    }
   }

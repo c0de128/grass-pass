@@ -16,7 +16,8 @@
    "totalSpecies": 24,
    "totalObservations": 25,
    "taxaRequested": 23
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:50.123Z"
  },
  "exchanges": [
   {
@@ -136,6 +137,93 @@
      {"id":126257,"name":"Helicina orbiculata","preferred_common_name":"Globular Drop Snail","wikipedia_summary":"<i><b>Helicina orbiculata</b></i>, also known as <i>Helicina (Oligyra) orbiculata</i> and as <i><b>Oligyra orbiculata</b></i>, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","ancestor_ids":[48460,1,47115,47114,437702,775835,245601,85811,524933,88762]},
      {"id":153540,"name":"Acacesia hamata","preferred_common_name":"Difoliate Orbweaver","wikipedia_summary":"<i><b>Acacesia hamata</b></i> is a species of spider in the orb weaver family, <i>Araneidae</i>. It is typically found in summer months of the eastern half of the United States, south to Argentina. <i>Acacesia hamata</i> is the only species of <i>Acacesia</i> normally found in the United States.","ancestor_ids":[48460,1,47120,245097,47119,47118,120474,342614,319384,47535,417879,153566]},
      {"id":218004,"name":"Cymatodera undulata","wikipedia_summary":"<i><b>Cymatodera undulata</b></i>, the <b>undulate checkered beetle</b>, is a species of checkered beetle in the family Cleridae. It is found in North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,372852,55050,55051,366994,174061]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.63412&lng=-96.96476&radius=50&verifiable=true&month=10&taxon_id=57920%2C69816%2C75833%2C78664%2C120585%2C130379%2C135263%2C142653%2C143792%2C155299%2C162705%2C203827%2C204420%2C914092&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:47.916Z",
+   "latencyMs": 189,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":143,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":49,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":45,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":18,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}},
+     {"count":16,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":14,"taxon":{"id":57920,"name":"Xanthium strumarium","rank":"species","preferred_common_name":"rough cocklebur","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,57921,57920]}},
+     {"count":6,"taxon":{"id":155299,"name":"Croton monanthogynus","rank":"species","preferred_common_name":"Prairie Tea","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,1244599,1259430,53165,155299]}},
+     {"count":6,"taxon":{"id":162705,"name":"Eryngium leavenworthii","rank":"species","preferred_common_name":"Leavenworth's eryngo","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48700,48699,525432,790556,57628,1679645,162705]}},
+     {"count":6,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":4,"taxon":{"id":75833,"name":"Boerhavia coccinea","rank":"species","preferred_common_name":"scarlet spiderling","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,72014,75833]}},
+     {"count":2,"taxon":{"id":914092,"name":"Oenothera glaucifolia","rank":"species","preferred_common_name":"False Gaura","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,48626,914075,1654961,914092]}},
+     {"count":1,"taxon":{"id":120585,"name":"Euphorbia bicolor","rank":"species","preferred_common_name":"snow-on-the-prairie","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,779191,1244656,1244731,51822,792275,792271,120585]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.63412&lng=-96.96476&radius=50&verifiable=true&month=10&taxon_id=57920%2C69816%2C75833%2C78664%2C120585%2C130379%2C135263%2C142653%2C143792%2C155299%2C162705%2C203827%2C204420%2C914092&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:48.918Z",
+   "latencyMs": 185,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 11,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":43,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":18,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}},
+     {"count":15,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":7,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":6,"taxon":{"id":162705,"name":"Eryngium leavenworthii","rank":"species","preferred_common_name":"Leavenworth's eryngo","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48700,48699,525432,790556,57628,1679645,162705]}},
+     {"count":5,"taxon":{"id":155299,"name":"Croton monanthogynus","rank":"species","preferred_common_name":"Prairie Tea","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,1244599,1259430,53165,155299]}},
+     {"count":4,"taxon":{"id":75833,"name":"Boerhavia coccinea","rank":"species","preferred_common_name":"scarlet spiderling","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,72014,75833]}},
+     {"count":4,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":2,"taxon":{"id":914092,"name":"Oenothera glaucifolia","rank":"species","preferred_common_name":"False Gaura","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,48626,914075,1654961,914092]}},
+     {"count":1,"taxon":{"id":57920,"name":"Xanthium strumarium","rank":"species","preferred_common_name":"rough cocklebur","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,57921,57920]}},
+     {"count":1,"taxon":{"id":120585,"name":"Euphorbia bicolor","rank":"species","preferred_common_name":"snow-on-the-prairie","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,779191,1244656,1244731,51822,792275,792271,120585]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.63412&lng=-96.96476&radius=50&verifiable=true&month=10&taxon_id=57920%2C69816%2C75833%2C78664%2C120585%2C130379%2C135263%2C142653%2C143792%2C155299%2C162705%2C203827%2C204420%2C914092&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:49.919Z",
+   "latencyMs": 199,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":116,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":29,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":13,"taxon":{"id":57920,"name":"Xanthium strumarium","rank":"species","preferred_common_name":"rough cocklebur","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,57921,57920]}},
+     {"count":6,"taxon":{"id":204420,"name":"Strophostyles helvola","rank":"species","preferred_common_name":"trailing fuzzy-bean","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,507503,533399,130996,204420]}},
+     {"count":3,"taxon":{"id":155299,"name":"Croton monanthogynus","rank":"species","preferred_common_name":"Prairie Tea","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,1244599,1259430,53165,155299]}},
+     {"count":2,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":2,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":75833,"name":"Boerhavia coccinea","rank":"species","preferred_common_name":"scarlet spiderling","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,72014,75833]}},
+     {"count":1,"taxon":{"id":120585,"name":"Euphorbia bicolor","rank":"species","preferred_common_name":"snow-on-the-prairie","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51821,779191,1244656,1244731,51822,792275,792271,120585]}},
+     {"count":1,"taxon":{"id":130379,"name":"Liatris punctata","rank":"species","preferred_common_name":"dotted gayfeather","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901059,48690,130379]}}
     ]
    }
   }

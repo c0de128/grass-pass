@@ -16,7 +16,8 @@
    "totalSpecies": 15,
    "totalObservations": 16,
    "taxaRequested": 15
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:32.101Z"
  },
  "exchanges": [
   {
@@ -247,6 +248,76 @@
      {"id":330498,"name":"Samea castellalis","preferred_common_name":"Stained-glass Moth","wikipedia_summary":"<i><b>Samea ecclesialis</b></i> is a moth in the Crambidae family. It is found in Argentina, Brazil, Bolivia, Colombia, Ecuador, French Guiana, Panama, Costa Rica, Mexico and the United States, where it has been recorded from North Carolina to Florida, west to Texas.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,49682,52002,122486,928021,318988]},
      {"id":335840,"name":"Pyrausta inornatalis","preferred_common_name":"Inornate Pyrausta Moth","wikipedia_summary":"<i><b>Pyrausta inornatalis</b></i>, the <b>inornate pyrausta moth</b>, is a moth in the family Crambidae. It was described by Charles H. Fernald in 1885. It is found in United States, where it has been recorded from Arizona, California, Florida, Arkansas, Kansas, Louisiana, Missouri, Oklahoma, Tennessee and Texas. It is also found in Mexico.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,49682,52002,122491,892833,55659,1305328]},
      {"id":556702,"name":"Celticecis subulata","preferred_common_name":"Hackberry Awl-shaped Gall Midge","wikipedia_summary":null,"ancestor_ids":[48460,1,47120,372739,47158,184884,47822,154259,489328,493389,55699,322033,495248,495249,127393]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.11107&lng=-96.66295&radius=50&verifiable=true&month=10&taxon_id=54776%2C54847%2C81792%2C83435%2C128748%2C128823%2C1156473%2C1555999&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:29.783Z",
+   "latencyMs": 133,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 8,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":74,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":39,"taxon":{"id":54776,"name":"Cornus drummondii","rank":"species","preferred_common_name":"roughleaf dogwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47195,47194,47193,1296983,54776]}},
+     {"count":38,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":17,"taxon":{"id":128748,"name":"Sideroxylon lanuginosum","rank":"species","preferred_common_name":"Gum bumelia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,48877,128749,128748]}},
+     {"count":16,"taxon":{"id":128823,"name":"Ulmus crassifolia","rank":"species","preferred_common_name":"Cedar Elm","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53548,53549,1664435,1664436,128823]}},
+     {"count":14,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":3,"taxon":{"id":54847,"name":"Salix nigra","rank":"species","preferred_common_name":"black willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,53453,1237137,1237159,54847]}},
+     {"count":1,"taxon":{"id":1156473,"name":"Erigeron divaricatus","rank":"species","preferred_common_name":"Dwarf Conyza","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972882,50879,1607990,1156473]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.11107&lng=-96.66295&radius=50&verifiable=true&month=10&taxon_id=54776%2C54847%2C81792%2C83435%2C128748%2C128823%2C1156473%2C1555999&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:30.788Z",
+   "latencyMs": 112,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":1,"taxon":{"id":1156473,"name":"Erigeron divaricatus","rank":"species","preferred_common_name":"Dwarf Conyza","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972882,50879,1607990,1156473]}},
+     {"count":1,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.11107&lng=-96.66295&radius=50&verifiable=true&month=10&taxon_id=54776%2C54847%2C81792%2C83435%2C128748%2C128823%2C1156473%2C1555999&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:31.797Z",
+   "latencyMs": 300,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":51,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":31,"taxon":{"id":54776,"name":"Cornus drummondii","rank":"species","preferred_common_name":"roughleaf dogwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47195,47194,47193,1296983,54776]}},
+     {"count":28,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":11,"taxon":{"id":128748,"name":"Sideroxylon lanuginosum","rank":"species","preferred_common_name":"Gum bumelia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,48877,128749,128748]}},
+     {"count":9,"taxon":{"id":128823,"name":"Ulmus crassifolia","rank":"species","preferred_common_name":"Cedar Elm","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53548,53549,1664435,1664436,128823]}},
+     {"count":6,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}}
     ]
    }
   }

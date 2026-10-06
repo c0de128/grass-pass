@@ -16,7 +16,8 @@
    "totalSpecies": 10,
    "totalObservations": 10,
    "taxaRequested": 10
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:37.959Z"
  },
  "exchanges": [
   {
@@ -163,6 +164,66 @@
      {"id":69736,"name":"Schistocerca americana","preferred_common_name":"American Bird Grasshopper","wikipedia_summary":"<i><b>Schistocerca americana</b></i> is a species of grasshopper in the family Acrididae known commonly as the <b>American grasshopper</b> and <b>American bird grasshopper</b>. It is native to North America, where it occurs in the eastern United States, Mexico, and the Bahamas. Occasional, localized outbreaks of this grasshopper occur, and it is often referred to as a locust, though it lacks the true swarming form of its congener, the desert locust (<i>S. gregaria</i>).","ancestor_ids":[48460,1,47120,372739,47158,184884,47651,67688,700600,47650,47649,337688,523283,52159,1373635]},
      {"id":94577,"name":"Argia translata","preferred_common_name":"Dusky Dancer","wikipedia_summary":"The <b>dusky dancer</b> (<i>Argia translata</i>) is a damselfly of the family Coenagrionidae, native to eastern and southern North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47928,426081,47925,47977]},
      {"id":1364008,"name":"Lepomis aquilensis","preferred_common_name":"Plains Longear Sunfish","wikipedia_summary":"The <b>longear sunfish</b> (<i><b>Lepomis megalotis</b></i>) is a freshwater fish in the sunfish family, Centrarchidae, of order Perciformes. It is native to the area of eastern North America stretching from the Great Lakes down to northeastern Mexico. The longear sunfish reaches a maximum recorded length of about 24 cm (9.4 in), with a maximum recorded weight of 790 g (1.74 lb). Most do not live beyond six years. The longear sunfish is quite colorful, with an olive to rusty-brown back, bright...","ancestor_ids":[48460,1,2,355675,47178,1632273,1303731,1303755,49588,1303639,49592,1553125]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.99173&lng=-96.63178&radius=50&verifiable=true&month=10&taxon_id=53478%2C554401&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:35.837Z",
+   "latencyMs": 182,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":21,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":16,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.99173&lng=-96.63178&radius=50&verifiable=true&month=10&taxon_id=53478%2C554401&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:36.839Z",
+   "latencyMs": 159,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":20,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":15,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.99173&lng=-96.63178&radius=50&verifiable=true&month=10&taxon_id=53478%2C554401&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:37.846Z",
+   "latencyMs": 111,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":1,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}},
+     {"count":1,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}}
     ]
    }
   }

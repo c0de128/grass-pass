@@ -16,7 +16,8 @@
    "totalSpecies": 5,
    "totalObservations": 5,
    "taxaRequested": 5
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:28.936Z"
  },
  "exchanges": [
   {
@@ -127,6 +128,67 @@
      {"id":119145,"name":"Mikania scandens","preferred_common_name":"climbing hempvine","wikipedia_summary":"<i><b>Mikania scandens</b></i> is a species of flowering plant in the aster family, Asteraceae. Its common names include <b>climbing hempvine</b>, <b>climbing hempweed</b>, and <b>louse-plaster</b>. It is native to the eastern and central United States, its distribution extending into Tamaulipas in Mexico. Reports of its presence in Ontario in Canada are erroneous. It is an introduced and invasive species on many Pacific Islands and in parts of southern Asia.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588]},
      {"id":120151,"name":"Frangula caroliniana","preferred_common_name":"Carolina buckthorn","wikipedia_summary":"<i><b>Frangula caroliniana</b></i>, commonly called the <b>Carolina buckthorn</b>, is a deciduous upright shrub or small tree native to the southeastern, south-central, and mid-western parts of the United States, from Texas east to Florida and north as far as Maryland, Ohio, Missouri, and Oklahoma. There is also an isolated population in the State of Nuevo León in northeastern Mexico. It is found in a wide variety of habitats, including barrens, forests, and limestone bluffs.","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424]},
      {"id":58530,"name":"Eurema lisa","preferred_common_name":"Little Yellow","wikipedia_summary":"<i><b>Eurema lisa</b></i>, commonly known as the <b>little yellow</b>, <b>little sulphur</b> or <b>little sulfur</b>, is a species of Coliadinae that occurs in Central America and the southern part of North America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,48508,119556,1609467,1609472,51615]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C75995%2C119145%2C120151&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:26.776Z",
+   "latencyMs": 133,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":8,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}},
+     {"count":7,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":4,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C75995%2C119145%2C120151&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:27.778Z",
+   "latencyMs": 274,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":7,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":3,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C75995%2C119145%2C120151&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:28.779Z",
+   "latencyMs": 155,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":2,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}},
+     {"count":2,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
     ]
    }
   }

@@ -16,7 +16,8 @@
    "totalSpecies": 25,
    "totalObservations": 33,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:44.123Z"
  },
  "exchanges": [
   {
@@ -572,6 +573,72 @@
      {"id":70191,"name":"Ischnura ramburii","preferred_common_name":"Rambur's Forktail","wikipedia_summary":"<b>Rambur's forktail</b> (<i>Ischnura ramburii</i>) is a member of the damselfly family Coenagrionidae. Males are green with blue on abdominal segments 8 and 9. Females are orange-red, olive green, or similar to males in coloration. This is the most widespread New World <i>Ischnura</i>, occurring throughout the Americas from the United States to Chile, as well as Hawaii and the Antilles.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47928,426081,47925,52054]},
      {"id":94513,"name":"Archilestes grandis","preferred_common_name":"Great Spreadwing","wikipedia_summary":"The <b>great spreadwing</b> (<i>Archilestes grandis</i>) is a damselfly in the family Lestidae. When great spreadwings are startled they often return to the same perch or a perch nearby.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47928,1317183,47930,86599]},
      {"id":104574,"name":"Libellula croceipennis","preferred_common_name":"Neon Skimmer","wikipedia_summary":"The <b>neon skimmer</b> (<i>Libellula croceipennis</i>) is a dragonfly of the skimmer family. It can be found near ponds, lakes and slow moving streams in the southwest United States, Central America, and northern South America.","ancestor_ids":[48460,1,47120,372739,47158,184884,47792,47927,1317176,47819,47818]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.83668&lng=-96.72001&radius=50&verifiable=true&month=10&taxon_id=52119%2C54847%2C60210%2C62776%2C135262%2C135263&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:41.878Z",
+   "latencyMs": 137,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":37,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":14,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}},
+     {"count":6,"taxon":{"id":52119,"name":"Populus deltoides","rank":"species","preferred_common_name":"Eastern Cottonwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,47566,1430520,52119]}},
+     {"count":3,"taxon":{"id":62776,"name":"Clematis terniflora","rank":"species","preferred_common_name":"autumn clematis","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988,62776]}},
+     {"count":2,"taxon":{"id":54847,"name":"Salix nigra","rank":"species","preferred_common_name":"black willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,53453,1237137,1237159,54847]}},
+     {"count":1,"taxon":{"id":60210,"name":"Ammannia coccinea","rank":"species","preferred_common_name":"Scarlet Toothcup","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,58935,60211,60210]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.83668&lng=-96.72001&radius=50&verifiable=true&month=10&taxon_id=52119%2C54847%2C60210%2C62776%2C135262%2C135263&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:42.888Z",
+   "latencyMs": 122,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 4,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":36,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":13,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}},
+     {"count":2,"taxon":{"id":62776,"name":"Clematis terniflora","rank":"species","preferred_common_name":"autumn clematis","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988,62776]}},
+     {"count":1,"taxon":{"id":60210,"name":"Ammannia coccinea","rank":"species","preferred_common_name":"Scarlet Toothcup","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,58935,60211,60210]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.83668&lng=-96.72001&radius=50&verifiable=true&month=10&taxon_id=52119%2C54847%2C60210%2C62776%2C135262%2C135263&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:43.894Z",
+   "latencyMs": 225,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":1,"taxon":{"id":60210,"name":"Ammannia coccinea","rank":"species","preferred_common_name":"Scarlet Toothcup","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,58935,60211,60210]}},
+     {"count":1,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}}
     ]
    }
   }

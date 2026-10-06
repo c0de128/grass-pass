@@ -16,7 +16,8 @@
    "totalSpecies": 86,
    "totalObservations": 189,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:23:05.033Z"
  },
  "exchanges": [
   {
@@ -1551,6 +1552,66 @@
      {"id":49972,"name":"Battus philenor","preferred_common_name":"Pipevine Swallowtail","wikipedia_summary":"<i><b>Battus philenor</b></i>, the <b>pipevine swallowtail</b> or <b>blue swallowtail</b>, is a swallowtail butterfly found in North America and Central America. This butterfly is black with iridescent-blue hindwings. They are found in many different habitats, but are most commonly found in forests. Caterpillars are often black or red, and feed on compatible plants of the genus <i>Aristolochia</i>. They are known for sequestering acids from the plants they feed on in order to defend themselves from predators by being...","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47223,49973,49974,522893,49975]},
      {"id":51221,"name":"Procambarus clarkii","preferred_common_name":"Red Swamp Crayfish","wikipedia_summary":"<i><b>Procambarus clarkii</b></i> is a species of cambarid freshwater crayfish, native to northern Mexico, and southern and southeastern United States, but also introduced elsewhere (both in North America and other continents), where it is often an invasive pest. It is known variously as the <b>red swamp crawfish</b>, <b>red swamp crayfish</b>, <b>Louisiana crawfish</b>, <b>Louisiana crayfish</b> or <b>mudbug</b>.","ancestor_ids":[48460,1,47120,85493,473790,47187,774775,144113,47186,118451,311310,47783,47782,51222,1687632]},
      {"id":1188207,"name":"Setophaga aestiva","preferred_common_name":"Northern Yellow Warbler","wikipedia_summary":"The <b>yellow warbler</b> (<i><b>Setophaga petechia</b></i>) is a New World warbler species. Yellow warblers are the most widespread species in the diverse genus <i>Setophaga</i>, breeding in almost the whole of North America, the Caribbean, as well as northern South America.","ancestor_ids":[48460,1,2,355675,3,7251,71349,10246]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329%2C78579&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:23:02.884Z",
+   "latencyMs": 132,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}},
+     {"count":4,"taxon":{"id":78579,"name":"Phytolacca heterotepala","rank":"species","preferred_common_name":"Mexican pokeweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48600,48601,78579]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329%2C78579&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:23:03.895Z",
+   "latencyMs": 172,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}},
+     {"count":3,"taxon":{"id":78579,"name":"Phytolacca heterotepala","rank":"species","preferred_common_name":"Mexican pokeweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48600,48601,78579]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329%2C78579&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:23:04.902Z",
+   "latencyMs": 129,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":3,"taxon":{"id":78579,"name":"Phytolacca heterotepala","rank":"species","preferred_common_name":"Mexican pokeweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48600,48601,78579]}},
+     {"count":1,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}}
     ]
    }
   }

@@ -22,6 +22,10 @@ import type { PoolItem, SectionState } from "@/lib/pool/types";
 import { wildCandidates, wildPool } from "@/lib/pool/wild";
 import type { FetchLike } from "@/lib/sources/common";
 import { speciesCounts, taxaSummaries, windowStart, type SpeciesList, type TaxonSummary } from "@/lib/sources/inat";
+import { loadPhenology } from "@/lib/sources/inat-phenology";
+import { monthOfDay } from "@/lib/pool/season";
+import { plantCandidateIds } from "@/lib/pool/wild";
+import { localDay } from "@/lib/time";
 import { PARK_FILTER, parkFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
 
 export const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -64,7 +68,8 @@ export const AttemptSchema = z.object({
 
 export const ExchangeSchema = z.object({
   source: z.enum(["overpass", "inaturalist"]),
-  what: z.enum(["features", "species_counts", "taxa"]),
+  /** "phenology": the R1-M4 season check's "Flowers and Fruits" species_counts calls (src/lib/sources/inat-phenology.ts). */
+  what: z.enum(["features", "species_counts", "taxa", "phenology"]),
   method: z.enum(["GET", "POST"]),
   url: z.string().url(),
   /** Overpass QL (the POST `data` field). */
@@ -102,6 +107,8 @@ export const EvalFixtureSchema = z.object({
     fetchedAtMs: z.number().int(),
     trimmed: z.string(),
     summary: FixtureSummarySchema,
+    /** When the phenology exchanges were added to a fixture recorded before the season check existed (R1-M4). */
+    phenologyAddedAt: z.string().optional(),
   }),
   exchanges: z.array(ExchangeSchema).min(1),
 });
@@ -367,8 +374,16 @@ export async function loadCaseData(fx: EvalFixture, band: AgeBand): Promise<Case
   });
   const ids = wildCandidates(species).candidates.map((c) => c.taxonId);
   const summaries = ids.length > 0 ? await taxaSummaries(ids, { ...base, store: new MemoryStore(), queue: immediateQueue }) : [];
+  // R1-M4: the same season evidence buildPass uses (replayed), so the template baseline is season-checked too.
+  const month = monthOfDay(localDay(now()));
+  const center = { lat: features.park.lat, lng: features.park.lng };
+  const phenology = await loadPhenology(features.park.id, center, month, plantCandidateIds(species), {
+    ...base,
+    store: new MemoryStore(),
+    queue: immediateQueue,
+  });
   const park = parkPool(features);
-  const wild = wildPool(species, summaries, since);
+  const wild = wildPool(species, summaries, since, { month, phenology });
   const pool = [...park.items, ...wild.items];
   const mix = computeMix({ park: park.items.length, wild: wild.items.length, lucky: 0 }, band);
   return {

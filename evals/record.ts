@@ -16,7 +16,10 @@ import { MemoryStore } from "@/lib/cache/store";
 import { userAgent, SourceError } from "@/lib/sources/common";
 import { parseSpeciesCounts, parseTaxa, speciesCounts, taxaSummaries, windowStart, type SpeciesList } from "@/lib/sources/inat";
 import { parkFeatures, parseFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
-import { wildCandidates } from "@/lib/pool/wild";
+import { plantCandidateIds, wildCandidates } from "@/lib/pool/wild";
+import { monthOfDay } from "@/lib/pool/season";
+import { loadPhenology } from "@/lib/sources/inat-phenology";
+import { localDay } from "@/lib/time";
 import {
   EvalFixtureSchema,
   FIXTURE_DIR,
@@ -92,6 +95,7 @@ export function buildExchanges(calls: RecordedCall[], parkId: string): Exchange[
   for (const c of calls.filter((x) => x.method === "GET")) {
     const raw = okJson(c);
     if (raw === null) continue;
+    const isPhenology = c.url.includes("/observations/species_counts") && new URL(c.url).searchParams.has("term_id");
     const isSpecies = c.url.includes("/observations/species_counts");
     const trimmed = isSpecies ? trimSpecies(raw) : trimTaxa(raw);
     const same = isSpecies
@@ -100,7 +104,7 @@ export function buildExchanges(calls: RecordedCall[], parkId: string): Exchange[
     if (!same) throw new Error(`trimmed iNaturalist answer parses differently: ${c.url}`);
     out.push({
       source: "inaturalist",
-      what: isSpecies ? "species_counts" : "taxa",
+      what: isPhenology ? "phenology" : isSpecies ? "species_counts" : "taxa",
       method: "GET",
       url: c.url,
       status: 200,
@@ -127,6 +131,13 @@ async function recordOnce(c: EvalCase): Promise<{ fx: EvalFixture; endpoint: str
   const species: SpeciesList = await speciesCounts({ lat: features.park.lat, lng: features.park.lng }, since, { store, fetchImpl: rec.fetch, env });
   const ids = wildCandidates(species).candidates.map((s) => s.taxonId);
   if (ids.length > 0) await taxaSummaries(ids, { store, fetchImpl: rec.fetch, env });
+  // R1-M4: the season check's phenology calls (same month, same plant ids as buildPass would use).
+  const phenology = await loadPhenology(features.park.id, { lat: features.park.lat, lng: features.park.lng }, monthOfDay(localDay(startedAt)), plantCandidateIds(species), {
+    store,
+    fetchImpl: rec.fetch,
+    env,
+  });
+  if (phenology === null) throw new SourceError("inaturalist", "busy", { started: true });
 
   const exchanges = buildExchanges(rec.calls, c.parkId);
   const ov = exchanges.find((e) => e.source === "overpass");

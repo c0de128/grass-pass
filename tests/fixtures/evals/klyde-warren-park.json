@@ -16,7 +16,8 @@
    "totalSpecies": 23,
    "totalObservations": 42,
    "taxaRequested": 23
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:47.056Z"
  },
  "exchanges": [
   {
@@ -205,6 +206,63 @@
      {"id":73149,"name":"Parkesia noveboracensis","preferred_common_name":"Northern Waterthrush","wikipedia_summary":"The <b>northern waterthrush</b> (<i>Parkesia noveboracensis</i>) is one of the larger New World warblers and one of the Nearctic-Neotropical migratory songbirds. It breeds in the northern part of North America in Canada and the northern United States including Alaska. This bird is migratory, wintering in Central America, the West Indies and Florida, as well as in Venezuela, Colombia, and Ecuador. It is a very rare vagrant to other South American countries and to western Europe.","ancestor_ids":[48460,1,2,355675,3,7251,71349,71741]},
      {"id":118538,"name":"Cotinis nitida","preferred_common_name":"Common Green June Beetle","wikipedia_summary":"<i><b>Cotinis nitida</b></i>, commonly known as the <b>green June beetle</b>, <b>June bug</b> or <b>June beetle</b>, is a beetle of the family Scarabaeidae. It is found in the eastern United States, where it is most abundant in the south. It is sometimes confused with the related southwestern species figeater beetle <i>Cotinis mutabilis</i>, which is less destructive.","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,702480,48202,48201,127588,244822,1583205,57666]},
      {"id":1188207,"name":"Setophaga aestiva","preferred_common_name":"Northern Yellow Warbler","wikipedia_summary":"The <b>yellow warbler</b> (<i><b>Setophaga petechia</b></i>) is a New World warbler species. Yellow warblers are the most widespread species in the diverse genus <i>Setophaga</i>, breeding in almost the whole of North America, the Caribbean, as well as northern South America.","ancestor_ids":[48460,1,2,355675,3,7251,71349,10246]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.78945&lng=-96.80155&radius=50&verifiable=true&month=10&taxon_id=54781%2C551846&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:44.896Z",
+   "latencyMs": 131,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":20,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":20,"taxon":{"id":551846,"name":"Nekemias arborea","rank":"species","preferred_common_name":"peppervine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,954525,551846]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.78945&lng=-96.80155&radius=50&verifiable=true&month=10&taxon_id=54781%2C551846&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:45.904Z",
+   "latencyMs": 160,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 0,
+    "page": 1,
+    "per_page": 30,
+    "results": []
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.78945&lng=-96.80155&radius=50&verifiable=true&month=10&taxon_id=54781%2C551846&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:46.908Z",
+   "latencyMs": 145,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":18,"taxon":{"id":551846,"name":"Nekemias arborea","rank":"species","preferred_common_name":"peppervine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,954525,551846]}},
+     {"count":16,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}}
     ]
    }
   }

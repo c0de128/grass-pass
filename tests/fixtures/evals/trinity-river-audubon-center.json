@@ -16,7 +16,8 @@
    "totalSpecies": 26,
    "totalObservations": 33,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:53.141Z"
  },
  "exchanges": [
   {
@@ -149,6 +150,70 @@
      {"id":144814,"name":"Poecile carolinensis","preferred_common_name":"Carolina Chickadee","wikipedia_summary":"The <b>Carolina chickadee</b> (<i>Poecile carolinensis</i>) is a small passerine bird in the tit family Paridae. It is often placed in the genus <i>Parus</i> with most other tits, but mtDNA cytochrome <i>b</i> sequence data and morphology suggest that separating <i>Poecile</i> more adequately expresses these birds' relationships (Gill <i>et al.</i>, 2005). The American Ornithologists' Union has been treating <i>Poecile</i> as distinct genus for some time already.","ancestor_ids":[48460,1,2,355675,3,7251,13547,144351]},
      {"id":151627,"name":"Lampsilis teres","preferred_common_name":"Yellow Sandshell","wikipedia_summary":"<i><b>Lampsilis teres</b></i>, the <b>yellow sandshell</b> or <b>slough sandshell</b>, is a freshwater mussel native to the United States and Mexico. Although it is considered a species of least concern on the IUCN Red List, it is extirpated from (locally extinct) and endangered in parts of its range.","ancestor_ids":[48460,1,47115,47584,1051154,1051155,372765,775841,801489,51903,738288,995660,89337]},
      {"id":792988,"name":"Dryobates pubescens","preferred_common_name":"Downy Woodpecker","wikipedia_summary":"The <b>downy woodpecker</b> (<i>Dryobates pubescens</i>) is a species of woodpecker, the smallest in North America.","ancestor_ids":[48460,1,2,355675,3,17550,17599,1653299,1653311,792976]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C75995%2C170070%2C194109&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:50.930Z",
+   "latencyMs": 135,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 4,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":17,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":5,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}},
+     {"count":3,"taxon":{"id":170070,"name":"Ungnadia speciosa","rank":"species","preferred_common_name":"Mexican buckeye","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,155712,170070]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C75995%2C170070%2C194109&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:51.933Z",
+   "latencyMs": 206,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C75995%2C170070%2C194109&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:52.932Z",
+   "latencyMs": 206,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 4,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":5,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}},
+     {"count":3,"taxon":{"id":170070,"name":"Ungnadia speciosa","rank":"species","preferred_common_name":"Mexican buckeye","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,155712,170070]}},
+     {"count":1,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}}
     ]
    }
   }

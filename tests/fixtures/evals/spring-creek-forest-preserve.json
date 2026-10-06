@@ -16,7 +16,8 @@
    "totalSpecies": 28,
    "totalObservations": 38,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:41.071Z"
  },
  "exchanges": [
   {
@@ -130,6 +131,86 @@
      {"id":4956,"name":"Ardea herodias","preferred_common_name":"Great Blue Heron","wikipedia_summary":"The <b>great blue heron</b> (<i>Ardea herodias</i>) is a large wading bird in the heron family Ardeidae, common near the shores of open water and in wetlands over most of North America and Central America, as well as the Caribbean and the Galápagos Islands. It is a rare vagrant to coastal Spain, the Azores, and areas of far southern Europe. An all-white population found only in the Caribbean and Florida was once treated as a separate species...","ancestor_ids":[48460,1,2,355675,3,67566,4929,597395,4950]},
      {"id":47219,"name":"Apis mellifera","preferred_common_name":"Western Honey Bee","wikipedia_summary":"The <b>western honey bee</b> or <b>European honey bee</b> (<i>Apis mellifera</i>) is the most common of the 7–12 species of honey bee worldwide. The genus name <i>Apis</i> is Latin for \"bee\", and <i>mellifera</i> is the Latin for \"honey-bearing\", referring to the species' production of honey for the winter.","ancestor_ids":[48460,1,47120,372739,47158,184884,47201,124417,326777,47222,630955,47221,199939,538904,47220,578086]},
      {"id":50340,"name":"Hylephila phyleus","preferred_common_name":"Fiery Skipper","wikipedia_summary":"The <b>fiery skipper</b> (<i>Hylephila phyleus</i>) is a butterfly of the family Hesperiidae and is approximately 1 inch (2.5 cm) long. The males are orange or yellow with black spots while the females are dark brown with orange or yellow spots. The caterpillars are greenish pink with a black head. The caterpillars are often considered pests and can feed on Bermudagrass, creeping bentgrass, and St. Augustine grass.","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47653,122493,320552,1363159,50341]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C203827%2C554401&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:38.854Z",
+   "latencyMs": 186,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 11,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":111,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":29,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":25,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":18,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":16,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":14,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":10,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":7,"taxon":{"id":58387,"name":"Sorghum halepense","rank":"species","preferred_common_name":"Johnson grass","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388,58387]}},
+     {"count":6,"taxon":{"id":52119,"name":"Populus deltoides","rank":"species","preferred_common_name":"Eastern Cottonwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,47566,1430520,52119]}},
+     {"count":6,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}},
+     {"count":3,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C203827%2C554401&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:39.863Z",
+   "latencyMs": 150,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":29,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":22,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":17,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":6,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":3,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}},
+     {"count":1,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C203827%2C554401&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:40.876Z",
+   "latencyMs": 191,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 9,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":80,"taxon":{"id":203827,"name":"Ligustrum quihoui","rank":"species","preferred_common_name":"Quihoui privet","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,69819,203827]}},
+     {"count":13,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":9,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":7,"taxon":{"id":58387,"name":"Sorghum halepense","rank":"species","preferred_common_name":"Johnson grass","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388,58387]}},
+     {"count":6,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":5,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}},
+     {"count":4,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":2,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":1,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
     ]
    }
   }

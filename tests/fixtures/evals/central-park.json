@@ -16,7 +16,8 @@
    "totalSpecies": 149,
    "totalObservations": 468,
    "taxaRequested": 24
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:23:02.175Z"
  },
  "exchanges": [
   {
@@ -2767,6 +2768,69 @@
      {"id":52856,"name":"Artemisia vulgaris","preferred_common_name":"common mugwort","wikipedia_summary":"<i><b>Artemisia vulgaris</b></i> (<b>common mugwort</b> or <b>common wormwood</b>) is one of several species in the genus <i>Artemisia</i> commonly known as mugwort, although <i>Artemisia vulgaris</i> is the species most often called mugwort. This species is also occasionally known as <b>riverside wormwood</b>, <b>felon herb</b>, <b>chrysanthemum weed</b>, <b>wild wormwood</b>, <b>old Uncle Henry</b>, <b>sailor's tobacco</b>, <b>naughty man</b>, <b>old man</b> or <b>St. John's plant</b> (not to be confused with St John's wort). Mugworts have been used medicinally and as culinary herbs.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942]},
      {"id":3017,"name":"Columba livia","preferred_common_name":"Rock Pigeon","wikipedia_summary":"The <b>rock dove</b> or <b>rock pigeon</b> (/ˈpɪdʒ.ən/ also /ˈpɪdʒ.ɪn/; <i>Columba livia</i>) is a member of the bird family Columbidae (doves and pigeons).:624 In common usage, this bird is often simply referred to as the \"pigeon\".","ancestor_ids":[48460,1,2,355675,3,2708,2715,3000]},
      {"id":6937,"name":"Anas crecca","preferred_common_name":"Green-winged Teal","wikipedia_summary":"The <b>Eurasian teal</b>, <b>common teal</b>, or <b>Eurasian green-winged teal</b> (<i>Anas crecca</i>) is a common and widespread duck which breeds in temperate Eurasia and migrates south in winter. The Eurasian teal is often called simply the <b>teal</b> due to being the only one of these small dabbling ducks in much of its range. The bird gives its name to the blue-green colour teal.","ancestor_ids":[48460,1,2,355675,3,6888,6912,6922]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C119048%2C143803&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:56.950Z",
+   "latencyMs": 151,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":895,"taxon":{"id":119048,"name":"Ageratina altissima","rank":"species","preferred_common_name":"white snakeroot","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901066,64116,1464929,119048]}},
+     {"count":94,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}},
+     {"count":43,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C119048%2C143803&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:57.956Z",
+   "latencyMs": 3912,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":806,"taxon":{"id":119048,"name":"Ageratina altissima","rank":"species","preferred_common_name":"white snakeroot","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901066,64116,1464929,119048]}},
+     {"count":85,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}},
+     {"count":12,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C119048%2C143803&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:23:01.870Z",
+   "latencyMs": 303,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":102,"taxon":{"id":119048,"name":"Ageratina altissima","rank":"species","preferred_common_name":"white snakeroot","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901066,64116,1464929,119048]}},
+     {"count":10,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}},
+     {"count":3,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}}
     ]
    }
   }

@@ -16,7 +16,8 @@
    "totalSpecies": 13,
    "totalObservations": 14,
    "taxaRequested": 12
-  }
+  },
+  "phenologyAddedAt": "2026-10-06T03:22:34.971Z"
  },
  "exchanges": [
   {
@@ -120,6 +121,75 @@
      {"id":43794,"name":"Castor canadensis","preferred_common_name":"American Beaver","wikipedia_summary":"The <b>North American beaver</b> (<i>Castor canadensis</i>) is one of two extant beaver species. It is native to North America and introduced to Patagonia in South America and some European countries (e.g. Finland). In the United States and Canada, the species is often referred to simply as \"beaver\", though this causes some confusion because another distantly related rodent, <i>Aplodontia rufa</i>, is often called the \"mountain beaver\". Other vernacular names, including <b>American beaver</b> and <b>Canadian beaver</b>, distinguish this...","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,870764,43791,43792]},
      {"id":55483,"name":"Fuligo septica","preferred_common_name":"Dog Vomit Slime Mold","wikipedia_summary":"<i><b>Fuligo septica</b></i> is a species of plasmodial slime mold, and a member of the Myxomycetes class. It is commonly known as the <b>scrambled egg slime</b>, or <b>flowers of tan</b> because of its peculiar yellowish, bile-colored appearance. Also known as the <b>dog vomit slime mold</b>, it is common with a worldwide distribution, and it is often found on bark mulch in urban areas after heavy rain or excessive watering. Their spores are produced on or in aerial...","ancestor_ids":[48460,47686,47685,47684,1443220,1443223,55484,55485,55486]},
      {"id":118538,"name":"Cotinis nitida","preferred_common_name":"Common Green June Beetle","wikipedia_summary":"<i><b>Cotinis nitida</b></i>, commonly known as the <b>green June beetle</b>, <b>June bug</b> or <b>June beetle</b>, is a beetle of the family Scarabaeidae. It is found in the eastern United States, where it is most abundant in the south. It is sometimes confused with the related southwestern species figeater beetle <i>Cotinis mutabilis</i>, which is less destructive.","ancestor_ids":[48460,1,47120,372739,47158,184884,47208,71130,702480,48202,48201,127588,244822,1583205,57666]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074%2C1555999&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:32.797Z",
+   "latencyMs": 155,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 7,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":82,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":50,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":45,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":42,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":19,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}},
+     {"count":19,"taxon":{"id":200074,"name":"Gonolobus suberosus","rank":"species","preferred_common_name":"Anglepod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448,200074]}},
+     {"count":18,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074%2C1555999&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:33.807Z",
+   "latencyMs": 126,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":18,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}},
+     {"count":1,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074%2C1555999&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T03:22:34.820Z",
+   "latencyMs": 147,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":59,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":44,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":33,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":30,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":18,"taxon":{"id":200074,"name":"Gonolobus suberosus","rank":"species","preferred_common_name":"Anglepod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448,200074]}},
+     {"count":15,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}}
     ]
    }
   }

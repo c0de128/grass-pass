@@ -8,7 +8,15 @@ applyStoredTheme();
 
 const serverTheme = (): Theme | null => null;
 
-/** Dark mode switch. aria-pressed = dark mode on. Hidden from print. */
+/**
+ * Dark mode switch. aria-pressed = dark mode on. Hidden from print.
+ * R2-m10: the label says what a press does ("Switch to dark mode" / "Switch to light mode"), so in dark
+ * mode it no longer reads like the current state.
+ */
+export function themeToggleLabel(dark: boolean): string {
+  return dark ? "Switch to light mode" : "Switch to dark mode";
+}
+
 export function ThemeToggle() {
   const theme = useSyncExternalStore<Theme | null>(subscribeTheme, currentTheme, serverTheme);
   const dark = theme === "dark";
@@ -29,7 +37,7 @@ export function ThemeToggle() {
           </>
         )}
       </svg>
-      <span className="sr-only sm:not-sr-only">Dark mode</span>
+      <span className="sr-only sm:not-sr-only">{themeToggleLabel(dark)}</span>
     </button>
   );
 }

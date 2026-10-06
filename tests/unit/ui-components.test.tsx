@@ -13,7 +13,7 @@ import {
 import { Hero } from "@/components/Hero";
 import { SiteHeader } from "@/components/SiteHeader";
 import { parseTheme } from "@/components/theme";
-import { ThemeToggle } from "@/components/ThemeToggle";
+import { ThemeToggle, themeToggleLabel } from "@/components/ThemeToggle";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import { Chip, SECTION_LABELS, type SectionKind } from "@/components/ui/Chip";
 import { GrassDivider } from "@/components/ui/GrassDivider";
@@ -193,7 +193,7 @@ describe("brand art", () => {
     const out = html(<SiteHeader />);
     expect(out).toContain("<header");
     expect(out).toContain('aria-label="Grass Pass home"');
-    expect(out).toContain(">Dark mode</span>");
+    expect(out).toContain(">Switch to dark mode</span>");
   });
 });
 
@@ -209,6 +209,11 @@ describe("theme", () => {
     const out = html(<ThemeToggle />);
     expect(out).toMatch(/^<button type="button"/);
     expect(out).not.toContain("aria-pressed");
+  });
+
+  it("R2-m10: the label says what a press does", () => {
+    expect(themeToggleLabel(false)).toBe("Switch to dark mode");
+    expect(themeToggleLabel(true)).toBe("Switch to light mode");
   });
 });
 

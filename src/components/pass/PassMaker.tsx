@@ -222,18 +222,16 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   useEffect(() => {
     if (resume === null) return;
     window.history.replaceState(null, "", "/#find");
-    let live = true;
+    // Not cancelled on cleanup: replaceState below clears ?resume, which re-runs this effect while the judge
+    // sign-in keeps this component mounted (state updates after an unmount are a no-op).
     void takeResume().then((r) => {
-      if (!live || !r) return;
+      if (!r) return;
       setPark(r.park);
       setPickedBand(r.band);
       storeBand(r.band);
       resumedRef.current = true;
       setResumed(true);
     });
-    return () => {
-      live = false;
-    };
   }, [resume]);
 
   // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):
@@ -247,22 +245,30 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
     h.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
   }, [park]);
 
-  // Back from signing in with the park restored: once the session shows signed in, say so and focus the make
-  // button. Still signed out (the sign-in failed or was cancelled): the heading gets focus as usual.
+  // Back from signing in with the park restored. The refreshed session can reach this component a moment after
+  // the park is restored, so wait for it: until then the heading has focus; as soon as the session shows signed
+  // in, say so (polite status) and move focus to "Make my pass" (UX-4-03). A cancelled sign-in just keeps the heading.
   const signedInNow = account?.signedIn === true && !needsSignIn;
   const judgeNow = account?.judge === true;
+  const headingFocused = useRef(false);
   useEffect(() => {
     if (!resumed || !park) return;
-    const target = signedInNow ? makeRef.current : headingRef.current;
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    if (!signedInNow) {
+      if (headingFocused.current) return;
+      headingFocused.current = true;
+      headingRef.current?.focus({ preventScroll: true });
+      headingRef.current?.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
+      return;
+    }
     /* eslint-disable react-hooks/set-state-in-effect -- one-time hand-off after the sign-in round trip */
     resumedRef.current = false;
+    headingFocused.current = false;
     setResumed(false);
-    if (signedInNow) setNote(signedInNote(judgeNow));
+    setNote(signedInNote(judgeNow));
     /* eslint-enable react-hooks/set-state-in-effect */
-    if (!target) return;
-    target.focus({ preventScroll: true });
-    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
-    target.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+    makeRef.current?.focus({ preventScroll: true });
+    makeRef.current?.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
   }, [resumed, park, signedInNow, judgeNow]);
 
   useEffect(() => {
@@ -276,6 +282,8 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   function onPick(p: Park) {
     reset();
     setNote(null);
+    resumedRef.current = false;
+    setResumed(false);
     setPark(p);
   }
 

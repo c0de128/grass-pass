@@ -17,6 +17,7 @@
   --color-primary: var(--gp-primary);
   --color-primary-foreground: var(--gp-primary-foreground);
   --color-primary-hover: var(--gp-primary-hover);
+  --color-link: var(--gp-link);
   --color-muted: var(--gp-muted);
   --color-muted-foreground: var(--gp-muted-foreground);
   --color-sun: var(--gp-sun);

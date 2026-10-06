@@ -89,7 +89,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           </li>
         </ul>
         <p>
-          <Link href="/about#privacy" prefetch={false} className="font-semibold text-primary underline underline-offset-4">
+          <Link href="/about#privacy" prefetch={false} className="font-semibold text-link underline underline-offset-4">
             What we keep, and for how long
           </Link>
         </p>

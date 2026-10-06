@@ -14,7 +14,7 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-bold tracking-widest text-primary uppercase">What&apos;s on a pass</p>
+            <p className="text-xs font-bold tracking-widest text-link uppercase">What&apos;s on a pass</p>
             <h2 id="pass-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
               Every clue comes with its receipts.
             </h2>

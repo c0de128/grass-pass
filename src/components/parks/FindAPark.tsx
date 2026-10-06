@@ -304,7 +304,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
             onClick={onUseLocation}
             aria-disabled={busy || undefined}
             aria-describedby={locError ? `${locNoteId} ${locErrorId}` : locNoteId}
-            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md font-semibold text-primary underline-offset-4 hover:underline aria-disabled:opacity-60"
+            className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md font-semibold text-link underline-offset-4 hover:underline aria-disabled:opacity-60"
           >
             {phase.kind === "locating" ? (
               <LoaderCircle className="size-4 motion-safe:animate-spin" aria-hidden="true" />

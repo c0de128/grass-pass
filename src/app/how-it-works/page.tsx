@@ -49,7 +49,7 @@ export const metadata: Metadata = {
     "Step by step: how Grass Pass turns real park data into a printable kids' pass with one call to the open Gemma 4 model, what the AI does and doesn't do, what code checks, and what we measured.",
 };
 
-const ext = "font-semibold text-primary underline underline-offset-2";
+const ext = "font-semibold text-link underline underline-offset-2";
 const bandLink = "font-semibold text-band-foreground underline underline-offset-2";
 
 const gemma = evalColumn("gemma-4-31B-it");
@@ -79,7 +79,7 @@ function Band({
     <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-28 sm:scroll-mt-16 ${bg}`}>
       <div className={`mx-auto flex ${width} flex-col gap-8 px-5 py-16 md:px-8 lg:py-20`}>
         <div className="flex max-w-3xl flex-col gap-3">
-          <p className={`text-xs font-bold tracking-widest uppercase ${tone === "dark" ? "text-sun" : "text-primary"}`}>{eyebrow}</p>
+          <p className={`text-xs font-bold tracking-widest uppercase ${tone === "dark" ? "text-sun" : tone === "muted" ? "text-link" : "text-primary"}`}>{eyebrow}</p>
           <h2
             id={`${id}-title`}
             className={`text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl ${tone === "dark" ? "" : "text-ink"}`}
@@ -440,7 +440,7 @@ export default function HowItWorksPage() {
               ].map(([href, label]) => (
                 <li key={href}>
                   <a
-                    className="inline-flex min-h-11 items-center rounded-full bg-card px-4 text-sm font-semibold text-primary underline-offset-4 ring-1 ring-border hover:underline"
+                    className="inline-flex min-h-11 items-center rounded-full bg-card px-4 text-sm font-semibold text-link underline-offset-4 ring-1 ring-border hover:underline"
                     href={href}
                   >
                     {label}

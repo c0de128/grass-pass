@@ -67,7 +67,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
             ) : (
               <>
                 Grown-ups: back from the park?{" "}
-                <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-primary underline underline-offset-4">
+                <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-link underline underline-offset-4">
                   Sign in
                 </Link>{" "}
                 to tell us what you found. It helps the next family, and a find nobody can spot (or that isn&apos;t safe) is left off new passes.

@@ -1,4 +1,6 @@
-import { readFileSync } from "node:fs";
+import { readdirSync, readFileSync } from "node:fs";
+import { join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 
 // v3 (Kevin's v0 design) colour roles in src/styles/tokens.css: every text pair >= 4.5:1, controls/rings >= 3:1,
@@ -43,6 +45,13 @@ describe.each([
     ["muted-foreground", "card", "muted text on cards"],
     ["primary", "background", "green eyebrows and links"],
     ["primary", "card", "links on cards"],
+    // UX-4-01 (R4): the pass page's "Grown-ups: back from the park? Sign in" box is a link on the muted fill.
+    ["link", "muted", "green links and eyebrows on muted fills (pass page report box, sign-in card, alerts)"],
+    ["link", "background", "green links on the page"],
+    ["link", "card", "green links on cards"],
+    ["destructive", "card", "error text on cards"],
+    ["foreground", "muted", "body text on muted fills"],
+    ["sun-foreground", "sun", "picked age chip and park row"],
     ["primary-foreground", "primary", "primary button text"],
     ["sun-foreground", "sun", "text on sunflower chips"],
     ["sun", "band", "sunflower text on the dark band"],
@@ -70,3 +79,35 @@ describe.each([
 it("the system-dark block and the explicit dark block match", () => {
   expect(block(':root:not([data-theme="light"]) {')).toEqual(dark);
 });
+
+describe("UX-4-01: green text links never use the primary fill colour", () => {
+  // Every underlined green link uses text-link (>= 4.5:1 on every surface, the muted fill included), never
+  // text-primary, which is 4.49:1 on the muted fill in the light theme (axe, audit round 4).
+  const files: string[] = [];
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const p = join(dir, e.name);
+      if (e.isDirectory()) walk(p);
+      else if (e.name.endsWith(".tsx")) files.push(p);
+    }
+  };
+  walk(fileURLToPath(new URL("../../src/", import.meta.url)));
+  const LINK_CLASSES = /className=(?:"([^"]*)"|\{?`([^`]*)`)/g;
+  const PRIMARY_TEXT = /\btext-primary(?![-\w])/;
+
+  it("finds the component files", () => expect(files.length).toBeGreaterThan(20));
+  it.each(files.map((f) => [relative(process.cwd(), f), f]))("%s: no underlined text-primary", (_name, f) => {
+    const src = readFileSync(f, "utf8");
+    const bad = [...src.matchAll(LINK_CLASSES)]
+      .map((m) => m[1] ?? m[2])
+      .filter((c) => PRIMARY_TEXT.test(c) && /underline/.test(c));
+    expect(bad).toEqual([]);
+  });
+  it("the pass page 'Grown-ups: back from the park? Sign in' link uses text-link", () => {
+    const src = readFileSync(new URL("../../src/components/pass/PassPreview.tsx", import.meta.url), "utf8");
+    const box = src.slice(src.indexOf("Grown-ups: back from the park?"), src.indexOf("to tell us what you found"));
+    expect(box).toContain("text-link");
+    expect(box).not.toMatch(PRIMARY_TEXT);
+  });
+});
+

@@ -38,6 +38,9 @@
   --gp-primary: #137838; /* grass green; 5.57:1 with white text, 4.92:1 as text on the background */
   --gp-primary-foreground: #ffffff;
   --gp-primary-hover: #0f6830;
+  /* Green TEXT links and eyebrows (audit R4 UX-4-01): primary is only 4.49:1 on the muted fill; this is 5.56:1 on
+     muted, 6.10:1 on the background, 6.90:1 on cards. */
+  --gp-link: #0f6830;
   --gp-muted: #e2ead2;
   --gp-muted-foreground: #4a5d4f; /* 6.25:1 on the background, 5.70:1 on muted */
   --gp-sun: #ffc72c; /* sunflower: fills only; ink text on it is 9.94:1 */
@@ -66,6 +69,7 @@
     --gp-primary: #4cc274; /* 7.9:1 on the background */
     --gp-primary-foreground: #0b1a10; /* 7.9:1 on primary */
     --gp-primary-hover: #6fd392;
+    --gp-link: #4cc274; /* 5.95:1 on muted, 7.0:1 on cards */
     --gp-muted: #1f3325;
     --gp-muted-foreground: #a9bba5; /* 8.8:1 on the background, 6.6:1 on muted */
     --gp-sun: #ffc72c;
@@ -93,6 +97,7 @@
   --gp-primary: #4cc274;
   --gp-primary-foreground: #0b1a10;
   --gp-primary-hover: #6fd392;
+  --gp-link: #4cc274;
   --gp-muted: #1f3325;
   --gp-muted-foreground: #a9bba5;
   --gp-sun: #ffc72c;
@@ -125,6 +130,7 @@
     --gp-ink: #000;
     --gp-muted: #fff;
     --gp-muted-foreground: #000;
+    --gp-link: #000;
     --gp-line: #000;
     --gp-border: #000;
   }

@@ -82,7 +82,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
           <Link
             href={card.ex.href}
             prefetch={false}
-            className="inline-flex min-h-8 items-center gap-1 rounded-md font-bold text-primary underline-offset-2 hover:underline"
+            className="inline-flex min-h-8 items-center gap-1 rounded-md font-bold text-link underline-offset-2 hover:underline"
           >
             Open this pass
             <ArrowUpRight className="size-3.5" aria-hidden="true" />

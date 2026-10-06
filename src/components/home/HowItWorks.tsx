@@ -41,7 +41,7 @@ export function HowItWorks() {
             Real park data in. One AI call. Paper out.
           </h2>
           <p>
-            <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-primary underline underline-offset-4">
+            <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4">
               The full story: the data, the AI and every check
               <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>

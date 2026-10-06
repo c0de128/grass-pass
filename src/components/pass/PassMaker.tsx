@@ -286,7 +286,7 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
               <span>
                 For <strong>{AGE_BAND_INFO[band].label}</strong>: {AGE_BAND_INFO[band].hint}.
               </span>
-              <button type="button" onClick={changeAge} className="inline-flex min-h-11 items-center rounded-md font-semibold text-primary underline underline-offset-4">
+              <button type="button" onClick={changeAge} className="inline-flex min-h-11 items-center rounded-md font-semibold text-link underline underline-offset-4">
                 Change age
               </button>
             </p>

@@ -53,7 +53,7 @@ export const metadata: Metadata = {
 const gemma = evalColumn("gemma-4-31B-it");
 const template = evalColumn("no-AI template");
 const resultsUrl = `${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}`;
-const ext = "font-semibold text-primary underline underline-offset-2";
+const ext = "font-semibold text-link underline underline-offset-2";
 const bandLink = "font-semibold text-band-foreground underline underline-offset-2";
 
 function Eyebrow({ children, onBand = false }: { children: ReactNode; onBand?: boolean }) {

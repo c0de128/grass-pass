@@ -33,9 +33,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            Pick a real park and your kid&apos;s age. Gemma 4, an open-weight AI model, reads that park&apos;s map and the last 14
-            days of wildlife sightings nearby, then writes a one-page pass of things to find there. Code checks every clue
-            against its source. You print it; the pencil does the rest.
+            Pick a real park and your kid&apos;s age. Gemma 4, an open-weight AI model, reads that park&apos;s map and 14 days
+            of nearby wildlife sightings, then writes a one-page pass of things to find. Code checks every clue against its
+            source. You print it; the pencil does the rest.
           </p>
 
           <ExampleChips examples={examples} />

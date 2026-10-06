@@ -1,32 +1,61 @@
+import { ArrowRight } from "lucide-react";
 import Link from "next/link";
-import { Logo } from "@/components/art/BrandArt";
+import { Logo } from "@/components/site/Logo";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { GrassDivider } from "@/components/ui/GrassDivider";
 
-/** Site header: the Grass Pass logo (home link), the About link, the dark mode switch, and a grass strip below. */
+/** Home page section anchors (v0 nav). Plain links to "/#...", so they also work from /about and a pass page. */
+export const HOME_SECTIONS = [
+  { href: "/#why", label: "Why it works" },
+  { href: "/#how", label: "How it works" },
+  { href: "/#pass", label: "What's on a pass" },
+  { href: "/#parks", label: "Sample parks" },
+] as const;
+
+/**
+ * v3 site header (Kevin's v0 design): sticky, translucent meadow background, the ticket logo (home link,
+ * never prefetched: SEC-3-01), the section links (large screens), About, the dark mode switch and the dark
+ * "Make a pass" pill that jumps to the park search on the home page.
+ */
 export function SiteHeader() {
   return (
-    <header className="w-full">
-      <div className="mx-auto flex w-full max-w-5xl items-center justify-between gap-3 px-5 pt-4 pb-2">
-        {/* min-w-0 + max-w-full: at 360 px the logo gives up a few px for the About link instead of overflowing. */}
-        <Link href="/" prefetch={false} className="inline-flex min-h-11 min-w-0 shrink items-center rounded-control" aria-label="Grass Pass home">
-          <span className="block w-[200px] max-w-full sm:w-[250px]">
-            <Logo height={57} decorative eager />
-          </span>
+    <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-md print:hidden">
+      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-5 md:px-8">
+        <Link href="/" prefetch={false} aria-label="Grass Pass home" className="inline-flex min-h-11 shrink-0 items-center rounded-md text-foreground">
+          <Logo />
         </Link>
-        <div className="flex shrink-0 items-center gap-2 sm:gap-3 print:hidden">
-          <nav aria-label="Site">
-            <Link
-              href="/about"
-              className="inline-flex min-h-11 min-w-11 items-center justify-center rounded-control px-2.5 font-bold text-heading underline-offset-4 hover:underline sm:px-3"
-            >
-              About
-            </Link>
+        <div className="flex items-center gap-2 sm:gap-3 lg:gap-8">
+          <nav aria-label="Site" className="flex items-center">
+            <ul className="flex items-center gap-8">
+              {HOME_SECTIONS.map((link) => (
+                <li key={link.href} className="hidden lg:block">
+                  <Link href={link.href} prefetch={false} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                    {link.label}
+                  </Link>
+                </li>
+              ))}
+              <li>
+                <Link
+                  href="/about"
+                  className="inline-flex min-h-11 items-center px-1.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground lg:min-h-0 lg:px-0"
+                >
+                  About
+                </Link>
+              </li>
+            </ul>
           </nav>
-          <ThemeToggle />
+          <div className="flex items-center gap-2 sm:gap-3">
+            <ThemeToggle />
+            <Link
+              href="/#find"
+              prefetch={false}
+              className="group hidden h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-on-ink transition-transform motion-safe:hover:-translate-y-0.5 sm:inline-flex"
+            >
+              Make a pass
+              <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
+            </Link>
+          </div>
         </div>
       </div>
-      <GrassDivider />
     </header>
   );
 }

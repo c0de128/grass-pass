@@ -8,7 +8,7 @@ export function RestingNotice({ state }: { state: Resting }) {
   if (!state.resting) return null;
   const [first, ...rest] = restingMessage(state).split(". ");
   return (
-    <p className="rounded-control border-2 border-line bg-surface px-4 py-3 text-base text-fg" data-testid="resting-notice">
+    <p className="rounded-2xl bg-sun px-4 py-3 text-base text-sun-foreground" data-testid="resting-notice">
       <strong>{first}.</strong> {rest.join(". ")}
     </p>
   );

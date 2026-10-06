@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import { factsFor } from "@/lib/pool/park";
 import { askMix, buildMessages, computeMix, escapeSource, systemPrompt, userPrompt } from "@/lib/ai/prompt";
 import {
   ASK_EXTRA,
@@ -162,12 +161,8 @@ describe("prompt (SPEC 6.1)", () => {
       // R2-M5: the prompt states the asked-for mix (n + ASK_EXTRA spare).
       const ask = askMix(computeMix(counts, "6-10")!, counts);
       expect(ask.n).toBe(9);
-      // R2 (Builder F): the Find This Spot source now uses the park-seeded facts (factsFor) instead of one
-      // fixed sentence. The recordings predate that, so the old sentence is swapped for today's facts here;
-      // everything else must still match the live request exactly (re-record in the next paid eval run).
-      const OLD_SPOT = "A picnic shelter has a roof on posts and tables underneath where people eat lunch.";
-      const recorded = JSON.parse(JSON.stringify(modelRec(p.slug).request.messages).replace(OLD_SPOT, factsFor("shelter", p.id, 1).join(" ")));
-      expect(recorded).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
+      // The Find This Spot source is the park-seeded facts (factsFor); Celebration was re-recorded with them.
+      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
     }
   });
 
@@ -210,7 +205,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded audit R2, 9 asked for 8 printed): Celebration 8 + 1 spare, Connemara 7", () => {
+  it("the real recorded Gemma answers (re-recorded after audit R2, 9 asked for 8 printed): Celebration 8 + 1 spare, Connemara 7", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { pool, target } = poolFor(p);
       const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
@@ -231,21 +226,22 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(cel.items).toHaveLength(8);
     expect(cel.drops).toEqual({});
     expect(cel.spares).toBe(1);
-    expect(cel.items.find((i) => i.item.id === "osm-soccer")?.clue).toBe("Bet you can't find 25 big grass areas with goals at the ends!");
+    expect(cel.items.find((i) => i.item.id === "osm-soccer")?.clue).toBe("Look for a big grass area with a goal at each end. How many of these can you find? There are 25!");
     // Connemara: the Callery pear twice (duplicate) and a generic plant clue ("Do you see a plant with seeds or
     // fruit?", proved only by the season sentence) are dropped: 7 of 8 is n-1, so no retry.
-    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put.");
+    // Re-recorded after R2: find 8 is the pond, so the code-written tip adds the water line.
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 8 is near water: stay close.");
     expect(conn.items).toHaveLength(7);
     expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 1 });
     expect(conn.items.length).toBe(retryThreshold(8));
     expect(conn.parentNote).toBe(conn.parentNote.slice(0, 200));
-    // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target) has a riddle for the X
+    // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target, last after R2 with factsFor) has a riddle for the X
     // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables for lunch!" });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Look for a place with a roof on posts and tables for lunch. It keeps you dry in the rain!" });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });

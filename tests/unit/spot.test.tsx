@@ -349,10 +349,10 @@ describe("makePass with Find This Spot (live recordings)", () => {
     const p = await pass(CEL.id);
     const s = p.spot as SpotOk;
     expect(s.status).toBe("ok");
-    expect(s.riddle).toBe("Find the place with a roof on posts and tables for lunch!");
+    expect(s.riddle).toBe("Look for a place with a roof on posts and tables for lunch. It keeps you dry in the rain!");
     expect(s.riddleBy).toBe("model");
     expect(s.target.osmId).toBe("way/536185861");
-    expect(p.items).toHaveLength(8); // audit R2 recording: 9 asked, all 9 pass the checks, 8 printed
+    expect(p.items).toHaveLength(8); // post-R2 recording: 9 asked, all 9 pass the checks, 8 printed
   });
 
   it("a riddle that names the place is dropped and the fixed line is printed (test-built from the real answer)", async () => {

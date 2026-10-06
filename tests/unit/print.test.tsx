@@ -183,10 +183,11 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // This live answer has no water find, so no find carries a safety line and the stub does not point
-    // to any (Connemara's stub test covers the line when there are some).
-    expect(pass.items.every((it) => it.safety === null)).toBe(true);
-    expect(t).not.toContain(STUB_EACH_LINE);
+    // The post-R2 live answer prints the pond (a water find), so that find carries a safety line and the
+    // stub points to it; nothing was filtered, so there is still no safety footnote.
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(7);
+    expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
+    expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });
 
   it("missing and removed clues are stated honestly, never padded", async () => {

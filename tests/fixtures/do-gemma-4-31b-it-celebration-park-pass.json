@@ -1,23 +1,23 @@
 {
   "_recording": {
-    "what": "Real DigitalOcean serverless inference answer (strict json_schema) for the Celebration Park pass (ages 6-10), re-recorded for audit round 2 (R2-M5: no copyable good example clues, a writing voice per park, count clues must count the whole thing the map counts with its number, no parentNote in the request, two rotating facts per Park Find kind). The request was built by src/lib/ai/prompt.ts + schema.ts from the recorded fixtures in this folder; only the model call was live. No key or auth header is stored.",
-    "recordedAt": "2026-10-06T04:00:25.222Z",
+    "what": "Real DigitalOcean serverless inference answer (strict json_schema) for the Celebration Park pass (ages 6-10), re-recorded after audit round 2 (the Find This Spot riddle source now uses the park-seeded facts, factsFor(), instead of one fixed sentence; PM extra, e57dc92). The request was built by src/lib/ai/prompt.ts + schema.ts from the recorded fixtures in this folder; only the model call was live. No key or auth header is stored.",
+    "recordedAt": "2026-10-06T09:45:41.784Z",
     "endpoint": "https://inference.do-ai.run/v1/chat/completions",
     "httpStatus": 200,
-    "wallMs": 24487,
+    "wallMs": 11675,
     "parkId": "way/188145317",
     "ageBand": "6-10",
     "recordedAtMs": 1791256837998,
     "modelCalls": [
       {
         "status": 200,
-        "latencyMs": 24394,
-        "at": "2026-10-06T04:00:25.222Z"
+        "latencyMs": 11583,
+        "at": "2026-10-06T09:45:41.784Z"
       }
     ],
-    "recordedBy": "builder R2 H: scratch Vitest test running makePass() with passReplay() for data and the live model",
+    "recordedBy": "builder (post-R2 eval sync): scratch Vitest test running makePass() with passReplay() for data and the live model",
     "previous": {
-      "recordedAt": "2026-10-06T04:01:17.255Z"
+      "recordedAt": "2026-10-06T04:00:25.222Z"
     }
   },
   "request": {
@@ -29,7 +29,7 @@
       },
       {
         "role": "user",
-        "content": "Park: <source id=\"park-name\" section=\"park\" kind=\"park name\">Celebration Park</source>\nPOOL:\n<source id=\"osm-basketball\" section=\"park\" kind=\"basketball court\">Celebration Park has 2 basketball courts on the map (OpenStreetMap). Each one is a flat hard court with a hoop on a tall pole at each end. Its hoop is a metal ring, often with a net hanging down, fixed to a flat board.</source>\n<source id=\"osm-tennis\" section=\"park\" kind=\"tennis court\">Celebration Park has 4 tennis courts on the map (OpenStreetMap). Each one is a flat court with a low net across the middle. A tall wire fence usually goes all around it to keep the balls in.</source>\n<source id=\"osm-soccer\" section=\"park\" kind=\"soccer field\">Celebration Park has 25 soccer fields on the map (OpenStreetMap). Mapped name: Celebration Park Soccer Fields. Each one is a big grass field with a goal with a net at each end. White lines on its grass mark a big box in front of each goal.</source>\n<source id=\"osm-baseball\" section=\"park\" kind=\"baseball field\">Celebration Park has 5 baseball fields on the map (OpenStreetMap). Mapped name: Celebration Park Baseball Diamonds. Players wait their turn on long benches in low dugouts beside it. Each one has a dirt infield with a base at each corner.</source>\n<source id=\"osm-sports-field\" section=\"park\" kind=\"sports field\">Celebration Park has 2 sports fields on the map (OpenStreetMap). Painted lines or flat open grass show where a game is played on it. Teams and families use it for running games and practice.</source>\n<source id=\"osm-playground\" section=\"park\" kind=\"playground\">Celebration Park has a playground on the map (OpenStreetMap). Kids climb ladders and steps on it to reach the top of the play set. It often has a low fence or a border around it.</source>\n<source id=\"osm-bench\" section=\"park\" kind=\"bench\">Celebration Park has 4 benches on the map (OpenStreetMap). They can be made of wood, metal or stone. Each one is a long outdoor seat for resting.</source>\n<source id=\"osm-fountain\" section=\"park\" kind=\"fountain\">Celebration Park has 2 fountains on the map (OpenStreetMap). You can hear its water splashing as you get close. Some shoot water up high, and some let it trickle down.</source>\n<source id=\"osm-water\" section=\"park\" kind=\"pond or lake\">Celebration Park has 2 ponds or lakes on the map (OpenStreetMap). On a calm day it shines like a mirror. Ripples spread across it when a fish jumps or a bird lands.</source>\n<source id=\"osm-bridge\" section=\"park\" kind=\"bridge\">Celebration Park has a bridge on the map (OpenStreetMap). It lets a path cross over water or a dip in the ground. Many have rails on the sides to hold on to.</source>\nSPOT:\n<source id=\"spot-way-536185861\" section=\"spot\" kind=\"picnic shelter\">On the map of Celebration Park (OpenStreetMap), the X marks a picnic shelter. A picnic shelter has a roof on posts and tables underneath where people eat lunch. It is about 140 m south-east of the START (parking lot).</source>"
+        "content": "Park: <source id=\"park-name\" section=\"park\" kind=\"park name\">Celebration Park</source>\nPOOL:\n<source id=\"osm-basketball\" section=\"park\" kind=\"basketball court\">Celebration Park has 2 basketball courts on the map (OpenStreetMap). Each one is a flat hard court with a hoop on a tall pole at each end. Its hoop is a metal ring, often with a net hanging down, fixed to a flat board.</source>\n<source id=\"osm-tennis\" section=\"park\" kind=\"tennis court\">Celebration Park has 4 tennis courts on the map (OpenStreetMap). Each one is a flat court with a low net across the middle. A tall wire fence usually goes all around it to keep the balls in.</source>\n<source id=\"osm-soccer\" section=\"park\" kind=\"soccer field\">Celebration Park has 25 soccer fields on the map (OpenStreetMap). Mapped name: Celebration Park Soccer Fields. Each one is a big grass field with a goal with a net at each end. White lines on its grass mark a big box in front of each goal.</source>\n<source id=\"osm-baseball\" section=\"park\" kind=\"baseball field\">Celebration Park has 5 baseball fields on the map (OpenStreetMap). Mapped name: Celebration Park Baseball Diamonds. Players wait their turn on long benches in low dugouts beside it. Each one has a dirt infield with a base at each corner.</source>\n<source id=\"osm-sports-field\" section=\"park\" kind=\"sports field\">Celebration Park has 2 sports fields on the map (OpenStreetMap). Painted lines or flat open grass show where a game is played on it. Teams and families use it for running games and practice.</source>\n<source id=\"osm-playground\" section=\"park\" kind=\"playground\">Celebration Park has a playground on the map (OpenStreetMap). Kids climb ladders and steps on it to reach the top of the play set. It often has a low fence or a border around it.</source>\n<source id=\"osm-bench\" section=\"park\" kind=\"bench\">Celebration Park has 4 benches on the map (OpenStreetMap). They can be made of wood, metal or stone. Each one is a long outdoor seat for resting.</source>\n<source id=\"osm-fountain\" section=\"park\" kind=\"fountain\">Celebration Park has 2 fountains on the map (OpenStreetMap). You can hear its water splashing as you get close. Some shoot water up high, and some let it trickle down.</source>\n<source id=\"osm-water\" section=\"park\" kind=\"pond or lake\">Celebration Park has 2 ponds or lakes on the map (OpenStreetMap). On a calm day it shines like a mirror. Ripples spread across it when a fish jumps or a bird lands.</source>\n<source id=\"osm-bridge\" section=\"park\" kind=\"bridge\">Celebration Park has a bridge on the map (OpenStreetMap). It lets a path cross over water or a dip in the ground. Many have rails on the sides to hold on to.</source>\nSPOT:\n<source id=\"spot-way-536185861\" section=\"spot\" kind=\"picnic shelter\">On the map of Celebration Park (OpenStreetMap), the X marks a picnic shelter. It has a roof on posts and tables underneath where people eat lunch. It gives shade from the sun and cover from the rain. It is about 140 m south-east of the START (parking lot).</source>"
       }
     ],
     "max_tokens": 1200,
@@ -141,15 +141,15 @@
         "index": 0,
         "logprobs": null,
         "message": {
-          "content": "{\"items\": [{\"clue\": \"I dare you to find 2 flat hard areas with hoops on tall poles!\", \"difficulty\": \"easy\", \"itemId\": \"osm-basketball\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"2 basketball courts\"}, {\"clue\": \"Can you spot 4 flat areas with low nets across the middle?\", \"difficulty\": \"easy\", \"itemId\": \"osm-tennis\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"4 tennis courts\"}, {\"clue\": \"Bet you can't find 25 big grass areas with goals at the ends!\", \"difficulty\": \"medium\", \"itemId\": \"osm-soccer\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"25 soccer fields\"}, {\"clue\": \"Search for 5 areas that have a dirt center with a base at each corner!\", \"difficulty\": \"medium\", \"itemId\": \"osm-baseball\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"5 baseball fields\"}, {\"clue\": \"I dare you to find 2 areas with painted lines or flat open grass!\", \"difficulty\": \"easy\", \"itemId\": \"osm-sports-field\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"2 sports fields\"}, {\"clue\": \"Find a place with ladders and steps to reach a high top!\", \"difficulty\": \"easy\", \"itemId\": \"osm-playground\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"climb ladders and steps\"}, {\"clue\": \"Count the long outdoor seats. Can you find 4?\", \"difficulty\": \"medium\", \"itemId\": \"osm-bench\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"4 benches\"}, {\"clue\": \"Listen! Can you find 2 things where water is splashing?\", \"difficulty\": \"medium\", \"itemId\": \"osm-fountain\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"2 fountains\"}, {\"clue\": \"Look for a place that shines like a mirror on a calm day!\", \"difficulty\": \"hard\", \"itemId\": \"osm-water\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"shines like a mirror\"}], \"spot\": {\"riddle\": \"Find the place with a roof on posts and tables for lunch!\", \"sourceQuote\": \"roof on posts and tables\", \"targetId\": \"spot-way-536185861\"}}",
+          "content": "{\"items\": [{\"clue\": \"I dare you to find a flat hard spot with a hoop on a tall pole. How many are there? There are 2!\", \"difficulty\": \"easy\", \"itemId\": \"osm-basketball\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"has 2 basketball courts\"}, {\"clue\": \"Can you spot a place with a low net in the middle and a tall wire fence?\", \"difficulty\": \"medium\", \"itemId\": \"osm-tennis\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"low net across the middle\"}, {\"clue\": \"Look for a big grass area with a goal at each end. How many of these can you find? There are 25!\", \"difficulty\": \"hard\", \"itemId\": \"osm-soccer\", \"lookWhere\": \"on the grass\", \"sourceQuote\": \"has 25 soccer fields\"}, {\"clue\": \"Search for a dirt area that has a base at each corner!\", \"difficulty\": \"medium\", \"itemId\": \"osm-baseball\", \"lookWhere\": \"on the ground\", \"sourceQuote\": \"dirt infield with a base\"}, {\"clue\": \"Bet you can't find a place where kids climb ladders and steps to get to the top!\", \"difficulty\": \"easy\", \"itemId\": \"osm-playground\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"climb ladders and steps\"}, {\"clue\": \"Find a long outdoor seat. How many are there to sit on? There are 4!\", \"difficulty\": \"easy\", \"itemId\": \"osm-bench\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"has 4 benches\"}, {\"clue\": \"Listen close! Can you find something where you hear water splashing?\", \"difficulty\": \"medium\", \"itemId\": \"osm-fountain\", \"lookWhere\": \"by the path\", \"sourceQuote\": \"hear its water splashing\"}, {\"clue\": \"Find a spot of water that shines like a mirror on a calm day!\", \"difficulty\": \"medium\", \"itemId\": \"osm-water\", \"lookWhere\": \"near the water\", \"sourceQuote\": \"shines like a mirror\"}, {\"clue\": \"Hunt for a path that goes over water and has rails on the sides!\", \"difficulty\": \"easy\", \"itemId\": \"osm-bridge\", \"lookWhere\": \"near the water\", \"sourceQuote\": \"rails on the sides\"}], \"spot\": {\"riddle\": \"Look for a place with a roof on posts and tables for lunch. It keeps you dry in the rain!\", \"sourceQuote\": \"roof on posts and tables\", \"targetId\": \"spot-way-536185861\"}}",
           "reasoning_content": null,
           "refusal": null,
           "role": "assistant"
         }
       }
     ],
-    "created": 1791269045,
-    "id": "chatcmpl-d6008c17-2128-95cb-86c8-6b351a98eacd",
+    "created": 1791279930,
+    "id": "chatcmpl-ce08c03f-b090-458a-91e8-e8b14229ed34",
     "model": "gemma-4-31B-it",
     "object": "chat.completion",
     "usage": {
@@ -158,14 +158,14 @@
         "ephemeral_1h_input_tokens": 0,
         "ephemeral_5m_input_tokens": 0
       },
-      "cache_read_input_tokens": 0,
-      "completion_tokens": 538,
-      "prompt_tokens": 1714,
+      "cache_read_input_tokens": 1664,
+      "completion_tokens": 591,
+      "prompt_tokens": 1724,
       "prompt_tokens_details": {
-        "cached_tokens": 0
+        "cached_tokens": 1664
       },
       "speed": null,
-      "total_tokens": 2252
+      "total_tokens": 2315
     }
   }
 }

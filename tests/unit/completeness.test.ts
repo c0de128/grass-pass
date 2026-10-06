@@ -20,7 +20,7 @@ import {
   validateDraft,
   voiceSwitch,
 } from "@/lib/ai/validate";
-import { MAX_MODEL_CALLS, REFILL_TIMEOUT_MS, WHOLE_RETRY_MIN_LEFT_MS } from "@/lib/ai/build-pass";
+import { MAX_MODEL_CALLS, REFILL_TIMEOUT_MS, retryableModelError, retryText, WHOLE_RETRY_MIN_LEFT_MS } from "@/lib/ai/build-pass";
 import { resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
@@ -256,6 +256,65 @@ describe("buildPass calls (built failures; every other answer is a real recordin
     expect(logs.filter((l) => l.includes('"event":"pass_call_failed"') && l.includes('"code":"MODEL_TIMEOUT"') && l.includes('"refill":true'))).toHaveLength(1);
     expect(out.pass.items).toHaveLength(6); // the real refill keeps none: 6 of 8, honestly
   }, 30_000);
+
+  it("Q-5-04: a failed whole retry stops at 2 calls (timeout, then timeout again) with an honest error", async () => {
+    const r = passReplay({ model: (c) => hang(c) });
+    const steps: string[] = [];
+    const out = await makePass(
+      { parkId: PARKS.celebration.id, ageBand: "6-10" },
+      { ip: "192.0.2.93", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, onStep: (s) => steps.push(`${s.step}:${s.text}`) },
+    );
+    if (out.kind !== "error") throw new Error(out.kind);
+    expect(out.error.code).toBe("MODEL_TIMEOUT");
+    expect(modelCalls(r.calls)).toHaveLength(2);
+    // Q-5-03: the second call's progress line gives the true reason (a timeout, not "clues didn't pass").
+    expect(steps).toContain(`retry:${retryText("timeout")}`);
+    expect(steps.join("\n")).not.toContain(retryText("refill"));
+  }, 30_000);
+
+  it("Q-5-04: no whole retry starts with less than WHOLE_RETRY_MIN_LEFT_MS left (first call fails at 62 s on the virtual clock)", async () => {
+    let skew = 0;
+    const r = passReplay({
+      model: () => {
+        skew += 62_000; // built: the first call 'took' 62 s of the 85 s pass deadline, then failed with a retryable 403
+        return new Response("forbidden", { status: 403 });
+      },
+    });
+    const out = await makePass(
+      { parkId: PARKS.celebration.id, ageBand: "6-10" },
+      { ip: "192.0.2.94", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, now: () => Date.now() + skew },
+    );
+    expect(out.kind).toBe("error");
+    expect(modelCalls(r.calls)).toHaveLength(1);
+    expect(WHOLE_RETRY_MIN_LEFT_MS).toBe(25_000);
+  }, 30_000);
+
+  it.each([400, 401, 404])("Q-5-04: a %i from the provider is never retried (it would fail the same way)", async (status) => {
+    const r = passReplay({ model: () => new Response("no", { status }) });
+    const out = await makePass({ parkId: PARKS.celebration.id, ageBand: "6-10" }, { ip: `192.0.2.${95 + (status % 7)}`, fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env });
+    expect(out.kind).toBe("error");
+    expect(modelCalls(r.calls)).toHaveLength(1);
+  });
+
+  it("Q-5-04: retryableModelError keeps timeouts, network, malformed, 5xx, 408 and 403; drops 400/401/404, quota and rate limits", () => {
+    for (const refill of [false, true]) {
+      expect(retryableModelError({ code: "MODEL_TIMEOUT" }, refill)).toBe(true);
+      expect(retryableModelError({ code: "MODEL_NETWORK" }, refill)).toBe(true);
+      expect(retryableModelError({ code: "MODEL_BAD_OUTPUT", upstreamStatus: 200 }, refill)).toBe(true);
+      for (const s of [500, 502, 503, 408, 403]) expect(retryableModelError({ code: "MODEL_PROVIDER", upstreamStatus: s }, refill)).toBe(true);
+      for (const s of [400, 401, 404, 422]) expect(retryableModelError({ code: "MODEL_PROVIDER", upstreamStatus: s }, refill)).toBe(false);
+      expect(retryableModelError({ code: "MODEL_RATE_LIMITED", upstreamStatus: 429 }, refill)).toBe(false);
+      expect(retryableModelError({ code: "MODEL_QUOTA", upstreamStatus: 402 }, refill)).toBe(false);
+      expect(retryableModelError({ code: "MODEL_NOT_CONFIGURED" }, refill)).toBe(false);
+    }
+  });
+
+  it("Q-5-03: each retry reason has its own progress line", () => {
+    const lines = (["timeout", "failed", "none_kept", "refill", "last_refill"] as const).map(retryText);
+    expect(new Set(lines).size).toBe(5);
+    expect(retryText("timeout")).toMatch(/didn't answer in time/);
+    expect(lines.filter((l) => /once more/.test(l))).toHaveLength(0);
+  });
 
   it("a rate-limited first call (built 429) is never retried", async () => {
     const r = passReplay({ model: () => new Response("slow down", { status: 429 }) });

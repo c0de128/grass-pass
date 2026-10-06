@@ -98,6 +98,35 @@ export const REFILL_TIMEOUT_MS = 20_000;
 const RETRYABLE_FIRST: ReadonlySet<string> = new Set(["MODEL_TIMEOUT", "MODEL_PROVIDER", "MODEL_BAD_OUTPUT", "MODEL_NETWORK"]);
 /** Failed refills after which another refill may still be tried (an answer that never came). */
 const RETRYABLE_REFILL: ReadonlySet<string> = new Set(["MODEL_TIMEOUT", "MODEL_PROVIDER", "MODEL_BAD_OUTPUT", "MODEL_NETWORK"]);
+/**
+ * Q-5-04: a provider error is only worth another call when it can pass: 5xx, 408, and 403 (run -5 had a transient
+ * 403). A 400 (request rejected), 401 (bad key) or 404 (wrong MODEL_ID) would fail the same way and use up a second
+ * AI-cap unit, so it stops.
+ */
+export function retryableModelError(err: { code: string; upstreamStatus?: number }, refill: boolean): boolean {
+  if (!(refill ? RETRYABLE_REFILL : RETRYABLE_FIRST).has(err.code)) return false;
+  if (err.code !== "MODEL_PROVIDER" || err.upstreamStatus === undefined) return true;
+  return err.upstreamStatus >= 500 || err.upstreamStatus === 408 || err.upstreamStatus === 403;
+}
+
+/** Why another model call is starting (Q-5-03: the progress line must say the true reason). */
+export type RetryReason = "timeout" | "failed" | "none_kept" | "refill" | "last_refill";
+
+/** The progress line for a second or third model call. */
+export function retryText(reason: RetryReason): string {
+  switch (reason) {
+    case "timeout":
+      return "The AI didn't answer in time. Asking it again…";
+    case "failed":
+      return "The AI's answer didn't come through. Asking it again…";
+    case "none_kept":
+      return "None of the clues passed the checks. Asking the model again…";
+    case "refill":
+      return "A few clues didn't pass the checks. Asking the model for a few more…";
+    case "last_refill":
+      return "Still a few finds short. Asking for the last few…";
+  }
+}
 
 const speciesCache = createJsonCache({ name: "inat-species", schema: SpeciesListSchema, ttlSec: SPECIES_TTL_SEC, maxEntries: 2_000 });
 const taxaCache = createJsonCache({ name: "inat-taxon", schema: TaxonSummarySchema, ttlSec: TAXA_TTL_SEC, maxEntries: 20_000 });
@@ -180,7 +209,7 @@ export function stepText(step: PassStep, env: Env): string {
     case "check":
       return "Fact-checking every clue against its source…";
     case "retry":
-      return "A few clues didn't pass the checks. Asking the model once more…";
+      return retryText("refill");
   }
 }
 
@@ -442,6 +471,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let answered = modelId;
   let best: ValidationResult | null = null;
   let lastError: ModelError | null = null;
+  /** Did the previous call fail (no answer)? Picks the honest progress line for the next call (Q-5-03). */
+  let prevFailed: ModelError | null = null;
+  let refills = 0;
   /** The first riddle (of up to two calls) that passed every check. */
   let riddle: string | null = null;
   let riddleDrop: SpotReason | null = null;
@@ -491,8 +523,16 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       if (call === 1) return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 }, parkData };
       break;
     }
-    if (call > 1) deps.emit("retry", stepText("retry", deps.env));
-    else deps.emit("clues", stepText("clues", deps.env));
+    if (call > 1) {
+      const reason: RetryReason = prevFailed
+        ? prevFailed.code === "MODEL_TIMEOUT" ? "timeout" : "failed"
+        : !refill
+          ? "none_kept"
+          : refills === 0 ? "refill" : "last_refill";
+      if (refill) refills++;
+      deps.emit("retry", retryText(reason));
+    } else deps.emit("clues", stepText("clues", deps.env));
+    prevFailed = null;
     // The paid call starts now: it counts, and it finishes (and is cached) even if every client leaves.
     ticket.commit();
     deps.pin();
@@ -545,12 +585,13 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       if (!(err instanceof ModelError)) throw err;
       attempts += 1;
       lastError = err;
+      prevFailed = err;
       log("pass_call_failed", { call, refill, code: err.code, upstreamStatus: err.upstreamStatus ?? null, timeoutMs });
       // Completeness (run 2026-10-06-5, Cedar Ridge 10-13: the first call timed out at 30 s and the pass was
       // lost): a failed first call gets ONE whole-request retry while the deadline allows it; a failed refill
       // may be followed by one more refill. Quota, rate limits and a missing key are never retried.
       // (Network errors and 5xx were already retried once inside callModel.)
-      if (!(refill ? RETRYABLE_REFILL : RETRYABLE_FIRST).has(err.code)) break;
+      if (!retryableModelError(err, refill)) break;
     }
   }
 

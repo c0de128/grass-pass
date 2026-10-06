@@ -219,3 +219,18 @@ describe("phone example row (R1 UX m8 kept in the v3 layout)", () => {
     expect(shortParkName("Connemara Meadow Preserve")).toBe("Connemara Meadow");
   });
 });
+
+describe("UX-5-07: the photo credit line links each photo once and each licence once", () => {
+  it("4 photos with 2 licences -> 4 photo links + 2 licence links, every author and licence named", async () => {
+    const { PhotoCredits } = await import("@/components/home/PhotoCredits");
+    const html = renderToStaticMarkup(<PhotoCredits />);
+    const photos = Object.values(PARK_PHOTOS);
+    const licences = new Set(photos.map((p) => p.licenceUrl));
+    expect(html.match(/<a /g)).toHaveLength(photos.length + licences.size);
+    for (const p of photos) {
+      expect(html).toContain(`href="${p.sourceUrl}"`);
+      expect(html).toContain(`by ${p.author}`);
+    }
+    for (const u of licences) expect(html.split(`href="${u}"`).length - 1).toBe(1);
+  });
+});

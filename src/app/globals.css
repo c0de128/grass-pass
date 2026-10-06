@@ -126,15 +126,54 @@
  * scrollbar steady. Screen only; anchors still scroll to the right place. Not on #parks: axe then misreads the
  * background behind its credit line (a false contrast failure that drops Lighthouse accessibility to 96).
  */
+/*
+ * UX-5-01 (R5): every placeholder must be AT LEAST as tall as its real section at that width. A skipped section still
+ * reports its children's real layout boxes, so a too-short placeholder let #pass's dark band card (real height
+ * 1,961 px at 390 px vs a 1,450 px placeholder) sit over the #parks "Explore" eyebrow, and axe/Lighthouse read that
+ * as a 2.78:1 contrast failure (Lighthouse mobile accessibility 96). Real heights measured 2026-10-06 on a server with no
+ * example passes (a real riddle makes #pass taller), so the placeholders leave 300-400 px of room:
+ *   width   #why   #how   #pass
+ *   320     1726   1878   2305
+ *   390     1686   1703   1961
+ *   640     1839   1582   1731
+ *   768     1091   1141   1314
+ *   1280    1127   1014   1098
+ * tests/e2e/home-axe-scroll.spec.ts re-measures them at every width.
+ */
 @media screen {
   .gp-home > section:is(#why, #how, #pass) {
     content-visibility: auto;
-    contain-intrinsic-size: auto 900px;
   }
-  /* #pass is ~1,200-1,420 px tall from 768 px up (measured 2026-10-06 with a real Find This Spot riddle). With a 900 px
-     placeholder its band card spilled over the #parks heading while skipped, and axe misread that heading's background
-     (a false contrast failure at 1280 px). A placeholder at least as tall as the real section keeps the two apart. */
+  .gp-home > section#why {
+    contain-intrinsic-size: auto 2000px;
+  }
+  .gp-home > section#how {
+    contain-intrinsic-size: auto 2100px;
+  }
   .gp-home > section#pass {
-    contain-intrinsic-size: auto 1450px;
+    contain-intrinsic-size: auto 2700px;
   }
 }
+@media screen and (min-width: 640px) {
+  .gp-home > section#why {
+    contain-intrinsic-size: auto 2000px;
+  }
+  .gp-home > section#how {
+    contain-intrinsic-size: auto 1800px;
+  }
+  .gp-home > section#pass {
+    contain-intrinsic-size: auto 2000px;
+  }
+}
+@media screen and (min-width: 768px) {
+  .gp-home > section#why {
+    contain-intrinsic-size: auto 1300px;
+  }
+  .gp-home > section#how {
+    contain-intrinsic-size: auto 1300px;
+  }
+  .gp-home > section#pass {
+    contain-intrinsic-size: auto 1550px;
+  }
+}
+

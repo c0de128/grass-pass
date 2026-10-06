@@ -31,7 +31,7 @@ export function SiteHeader() {
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-md print:hidden">
       {/* Phones (under 640 px): the logo and the dark mode switch on top, the page tabs on a second row, so
           "How it works" and "About" stay visible without sideways scrolling (360 px measured). */}
-      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 px-4 pt-1.5 sm:h-16 sm:flex-nowrap sm:gap-6 sm:px-5 sm:pt-0 md:px-8">
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 px-4 pt-1.5 max-[359px]:gap-x-2 sm:h-16 sm:flex-nowrap sm:gap-6 sm:px-5 sm:pt-0 md:px-8">
         <Link href="/" prefetch={false} aria-label="Grass Pass home" className="inline-flex min-h-11 shrink-0 items-center rounded-md text-foreground">
           <Logo />
         </Link>
@@ -56,7 +56,7 @@ export function SiteHeader() {
             ))}
           </ul>
         </nav>
-        <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
+        <div className="ml-auto flex items-center gap-2 max-[359px]:gap-1 sm:ml-0 sm:gap-3">
           <AccountMenu />
           <ThemeToggle />
           <Link

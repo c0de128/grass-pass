@@ -92,7 +92,7 @@ export function AccountMenu() {
       <Link
         href="/signin"
         prefetch={false}
-        className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-muted"
+        className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-muted max-[359px]:gap-1 max-[359px]:px-1"
         data-testid="header-sign-in"
       >
         <LogIn className="size-4" aria-hidden="true" />
@@ -120,7 +120,7 @@ export function AccountMenu() {
         {who.label}
       </span>
       <input type="hidden" name="returnTo" value={returnTo} />
-      <button type="submit" className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-muted">
+      <button type="submit" className="inline-flex min-h-11 items-center gap-1.5 rounded-full px-2 text-sm font-semibold whitespace-nowrap text-foreground hover:bg-muted max-[359px]:gap-1 max-[359px]:px-1">
         <LogOut className="size-4" aria-hidden="true" />
         Sign out<span className="sr-only md:hidden"> ({who.label})</span>
       </button>

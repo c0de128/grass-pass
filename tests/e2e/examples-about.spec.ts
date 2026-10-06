@@ -14,13 +14,13 @@ test.describe("example parks", () => {
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 2, name: "See a real pass, right now." })).toBeVisible();
     const list = page.getByRole("list", { name: "Example parks" });
-    await expect(list.getByRole("listitem")).toHaveCount(4);
+    await expect(list.locator(":scope > li")).toHaveCount(4);
 
     // Each card has a data-state (ExampleParks.tsx): ready | off | making | waiting. Decide on that, not on copy.
-    const states = async () => list.getByRole("listitem").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
+    const states = async () => list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
     const explainsItself = async () => {
       // Every example without a pass says why, in words (never a blank or a made-up pass).
-      for (const item of await list.getByRole("listitem").all()) {
+      for (const item of await list.locator(":scope > li").all()) {
         if ((await item.getByRole("link").count()) === 0) await expect(item).toContainText(/^.+No data available yet: \S.{10,}/);
       }
     };
@@ -28,7 +28,7 @@ test.describe("example parks", () => {
     // PREWARM_EXAMPLES=0 (keyless CI): every card says the examples are switched off, so SKIP with that copy.
     if ((await states()).every((s) => s === "off")) {
       await explainsItself();
-      test.skip(true, `Example warm-up is switched off on this server; every card says: ${await list.getByRole("listitem").first().textContent()}`);
+      test.skip(true, `Example warm-up is switched off on this server; every card says: ${await list.locator(":scope > li").first().textContent()}`);
     }
 
     // Wait (reloading) while the server is making an example pass. When nothing is ready and nothing is
@@ -62,11 +62,11 @@ test.describe("example parks", () => {
     test.setTimeout(300_000);
     await page.goto("/");
     const list = page.getByRole("list", { name: "Example parks" });
-    await expect(list.getByRole("listitem").first()).toContainText("Arbor Hills Nature Preserve");
-    await expect(list.getByRole("listitem").last()).toContainText("Connemara Meadow Preserve");
+    await expect(list.locator(":scope > li").first()).toContainText("Arbor Hills Nature Preserve");
+    await expect(list.locator(":scope > li").last()).toContainText("Connemara Meadow Preserve");
     // Let the warm-up finish (cards say "making" while a pass is being made), so every example that CAN be
     // made is checked, not just the first one ready.
-    const states = async () => list.getByRole("listitem").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
+    const states = async () => list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
     for (let i = 0; i < 40 && (await states()).includes("making"); i++) {
       await page.waitForTimeout(5_000);
       await page.reload();

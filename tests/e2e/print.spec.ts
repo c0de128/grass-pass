@@ -30,7 +30,7 @@ test("a print link for a pass that isn't saved says so and links back", async ({
   const res = await page.goto("/pass/w1-6to10-20200101-1/print");
   expect(res?.status()).toBe(404);
   await expect(page.getByRole("heading", { level: 1, name: "No pass here" })).toBeVisible();
-  await expect(page.getByRole("link", { name: "Make a pass" })).toHaveAttribute("href", "/");
+  await expect(page.getByRole("main").getByRole("link", { name: "Make a pass" })).toHaveAttribute("href", "/");
 });
 
 test.describe("a real pass", () => {

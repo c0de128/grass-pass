@@ -101,5 +101,5 @@ test("a pass id that isn't saved says so, with HTTP 404, and links back", async 
   await expect(
     page.getByText("No data available: this pass isn't saved here anymore (passes are kept for 30 days), or the link is wrong."),
   ).toBeVisible();
-  await expect(page.getByRole("link", { name: "Make a pass" })).toHaveAttribute("href", "/");
+  await expect(page.getByRole("main").getByRole("link", { name: "Make a pass" })).toHaveAttribute("href", "/");
 });

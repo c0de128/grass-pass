@@ -4,7 +4,8 @@
  *
  * Per item, in order: spec zod schema -> URL/markup -> unknown id -> duplicate id -> section
  * mismatch -> danger (blocked taxon, or a blocked word in the text) -> grounding (`sourceQuote` must
- * be a normalized substring of that item's sourceText) -> name leak (common/scientific name or a
+ * be a normalized substring of that item's sourceText; S8c: a quote with the next JSON field glued on
+ * is cut back at the field marker and must then be a real substring) -> name leak (common/scientific name or a
  * distinctive part of it, plural too, in the clue; a leak only in `lookWhere` blanks that hint and keeps
  * the item) -> numbers not in the source. Then the mix limits computed by
  * code are re-applied (extras beyond a section's max are dropped, in answer order).
@@ -45,6 +46,8 @@ export type ValidationResult = {
   hardCount: number;
   /** Items kept with their lookWhere left out because it used a word of the answer's name. */
   lookWhereCleared: number;
+  /** S8c: items whose quote had the next JSON field glued on and was cut back to its real source part. */
+  quotesRepaired: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -80,11 +83,59 @@ function trimQuote(q: string): string {
   return t;
 }
 
-/** True when `quote` (normalized) is a substring of `source` (normalized) and long enough to mean something. */
-export function isGrounded(quote: string, source: string): boolean {
+/** The normalized quote when it is a substring of the normalized source and long enough, else null. */
+function exactMatch(quote: string, normSource: string): string | null {
   const q = trimQuote(normalizeForMatch(quote));
-  if (q.length < MIN_GROUNDING_CHARS) return false;
-  return normalizeForMatch(source).includes(q);
+  if (q.length < MIN_GROUNDING_CHARS) return null;
+  return normSource.includes(q) ? q : null;
+}
+
+/**
+ * S8c: a decoding glitch seen in 3 of 56 Gemma 4 31B answers (2026-10-05-2) glues the start of the next
+ * JSON field onto a correct quote: "...across the park.专项parentNote: Help the child...",
+ * "...as well as TexasparentNote: ...", "...for resting.`, ", "...one-bench-sourceQuote: ...".
+ * The marker is where the quote ends. Schema field names match anywhere (they come glued to a word);
+ * any other camelCase "...Note:" key starting a word ("periodontalNote:") and JSON punctuation residue (a quote mark or backtick before , } ]) too.
+ */
+export const FIELD_MARKER_RE =
+  /\s*[,;.…]*\s*(?:parentNote|lookWhere|sourceQuote|itemId|targetId)\s*[:=]?|(?:^|[^\p{L}])(?:clue|section|difficulty|riddle)\s*[:=]|(?<!\p{L})\p{Ll}+Note\s*[:=]|[`"]\s*[,}\]]/u;
+/** A run of letters from a non-Latin script glued into an English quote ("park.专项"): the glitch, never source text here. */
+const NON_LATIN_RE = /[^\p{Script=Latin}\p{Script=Common}\p{Script=Inherited}]/u;
+/** After the cut, at most this many trailing junk words ("Spanish gold house") may be dropped. */
+const MAX_JUNK_WORDS = 2;
+
+/**
+ * The part of a glued quote that is really in the source, or null. Only used when the model's quote
+ * failed the exact check AND carries a field marker. The answer is always a real normalized substring
+ * of the source (never invented text): the quote up to the marker, minus any non-Latin glitch run and
+ * at most MAX_JUNK_WORDS trailing words.
+ */
+export function repairGluedQuote(quote: string, source: string): string | null {
+  const m = FIELD_MARKER_RE.exec(quote);
+  if (!m) return null;
+  let head = quote.slice(0, m.index);
+  const nl = NON_LATIN_RE.exec(head);
+  if (nl) head = head.slice(0, nl.index);
+  const normSource = normalizeForMatch(source);
+  const words = head.trim().split(/\s+/);
+  for (let drop = 0; drop <= MAX_JUNK_WORDS && words.length - drop > 0; drop++) {
+    const hit = exactMatch(words.slice(0, words.length - drop).join(" "), normSource);
+    if (hit) return hit;
+  }
+  return null;
+}
+
+/**
+ * The grounded quote: the model's quote (normalized) when it is a substring of the source, else the
+ * repaired part of a glued quote (S8c), else null.
+ */
+export function groundedQuote(quote: string, source: string): string | null {
+  return exactMatch(quote, normalizeForMatch(source)) ?? repairGluedQuote(quote, source);
+}
+
+/** True when `quote` (normalized, or its repaired glued form) is a substring of `source` and long enough to mean something. */
+export function isGrounded(quote: string, source: string): boolean {
+  return groundedQuote(quote, source) !== null;
 }
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -115,6 +166,19 @@ export const hasUrlOrMarkup = (s: string) => MARKUP_RE.test(s);
 /** Single-line plain text: control characters removed, spaces collapsed. */
 const tidy = (s: string) => s.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
 
+const tidyStrings = (o: Record<string, unknown>) => Object.fromEntries(Object.entries(o).map(([k, v]) => [k, typeof v === "string" ? tidy(v) : v]));
+
+/**
+ * S8c (M7): the request schema no longer asks the model for `section` (about 6 answer tokens per item);
+ * code fills it from the pool item the id points to. An answer that does carry a section is still
+ * checked against the pool (section_mismatch), so the SPEC 6.2 item schema is unchanged.
+ */
+function withCodeSection(o: Record<string, unknown>, byId: ReadonlyMap<string, PoolItem>): Record<string, unknown> {
+  if (o.section !== undefined || typeof o.itemId !== "string") return o;
+  const item = byId.get(o.itemId);
+  return item ? { ...o, section: item.section } : o;
+}
+
 export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[], mix: Mix): ValidationResult {
   const byId = new Map(pool.map((p) => [p.id, p]));
   const drops: Partial<Record<DropReason, number>> = {};
@@ -124,15 +188,13 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
   const used = new Set<string>();
   const kept: ValidItem[] = [];
   let lookWhereCleared = 0;
+  let quotesRepaired = 0;
 
   for (const raw of draft.items) {
-    const parsed = PassItemDraft.safeParse(
-      raw && typeof raw === "object"
-        ? Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, typeof v === "string" ? tidy(v) : v]))
-        : raw,
-    );
+    const parsed = PassItemDraft.safeParse(raw && typeof raw === "object" ? withCodeSection(tidyStrings(raw as Record<string, unknown>), byId) : raw);
     if (!parsed.success) {
-      drop("schema");
+      const id = raw && typeof raw === "object" ? (raw as Record<string, unknown>).itemId : undefined;
+      drop(typeof id === "string" && !byId.has(id) ? "unknown_id" : "schema");
       continue;
     }
     const d = parsed.data;
@@ -157,9 +219,17 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
       drop("danger");
       continue;
     }
-    if (!isGrounded(d.sourceQuote, item.sourceText)) {
-      drop("not_grounded");
-      continue;
+    const normSource = normalizeForMatch(item.sourceText);
+    let sourceQuote = d.sourceQuote;
+    if (!exactMatch(sourceQuote, normSource)) {
+      const repaired = repairGluedQuote(sourceQuote, item.sourceText);
+      if (!repaired) {
+        drop("not_grounded");
+        continue;
+      }
+      // S8c: keep only the part that is really in the source (the glued next field is cut off).
+      sourceQuote = repaired;
+      quotesRepaired++;
     }
     if (nameLeak(d.clue, item.nameWords)) {
       drop("name_leak");
@@ -177,7 +247,7 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
       continue;
     }
     used.add(item.id);
-    kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote: d.sourceQuote });
+    kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote });
   }
 
   // Re-check the mix limits computed by code.
@@ -205,6 +275,7 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
     belowMin,
     hardCount: items.filter((i) => i.difficulty === "hard").length,
     lookWhereCleared,
+    quotesRepaired,
   };
 }
 
@@ -229,7 +300,7 @@ export type SpotReason = "missing" | "schema" | "wrong_target" | "url_or_markup"
 export function validateSpot(raw: unknown, target: SpotCheckTarget): { ok: true; riddle: string } | { ok: false; reason: SpotReason } {
   if (raw === undefined || raw === null) return { ok: false, reason: "missing" };
   const parsed = SpotDraft.safeParse(
-    typeof raw === "object" ? Object.fromEntries(Object.entries(raw as Record<string, unknown>).map(([k, v]) => [k, typeof v === "string" ? tidy(v) : v])) : raw,
+    typeof raw === "object" ? tidyStrings(raw as Record<string, unknown>) : raw,
   );
   if (!parsed.success) return { ok: false, reason: "schema" };
   const d = parsed.data;

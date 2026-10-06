@@ -38,7 +38,7 @@ function legacyPool(d: CaseData): PoolItem[] {
   const park = d.pool
     .filter((p) => p.section === "park")
     .map((p) => ({ ...p, sourceText: `${p.sourceText} ${FEATURE_KINDS[p.id.slice(4).replace(/-/g, "_") as FeatureKind].describe}` }));
-  const wild = d.species ? wildPool(d.species, d.summaries, "2026-09-21", undefined, { describableOnly: false }).items : [];
+  const wild = d.species ? wildPool(d.species, d.summaries, "2026-09-21", undefined, { describableOnly: false, kidText: false }).items : [];
   return [...park, ...wild];
 }
 

@@ -87,7 +87,7 @@ describe("which pools are low data, and how many spares they get", () => {
     const cel = planRequest(celebration, "6-10", "Celebration Park")!;
     expect([cel.lowData, cel.mix.n, cel.ask.n]).toEqual([false, 8, 8]);
     expect(cel.openers).toEqual(openersFor("Celebration Park", 8));
-    expect(cel.validate).toEqual({ hasMap: false, ask: cel.ask, lowData: false });
+    expect(cel.validate).toEqual({ hasMap: false, ask: cel.ask, lowData: false, band: "6-10" });
     const nine = planRequest(celebration.slice(0, 9), "6-10", "P")!;
     expect([nine.lowData, nine.mix.n, nine.ask.n]).toEqual([true, 8, 9]);
     expect(planRequest(celebration.slice(0, 2), "6-10", "P")).toBeNull(); // the "all empty" path: no model call

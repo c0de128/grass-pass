@@ -289,6 +289,107 @@
      {"count":1,"taxon":{"id":164861,"name":"Ludwigia octovalvis","rank":"species","preferred_common_name":"Mexican Primrose-willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,50339,1647660,164861]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/62944?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:01.726Z",
+   "latencyMs": 67,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":62944,"name":"Cardiospermum halicacabum","preferred_common_name":"Lesser Balloon Vine","wikipedia_summary":"<i><b>Cardiospermum halicacabum</b></i>, known as the <b>balloon plant</b> or <b>love in a puff</b>, is a climbing plant widely distributed in tropical and subtropical Africa and Asia. Often found as a weed along roads and rivers, it has been examined for antidiarrhoeal as well as homoeopathic medicinal properties.","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C62944%2C78453%2C128701%2C135263%2C142653%2C164861&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:11.344Z",
+   "latencyMs": 359,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":102,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":43,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":32,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":25,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":18,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":14,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":7,"taxon":{"id":54797,"name":"Gleditsia triacanthos","rank":"species","preferred_common_name":"honey locust","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,48498,54797]}},
+     {"count":6,"taxon":{"id":52599,"name":"Pontederia cordata","rank":"species","preferred_common_name":"pickerelweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,52601,52602,962644,52599]}},
+     {"count":6,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}},
+     {"count":3,"taxon":{"id":54808,"name":"Fraxinus pennsylvanica","rank":"species","preferred_common_name":"green ash","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47733,54806,1324541,54808]}},
+     {"count":2,"taxon":{"id":78453,"name":"Persicaria hydropiperoides","rank":"species","preferred_common_name":"swamp smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,78453]}},
+     {"count":1,"taxon":{"id":164861,"name":"Ludwigia octovalvis","rank":"species","preferred_common_name":"Mexican Primrose-willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,50339,1647660,164861]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C62944%2C78453%2C128701%2C135263%2C142653%2C164861&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:13.428Z",
+   "latencyMs": 664,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 8,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":28,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":25,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":14,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":11,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":5,"taxon":{"id":52599,"name":"Pontederia cordata","rank":"species","preferred_common_name":"pickerelweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,52601,52602,962644,52599]}},
+     {"count":5,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":2,"taxon":{"id":78453,"name":"Persicaria hydropiperoides","rank":"species","preferred_common_name":"swamp smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,78453]}},
+     {"count":1,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.05819&lng=-96.67036&radius=50&verifiable=true&month=10&taxon_id=51453%2C52599%2C53034%2C54797%2C54808%2C58205%2C58371%2C60210%2C62944%2C78453%2C128701%2C135263%2C142653%2C164861&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:16.173Z",
+   "latencyMs": 325,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 8,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":42,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":29,"taxon":{"id":62944,"name":"Cardiospermum halicacabum","rank":"species","preferred_common_name":"Lesser Balloon Vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,62946,62944]}},
+     {"count":27,"taxon":{"id":51453,"name":"Passiflora incarnata","rank":"species","preferred_common_name":"purple passionflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,51451,853017,853019,51452,878751,1255740,51453]}},
+     {"count":7,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":6,"taxon":{"id":128701,"name":"Desmanthus illinoensis","rank":"species","preferred_common_name":"Illinois bundleflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,373578,479698,128700,128701]}},
+     {"count":4,"taxon":{"id":54797,"name":"Gleditsia triacanthos","rank":"species","preferred_common_name":"honey locust","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,48498,54797]}},
+     {"count":2,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":164861,"name":"Ludwigia octovalvis","rank":"species","preferred_common_name":"Mexican Primrose-willow","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47791,47790,50339,1647660,164861]}}
+    ]
+   }
   }
  ]
 }

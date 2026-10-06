@@ -65,7 +65,9 @@ flowchart LR
    the newest month go into the pool; counts are kept 30 days.
 3. **Code decides what is safe.** The blocked groups in `src/lib/safety/danger-taxa.ts` (venomous snakes, recluse and
    widow spiders, fire ants, poison ivy...) are removed by iNaturalist taxon and ancestor ids before the model sees the
-   list, and checked again after. Every Wild Find gets a fixed "look, don't touch" line from code.
+   list, and checked again after. Any species whose own description says it is poisonous, toxic, venomous, stings or
+   burns the skin is left off too, and a clue with one of those words is dropped (a live pass once asked kids to find
+   white snakeroot, "a poisonous perennial herb"). Every Wild Find gets a fixed "look, don't touch" line from code.
 4. **An open model writes the clues** (`gemma-4-31B-it` on DigitalOcean serverless inference by default): it picks items by
    id and writes the clues. The JSON schema allows only the real pool ids.
 5. **Code checks every clue.** Its `sourceQuote` must appear word for word in the item's source; it must not name its

@@ -22,10 +22,12 @@
  */
 import { seasonProblem } from "@/lib/pool/season";
 import { hasUrlOrMarkup } from "@/lib/safety/contact";
-import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
+import { blockedBy, blockedWordIn, dangerClueWord } from "@/lib/safety/danger-taxa";
+import type { AgeBand } from "@/lib/pass/constants";
+import { jargonProblem, triviaProblem } from "./jargon";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
-import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, type Mix } from "./prompt";
+import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, STOCK_PHRASES, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
 /**
@@ -53,6 +55,8 @@ export const DROP_REASONS = [
   "odd_wording",
   "riddle_frame",
   "generic_clue",
+  "jargon",
+  "trivia",
   "copies_example",
   "copies_source",
   "repeats_clue",
@@ -75,14 +79,14 @@ export type ValidItem = {
 /** Drops that say the model could not write a valid clue for THAT item (not an id or shape problem, not style). */
 const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
   "cut_off", "url_or_markup", "danger", "not_grounded", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
-  "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "copies_example", "repeats_clue",
+  "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "jargon", "copies_example", "repeats_clue",
 ]);
 
 /**
  * Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening and
  * name_trait on every pass).
  */
-export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait">;
+export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait" | "trivia">;
 
 export type ValidationResult = {
   items: ValidItem[];
@@ -314,6 +318,8 @@ export type ValidateOptions = {
   allowRepeatedOpenings?: boolean;
   /** Clues already kept by an earlier call of this pass (the refill): repeats are checked against them too. */
   prior?: readonly Pick<ValidItem, "clue">[];
+  /** Audit R5-C3: the pass's age band (the jargon and trivia checks allow a few more words for 10-13). */
+  band?: AgeBand;
   /** Eval tooling (evals/replay.ts): told every drop with the item id and the clue (no effect on the result). */
   trace?: (drop: { reason: DropReason; itemId: string | null; clue: string | null }) => void;
 };
@@ -394,7 +400,14 @@ export function validateDraft(
       drop("section_mismatch");
       continue;
     }
-    if ((item.taxon && blockedBy(item.taxon)) || blockedWordIn(d.clue) || blockedWordIn(d.lookWhere)) {
+    // Audit R5-S1: also any danger word ("a poisonous perennial herb", "venomous", "stings") in the clue or hint.
+    if (
+      (item.taxon && blockedBy(item.taxon)) ||
+      blockedWordIn(d.clue) ||
+      blockedWordIn(d.lookWhere) ||
+      dangerClueWord(d.clue) !== null ||
+      dangerClueWord(d.lookWhere) !== null
+    ) {
       drop("danger");
       continue;
     }
@@ -504,6 +517,16 @@ export function validateDraft(
       drop("generic_clue");
       continue;
     }
+    // Audit R5-C3 / Q-5-01: Wikipedia jargon ("a moth of the Crambidae family", "pale yellow hindtarsomere",
+    // "a mass of 24-39.5 g") gives a child nothing to look for: always removed. A hint with jargon is left out.
+    if (jargonProblem(d.clue, opts.band) !== null) {
+      drop("jargon");
+      continue;
+    }
+    if (lookWhere && jargonProblem(lookWhere, opts.band) !== null) {
+      lookWhere = "";
+      lookWhereCleared++;
+    }
     // R2-M5: the prompt's example sentences came back word for word on every park.
     if (copiesPromptExample(d.clue) !== null) {
       drop("copies_example");
@@ -516,6 +539,9 @@ export function validateDraft(
     // (pool/park.ts chooseWords), so a copied phrase differs between parks. Near-repeats on the same
     // pass stay drops, except on a low-data pool.
     let style: StyleReason | undefined = traitHit ? "name_trait" : undefined;
+    // Audit R5-C3 / Q-5-01: range trivia ("native to Texas and Oklahoma"), field-guide words ("an operculum",
+    // "arboreal") and a bare colour ("a bird that is black"): the first to go when a spare can replace it.
+    if (item.section === "wild" && triviaProblem(d.clue, opts.band) !== null) style ??= "trivia";
     const run = opts.allowSourceCopies ? null : copiedRun(d.clue, item.sourceText);
     if (run !== null) {
       copied.add(run);
@@ -690,7 +716,7 @@ export function validateSpot(raw: unknown, target: SpotCheckTarget): { ok: true;
   const d = parsed.data;
   if (d.targetId !== target.id) return { ok: false, reason: "wrong_target" };
   if (hasUrlOrMarkup(d.riddle)) return { ok: false, reason: "url_or_markup" };
-  if (blockedWordIn(d.riddle)) return { ok: false, reason: "danger" };
+  if (blockedWordIn(d.riddle) || dangerClueWord(d.riddle) !== null) return { ok: false, reason: "danger" };
   if (!isGrounded(d.sourceQuote, target.sourceText)) return { ok: false, reason: "not_grounded" };
   if (nameLeak(d.riddle, target.nameWords)) return { ok: false, reason: "name_leak" };
   if (numbersNotIn(d.riddle, target.sourceText).length > 0) return { ok: false, reason: "number_not_in_source" };
@@ -1013,7 +1039,10 @@ const firstWords = (clue: string, k: number) => (sentencesOf(clue)[0] ?? []).sli
 /** The stock opening a clue starts with ("can you find"), or null (prompt.ts STOCK_OPENINGS). */
 export function stockOpening(clue: string): string | null {
   const start = `${firstWords(clue, 4)} `;
-  return STOCK_OPENINGS.find((o) => start.startsWith(`${o} `)) ?? null;
+  const opening = STOCK_OPENINGS.find((o) => start.startsWith(`${o} `));
+  if (opening) return opening;
+  const all = ` ${sentencesOf(clue).flat().join(" ")} `;
+  return STOCK_PHRASES.find((p) => all.includes(` ${p} `)) ?? null;
 }
 
 /** Two clues that start with the same 3 words. */

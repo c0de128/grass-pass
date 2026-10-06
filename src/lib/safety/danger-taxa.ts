@@ -21,7 +21,8 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   { id: 30493, name: "Micrurus", common: "coralsnakes", why: "venomous snake" },
   { id: 67598, name: "Solenopsis invicta", common: "red imported fire ant", why: "painful stings, mounds" },
   { id: 51079, name: "Toxicodendron", common: "poison ivy, oak and sumac", why: "rash on touch" },
-  { id: 48599, name: "Phytolacca americana", common: "American pokeweed", why: "poisonous berries" },
+  // Audit R5-S1 (2026-10-06): widened from the species (Phytolacca americana 48599) to the genus. iNat 48601 = genus Phytolacca, "Pokeweeds".
+  { id: 48601, name: "Phytolacca", common: "pokeweeds", why: "poisonous berries" },
   { id: 84185, name: "Megalopyge opercularis", common: "southern flannel moth (asp caterpillar)", why: "stinging caterpillar" },
   { id: 48943, name: "Datura", common: "devil's trumpets (jimsonweed)", why: "poisonous plant" },
   { id: 52747, name: "Vespidae", common: "hornets, paper wasps and yellowjackets", why: "stings" },
@@ -33,6 +34,26 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   // Builder addition (live Connemara list 2026-10-05 had western horsenettle and buffalo-bur):
   // iNat 50641 = genus Solanum, "nightshades": spiny stems and poisonous berries.
   { id: 50641, name: "Solanum", common: "nightshades (horsenettle, buffalo-bur)", why: "poisonous berries, spines" },
+  // Audit R5-S1 (2026-10-06): a live 10-13 pass for Tenney Park printed white snakeroot as "a poisonous perennial herb".
+  // Common North American plants and fungi that are deadly or badly poisonous to eat, or that burn the skin, and
+  // that a child could touch or put in their mouth. Every id was resolved live on iNaturalist
+  // (`/v1/taxa?q=<genus>&rank=genus`, 2026-10-06); the comment names what iNat returned.
+  { id: 64116, name: "Ageratina", common: "snakeroots (white snakeroot)", why: "poisonous plant" }, // genus Ageratina, "snakeroots"
+  { id: 60126, name: "Cicuta", common: "water hemlocks", why: "deadly if eaten" }, // genus Cicuta, "water hemlocks"
+  { id: 52999, name: "Conium", common: "poison hemlock", why: "deadly if eaten" }, // genus Conium (no common name on iNat)
+  { id: 54899, name: "Pastinaca", common: "wild parsnip", why: "sap burns skin in sunlight" }, // genus Pastinaca, "parsnips"
+  { id: 53095, name: "Heracleum", common: "hogweeds and cow parsnip", why: "sap burns skin in sunlight" }, // genus Heracleum, "hogweeds"
+  { id: 53725, name: "Melia", common: "chinaberry", why: "poisonous berries" }, // genus Melia (no common name on iNat)
+  { id: 47564, name: "Nerium", common: "oleander", why: "poisonous in all parts" }, // genus Nerium, "oleanders"
+  { id: 56740, name: "Ricinus", common: "castor bean", why: "deadly seeds" }, // genus Ricinus, "Castor Beans" (the plant; not the louse genus 907186)
+  { id: 47555, name: "Taxus", common: "yews", why: "poisonous seeds and leaves" }, // genus Taxus, "yews"
+  { id: 468609, name: "Dermatophyllum", common: "Texas mountain laurel", why: "poisonous seeds" }, // genus Dermatophyllum (no common name on iNat)
+  { id: 50334, name: "Lantana", common: "lantanas", why: "poisonous berries" }, // genus Lantana, "Lantanas"
+  { id: 50311, name: "Arisaema", common: "jack-in-the-pulpits", why: "berries and roots burn the mouth" }, // genus Arisaema
+  // Fungi stay "look, don't touch, never eat" (ADR 0003), except the genera behind most deadly mushroom poisonings.
+  { id: 48419, name: "Amanita", common: "amanitas (death cap, destroying angel, fly agaric)", why: "deadly mushrooms" }, // genus Amanita
+  { id: 118297, name: "Galerina", common: "galerinas (funeral bell)", why: "deadly mushrooms" }, // genus Galerina, "Moss Bells"
+  { id: 117308, name: "Chlorophyllum molybdites", common: "green-spored parasol", why: "poisonous mushroom often found on lawns" }, // species, "Green-spored Parasol"
 ];
 
 const BLOCKED_IDS = new Map(BLOCKED_TAXA.map((t) => [t.id, t]));
@@ -94,6 +115,26 @@ export const BLOCKED_WORDS: readonly string[] = [
   "nightshade",
   "centipede",
   "scorpion",
+  // Audit R5-S1 additions (common names of the new blocked groups).
+  "snakeroot",
+  "hemlock",
+  "cowbane",
+  "wild parsnip",
+  "hogweed",
+  "cow parsnip",
+  "chinaberry",
+  "oleander",
+  "castor bean",
+  "yew",
+  "mountain laurel",
+  "lantana",
+  "jack-in-the-pulpit",
+  "amanita",
+  "death cap",
+  "destroying angel",
+  "fly agaric",
+  "funeral bell",
+  "false parasol",
 ];
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -159,4 +200,58 @@ export function safetyLineFor(t: TaxonLike, sourceText: string): string {
 /** Things that stay put (plants, fungi) are easier to find than birds that fly away (SPEC §6.1). */
 export function isStationary(t: TaxonLike): boolean {
   return has(t, TAXA.plants) || has(t, TAXA.fungi);
+}
+
+// ---------- danger words in source text and in model text (audit R5-S1) ----------
+
+/**
+ * Audit R5-S1 (2026-10-06): a named-taxa list can never hold every poisonous species. White snakeroot
+ * reached a live 10-13 pass because its own Wikipedia summary ("is a poisonous perennial herb") was
+ * quoted in the clue. Any Wild Find whose source text (iNaturalist names + Wikipedia summary) says it
+ * is poisonous, toxic, venomous, deadly, stings, burns or irritates the skin is left off the pass
+ * before the model sees it. Measured on the 231 recorded summaries of the 20 eval parks: white
+ * snakeroot, flowerpot parasol ("poisonous, if consumed") and Lindheimer's senna ("lethally toxic to
+ * livestock") hit; nothing harmless did once negations ("nonvenomous", "no venom") are taken out.
+ */
+const DANGER_SOURCE_RE =
+  /\b(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|deadly|fatal(?:ly)?|lethal(?:ly)?|irritant\w*|irritation|irritating|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|do not eat|don't eat|should not be eaten|not be eaten|not edible|causes? burns?|burns? the skin)\b/i;
+
+/** Words about stings: bees are "look, don't touch: it can sting" by design (ADR 0003), so for them only these are ignored. */
+const STING_ONLY_RE = /^(?:stings?|stinging|stinger\w*)$/i;
+
+/**
+ * Negated danger words ("nonvenomous", "non-toxic", "not poisonous", "no venom", "not considered
+ * dangerous") say the opposite and are taken out before the check. "Mildly venomous" is not a negation.
+ */
+const NEGATED_RE =
+  /\b(?:non-?|not\s+(?:considered\s+|known\s+to\s+be\s+|thought\s+to\s+be\s+)?|no\s+|never\s+|nor\s+)(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|dangerous|harmful|deadly)\b|\bharmless\b/gi;
+
+const normalizeText = (s: string) => s.normalize("NFKC").replace(/[‘’]/g, "'").replace(/\s+/g, " ");
+
+/**
+ * The first danger word in a Wild Find's SOURCE text (names + summary), or null when it reads safe.
+ * `taxon` (optional) lets the bees' own sting words through (ADR 0003 keeps bees with a sting line).
+ */
+export function dangerSourceWord(text: string, taxon?: TaxonLike): string | null {
+  const t = normalizeText(text).replace(NEGATED_RE, " ");
+  const bee = taxon ? has(taxon, TAXA.honeyBees) || has(taxon, TAXA.bumbleBees) : false;
+  const re = new RegExp(DANGER_SOURCE_RE.source, "gi");
+  for (const m of t.matchAll(re)) {
+    if (bee && STING_ONLY_RE.test(m[0])) continue;
+    return m[0];
+  }
+  return null;
+}
+
+/**
+ * Danger words that must never be printed in a clue, hint or riddle (audit R5-S1, post-model check).
+ * No negation is allowed here: "a snake that is not venomous" is no sentence for a kids' pass either.
+ */
+const DANGER_CLUE_RE =
+  /\b(?:\w*poison\w*|\w*toxi[cn]\w*|\w*venom\w*|deadly|fatal\w*|lethal\w*|irritat\w*|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|deaths?|kills?|killing|do not eat|don't eat)\b/i;
+
+/** The first danger word in a model-written clue / hint / riddle, or null. */
+export function dangerClueWord(text: string): string | null {
+  const m = DANGER_CLUE_RE.exec(normalizeText(text));
+  return m ? m[0] : null;
 }

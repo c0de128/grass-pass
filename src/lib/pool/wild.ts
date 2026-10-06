@@ -3,7 +3,7 @@
  * last 14 days, minus every hard-blocked taxon (ADR 0003), each with its Wikipedia summary as the only
  * text a clue may quote. Counts, dates and safety lines are code-written.
  */
-import { blockedBy, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
+import { blockedBy, dangerSourceWord, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
 import type { Species, SpeciesList, TaxonSummary } from "@/lib/sources/inat";
 import { seasonFrom, seasonSentence, type PhenologyCount } from "./season";
 import { distinctiveWords, type PoolItem, type SectionState } from "./types";
@@ -38,6 +38,52 @@ export function leadSentences(text: string, max: number = WILD_SOURCE_CHARS): st
   const cut = t.slice(0, max);
   const space = cut.lastIndexOf(" ");
   return space > max / 2 ? cut.slice(0, space) : cut;
+}
+
+/**
+ * Audit R5-C3 (round 5, 2026-10-06): clues pasted Wikipedia: "a moth of the Crambidae family", "a typical
+ * length of 16 cm and a mass of 24-39.5 g", "the most widespread species in its genus". The text the model
+ * gets (and the clue's sourceQuote is checked against) loses what a child can't see: sentences about
+ * names and classification, "in the family X" phrases, (subfamily ...) asides and weights (with their
+ * bracketed conversion). Looks, sizes and behaviour stay; a size's "(3-6 in)" conversion stays too (the
+ * recorded answers quote it, and the clue check drops a clue with 2 or more measurements). Code only removes words.
+ */
+const TAXONOMY_SENTENCE_RE =
+  /\b(?:binomial|taxonom\w*|classified|classification|synonym\w*|subspecies|described by|first described|genus name|specific (?:name|epithet)|latin for|greek for|etymolog\w*|monotypic|phylogen\w*|clade|recogni[sz]ed)\b/i;
+const FAMILY_PHRASE_RE =
+  /,?\s*(?:(?:is |are )?(?:[Aa] member|[Mm]embers) of |in |of |within |from |belonging to |(?:that |which )?belongs? to )?the (?:[\p{L}-]+ ){0,3}(?:sub)?(?:family|genus|order|tribe),?\s*\p{Lu}[\p{L}]+(?=[\s,.;)]|$)/gu;
+const RANK_PAREN_RE = /\s*\((?:[^()]*\b(?:sub)?(?:family|genus|order|tribe)\b[^()]*|[^()]*\b\p{Lu}[\p{L}]+(?:idae|inae|aceae)\b[^()]*)\)/gu;
+const MASS_PHRASE_RE = /,?\s*(?:and |with )?(?:a |an )?(?:average |typical )?(?:body )?(?:mass|weight) of (?:about |around |up to )?\d[\d.,–\s-]*?(?:to \d[\d.,]*\s?)?(?:g|kg|grams?|kilograms?|oz|ounces?|lbs?|pounds?)\b(?:\s*\([^()]*\))?/gi;
+/** A whole sentence about weight ("The average body mass is 150 g."). */
+const MASS_SENTENCE_RE = /\b(?:mass|weighs?|weight)\b[^.]*\d/i;
+/** A sentence that only says which group it belongs to ("It is in the genus Asclepias, the milkweeds."). */
+const GROUP_ONLY_SENTENCE_RE = /^(?:it|this species|they|this plant|these)\s+(?:is|are|belongs?|was)\s+(?:a member of|members of|in|placed in|part of|one of)\s+(?:the\s+)?(?:[\p{L}-]+\s+){0,3}(?:sub)?(?:family|genus|order|tribe)\b/iu;
+
+/** Name history ("The name for the genus, Ipomoea, has root in the Greek words ..."). */
+const NAME_SENTENCE_RE = /\b(?:name for the|(?:genus|generic|scientific|specific) name|comes? from the (?:latin|greek)|derived from the (?:latin|greek))\b/i;
+/** Group talk left after the phrase removal ("belongs to the Ipomoea genus", "In this genus most members ..."). */
+const GROUP_LEFT_RE = /\b(?:genus|genera|subfamily|subfamilies|tribe)\b|\bthe [\p{L}-]+ family\b|\bfamily \p{Lu}/u;
+
+export function kidSourceText(text: string): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  return t
+    .split(/(?<=[.!?])\s+(?=[A-Z0-9"“(])/u)
+    .filter((x) => !TAXONOMY_SENTENCE_RE.test(x) && !NAME_SENTENCE_RE.test(x) && !GROUP_ONLY_SENTENCE_RE.test(x) && !MASS_SENTENCE_RE.test(x.replace(MASS_PHRASE_RE, "")))
+    .map((x) =>
+      x
+        .replace(RANK_PAREN_RE, "")
+        .replace(MASS_PHRASE_RE, "")
+        .replace(FAMILY_PHRASE_RE, "")
+        .replace(/\s+([,.;])/g, "$1")
+        .replace(/,\s*,/g, ",")
+        .replace(/\s{2,}/g, " ")
+        .replace(/^[,;\s]+/, "")
+        .replace(/^\p{Ll}/u, (c) => c.toUpperCase())
+        .trim(),
+    )
+    // The first sentence says what it is ("... is a small heron"): it stays even when group talk is left in it.
+    .filter((x, i) => x.length > 0 && (i === 0 || !GROUP_LEFT_RE.test(x)))
+    .join(" ");
 }
 
 const SPECIES_RANKS = new Set(["species", "subspecies", "variety", "form", "hybrid"]);
@@ -243,9 +289,11 @@ export function wildPool(
   sinceDay: string,
   season?: WildSeasonInput,
   /** R2-M5: leave out species whose summary says nothing about how they look (default). Tests of older runs turn it off. */
-  opts: { describableOnly?: boolean } = {},
+  opts: { describableOnly?: boolean; kidText?: boolean } = {},
 ): { items: PoolItem[]; state: SectionState; blocked: number } {
   const describableOnly = opts.describableOnly ?? true;
+  /** Audit R5-C3: taxonomy and weights leave the text (default). Tests that replay answers of runs made before it turn it off. */
+  const kidText = opts.kidText ?? true;
   const { candidates, blocked: blockedFirst } = wildCandidates(list);
   const byId = new Map(summaries.map((s) => [s.id, s]));
   let blocked = blockedFirst;
@@ -258,15 +306,25 @@ export function wildPool(
       blocked++;
       continue;
     }
+    // Audit R5-S1: its own names or summary say it is poisonous, toxic, venomous, stings, burns the skin...
+    // (white snakeroot: "a poisonous perennial herb"). Left off for safety, before the model sees it.
+    if (dangerSourceWord([s.commonName ?? "", s.name, ...(sum?.names ?? []), sum?.summary ?? ""].join(". "), taxon)) {
+      blocked++;
+      continue;
+    }
     if (!sum?.summary || sum.summary.length < MIN_SUMMARY_CHARS) continue;
+    // Audit R5-C3: taxonomy and weights are not things a child can see; they leave the text the model gets.
+    // (MIN_SUMMARY_CHARS is checked on the summary as received; a short cleaned text is still checked for looks below.)
+    const summary = kidText ? kidSourceText(sum.summary) : sum.summary;
+    if (summary.length === 0) continue;
     // R2-M5: a summary with nothing a child can look for ("a species of flowering plant native to ...")
     // only makes generic clues, which the server drops. Such a species is not a find.
-    if (describableOnly && looksScore(leadSentences(sum.summary)) === 0) continue;
+    if (describableOnly && looksScore(leadSentences(summary)) === 0) continue;
     const label = s.commonName ? `${cap(s.commonName)} (${s.name})` : s.name;
     const plantSeason =
       season && s.iconic === "Plantae" ? seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) : undefined;
     // R1-M4 follow-up: the season fact is part of the SOURCE (a code-written sentence, quotable and true).
-    const sourceText = `${label}. ${leadSentences(sum.summary)}${plantSeason ? ` ${seasonSentence(plantSeason)}` : ""}`;
+    const sourceText = `${label}. ${leadSentences(summary)}${plantSeason ? ` ${seasonSentence(plantSeason)}` : ""}`;
     const nameWords = [
       ...new Set([
         ...(s.commonName ? [s.commonName.toLowerCase(), ...distinctiveWords(s.commonName)] : []),
@@ -304,7 +362,7 @@ export function wildPool(
       ...(nameTraits.length > 0 ? { nameTraits } : {}),
       ...(traitParts.length > 0 ? { nameTraitParts: traitParts } : {}),
       // Name trait words are still "inside the names" here, so the pool order and low-data test are unchanged.
-      looks: looksOutsideNames(leadSentences(sum.summary), [...nameWords, ...nameTraits]),
+      looks: looksOutsideNames(leadSentences(summary), [...nameWords, ...nameTraits]),
       safety: safetyLineFor(taxon, sum.summary),
       stationary: isStationary(taxon),
       taxon,

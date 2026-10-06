@@ -481,6 +481,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         ? {
             copied: lastCheck?.copied ?? [],
             generic: (lastCheck?.drops.generic_clue ?? 0) > 0,
+            ...((lastCheck?.drops.jargon ?? 0) > 0 ? { jargon: true } : {}),
             taken: best.items.map((k) => openingWord(k.clue)),
           }
         : undefined;

@@ -134,7 +134,8 @@ describe("R3-M2a + PM 1B: a colour or size word of the species' own name is a pr
   const amber = () => wildItem("white-rock-lake-park", /^Eastern Amberwing/);
   const fork = () => wildItem("white-rock-lake-park", /^Rambur's Forktail/);
   const gloryDraft = () => draftOf(glory(), "Hunt for a plant with white flowers.", "show it with flowers");
-  const forkDraft = () => draftOf(fork(), "Peek at a thin flyer with blue on segments 8 and 9.", "blue on abdominal segments 8 and 9");
+  // Audit R5-C3: "blue on segments 8 and 9" is now field-guide trivia for 6-10 (a preference too), so the spare says it in kid words.
+  const forkDraft = () => draftOf(fork(), "Peek at a thin green flyer with blue near its tail tip.", "blue on abdominal segments 8 and 9");
 
   it("the name's trait words are kept apart from the hard name words", () => {
     expect(glory().nameWords).not.toContain("white");

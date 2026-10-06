@@ -397,6 +397,10 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
+            <p>
+              Any other species whose own description says it is poisonous, toxic, venomous, stings or burns the skin is left off
+              too, and a clue that uses one of those words is removed.
+            </p>
             <p>Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot; line written by code.</p>
           </Disclosure>
         </div>

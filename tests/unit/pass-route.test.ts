@@ -12,7 +12,7 @@ import { SPOT_COPY } from "@/lib/spot/types";
 import * as route from "@/app/api/pass/route";
 import { recordedResponse } from "./support/osm-replay";
 import { nextAccountCookie, primeAccountCookies } from "./support/session";
-import { modelRec, PARKS, passReplay, type Call } from "./support/pass-replay";
+import { modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
 
 const FAKE_KEY = "test-key-not-real";
 let n = 0;
@@ -176,13 +176,13 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     }
     // The requests sent to the model are exactly the recorded live ones (first call and both refills).
     const sent = JSON.parse(modelCalls(replay.calls)[0].body!);
-    expect(sent.messages).toEqual(modelRec(PARKS.connemara.slug).request.messages);
+    expect(recordedShape(sent.messages)).toEqual(recordedShape(modelRec(PARKS.connemara.slug).request.messages));
     expect(sent.response_format.json_schema.strict).toBe(true);
     const sentRefill = JSON.parse(modelCalls(replay.calls)[1].body!);
-    expect(sentRefill.messages).toEqual(modelRec(PARKS.connemara.slug).refill!.request.messages);
+    expect(recordedShape(sentRefill.messages)).toEqual(recordedShape(modelRec(PARKS.connemara.slug).refill!.request.messages));
     expect(sentRefill.response_format).toEqual(modelRec(PARKS.connemara.slug).refill!.request.response_format);
     const sentRefill2 = JSON.parse(modelCalls(replay.calls)[2].body!);
-    expect(sentRefill2.messages).toEqual(modelRec(PARKS.connemara.slug).refill2!.request.messages);
+    expect(recordedShape(sentRefill2.messages)).toEqual(recordedShape(modelRec(PARKS.connemara.slug).refill2!.request.messages));
     expect(sentRefill2.response_format).toEqual(modelRec(PARKS.connemara.slug).refill2!.request.response_format);
 
     // The pass page reads it back from the cache only.

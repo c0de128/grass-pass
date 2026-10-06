@@ -6,6 +6,7 @@
  * no recording throw, so a test can never pass on invented data. Failure shapes that can't be recorded
  * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
  */
+import { kidWordsRule } from "@/lib/ai/prompt";
 import { PARK_FILTER } from "@/lib/sources/overpass-features";
 import { withoutMaxsize } from "@/lib/sources/overpass";
 import { fixture } from "./osm-replay";
@@ -80,7 +81,8 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
         // A refill gets the recorded refill whose request is exactly the one sent (the second refill differs
         // from the first: other ids, the taken first words); else the first recorded refill, else the first answer.
         if (isRefill) {
-          const same = [m.refill, m.refill2].find((r) => r && JSON.stringify(r.request.messages) === JSON.stringify(sent.messages));
+          // Audit R5-C3: compared without the kid-words line and the (now cleaned) Wild Finds texts (`recordedShape`).
+          const same = [m.refill, m.refill2].find((r) => r && JSON.stringify(recordedShape(r.request.messages)) === JSON.stringify(recordedShape((sent.messages ?? []) as { role: string; content: string }[])));
           if (same) return json(same.response);
           if (m.refill) return json(m.refill.response);
         }
@@ -161,4 +163,27 @@ export function histogramWithin(r: { _recording: Record<string, unknown>; body: 
   const body = r.body as { results: { day: Record<string, number> } };
   const day = Object.fromEntries(Object.entries(body.results.day).filter(([k]) => k >= d1 && k <= d2));
   return { ...body, results: { ...body.results, day } };
+}
+
+/**
+ * Audit R5-C3 (2026-10-06): the live model recordings were made before the kid-words rule
+ * (prompt.ts `kidWordsRule`) joined the system prompt. Everything else in today's request is still
+ * byte-for-byte the recorded one; this takes that one line out so the tests keep proving it. The
+ * recorded answers are therefore answers to the prompt without that line (said in the R5 report).
+ */
+export function withoutKidWordsRule<T extends { role: string; content: string }>(messages: readonly T[]): T[] {
+  const line = kidWordsRule();
+  return messages.map((m) => (m.role === "system" ? { ...m, content: m.content.split("\n").filter((l) => l !== line).join("\n") } : m));
+}
+
+/**
+ * Audit R5-C3 (2026-10-06): Wild Finds source text now loses taxonomy and weights (wild.ts `kidSourceText`),
+ * so the recorded requests' Wild Finds texts are the pre-R5 ones. This keeps everything else byte-for-byte
+ * comparable: the system prompt without the kid-words line, every Park Find and SPOT source exactly, and
+ * the Wild Finds sources by id, section and kind (their text blanked on both sides).
+ */
+export function recordedShape<T extends { role: string; content: string }>(messages: readonly T[]): T[] {
+  return withoutKidWordsRule(messages).map((m) =>
+    m.role === "user" ? { ...m, content: m.content.replace(/(<source id="inat-[^"]*" section="wild" kind="[^"]*">)[^<]*(<\/source>)/g, "$1$2") } : m,
+  );
 }

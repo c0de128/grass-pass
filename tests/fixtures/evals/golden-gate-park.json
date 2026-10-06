@@ -1614,6 +1614,82 @@
      {"count":1,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/1454382?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:05.565Z",
+   "latencyMs": 73,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":1454382,"name":"Nannopterum auritum","preferred_common_name":"Double-crested Cormorant","wikipedia_summary":"The <b>double-crested cormorant</b> (<i><b>Nannopterum auritum</b></i>) is a member of the cormorant family of water birds. It is found near rivers and lakes, and in coastal areas, and is widely distributed across North America, from the Aleutian Islands in Alaska down to Florida and Mexico. Measuring 70–90 cm (28–35 in) in length, it is entirely black except for a bare patch of orange-yellow facial skin and some extra plumage that it exhibits in the breeding season, when it grows...","ancestor_ids":[48460,1,2,355675,3,71268,4262,1289332]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:53.962Z",
+   "latencyMs": 307,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:56.314Z",
+   "latencyMs": 435,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=37.76940&lng=-122.48202&radius=50&verifiable=true&month=10&taxon_id=54329&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:59.691Z",
+   "latencyMs": 455,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":1,"taxon":{"id":54329,"name":"Tropaeolum majus","rank":"species","preferred_common_name":"garden nasturtium","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71275,54330,54331,1680522,54329]}}
+    ]
+   }
   }
  ]
 }

@@ -28,12 +28,16 @@ describe("hard-blocked taxa (ADR 0003): one test per entry", () => {
     });
   }
 
-  it("has the 15 ADR ids plus Urtica (51886) and Solanum (50641), no duplicates", () => {
+  it("has the 15 ADR ids (pokeweed widened to genus 48601 in R5), Urtica (51886), Solanum (50641) and the 15 R5-S1 groups, no duplicates", () => {
     const ids = BLOCKED_TAXA.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual(
-      expect.arrayContaining([48137, 47370, 30668, 30692, 30979, 30493, 67598, 51079, 48599, 84185, 48943, 52747, 133074, 53765, 119059, 51886, 50641]),
+      expect.arrayContaining([48137, 47370, 30668, 30692, 30979, 30493, 67598, 51079, 48601, 84185, 48943, 52747, 133074, 53765, 119059, 51886, 50641]),
     );
+    expect(ids).toEqual(
+      expect.arrayContaining([64116, 60126, 52999, 54899, 53095, 53725, 47564, 56740, 47555, 468609, 50334, 50311, 48419, 118297, 117308]),
+    );
+    expect(ids).toHaveLength(32);
   });
 
   it("SPEC 6.4 planted cases, REAL iNat records: Copperhead, Brown Recluse, Poison Ivy, Fire Ant, Pokeweed are all blocked", () => {
@@ -123,7 +127,8 @@ describe("danger filter after the model (defence in depth)", () => {
   });
 
   it("a pool item whose taxon is blocked is re-checked after the model (not only before)", () => {
-    const sneaky = { ...sunflower, id: "inat-48599", taxon: { taxonId: 48599, ancestorIds: [47126] } };
+    // Real ancestry of American pokeweed (48599): genus Phytolacca 48601 is blocked (audit R5 widened it from the species).
+    const sneaky = { ...sunflower, id: "inat-48599", taxon: { taxonId: 48599, ancestorIds: [47126, 48601] } };
     const out = validateDraft(
       { items: [{ itemId: sneaky.id, section: "wild", clue: "Find a tall yellow plant in the sun.", lookWhere: "in the meadow", sourceQuote: sneaky.sourceText.slice(40, 90), difficulty: "easy" }], parentNote: "" },
       [sneaky],

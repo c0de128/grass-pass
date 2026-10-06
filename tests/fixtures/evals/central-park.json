@@ -2833,6 +2833,85 @@
      {"count":3,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/44576?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:04.271Z",
+   "latencyMs": 55,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":44576,"name":"Rattus norvegicus","preferred_common_name":"Brown Rat","wikipedia_summary":"The <b>Brown rat</b> (<i>Rattus norvegicus</i>), also referred to as the <b>common rat</b>, <b>street rat</b>, <b>sewer rat</b>, <b>Hanover rat</b>, <b>Norway rat</b>, <b>Norwegian rat</b>, or <b>wharf rat</b> is one of the best known and most common rats.","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848323,43698,870778,488924,44185,735171,846293,44540]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C143803&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:45.554Z",
+   "latencyMs": 1195,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":94,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}},
+     {"count":43,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C143803&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:48.092Z",
+   "latencyMs": 1121,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":85,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}},
+     {"count":12,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=40.78252&lng=-73.96551&radius=50&verifiable=true&month=10&taxon_id=52856%2C143803&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-06T04:00:51.205Z",
+   "latencyMs": 694,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":10,"taxon":{"id":52856,"name":"Artemisia vulgaris","rank":"species","preferred_common_name":"common mugwort","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,373844,900983,52855,1123942,52856]}},
+     {"count":3,"taxon":{"id":143803,"name":"Persicaria longiseta","rank":"species","preferred_common_name":"low smartweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,48382,922206,922225,922227,61787,143803]}}
+    ]
+   }
   }
  ]
 }

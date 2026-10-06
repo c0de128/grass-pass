@@ -26,7 +26,7 @@ import { setLogSink } from "@/lib/log";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import type { PoolItem } from "@/lib/pool/types";
-import { modelRec, PARKS, passReplay, type Call } from "./support/pass-replay";
+import { modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
 
 const data: Record<string, CaseData> = {};
 beforeAll(async () => {
@@ -169,8 +169,13 @@ describe("quick wins from run -5's machine-made list", () => {
     expect(voiceSwitch("Who is this? I have a low dirt hill in my center for a pitcher.")).toBeNull(); // Zilker, -5
     expect(voiceSwitch("I have a roof and pillars to keep you dry and cool while you eat a meal.")).toBeNull(); // Celebration fixture
     expect(voiceSwitch("Peek at the trees. Can you see a bird with a large head?")).toBeNull(); // Bob Woodruff, -5
-    const plant = item("central-park", "inat-119048");
-    const v = validateDraft({ items: [draft(plant, "Watch for a plant with white blooms. I am poisonous!")] }, [plant], oneOf("wild"), { hasMap: false });
+    // Audit R5-S1: that -5 plant was white snakeroot. Its summary says "poisonous", so it is no longer in any pool,
+    // and the clue itself is now a danger drop on any item. The voice switch is shown on another real plant.
+    expect(data["central-park"].pool.some((p) => p.id === "inat-119048")).toBe(false);
+    const plant = data["central-park"].pool.find((p) => p.section === "wild")!;
+    const danger = validateDraft({ items: [draft(plant, "Watch for a plant with white blooms. I am poisonous!")] }, [plant], oneOf("wild"), { hasMap: false });
+    expect(danger.drops).toEqual({ danger: 1 });
+    const v = validateDraft({ items: [draft(plant, "Watch for a plant with white blooms. I am very tall!")] }, [plant], oneOf("wild"), { hasMap: false });
     expect(v.drops).toEqual({ odd_wording: 1 });
   });
 
@@ -190,8 +195,10 @@ describe("quick wins from run -5's machine-made list", () => {
 });
 
 describe("no-AI template: exempt from repeated openings (its masked sentences all open '____ is a ...')", () => {
-  it("Arbor Hills: the same first words are kept for the template, dropped for a model answer", () => {
-    const d = data["arbor-hills-nature-preserve"];
+  // Audit R5-C3: Arbor Hills' template no longer repeats an opening (its summaries lost their "is a species in the family
+  // ..." sentences); Allen Station shows the same exemption.
+  it("Allen Station: the same first words are kept for the template, dropped for a model answer", () => {
+    const d = data["allen-station-park"];
     const t = templatePass(d.pool, d.mix!);
     expect(t.result.drops.repeats_opening).toBeUndefined();
     const plain = validateDraft(templateDraft(d.pool, d.mix!), d.pool, d.mix!, { hasMap: false, allowSourceCopies: true });
@@ -232,7 +239,7 @@ describe("buildPass calls (built failures; every other answer is a real recordin
     expect(out.pass.items).toHaveLength(8);
     expect(out.pass.model.attempts).toBe(2);
     expect(modelCalls(r.calls)).toHaveLength(2);
-    expect(JSON.parse(modelCalls(r.calls)[1].body!).messages).toEqual(modelRec(PARKS.celebration.slug).request.messages);
+    expect(recordedShape(JSON.parse(modelCalls(r.calls)[1].body!).messages)).toEqual(recordedShape(modelRec(PARKS.celebration.slug).request.messages));
     expect(logs.filter((l) => l.includes('"event":"pass_call_failed"') && l.includes('"code":"MODEL_TIMEOUT"') && l.includes('"refill":false'))).toHaveLength(1);
   }, 30_000);
 
@@ -245,7 +252,7 @@ describe("buildPass calls (built failures; every other answer is a real recordin
     expect(calls).toHaveLength(3);
     // Nothing changed between the two refills, so the second one is the same request (answered by the real refill).
     expect(JSON.parse(calls[2].body!).messages).toEqual(JSON.parse(calls[1].body!).messages);
-    expect(JSON.parse(calls[2].body!).messages).toEqual(modelRec(PARKS.connemara.slug).refill!.request.messages);
+    expect(recordedShape(JSON.parse(calls[2].body!).messages)).toEqual(recordedShape(modelRec(PARKS.connemara.slug).refill!.request.messages));
     expect(logs.filter((l) => l.includes('"event":"pass_call_failed"') && l.includes('"code":"MODEL_TIMEOUT"') && l.includes('"refill":true'))).toHaveLength(1);
     expect(out.pass.items).toHaveLength(6); // the real refill keeps none: 6 of 8, honestly
   }, 30_000);

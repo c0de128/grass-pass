@@ -130,7 +130,7 @@ export type RequestPlan = {
   /** Per-park first words for the clues (`openersFor`), so passes of different parks don't start alike. */
   openers: string[];
   /** The options validate.ts checks this request's answer with (hasMap is set by the caller when a SPOT map is printed). */
-  validate: { hasMap: boolean; ask: Mix; lowData: boolean };
+  validate: { hasMap: boolean; ask: Mix; lowData: boolean; band?: AgeBand };
 };
 
 /** Hard items asked for beyond the band's promise (ages 10-13: 2 promised, 3 asked). */
@@ -154,7 +154,7 @@ export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed =
   // Audit R4 (Q-4-04): ask for one hard item more than the pass promises, so one dropped hard clue still
   // leaves the promised number (validate.ts fitToMix keeps hard items last to go).
   const ask = mix.hardMin > 0 ? { ...asked, hardMin: Math.min(asked.n, mix.hardMin + HARD_EXTRA) } : asked;
-  return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData } };
+  return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData, band } };
 }
 
 /**
@@ -213,7 +213,7 @@ export function refillPlan(
   const usedOpeners = new Set(kept.map((k) => openingWord(k.clue)));
   const fresh = plan.openers.filter((o) => !usedOpeners.has(o.toLowerCase()));
   const openers = [...fresh, ...plan.openers.filter((o) => usedOpeners.has(o.toLowerCase()))].slice(0, Math.max(ask.n, 1));
-  return { pool, mix, ask, lowData: plan.lowData, openers, validate: { hasMap: plan.validate.hasMap, ask, lowData: plan.lowData } };
+  return { pool, mix, ask, lowData: plan.lowData, openers, validate: { hasMap: plan.validate.hasMap, ask, lowData: plan.lowData, ...(plan.validate.band ? { band: plan.validate.band } : {}) } };
 }
 
 const cap = (w: string) => w.charAt(0).toUpperCase() + w.slice(1);
@@ -251,6 +251,12 @@ export const STOCK_FRAMES = [
   "Somewhere you will see", "Somewhere you can see", "Somewhere you can hear", "Somewhere you will find", "Somewhere you can find",
   "Somewhere there is", "Where can you hear", "Where can you find", "Where can you see", "Where can you spot", "Hunt for a tree",
 ] as const;
+
+/**
+ * Audit R5 Q-5-01: "for a bird that is" was the #2 cross-park repeat of run 2026-10-06-6 (4 parks), mid-clue
+ * ("Watch for a bird that is black."). A clue holding one of these phrases anywhere is a stock opening too.
+ */
+export const STOCK_PHRASES = ["for a bird that is", "a bird that is", "a bug that is", "a plant that is"] as const;
 
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
 export const STOCK_OPENINGS = [
@@ -316,6 +322,8 @@ export type RefillNotes = {
   copied: readonly string[];
   /** Some Wild Find clues were dropped as generic (only "has fruit or seeds", or nothing from its source). */
   generic: boolean;
+  /** Audit R5-C3: some first-try clues were dropped as field-guide jargon (absent = none; older recordings have no such line). */
+  jargon?: boolean;
   /**
    * Completeness (run 2026-10-06-5): first words of the clues already on the pass. A refill clue that
    * starts with one is dropped (`repeats_opening`), which cost 7 refill items in that run.
@@ -328,6 +336,9 @@ export function refillRules(notes: RefillNotes): string[] {
   const out: string[] = ["- This is a second try: some clues of the first try were removed by our checks."];
   if (notes.copied.length > 0) {
     out.push(`- The first try copied these words from a SOURCE. Never use them in a clue: ${notes.copied.slice(0, 6).map((c) => `"${c}"`).join(", ")}.`);
+  }
+  if (notes.jargon) {
+    out.push("- Some first-try clues used field-guide words (a family or Latin group name, a body-part term, measurements). Use the words a kid uses on a walk.");
   }
   if (notes.generic) out.push("- Some first-try clues were generic. Each Wild Find clue needs a colour, shape, size or part written in its SOURCE; if its SOURCE has none, choose another item.");
   const taken = [...new Set((notes.taken ?? []).filter(Boolean))];
@@ -403,7 +414,9 @@ export function readingRules(band: AgeBand, grade: string): string[] {
   if (band !== "10-13") return [`- Write at reading level grade ${grade}: short words, short sentences, fun and friendly.`];
   return [
     `- Write for a 10-13-year-old at reading level grade ${grade} to 6, never babyish: each clue is one or two complete sentences of 10 to 18 words in all.`,
-    "- Use the exact describing words the SOURCE uses (part names, shapes, textures, colours, sizes) instead of easy stand-ins, and add a comparison or what the part is for when the SOURCE says it. No filler words: every word helps the child check the find.",
+    // Audit R5-C3: "use the SOURCE's exact describing words" wrote "stiffly erect, branching square stems" and
+    // "a typical length of 16 cm and a mass of 24-39.5 g". Richer words, yes; a field guide's words, no.
+    "- Use the SOURCE's facts (shapes, textures, colours, parts) in words a 12-year-old uses on a walk, and add a comparison or what the part is for when the SOURCE says it. No filler words: every word helps the child check the find.",
   ];
 }
 
@@ -420,8 +433,29 @@ export function voiceFor(seed: string, band?: AgeBand): string {
   return voices[hash32(seed) % voices.length];
 }
 
+/**
+ * Audit R5-C3 / Q-5-01: real printed clues that read like Wikipedia (run 2026-10-06-6 and the round-5 judge
+ * pass). The prompt quotes them as BAD; validate.ts drops a copy (`copiesPromptExample`) and every clue like
+ * them (`jargon`, `trivia`).
+ */
+export const JARGON_BAD_EXAMPLES = [
+  { clue: "Where is a moth of the Crambidae family?", why: "a family name is nothing to see" },
+  { clue: "Hunt for a lizard native to Texas and Oklahoma.", why: "where it lives on a map is nothing to see" },
+  { clue: "Who has a typical length of 16 cm and a mass of 24-39.5 g?", why: "a field guide's numbers, and no child can weigh a bird" },
+] as const;
+
 /** Every full example clue in any prompt variant (for the copy check in validate.ts). */
-export const PROMPT_EXAMPLE_TEXTS: readonly string[] = [...BAD_CLUE_EXAMPLES.map((b) => b.clue), ...NAME_LEAK_EXAMPLES];
+export const PROMPT_EXAMPLE_TEXTS: readonly string[] = [
+  ...BAD_CLUE_EXAMPLES.map((b) => b.clue),
+  ...NAME_LEAK_EXAMPLES,
+  ...JARGON_BAD_EXAMPLES.map((b) => b.clue),
+];
+
+/** Audit R5-C3: the kid-words rule (every band). */
+export function kidWordsRule(): string {
+  const bad = JARGON_BAD_EXAMPLES.map((b) => `"${b.clue}" (${b.why})`).join(", ");
+  return `- Say each clue the way you would say it to a kid on a walk: what it looks like (colour plus the part it is on), its shape or what it does. Never use a family, genus or species word, a Latin group name, a weight, a field-guide word (such as operculum, pterostigma, tarsomere, arboreal, perennial) or where in the world it lives. Never say it is poisonous, toxic, venomous or that it stings. One colour alone is not a clue ("a bird that is black"): add the part or what it does. Bad: ${bad}.`;
+}
 
 export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null, ctx: PromptContext | null = null): string {
   const info = AGE_BAND_INFO[band];
@@ -485,6 +519,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
     `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
     ...readingRules(band, info.grade),
+    kidWordsRule(),
     `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look).`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
     "- Do not write numbers unless that number is in the item's SOURCE. No links.",

@@ -24,3 +24,23 @@ Last run: 2026-10-05T23:55:52.416Z by `pnpm eval:record`. Every fixture holds th
 | 18 | Central Park | `way/427818536` | ok, overpass-api.de 8.0 s | 25 kinds, 1572 trees | 149 species / 468 obs |
 | 19 | Golden Gate Park | `way/158602261` | ok, overpass-api.de 9.3 s | 30 kinds, 253 trees | 86 species / 189 obs |
 | 20 | Orchards Park | `way/517747125` | ok, kept the recording from 2026-10-05T23:45:56.318Z | 1 kinds, 0 trees | 1 species / 1 obs |
+
+## 2026-10-06: five taxa summaries added (audit R5-S1 safety fix)
+
+The R5-S1 blocklist additions (Ageratina, Amanita, Lantana, Melia, Phytolacca genus...) take some species out of the
+summary request, so the next species in line enters the 24 asked for. Those five were never fetched on 2026-10-05,
+so each was fetched live from iNaturalist on 2026-10-06 (`/v1/taxa/<id>?per_page=30&locale=en`, GrassPass
+User-Agent) and appended as its own `taxa` exchange with its real fetch time. Nothing recorded earlier was changed.
+
+| Park | Added taxon |
+|---|---|
+| Arbor Hills Nature Preserve | 120006 possumhaw |
+| Oak Point Park and Nature Preserve | 62944 Lesser Balloon Vine |
+| Zilker Metropolitan Park | 50616 marvel of Peru |
+| Central Park | 44576 Brown Rat |
+| Golden Gate Park | 1454382 Double-crested Cormorant |
+
+The plant list of the season check changes with the summary list, so the three season (phenology) lookups of
+the same five parks were fetched live on 2026-10-06 too, with the exact query today's code sends (same place,
+radius and month) and appended next to the 2026-10-05 ones (15 exchanges). They hold this month's counts as of
+2026-10-06, a day newer than the rest of each fixture.

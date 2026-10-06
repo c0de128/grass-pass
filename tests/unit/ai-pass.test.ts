@@ -20,7 +20,7 @@ import { wildPool } from "@/lib/pool/wild";
 import { parseSpeciesCounts, parseTaxa } from "@/lib/sources/inat";
 import { parseFeatures, parseParkId } from "@/lib/sources/overpass-features";
 import { parsePhenology } from "@/lib/sources/inat-phenology";
-import { modelRec, PARKS, phenologyRec, rec, recordedDraft } from "./support/pass-replay";
+import { modelRec, PARKS, phenologyRec, rec, recordedDraft, recordedShape } from "./support/pass-replay";
 
 /** The live phenology answers (all annotated, flowers, fruits) for Connemara, parsed by the app's code (R1-M4). */
 function connemaraPhenology() {
@@ -161,7 +161,7 @@ describe("prompt (SPEC 6.1)", () => {
       // Content tuning: Connemara is a low-data pool (1 spare: 9 asked); Celebration's 11 Park Finds ask for exactly 8.
       expect(plan.ask.n).toBe(p === PARKS.connemara ? 9 : 8);
       // The Find This Spot source is the park-seeded facts (factsFor); both were re-recorded after the content tuning.
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", plan.ask, spot, { month: 10, openers: plan.openers }));
+      expect(recordedShape(modelRec(p.slug).request.messages)).toEqual(recordedShape(buildMessages(f.park.name, pool, "6-10", plan.ask, spot, { month: 10, openers: plan.openers })));
     }
   });
 

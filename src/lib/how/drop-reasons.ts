@@ -22,7 +22,7 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   unknown_id: { kind: "always", plain: "It points at something not on this park's list." },
   duplicate_id: { kind: "always", plain: "It uses the same find twice." },
   section_mismatch: { kind: "always", plain: "It puts a find in the wrong section." },
-  danger: { kind: "always", plain: "It is about, or names, a blocked species (\"poison ivy\")." },
+  danger: { kind: "always", plain: "It is about, or names, a blocked species (\"poison ivy\"), or says poisonous, toxic, venomous or stings." },
   not_grounded: { kind: "always", plain: "Its proof quote isn't in that find's facts, word for word." },
   name_leak: {
     kind: "always",
@@ -44,6 +44,14 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   generic_clue: {
     kind: "always",
     plain: "A Wild Find clue with no detail from its facts (\"a tree with leaves\"), or a quote that is just the name.",
+  },
+  jargon: {
+    kind: "always",
+    plain: "It reads like a field guide, not a walk: a family or Latin group name (\"a moth of the Crambidae family\"), a weight or a pile of measurements, or a word like \"pterostigma\".",
+  },
+  trivia: {
+    kind: "preference",
+    plain: "Where it lives on a map (\"native to Texas and Oklahoma\"), a field-guide word (\"operculum\", \"arboreal\") or one bare colour (\"a bird that is black\").",
   },
   copies_example: { kind: "always", plain: "It copies an example sentence from our instructions." },
   copies_source: { kind: "preference", plain: "It copies 4+ words in a row from its facts instead of using kid words." },

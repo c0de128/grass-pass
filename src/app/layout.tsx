@@ -68,7 +68,7 @@ export const metadata: Metadata = {
     siteName: "Grass Pass",
     title: TITLE,
     description: DESCRIPTION,
-    images: [{ url: "/og-1200x630.png", width: 1200, height: 630, alt: "Grass Pass logo: a green ticket growing grass, next to a kid with a magnifying glass" }],
+    images: [{ url: "/og-1200x630.png", width: 1200, height: 630, alt: "Grass Pass: a green ticket with a sprout, the words \"Your ticket to get outside.\" and a sketch of a one-page pass" }],
   },
   twitter: {
     card: "summary_large_image",

@@ -523,7 +523,9 @@ export default function AboutPage() {
           </li>
           <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
           <li>
-            Printed pass logo, app icons and share images: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned SVG redraw of it.
+            Printed pass logo: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
+            hand-cleaned SVG redraw of it. App icons and share images: the v3 site logo (the green ticket with the Lucide
+            sprout) drawn as SVG by our own script.
           </li>
           <li>
             Fonts: Bricolage Grotesque and DM Sans on the site, Fredoka and Nunito on the printed pass (all SIL Open Font

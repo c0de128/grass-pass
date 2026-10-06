@@ -1,5 +1,7 @@
 #!/usr/bin/env node
-// Renders every Grass Pass brand asset (logo variant B, Kevin's pick) from the SVG sources in scripts/brand/art.mjs.
+// Renders every Grass Pass brand asset from the SVG sources in scripts/brand/art.mjs (the banner logo, variant B,
+// Kevin's pick: the printed pass logo and brand/*.svg) and scripts/brand/v3.mjs (the v3 sprout ticket: favicon,
+// app icons, share image, DEV cover).
 //   node scripts/render-brand.mjs          -> writes brand/*.svg and public/* (SVG, PNG, ICO)
 // Text is outlined with opentype.js (M PLUS Rounded 1c ExtraBold / Varela Round, OFL) and PNGs are rasterised with
 // @resvg/resvg-js, so no output depends on fonts installed on the machine. All three are dev-only.
@@ -24,6 +26,7 @@ import {
   viewBox,
 } from "./brand/art.mjs";
 import { f, loadBrandFonts, taglinePath, wordmarkPath } from "./brand/fonts.mjs";
+import { buildV3Rasters } from "./brand/v3.mjs";
 import { GRASS_STRIP_FILES, grassStripSvg } from "../src/components/art/grass.ts";
 
 const APP_DIR = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -124,7 +127,10 @@ export function buildSvgs(fonts = loadBrandFonts()) {
       [GRASS_STRIP_FILES.light]: grassStripSvg("light"),
       [GRASS_STRIP_FILES.dark]: grassStripSvg("dark"),
     },
-    raster: {
+    // v3 (Kevin's v0 design, 2026-10-06): the favicon, app icons, share image and DEV cover use the v3 sprout
+    // ticket (scripts/brand/v3.mjs). The banner-based versions stay available as `bannerRaster` (not written).
+    ...buildV3Rasters(),
+    bannerRaster: {
       "icon-32.png": { svg: appIconSvg(32, { simple: true }), size: 32 },
       "apple-touch-icon.png": { svg: appIconSvg(180), size: 180 },
       "icon-192.png": { svg: appIconSvg(192), size: 192 },
@@ -132,7 +138,6 @@ export function buildSvgs(fonts = loadBrandFonts()) {
       "og-1200x630.png": { svg: og, size: 1200 },
       "dev-cover-1000x420.png": { svg: cover, size: 1000 },
     },
-    favicon: [16, 32, 48].map((size) => ({ svg: appIconSvg(size, { simple: true }), size })),
   };
 }
 

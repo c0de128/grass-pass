@@ -4,7 +4,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { ART, ART_DARK, GRASS, TOKENS } from "../../scripts/brand/art.mjs";
 import { GRASS_PALETTE, bladeOutline } from "../../src/components/art/grass";
-import { buildSvgs } from "../../scripts/render-brand.mjs";
+import { buildSvgs, renderPng } from "../../scripts/render-brand.mjs";
+import { SPROUT_PATHS, V3 } from "../../scripts/brand/v3.mjs";
+import { Resvg } from "@resvg/resvg-js";
 
 const APP = fileURLToPath(new URL("../..", import.meta.url));
 const read = (p: string) => readFileSync(path.join(APP, p));
@@ -222,6 +224,48 @@ describe("brand assets", () => {
       expect(buf.subarray(1, 4).toString(), name).toBe("PNG");
       expect([buf.readUInt32BE(16), buf.readUInt32BE(20)], name).toEqual([w, h]);
     }
+  });
+
+  it("v3: the icons and share images are drawn from the v3 sprout ticket in the v3 colours (no fonts, text or pictures)", () => {
+    const raster = (out as { raster: Record<string, { svg: string; size: number }> }).raster;
+    expect(Object.keys(raster).sort()).toEqual(
+      ["apple-touch-icon.png", "dev-cover-1000x420.png", "icon-192.png", "icon-32.png", "icon-512.png", "og-1200x630.png"].sort(),
+    );
+    const sources = [...Object.values(raster).map((r) => r.svg), ...(out as { favicon: { svg: string }[] }).favicon.map((r) => r.svg)];
+    for (const svg of sources) {
+      expect(svg).toMatch(/role="img" aria-labelledby="t"><title id="t">Grass Pass[^<]*<\/title>/);
+      expect(svg).not.toMatch(/Gradient|<text|<image|xlink:href|@import|font-family/i);
+      // The v3 ticket: grass green with the Lucide sprout path.
+      expect(svg).toContain(`fill="${V3.primary}"`);
+      expect(svg).toContain(SPROUT_PATHS[0]);
+      // Never the banner ticket's colours.
+      expect(svg).not.toContain((ART as Record<string, string>).ticket);
+    }
+    // Tiles are meadow paper edge to edge; favicons are see-through around the ticket.
+    for (const name of ["apple-touch-icon.png", "icon-192.png", "icon-512.png"]) expect(raster[name].svg, name).toContain(`fill="${V3.background}"/>`);
+    expect(raster["icon-32.png"].svg).not.toContain(V3.background);
+    // The share images carry the tagline and the real section names only.
+    expect(raster["og-1200x630.png"].svg).toContain("your ticket to get outside");
+  });
+
+  it("v3: the committed icon and share PNGs are up to date with scripts/render-brand.mjs", () => {
+    const raster = (out as { raster: Record<string, { svg: string; size: number }> }).raster;
+    for (const [name, { svg, size }] of Object.entries(raster)) {
+      expect(Buffer.compare(read(`public/${name}`), renderPng(svg, size)), name).toBe(0);
+    }
+  });
+
+  it("v3: the rendered icons really show the green ticket on meadow paper (pixels)", () => {
+    const raster = (out as { raster: Record<string, { svg: string; size: number }> }).raster;
+    const img = new Resvg(raster["icon-512.png"].svg, { fitTo: { mode: "width", value: 512 }, font: { loadSystemFonts: false } }).render();
+    const px = (x: number, y: number) => {
+      const i = (y * img.width + x) * 4;
+      return `#${[0, 1, 2].map((k) => img.pixels[i + k].toString(16).padStart(2, "0")).join("").toUpperCase()}`;
+    };
+    expect(px(4, 4)).toBe(V3.background);
+    expect(px(150, 150)).toBe(V3.primary);
+    // The notch is cut out: the meadow shows through at the ticket's left edge.
+    expect(px(90, 256)).toBe(V3.background);
   });
 
   it("favicon.ico holds 16, 32 and 48 px PNG images", () => {

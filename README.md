@@ -102,7 +102,7 @@ still works and a new pass says the model is not configured.
 | `pnpm eval` | the evals: 20 recorded real parks, live open models on DigitalOcean (about $0.05-0.06, capped at $1), plus a no-AI baseline. See [`evals/README.md`](evals/README.md) |
 | `pnpm eval:check` | free dry run of every recorded park through the real pass builder, model off |
 | `pnpm eval:record` | re-records the 20 eval parks live from OpenStreetMap and iNaturalist |
-| `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` |
+| `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` (printed pass logo) and `scripts/brand/v3.mjs` (v3 icons and share images) |
 
 ### Cold start (measured)
 Measured on Oct 5, 2026 (~11:15 PM CDT) on the build laptop (Windows 11, Node 22), from a fresh git worktree:
@@ -338,9 +338,14 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
     Nunnally, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (Flickr).
 
   All four were resized and converted to WebP (no other changes).
-- **Brand (printed pass, icons, share images):** the original banner was made by Kevin with Google Gemini; the logo and
+- **Brand (printed pass):** the original banner was made by Kevin with Google Gemini; the logo and
   scene are a traced, hand-cleaned SVG redraw of it (`brand/`, `scripts/brand/art.mjs`; the kid's clothes and hair are
   cleaned traces in `scripts/brand/kid-trace.json`).
+- **Favicon, app icons, share image and DEV cover (v3):** the v3 site logo (the green ticket with the Lucide "sprout"
+  icon, ISC) and the v3 colours, drawn as SVG by `scripts/brand/v3.mjs` and rasterised by `scripts/render-brand.mjs`.
+  Text is outlined from [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) 800 and
+  [DM Sans](https://fonts.google.com/specimen/DM+Sans) 500/700 (`@fontsource/bricolage-grotesque`, `@fontsource/dm-sans`,
+  dev only, SIL OFL 1.1). The pass drawn on the share image shows only the real section names, no clue text.
 - Fonts: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) and
   [DM Sans](https://fonts.google.com/specimen/DM+Sans) for the site (v3; the latin variable "wght" `.woff2` files from
   `@fontsource-variable` 5.3.0), and [Fredoka](https://fonts.google.com/specimen/Fredoka) 600/700 and

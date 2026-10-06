@@ -2,6 +2,7 @@ import Image from "next/image";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icons";
 import { SECTION_LABELS } from "@/components/ui/Chip";
+import { safeParkName } from "@/lib/ai/validate";
 import { formatDay } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
@@ -103,7 +104,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
         />
         <div className="gp-kid-meta">
           <h1 id="kid-pass-title">
-            <span className="gp-label">Park:</span> {pass.park.name}
+            <span className="gp-label">Park:</span> {safeParkName(pass.park.name).name}
           </h1>
           {/* One wrapping row (S5 print-space fix): date + age, then the stay-close line. */}
           <p className="gp-kid-when">

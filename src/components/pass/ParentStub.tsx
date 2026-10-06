@@ -1,4 +1,5 @@
 import type { ReactNode } from "react";
+import { HIDDEN_PARK_NOTE, safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import type { Pass, SectionId } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
@@ -73,6 +74,8 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   });
   const { notGrounded, other } = pass.removed;
   const notes: string[] = [
+    // R2-m3: the park name was hidden on this pass; say why.
+    ...(safeParkName(pass.park.name).hidden ? [HIDDEN_PARK_NOTE] : []),
     ...missing.map((m) => m.message),
     // S5: why there is no Find This Spot map (the kid side shows nothing in that case).
     ...(pass.spot?.status === "none" ? [pass.spot.message] : []),

@@ -3,6 +3,7 @@ import { TicketCard } from "@/components/ui/TicketCard";
 import { OctoberBox } from "./OctoberBox";
 import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
+import { safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatDay, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
@@ -22,6 +23,8 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
   const short = pass.target - pass.items.length;
   const licence = modelLicence(pass.model.answered);
   const madeAt = formatTime(pass.generatedAt);
+  // R2-m3: an OSM name with a web address or phone number in it is never shown (the stub says why).
+  const parkName = safeParkName(pass.park.name).name;
 
   return (
     <TicketCard
@@ -33,7 +36,7 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
         <header className="flex flex-col gap-1">
           <p className="font-display text-sm font-bold uppercase tracking-wide">Grass Pass · your ticket to get outside</p>
           <h1 id="pass-title" className="text-3xl font-bold">
-            {pass.park.name}
+            {parkName}
           </h1>
           <p className="text-base">
             {AGE_BAND_INFO[pass.ageBand].label} · {formatDay(pass.day)} · {pass.items.length} {pass.items.length === 1 ? "find" : "finds"}
@@ -86,7 +89,7 @@ export function PassPreview({ pass, reused = false }: { pass: Pass; reused?: boo
           </p>
         ) : null}
 
-        {pass.spot ? <SpotMap spot={pass.spot} parkName={pass.park.name} variant="screen" /> : null}
+        {pass.spot ? <SpotMap spot={pass.spot} parkName={parkName} variant="screen" /> : null}
 
         <OctoberBox pass={pass} />
 

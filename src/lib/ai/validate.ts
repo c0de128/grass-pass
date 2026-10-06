@@ -194,11 +194,33 @@ const MARKUP_RE = /https?:|www\.|<|>|\]\(|\bjavascript:/i;
  * R1-m7 (SEC-1-04): text printed for a child never carries a way to contact someone. Bare domains
  * ("kidsprize.com", "x.com"), @handles, and phone-like runs of 7+ digits (spaces, dots, dashes and
  * brackets between them allowed: "555 0100", "(214) 555-0100").
+ * R2-m3 (SEC-2-04): any top-level domain, not a fixed list ("prize.ru", "win.ai", "kids.dev"): a word, a
+ * dot, then 2-24 letters that are all lower case or all upper case ("pond.Look" from a missing space is
+ * not a domain; "e.g." and "a.m." have one-letter parts). Also spelled or bracketed dots:
+ * "kidsprize dot com", "kidsprize (dot) net", "kidsprize[.]ru".
  */
-const DOMAIN_RE = /\b[a-z0-9-]+\.(?:com|net|org|io|ly|gg|app|me|co|xyz|info|biz|us|tv|link|site|online|shop|store|club|live|fun)\b/i;
+const DOMAIN_RE = /(?<![\p{L}\p{N}])[\p{L}\p{N}][\p{L}\p{N}-]*\.(?:\p{Ll}{2,24}|\p{Lu}{2,24})(?![\p{L}\p{N}])/u;
+const COMMON_TLDS = "com|net|org|edu|gov|io|co|us|uk|ca|ru|cn|de|fr|in|ai|dev|app|me|info|biz|xyz|gg|tv|cc|to|ly|link|site|online|shop|store|club|live|fun|top|win|vip";
+const SPELLED_DOT_RE = new RegExp(
+  `(?<![\\p{L}\\p{N}])[\\p{L}\\p{N}][\\p{L}\\p{N}-]*\\s*(?:[([{]\\s*(?:dot|\\.)\\s*[)\\]}]\\s*\\p{L}{2,24}|dot\\s+(?:${COMMON_TLDS}))(?![\\p{L}\\p{N}])`,
+  "iu",
+);
 const HANDLE_RE = /(?:^|[^\p{L}\p{N}])@[\p{L}\p{N}_]{2,}/u;
 const DIGITS_RE = /\d(?:[\s().-]*\d){6,}/;
-export const hasUrlOrMarkup = (s: string) => MARKUP_RE.test(s) || DOMAIN_RE.test(s) || HANDLE_RE.test(s) || DIGITS_RE.test(s);
+export const hasUrlOrMarkup = (s: string) =>
+  MARKUP_RE.test(s) || DOMAIN_RE.test(s) || SPELLED_DOT_RE.test(s) || HANDLE_RE.test(s) || DIGITS_RE.test(s);
+
+/** Shown instead of a park name that fails `hasUrlOrMarkup` (R2-m3), together with HIDDEN_PARK_NOTE. */
+export const HIDDEN_PARK_LABEL = "This park";
+export const HIDDEN_PARK_NOTE = "We hid this park's name: on OpenStreetMap it looked like it had a web address, an @handle or a phone number in it.";
+
+/**
+ * R2-m3 (SEC-2-04): the park name from OpenStreetMap is printed on the pass, so it gets the same contact
+ * check as every other printed text. An unsafe name becomes a neutral label (and the pass says why).
+ */
+export function safeParkName(name: string): { name: string; hidden: boolean } {
+  return hasUrlOrMarkup(name) ? { name: HIDDEN_PARK_LABEL, hidden: true } : { name, hidden: false };
+}
 
 /** "map", "maps", "mapped" (R1-m4): only a pass with a Find This Spot map may point at one. */
 const MAP_RE = /\bmap(?:s|ped)?\b/i;

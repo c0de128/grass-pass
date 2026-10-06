@@ -7,8 +7,8 @@ export default function manifest(): MetadataRoute.Manifest {
     description: "Your ticket to get outside: printable park treasure hunts built from real park data.",
     start_url: "/",
     display: "standalone",
-    background_color: "#FAF3E1",
-    theme_color: "#295031",
+    background_color: "#EEF3E2",
+    theme_color: "#10291A",
     icons: [
       { src: "/favicon.ico", sizes: "16x16 32x32 48x48", type: "image/x-icon" },
       { src: "/icon-192.png", sizes: "192x192", type: "image/png" },

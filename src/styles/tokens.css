@@ -1,10 +1,19 @@
 /*
- * Grass Pass design tokens (SPEC §8.1, binding: BRAND.md "APPROVED DESIGN", sampled from Kevin's banner).
- * Raw brand colours first, then semantic roles that flip for dark mode.
- * Contrast rules: --lawn, --sage and --sun are never text on cream; borders and focus rings use --forest.
- * Keep the raw hex values in sync with scripts/brand/art.mjs TOKENS (a unit test checks this).
+ * Grass Pass design tokens.
+ *
+ * v3 (Kevin's v0 design, 2026-10-06, BRAND.md "v3 design"): meadow paper background, pencil-ink green,
+ * grass green, sunflower yellow, white cards. Bricolage Grotesque headings, DM Sans body.
+ * v0 had no dark mode; the dark palette below is ours (same roles, night-meadow greens, the same sunflower).
+ *
+ * The raw banner colours (--paper ... --sunflower) are the ORIGINAL brand art palette. They are still used by
+ * the brand art scripts (scripts/brand/art.mjs TOKENS, checked by tests/unit/brand-assets.test.ts) for the
+ * printed-pass logo and the share images; the site itself uses the v3 roles (--gp-*, then the semantic roles).
+ *
+ * Contrast (WCAG 2.2 AA, measured in tests/unit/v3-tokens.test.ts): every text pair >= 4.5:1, borders,
+ * focus rings and input outlines >= 3:1, in both themes.
  */
 :root {
+  /* Original banner palette (brand art, print logo, share images). */
   --paper: #faf3e1;
   --paper-light: #fefcf6;
   --forest: #2f5233;
@@ -15,122 +24,109 @@
   --mint: #c1d5ad;
   --sun: #fbbd4a;
   --sunflower: #ffd96c;
-  --forest-deep: #22402a; /* primary button hover (paper on it: 10.6:1) */
+  --forest-deep: #22402a;
 
-  /* Semantic roles: light (default). */
+  /* v3 roles: light (default). */
   color-scheme: light;
-  --bg: var(--paper);
-  --surface: var(--paper-light);
-  --fg: var(--ink); /* 14.72:1 on paper */
-  --heading: var(--forest); /* 7.99:1 on paper */
-  --muted: var(--forest);
-  --line: var(--forest); /* input borders, card borders (>= 3:1) */
-  --focus: var(--forest);
-  --halo: var(--mint);
-  --primary: var(--forest);
-  --primary-hover: var(--forest-deep);
-  --on-primary: var(--paper);
-  --secondary-hover: var(--mint);
-  --chip: var(--mint);
-  --on-chip: var(--ink); /* 10.39:1 */
-  --notch-bg: var(--bg);
-  /* Header/footer lawn strip (option C), one static SVG per theme (scripts/render-brand.mjs writes both). */
-  --grass-strip: url("/brand/grass-strip.svg");
+  --gp-background: #eef3e2; /* meadow paper */
+  --gp-foreground: #10291a; /* pencil ink, 13.9:1 on the background */
+  --gp-ink: #10291a; /* strong "inverse" fill: header button, pass-card band */
+  --gp-on-ink: #eef3e2;
+  --gp-paper: #ffffff;
+  --gp-card: #ffffff;
+  --gp-card-foreground: #10291a;
+  --gp-primary: #137838; /* grass green; 5.57:1 with white text, 4.92:1 as text on the background */
+  --gp-primary-foreground: #ffffff;
+  --gp-primary-hover: #0f6830;
+  --gp-muted: #e2ead2;
+  --gp-muted-foreground: #4a5d4f; /* 6.25:1 on the background, 5.70:1 on muted */
+  --gp-sun: #ffc72c; /* sunflower: fills only; ink text on it is 9.94:1 */
+  --gp-sun-foreground: #10291a;
+  --gp-band: #10291a; /* the dark "Why generic hunts fail" band and the footer */
+  --gp-band-foreground: #eef3e2;
+  --gp-band-muted: #b7c1b0; /* 8.3:1 on the band */
+  --gp-destructive: #b42318;
+  --gp-border: rgb(16 41 26 / 0.12); /* soft card ring (decorative; cards are also set apart by fill and shadow) */
+  --gp-line: #78867c; /* input outlines and control borders: 3.7:1 on white, 3.3:1 on the background */
+  --gp-ring: #137838; /* focus ring, 4.9:1 on the background */
+  --gp-shadow: rgb(16 41 26 / 0.12);
 }
 
-/* Dark mode: system preference unless the user picked light; or an explicit dark pick. */
+/* Dark mode: the system preference unless the visitor picked light; or an explicit dark pick. */
 @media (prefers-color-scheme: dark) {
   :root:not([data-theme="light"]) {
     color-scheme: dark;
-    --bg: var(--ticket);
-    --surface: var(--forest);
-    --fg: var(--paper); /* 8.30:1 on ticket */
-    --heading: var(--paper);
-    --muted: var(--mint); /* 5.86:1 on ticket */
-    --line: var(--mint);
-    --focus: var(--sun); /* 5.46:1 on ticket */
-    --halo: var(--forest-deep);
-    --primary: var(--sun);
-    --primary-hover: var(--sunflower);
-    --on-primary: var(--ink); /* 9.68:1 on sun */
-    --secondary-hover: var(--forest-deep);
-    --chip: var(--mint);
-    --on-chip: var(--ink);
-    --grass-strip: url("/brand/grass-strip-dark.svg");
+    --gp-background: #0d1a11;
+    --gp-foreground: #e6eedb; /* 15.0:1 */
+    --gp-ink: #e6eedb;
+    --gp-on-ink: #0d1a11;
+    --gp-paper: #15261a;
+    --gp-card: #15261a;
+    --gp-card-foreground: #e6eedb;
+    --gp-primary: #4cc274; /* 7.9:1 on the background */
+    --gp-primary-foreground: #0b1a10; /* 7.9:1 on primary */
+    --gp-primary-hover: #6fd392;
+    --gp-muted: #1f3325;
+    --gp-muted-foreground: #a9bba5; /* 8.8:1 on the background, 6.6:1 on muted */
+    --gp-sun: #ffc72c;
+    --gp-sun-foreground: #10291a;
+    --gp-band: #050d07;
+    --gp-band-foreground: #e6eedb;
+    --gp-band-muted: #aeb6a6;
+    --gp-destructive: #ff8a7a;
+    --gp-border: rgb(230 238 219 / 0.14);
+    --gp-line: #7f907c; /* 4.4:1 on the card */
+    --gp-ring: #ffc72c;
+    --gp-shadow: rgb(0 0 0 / 0.45);
   }
 }
 
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: var(--ticket);
-  --surface: var(--forest);
-  --fg: var(--paper);
-  --heading: var(--paper);
-  --muted: var(--mint);
-  --line: var(--mint);
-  --focus: var(--sun);
-  --halo: var(--forest-deep);
-  --primary: var(--sun);
-  --primary-hover: var(--sunflower);
-  --on-primary: var(--ink);
-  --secondary-hover: var(--forest-deep);
-  --chip: var(--mint);
-  --on-chip: var(--ink);
-  --grass-strip: url("/brand/grass-strip-dark.svg");
+  --gp-background: #0d1a11;
+  --gp-foreground: #e6eedb;
+  --gp-ink: #e6eedb;
+  --gp-on-ink: #0d1a11;
+  --gp-paper: #15261a;
+  --gp-card: #15261a;
+  --gp-card-foreground: #e6eedb;
+  --gp-primary: #4cc274;
+  --gp-primary-foreground: #0b1a10;
+  --gp-primary-hover: #6fd392;
+  --gp-muted: #1f3325;
+  --gp-muted-foreground: #a9bba5;
+  --gp-sun: #ffc72c;
+  --gp-sun-foreground: #10291a;
+  --gp-band: #050d07;
+  --gp-band-foreground: #e6eedb;
+  --gp-band-muted: #aeb6a6;
+  --gp-destructive: #ff8a7a;
+  --gp-border: rgb(230 238 219 / 0.14);
+  --gp-line: #7f907c;
+  --gp-ring: #ffc72c;
+  --gp-shadow: rgb(0 0 0 / 0.45);
 }
 
-/*
- * Lawn strip under the header and above the footer (GrassDivider). A CSS background, so it is never announced and
- * the ~12 KB (gzipped) SVG is fetched once per theme and cached. The bank sits on the bottom edge.
- */
-.grass-strip {
-  height: 34px;
-  background: var(--grass-strip) left bottom / auto 34px repeat-x;
-}
-/* Footer copy starts further along the lawn, so header and footer never show the same flowers on a short page. */
-.grass-strip-alt {
-  background-position: -560px bottom;
+/* Inside the dark band and the footer the focus ring is sunflower (green on ink is too faint). */
+.gp-band {
+  --gp-ring: #ffc72c;
 }
 
-/* Show the right logo for the active theme (the dark logo is the reversed, cream version). */
-.only-dark {
-  display: none;
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) .only-light {
-    display: none;
-  }
-  :root:not([data-theme="light"]) .only-dark {
-    display: revert;
-  }
-}
-:root[data-theme="dark"] .only-light {
-  display: none;
-}
-:root[data-theme="dark"] .only-dark {
-  display: revert;
-}
-
-/* Print is always black on white (the pass layout itself lives in print.css, S4). */
+/* Print is always black on white (the printed pass layout itself lives in print.css and is unchanged). */
 @media print {
   :root,
   :root[data-theme="dark"] {
     color-scheme: light;
-    --bg: #fff;
-    --surface: #fff;
-    --fg: #000;
-    --heading: #000;
-    --muted: #000;
-    --line: #000;
-    --chip: #fff;
-    --on-chip: #000;
-    --notch-bg: #fff;
-  }
-  .only-dark {
-    display: none !important;
-  }
-  .only-light {
-    display: revert !important;
+    --gp-background: #fff;
+    --gp-card: #fff;
+    --gp-paper: #fff;
+    --gp-foreground: #000;
+    --gp-card-foreground: #000;
+    --gp-ink: #000;
+    --gp-muted: #fff;
+    --gp-muted-foreground: #000;
+    --gp-line: #000;
+    --gp-border: #000;
   }
 }
 

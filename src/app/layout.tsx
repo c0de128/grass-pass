@@ -5,10 +5,25 @@ import { SiteHeader } from "@/components/SiteHeader";
 import { siteUrl } from "@/lib/site-url";
 import "./globals.css";
 
-// Fonts live in the repo (src/app/fonts: the @fontsource 5.3.0 latin woff2 files, SIL OFL 1.1, licences
-// alongside), so neither the build nor the browser ever fetches Google Fonts.
-// next/font/local names the font family after the const, so the consts are "Fredoka" / "Nunito": the same family
-// names the Google Fonts loader produced before (computed styles and document.fonts still say Fredoka and Nunito).
+// Fonts live in the repo (src/app/fonts, SIL OFL 1.1, licences alongside), so neither the build nor the browser
+// ever fetches Google Fonts.
+// Site (v3, Kevin's v0 design): Bricolage Grotesque (headings) + DM Sans (body), the @fontsource-variable 5.3.0
+// latin "wght" files (one variable file each, weights 200-800 / 100-1000).
+// next/font/local names the family after the const, so the consts are the real family names.
+const BricolageGrotesque = localFont({
+  src: [{ path: "./fonts/bricolage-grotesque-latin-wght-normal.woff2", weight: "200 800", style: "normal" }],
+  variable: "--font-bricolage",
+  display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+});
+const DMSans = localFont({
+  src: [{ path: "./fonts/dm-sans-latin-wght-normal.woff2", weight: "100 1000", style: "normal" }],
+  variable: "--font-dm-sans",
+  display: "swap",
+  fallback: ["ui-sans-serif", "system-ui", "sans-serif"],
+});
+// The PRINTED pass keeps its own type (print.css: Fredoka headings, Nunito text), so its one-page fit is unchanged.
+// Not preloaded: only the print page uses them, and the browser fetches a font face only when a page uses it.
 const Fredoka = localFont({
   src: [
     { path: "./fonts/fredoka-latin-600-normal.woff2", weight: "600", style: "normal" },
@@ -16,6 +31,7 @@ const Fredoka = localFont({
   ],
   variable: "--font-fredoka",
   display: "swap",
+  preload: false,
   fallback: ["ui-rounded", "system-ui", "sans-serif"],
 });
 const Nunito = localFont({
@@ -26,6 +42,7 @@ const Nunito = localFont({
   ],
   variable: "--font-nunito",
   display: "swap",
+  preload: false,
   fallback: ["ui-rounded", "system-ui", "sans-serif"],
 });
 
@@ -63,19 +80,19 @@ export const metadata: Metadata = {
 
 export const viewport: Viewport = {
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#FAF3E1" },
-    { media: "(prefers-color-scheme: dark)", color: "#295031" },
+    { media: "(prefers-color-scheme: light)", color: "#EEF3E2" },
+    { media: "(prefers-color-scheme: dark)", color: "#0D1A11" },
   ],
 };
 
 export default function RootLayout({ children }: LayoutProps<"/">) {
   return (
-    <html lang="en" className={`${Fredoka.variable} ${Nunito.variable} h-full antialiased`}>
+    <html lang="en" className={`${BricolageGrotesque.variable} ${DMSans.variable} ${Fredoka.variable} ${Nunito.variable} h-full scroll-smooth antialiased`}>
       <body className="flex min-h-full flex-col">
         {/* First Tab stop on every page (WCAG 2.4.1): every page has <main id="main">. */}
         <a
           href="#main"
-          className="sr-only z-50 rounded-control bg-surface px-4 py-2 font-bold text-fg focus:not-sr-only focus:absolute focus:top-2 focus:left-2 print:hidden"
+          className="sr-only z-50 rounded-full bg-card px-4 py-2 font-bold text-foreground focus:not-sr-only focus:fixed focus:top-2 focus:left-2 print:hidden"
         >
           Skip to main content
         </a>

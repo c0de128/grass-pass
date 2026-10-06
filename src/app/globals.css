@@ -1,72 +1,108 @@
 @import "tailwindcss";
 @import "../styles/tokens.css";
 
-/* Brand tokens (src/styles/tokens.css) mapped into the Tailwind theme: bg-paper, text-forest, bg-surface, ... */
+/*
+ * v3 tokens (src/styles/tokens.css) mapped into the Tailwind theme with the names Kevin's v0 design uses
+ * (bg-background, text-ink, bg-sun, bg-muted, text-muted-foreground, ...). The older names the pass views
+ * still use (bg-surface, text-fg, border-line, ...) point at the same v3 roles.
+ */
 @theme inline {
-  --color-paper: var(--paper);
-  --color-paper-light: var(--paper-light);
-  --color-forest: var(--forest);
-  --color-ticket: var(--ticket);
-  --color-ink: var(--ink);
-  --color-lawn: var(--lawn);
-  --color-sage: var(--sage);
-  --color-mint: var(--mint);
-  --color-sun: var(--sun);
-  --color-sunflower: var(--sunflower);
+  --color-background: var(--gp-background);
+  --color-foreground: var(--gp-foreground);
+  --color-ink: var(--gp-ink);
+  --color-on-ink: var(--gp-on-ink);
+  --color-paper: var(--gp-paper);
+  --color-card: var(--gp-card);
+  --color-card-foreground: var(--gp-card-foreground);
+  --color-primary: var(--gp-primary);
+  --color-primary-foreground: var(--gp-primary-foreground);
+  --color-primary-hover: var(--gp-primary-hover);
+  --color-muted: var(--gp-muted);
+  --color-muted-foreground: var(--gp-muted-foreground);
+  --color-sun: var(--gp-sun);
+  --color-sun-foreground: var(--gp-sun-foreground);
+  --color-band: var(--gp-band);
+  --color-band-foreground: var(--gp-band-foreground);
+  --color-band-muted: var(--gp-band-muted);
+  --color-destructive: var(--gp-destructive);
+  --color-border: var(--gp-border);
+  --color-line: var(--gp-line);
+  --color-ring: var(--gp-ring);
+  --color-shadow: var(--gp-shadow);
 
-  /* Semantic roles (flip in dark mode). */
-  --color-bg: var(--bg);
-  --color-surface: var(--surface);
-  --color-fg: var(--fg);
-  --color-heading: var(--heading);
-  --color-muted: var(--muted);
-  --color-line: var(--line);
-  --color-focus: var(--focus);
-  --color-halo: var(--halo);
-  --color-primary: var(--primary);
-  --color-primary-hover: var(--primary-hover);
-  --color-on-primary: var(--on-primary);
-  --color-secondary-hover: var(--secondary-hover);
-  --color-chip: var(--chip);
-  --color-on-chip: var(--on-chip);
-  /* S0 name kept so existing markup keeps working: headings colour. */
-  --color-accent: var(--heading);
-  --color-background: var(--bg);
-  --color-foreground: var(--fg);
+  /* Older names (pass views, park list, status boxes). */
+  --color-bg: var(--gp-background);
+  --color-surface: var(--gp-card);
+  --color-fg: var(--gp-foreground);
+  --color-heading: var(--gp-foreground);
+  --color-on-primary: var(--gp-primary-foreground);
+  --color-secondary-hover: var(--gp-muted);
+  --color-chip: var(--gp-muted);
+  --color-on-chip: var(--gp-foreground);
 
-  --font-sans: var(--font-nunito), ui-rounded, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-  --font-display: var(--font-fredoka), var(--font-nunito), ui-rounded, system-ui, sans-serif;
-
+  --font-sans: var(--font-dm-sans), "DM Sans", ui-sans-serif, system-ui, sans-serif;
+  --font-heading: var(--font-bricolage), "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
+  --font-display: var(--font-bricolage), "Bricolage Grotesque", ui-sans-serif, system-ui, sans-serif;
 }
 
-/* Corner radii: rounded-ticket (cards) and rounded-control (buttons, inputs). */
+/* Corner radii as in v0 (--radius 0.875rem), plus the older card/control names. */
 @theme {
-  --radius-ticket: 16px;
-  --radius-control: 12px;
+  --radius-sm: 0.525rem;
+  --radius-md: 0.7rem;
+  --radius-lg: 0.875rem;
+  --radius-xl: 1.225rem;
+  --radius-2xl: 1.575rem;
+  --radius-3xl: 1.925rem;
+  --radius-4xl: 2.275rem;
+  --radius-ticket: 1.5rem;
+  --radius-control: 1rem;
 }
 
 @layer base {
   body {
-    background: var(--bg);
-    color: var(--fg);
+    background: var(--gp-background);
+    color: var(--gp-foreground);
     font-family: var(--font-sans);
-    font-size: 1.0625rem; /* 17 px */
     line-height: 1.5;
   }
 
   h1,
   h2,
-  h3 {
-    font-family: var(--font-display);
-    font-weight: 600;
-    color: var(--heading);
-    line-height: 1.2;
+  h3,
+  h4 {
+    font-family: var(--font-heading);
   }
 
-  /* Focus: 3 px outline + 4 px halo, never removed (SPEC §8.3). */
+  /* Focus: a solid 3 px ring with a 2 px gap, never removed (>= 3:1 against every background it sits on). */
   :focus-visible {
-    outline: 3px solid var(--focus);
+    outline: 3px solid var(--gp-ring);
     outline-offset: 2px;
-    box-shadow: 0 0 0 9px var(--halo);
+  }
+}
+
+/* Dotted "grain" behind the hero (v0). */
+@utility grain {
+  background-image: radial-gradient(color-mix(in oklab, var(--gp-foreground) 10%, transparent) 1px, transparent 1px);
+  background-size: 18px 18px;
+}
+
+/* The tear-off perforation on the pass card (v0). */
+@utility perforation {
+  background-image: radial-gradient(circle, var(--gp-foreground) 1.2px, transparent 1.6px);
+  background-size: 10px 4px;
+  background-repeat: repeat-x;
+  background-position: center;
+}
+
+/* v0's entrance animations (tw-animate-css "animate-in fade-in slide-in-from-bottom"), only when motion is OK. */
+@keyframes gp-rise {
+  from {
+    opacity: 0;
+    transform: translateY(1rem);
+  }
+}
+@utility gp-rise {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: gp-rise 0.7s ease-out both;
   }
 }

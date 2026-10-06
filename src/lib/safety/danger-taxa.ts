@@ -111,6 +111,8 @@ export function blockedWordIn(text: string): string | null {
 export const TAXA = {
   plants: 47126, // kingdom Plantae
   fungi: 47170, // kingdom Fungi, "Fungi Including Lichens"
+  lichens: 54743, // class Lecanoromycetes, "Common Lichens" (verified live 2026-10-06)
+  lichinomycetes: 152030, // class Lichinomycetes, small lichens (verified live 2026-10-06)
   lepidoptera: 47157, // order Lepidoptera, butterflies and moths
   honeyBees: 47220, // genus Apis
   bumbleBees: 52775, // genus Bombus
@@ -122,6 +124,7 @@ export const TAXA = {
 
 export const SAFETY_LINES = {
   fungi: "Look, don't touch. Never eat wild mushrooms.",
+  lichen: "Look, don't touch. Never eat lichens, and leave them where they grow.",
   berries: "Look, don't touch. Never eat wild berries or fruit.",
   prickly: "Look, don't touch. It has sharp spines or thorns.",
   plant: "Look, don't pick or eat.",
@@ -135,11 +138,14 @@ export const SAFETY_FOOTNOTE = "Some things seen here are left off for safety.";
 
 const has = (t: TaxonLike, id: number) => t.taxonId === id || t.ancestorIds.includes(id);
 const BERRY_RE = /\b(berr(y|ies)|fruits?|drupes?)\b/i;
+/** A lichen is a fungus in iNaturalist's tree, but not a mushroom: its own words decide too ("a fruticose lichen"). */
+const LICHEN_RE = /\blichens?\b/i;
 const PRICKLY_RE = /\b(spines?|spined|spiny|thorns?|thorny|prickl\w*|barbs?|burs?|burrs?|stinging)\b/i;
 
 /** The fixed safety line for a Wild Find. `sourceText` decides the berry line for plants. */
 export function safetyLineFor(t: TaxonLike, sourceText: string): string {
-  if (has(t, TAXA.fungi)) return SAFETY_LINES.fungi;
+  if (has(t, TAXA.lichens) || has(t, TAXA.lichinomycetes)) return SAFETY_LINES.lichen;
+  if (has(t, TAXA.fungi)) return LICHEN_RE.test(sourceText) ? SAFETY_LINES.lichen : SAFETY_LINES.fungi;
   if (has(t, TAXA.plants)) {
     if (PRICKLY_RE.test(sourceText)) return SAFETY_LINES.prickly;
     return BERRY_RE.test(sourceText) ? SAFETY_LINES.berries : SAFETY_LINES.plant;

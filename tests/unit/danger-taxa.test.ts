@@ -162,6 +162,18 @@ describe("fixed safety lines", () => {
     expect(safetyLineFor(t(TAXA.mammals), "a squirrel")).toBe(SAFETY_LINES.wildlife);
     expect(safetyLineFor(t(47115), "a snail")).toBe(SAFETY_LINES.small);
   });
+  it("a lichen gets a lichen line, not the mushroom line (judge R4: Connemara's Golden-eye Lichen)", () => {
+    // Real ancestry of Teloschistes chrysophthalmus (taxon 55553) from tests/fixtures/inat-taxa-connemara-meadow-preserve.json.
+    const goldenEye = { taxonId: 55553, ancestorIds: [48460, 47170, 48250, 372740, 54743, 952186, 54755, 54756, 1232043, 55554] };
+    expect(safetyLineFor(goldenEye, "is a fruticose lichen with branching lobes")).toBe(SAFETY_LINES.lichen);
+    expect(safetyLineFor(goldenEye, "")).toBe(SAFETY_LINES.lichen);
+    // A lichen outside Lecanoromycetes is still caught by its own words.
+    expect(safetyLineFor(t(TAXA.fungi), "a crustose lichen on rocks")).toBe(SAFETY_LINES.lichen);
+    expect(safetyLineFor(t(TAXA.fungi, TAXA.lichinomycetes), "")).toBe(SAFETY_LINES.lichen);
+    expect(SAFETY_LINES.lichen).not.toMatch(/mushroom/i);
+    // A mushroom still gets the mushroom line.
+    expect(safetyLineFor(t(TAXA.fungi), "a gilled mushroom")).toBe(SAFETY_LINES.fungi);
+  });
   it("plants and fungi stay put; birds don't", () => {
     expect(isStationary(t(TAXA.plants))).toBe(true);
     expect(isStationary(t(TAXA.fungi))).toBe(true);

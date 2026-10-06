@@ -14,14 +14,14 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-bold tracking-widest text-link uppercase">What&apos;s on a pass</p>
+            <p className="text-xs font-bold tracking-widest text-link uppercase">What&apos;s a pass?</p>
             <h2 id="pass-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
-              Every clue comes with its receipts.
+              Proof in every clue.
             </h2>
           </div>
           <p className="max-w-lg text-lg leading-relaxed text-pretty text-muted-foreground">
-            Every find comes from a real, dated source, listed on the grown-up&apos;s stub, so nobody spends an hour hunting for
-            a heron that left in 2019.
+            Every clue comes from a real, dated source, listed on the grown-up&apos;s stub. So nobody spends 40 minutes hunting
+            for a heron that flew off in 2019.
           </p>
         </div>
 
@@ -33,8 +33,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-3xl leading-tight font-extrabold sm:text-4xl">Wild Finds</h3>
             <p className="max-w-md leading-relaxed">
-              Plants and animals people really photographed in and around that park (within 1.5 km) in the last 14 days.
-              Gemma must quote each one&apos;s source, and code checks the quote word for word.
+              Real sightings of birds, bugs and blooms: plants and animals people photographed in or near the park (within
+              1.5 km) in the last 14 days. Gemma must quote each one&apos;s source, and code checks the quote word for word.
             </p>
             <div className="mt-auto flex flex-col gap-3 rounded-2xl bg-paper p-5 text-ink">
               <div className="flex items-start gap-3">
@@ -55,8 +55,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-2xl font-extrabold text-ink">Park Finds</h3>
             <p className="leading-relaxed text-muted-foreground">
-              Hoops, shelters, bridges: things on the park&apos;s OpenStreetMap map, with real counts like &ldquo;2 basketball
-              courts.&rdquo;
+              Hoops, shelters, bridges and playground gear, straight from the park&apos;s OpenStreetMap map, with real counts
+              like &ldquo;2 basketball courts.&rdquo;
             </p>
           </article>
 
@@ -67,8 +67,8 @@ export function PassAnatomy({ spot }: { spot: SpotQuote | null }) {
             </div>
             <h3 className="text-2xl font-extrabold text-ink">Lucky Finds</h3>
             <p className="leading-relaxed text-muted-foreground">
-              &ldquo;Maybe&rdquo; finds like a dog or a bike, backed by at least 3 Google Maps reviews from the last 2 years
-              that mention them (counted via SerpApi). No evidence, no Lucky Finds: the pass leaves them off and says why.
+              Maybe-sightings, like a dog or a bike, backed by at least 3 Google Maps reviews from the last 2 years that
+              mention them (counted via SerpApi). No proof, no Lucky Finds: the pass leaves them off and says why.
             </p>
           </article>
 

@@ -151,11 +151,11 @@ function storeBand(b: AgeBand) {
 const noSubscribe = () => () => {};
 const serverBand = (): AgeBand => DEFAULT_AGE_BAND;
 
-/** v0's short hints, kept true to AGE_BAND_INFO (6 or 8 finds; 10-13 has 2 hard ones). */
+/** Short, fun hints in Kevin's home-copy voice, kept true to AGE_BAND_INFO (6 or 8 finds; 10-13 has 2 hard ones). */
 export const AGE_HINTS: Record<AgeBand, string> = {
-  "4-6": "6 finds, read aloud",
-  "6-10": "8 finds, the classic",
-  "10-13": "8 finds, 2 tricky",
+  "4-6": "6 finds, you read aloud",
+  "6-10": "8 finds, the sweet spot",
+  "10-13": "8 finds, 2 brain-benders",
 };
 
 /**

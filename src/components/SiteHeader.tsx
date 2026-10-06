@@ -6,30 +6,31 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 /** Home page section anchors (v0 nav). Plain links to "/#...", so they also work from /about and a pass page. */
 export const HOME_SECTIONS = [
-  { href: "/#why", label: "Why it's different" },
-  { href: "/#pass", label: "What's on a pass" },
-  { href: "/#parks", label: "Examples" },
+  { href: "/#why", label: "Why Grass Pass" },
+  { href: "/#pass", label: "What's a pass?" },
+  { href: "/#parks", label: "Explore" },
 ] as const;
 
 /**
  * Page tabs shown at every width (Kevin, 2026-10-06: a "How it works" tab that explains the app and the AI
- * process in detail, at /how-it-works; it replaces the "/#how" anchor in the header).
+ * process in detail, at /how-it-works; it replaces the "/#how" anchor in the header). Labelled "Real-World Data"
+ * since Kevin's home copy (2026-10-06): the page explains the real park data and how the AI and code use it.
  */
 export const PAGE_LINKS = [
-  { href: "/how-it-works", label: "How it works" },
+  { href: "/how-it-works", label: "Real-World Data" },
   { href: "/about", label: "About" },
 ] as const;
 
 /**
  * v3 site header (Kevin's v0 design): sticky, translucent meadow background, the ticket logo (home link,
- * never prefetched: SEC-3-01), the section links (large screens), How it works and About (every width), the dark mode switch and the dark
+ * never prefetched: SEC-3-01), the section links (large screens), Real-World Data and About (every width), the dark mode switch and the dark
  * "Make a pass" pill that jumps to the park search on the home page.
  */
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-md print:hidden">
       {/* Phones (under 640 px): the logo and the dark mode switch on top, the page tabs on a second row, so
-          "How it works" and "About" stay visible without sideways scrolling (360 px measured). */}
+          "Real-World Data" and "About" stay visible without sideways scrolling (360 px measured). */}
       <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 px-4 pt-1.5 sm:h-16 sm:flex-nowrap sm:gap-6 sm:px-5 sm:pt-0 md:px-8">
         <Link href="/" prefetch={false} aria-label="Grass Pass home" className="inline-flex min-h-11 shrink-0 items-center rounded-md text-foreground">
           <Logo />

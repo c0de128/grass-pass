@@ -131,4 +131,10 @@
     content-visibility: auto;
     contain-intrinsic-size: auto 900px;
   }
+  /* #pass is ~1,200-1,420 px tall from 768 px up (measured 2026-10-06 with a real Find This Spot riddle). With a 900 px
+     placeholder its band card spilled over the #parks heading while skipped, and axe misread that heading's background
+     (a false contrast failure at 1280 px). A placeholder at least as tall as the real section keeps the two apart. */
+  .gp-home > section#pass {
+    contain-intrinsic-size: auto 1450px;
+  }
 }

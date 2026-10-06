@@ -10,14 +10,14 @@ export const TWO_PARKS = [
   {
     name: "Connemara Meadow",
     slug: "connemara",
-    big: { value: "70", label: "wildlife species spotted in 2 weeks" },
+    big: { value: "70", label: "kinds of plants and animals spotted in and around it in 2 weeks" },
     small: { value: "0", label: "playgrounds, courts or shelters" },
     verdict: "So its pass is wild: birds, bugs, blooms.",
   },
   {
     name: "Celebration Park",
     slug: "celebration",
-    big: { value: "25", label: "soccer fields, plus 6 courts" },
+    big: { value: "25", label: "soccer fields mapped here, plus 6 courts" },
     small: { value: "0", label: "recent wildlife sightings" },
     verdict: "So its pass is built: hoops, nets, a shelter.",
   },
@@ -32,15 +32,15 @@ export function TwoParks() {
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
           <div className="flex flex-col gap-4">
-            <p className="text-xs font-bold tracking-widest text-sun uppercase">Why generic hunts fail</p>
+            <p className="text-xs font-bold tracking-widest text-sun uppercase">The problem</p>
             <h2 id="why-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl lg:text-6xl">
-              &ldquo;Find a pinecone&rdquo; doesn&apos;t work everywhere.
+              Why &ldquo;Find a pinecone&rdquo; fails by age five.
             </h2>
           </div>
           <p className="max-w-lg text-lg leading-relaxed text-pretty text-band-muted">
-            We measured two parks in the same town, Allen, TX. They have almost nothing in common, so one printed list would
-            fail both. Grass Pass gives each park its own pass: code collects what is really there, and Gemma picks a fair
-            mix and writes the clues.
+            Generic scavenger lists don&apos;t work because parks aren&apos;t generic. A manicured city park has basketball hoops; a
+            nature preserve has butterflies. So we build each pass from what has actually been at your park lately: its real
+            map and the last two weeks of wildlife sightings. Look at these two parks in Allen, TX.
           </p>
         </div>
 

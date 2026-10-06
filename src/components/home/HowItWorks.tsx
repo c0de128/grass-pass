@@ -11,23 +11,23 @@ export const HOW_STEPS: readonly Step[] = [
   {
     icon: MapPinned,
     title: "Pick a park & age",
-    body: "Type a town, ZIP or park name, or use your location. Choose 4–6, 6–10 or 10–13 to set the number and difficulty of clues.",
+    body: "Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10 or 10–13: it sets how many clues and how hard.",
   },
   {
     icon: Sparkles,
-    title: "Gemma writes, code checks",
-    body: "Usually 10–30 seconds. Code reads the park map and 14 days of nearby sightings. Gemma 4 picks a fair mix and writes the clues. Code checks each one against its source.",
+    title: "AI builds the hunt",
+    body: "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.",
     ticker: ["Reading the park map…", "Checking what people spotted…", "Writing clues…"],
   },
   {
     icon: Printer,
-    title: "Print one page",
-    body: "One black-and-white Letter page: the kid’s pass on top, a dashed tear line, and the grown-up’s stub with answers and sources.",
+    title: "Print the page",
+    body: "One black-and-white Letter page: the kid’s pass on top, a tear line, and a grown-up stub with the answers and sources.",
   },
   {
     icon: Smartphone,
-    title: "Phone away",
-    body: "The kid ticks off finds with a pencil. The grown-up keeps the stub, in case anyone needs a hint.",
+    title: "Hide the phone",
+    body: "Phone away. Your kid ticks off finds with a pencil; you keep the stub, in case anyone needs a hint.",
   },
 ];
 
@@ -38,11 +38,11 @@ export function HowItWorks() {
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
           <h2 id="how-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
-            Real park data in. One AI call. Paper out.
+            Real park data in. One open AI model. Paper out.
           </h2>
           <p>
             <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4">
-              The full story: the data, the AI and every check
+              The full story for curious grown-ups: the data, the AI and every check
               <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
             </Link>
           </p>

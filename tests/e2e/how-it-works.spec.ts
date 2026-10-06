@@ -2,7 +2,7 @@ import AxeBuilder from "@axe-core/playwright";
 import { expect, test } from "@playwright/test";
 
 // Kevin 2026-10-06: a "How it works" tab at the top of every page, explaining the app and the AI process in
-// detail (/how-it-works). No upstream call: the page is static text built from the app's own constants.
+// detail (/how-it-works; the tab is labelled "Real-World Data" since Kevin's home copy). No upstream call: the page is static text built from the app's own constants.
 
 const WIDTHS = [360, 1280] as const;
 const SCHEMES = ["light", "dark"] as const;
@@ -12,7 +12,7 @@ for (const width of WIDTHS) {
   test(`the header tab opens the page at ${width} px (from the About page)`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     await page.goto("/about");
-    const tab = page.getByRole("navigation", { name: "Site" }).getByRole("link", { name: "How it works", exact: true });
+    const tab = page.getByRole("navigation", { name: "Site" }).getByRole("link", { name: "Real-World Data", exact: true });
     await expect(tab).toBeVisible();
     await tab.click();
     await expect(page).toHaveURL(/\/how-it-works$/);

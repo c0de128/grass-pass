@@ -1,4 +1,4 @@
-import { PhoneOff } from "lucide-react";
+import { CircleCheck, PhoneOff } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ExampleChips } from "@/components/home/ExampleChips";
@@ -7,8 +7,9 @@ import type { HeroCard, ReadyExample } from "@/lib/home/showcase";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 
 /**
- * v3 hero (Kevin's v0 design): the yellow "Phone away" badge, the big headline with the sunflower underline
- * under "outside.", the lead, and the real park search card (children: RestingNotice + PassMaker); on the
+ * v3 hero (Kevin's v0 design, Kevin's home copy 2026-10-06): the yellow "Screen-free & re-wilded" badge, the big
+ * headline with the sunflower underline under "kids back.", the lead (the "about 30 seconds" is PASS_WAIT_COPY's
+ * usual 10-30 s), the real park search card (children: RestingNotice + PassMaker) and the "Free for parents." line; on the
  * right the meadow picture with the tilted real example pass and the "Fits on 1 page" sticker.
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
@@ -19,13 +20,13 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
         <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">
           <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
             <PhoneOff className="size-3.5" aria-hidden="true" />
-            Powered by AI · Gemma 4 · real park data
+            Screen-free &amp; re-wilded
           </p>
 
           <h1 id="hero-title" className="text-6xl leading-[0.92] font-extrabold tracking-tighter text-balance text-ink sm:text-7xl xl:text-8xl">
-            A new way to explore, play and learn{" "}
+            AI reads the park. You get your{" "}
             <span className="relative inline-block text-primary">
-              outside.
+              kids back.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
                 <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
               </svg>
@@ -33,14 +34,20 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            Pick a real park and your kid&apos;s age. Gemma 4, an open-weight AI model, reads that park&apos;s map and 14 days
-            of nearby wildlife sightings, then writes a one-page pass of things to find. Code checks every clue against its
-            source. You print it; the pencil does the rest.
+            We turn your local park into a real-world treasure hunt in about 30 seconds. Gemma 4, an open AI model, reads
+            the park&apos;s real map and the last two weeks of wildlife sightings, then writes the clues. No screens required
+            after you press print.
           </p>
 
           <ExampleChips examples={examples} />
 
-          <div className="flex flex-col gap-4">{children}</div>
+          <div className="flex flex-col gap-4">
+            {children}
+            <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink" data-testid="hero-trust">
+              <CircleCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
+              Free for parents.
+            </p>
+          </div>
         </div>
 
         <div className="relative lg:sticky lg:top-24 lg:col-span-6">

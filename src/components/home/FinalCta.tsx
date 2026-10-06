@@ -1,4 +1,4 @@
-import { ArrowUp } from "lucide-react";
+import { ArrowRight } from "lucide-react";
 
 /** The big sunflower banner at the end of the home page (Kevin's v0 design). */
 export function FinalCta() {
@@ -10,14 +10,14 @@ export function FinalCta() {
             Print the pass. Pocket the pencil. Leave the phone.
           </h2>
           <p className="max-w-xl text-lg leading-relaxed text-pretty">
-            Free, one black-and-white page, written for the park down the street, not a park somewhere else.
+            Free, one printable page, written for the park across the street, not some park somewhere else.
           </p>
           <a
             href="#find"
             className="group inline-flex h-14 items-center gap-2 rounded-full bg-[#10291a] px-8 font-heading text-lg font-extrabold text-[#eef3e2] transition-transform [--gp-ring:#10291a] motion-safe:hover:-translate-y-0.5"
           >
-            Make your first pass
-            <ArrowUp className="size-5 transition-transform motion-safe:group-hover:-translate-y-0.5" aria-hidden="true" />
+            Make your first pass free
+            <ArrowRight className="size-5 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
           </a>
         </div>
       </div>

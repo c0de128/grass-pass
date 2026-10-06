@@ -6,7 +6,7 @@
  * OpenStreetMap parks nearest first. Field errors follow the starter-kit pattern: focus the
  * field, aria-invalid, aria-describedby, role=alert, re-announced on every failed submit.
  */
-import { LoaderCircle, LocateFixed, MapPin, Search, ShieldCheck } from "lucide-react";
+import { LoaderCircle, LocateFixed, MapPin, ShieldCheck, Target } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { buttonClassName } from "@/components/ui/Button";
@@ -271,7 +271,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
                 inputMode="search"
                 autoComplete="address-level2"
                 spellCheck={false}
-                placeholder="Town, ZIP or park name"
+                placeholder="Your town, ZIP or park name"
                 value={q}
                 onChange={(e) => {
                   setQ(e.target.value);
@@ -286,7 +286,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
               {phase.kind === "searching" ? (
                 <LoaderCircle className="size-5 motion-safe:animate-spin" aria-hidden="true" />
               ) : (
-                <Search className="size-5" aria-hidden="true" />
+                <Target className="size-5" aria-hidden="true" />
               )}
               {phase.kind === "searching" ? "Searching…" : "Find parks"}
             </button>

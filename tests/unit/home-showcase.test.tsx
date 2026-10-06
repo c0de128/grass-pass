@@ -8,7 +8,7 @@ import { PassAnatomy } from "@/components/home/PassAnatomy";
 import { SampleParks } from "@/components/home/SampleParks";
 import { TWO_PARKS_SOURCE, TwoParks } from "@/components/home/TwoParks";
 import { AgePicker } from "@/components/pass/PassMaker";
-import { cardFacts, heroCard, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
+import { cardFacts, heroCard, liveStatement, passType, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
@@ -92,13 +92,41 @@ describe("home showcase (v0 slots filled with real data)", () => {
   it("sample card facts come from the pass sections, the map and the October box", () => {
     const pass = realPass();
     const f = cardFacts(pass);
-    expect(f.facts).toMatch(new RegExp(`^${pass.items.length} finds on this pass: `));
+    expect(f.count).toBe(pass.items.length);
     const wild = pass.items.filter((i) => i.section === "wild").length;
     if (wild > 0) expect(f.facts).toContain(`${wild} Wild Find`);
+    expect(f.tags).not.toContain("Wild Finds");
     if (pass.spot?.status === "ok") expect(f.tags).toContain("Find This Spot map");
     const empty = cardFacts({ ...pass, items: [] });
     expect(empty.facts).toMatch(/^No data available/);
+    expect(empty.count).toBe(0);
+    expect(empty.type).toBeNull();
     expect(empty.tags).toEqual([...(pass.spot?.status === "ok" ? ["Find This Spot map"] : []), ...(pass.october?.status === "ok" ? ["October monarch box"] : [])]);
+  });
+
+  it("pass-type label: computed from the real Wild vs Park counts (Lucky left out), none when both are 0", () => {
+    const pass = realPass();
+    const base = pass.items[0]!;
+    const make = (wild: number, park: number, lucky = 0): Pass => ({
+      ...pass,
+      items: [
+        ...Array.from({ length: wild }, (_, i) => ({ ...base, id: `w${i}`, section: "wild" as const })),
+        ...Array.from({ length: park }, (_, i) => ({ ...base, id: `p${i}`, section: "park" as const })),
+        ...Array.from({ length: lucky }, (_, i) => ({ ...base, id: `l${i}`, section: "lucky" as const })),
+      ],
+    });
+    expect(passType(make(6, 2))?.label).toBe("Wild Pass");
+    expect(passType(make(4, 2))?.label).toBe("Wild Pass");
+    expect(passType(make(3, 5))?.label).toBe("Mixed Pass");
+    expect(passType(make(4, 4))?.label).toBe("Mixed Pass");
+    expect(passType(make(2, 4))?.label).toBe("Built Pass");
+    expect(passType(make(0, 8))?.label).toBe("Built Pass");
+    expect(passType(make(0, 0, 3))).toBeNull();
+    const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("connemara", pass)]} enabled />);
+    const t = passType(pass);
+    if (t) expect(html).toContain(t.label);
+    expect(html).toContain(`${pass.items.length} finds to spot`);
+    for (const fake of ["50+", "30+", "20+", "40+", "google.com"]) expect(html).not.toContain(fake);
   });
 
   it("the live pill only claims what is true, and pulses only about today", () => {
@@ -131,7 +159,7 @@ describe("home showcase (v0 slots filled with real data)", () => {
     expect(spotQuote([missingStatus("connemara", "x")])).toBeNull();
     const html = renderToStaticMarkup(<PassAnatomy spot={null} />);
     expect(html).not.toContain("Something with a roof where people eat lunch");
-    expect(html).toContain("No evidence, no Lucky Finds");
+    expect(html).toContain("No proof, no Lucky Finds");
     expect(html).toContain("at least 3 Google Maps reviews from the last 2 years");
     expect(html).not.toMatch(/printed as .look, don/);
   });
@@ -190,8 +218,8 @@ describe("home copy checked against the app", () => {
     expect(html.match(/type="radio"/g)).toHaveLength(3);
     expect(html).toContain("Explorer age</legend>");
     expect(html).toContain("(most kids)");
-    expect(html).toContain("6 finds, read aloud");
-    expect(html).toContain("8 finds, 2 tricky");
+    expect(html).toContain("6 finds, you read aloud");
+    expect(html).toContain("8 finds, 2 brain-benders");
   });
 });
 

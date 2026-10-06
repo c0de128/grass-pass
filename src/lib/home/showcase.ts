@@ -56,25 +56,48 @@ export function heroCard(statuses: readonly ExampleStatus[], preferred = HERO_EX
   };
 }
 
-export type CardFacts = { facts: string; tags: string[] };
+export type PassKind = "wild" | "mixed" | "built";
+export type PassType = { kind: PassKind; label: string; emoji: string };
+
+const PASS_TYPES: Record<PassKind, PassType> = {
+  wild: { kind: "wild", label: "Wild Pass", emoji: "🌲" },
+  mixed: { kind: "mixed", label: "Mixed Pass", emoji: "🦆" },
+  built: { kind: "built", label: "Built Pass", emoji: "🏟️" },
+};
+
+/**
+ * The pass-type label on a sample park card (Kevin's home copy, 2026-10-06), computed from the pass's real
+ * section counts. Lucky Finds are left out (they are neither nature nor park gear). With W Wild Finds and P Park
+ * Finds: Wild Pass when W >= 2 x P, Built Pass when P >= 2 x W, Mixed Pass otherwise; no label when W + P = 0.
+ * Example: 6 wild + 2 park -> Wild; 3 + 5 -> Mixed; 0 + 8 -> Built.
+ */
+export function passType(pass: Pass): PassType | null {
+  const wild = pass.items.filter((i) => i.section === "wild").length;
+  const park = pass.items.filter((i) => i.section === "park").length;
+  if (wild + park === 0) return null;
+  if (wild >= 2 * park) return PASS_TYPES.wild;
+  if (park >= 2 * wild) return PASS_TYPES.built;
+  return PASS_TYPES.mixed;
+}
+
+/** `count`: the real number of finds on the pass; `type`: its computed pass-type label (passType). */
+export type CardFacts = { facts: string; tags: string[]; count: number; type: PassType | null };
 
 /** Real facts for a sample park card, from that park's saved pass (counts by section, the map, the October box). */
 export function cardFacts(pass: Pass): CardFacts {
   const count = (s: SectionId) => pass.items.filter((i) => i.section === s).length;
-  const parts: string[] = [];
-  const wild = count("wild");
-  const park = count("park");
-  const lucky = count("lucky");
-  if (wild > 0) parts.push(`${wild} ${wild === 1 ? "Wild Find" : "Wild Finds"} (species seen nearby in the last 14 days, iNaturalist)`);
-  if (park > 0) parts.push(`${park} ${park === 1 ? "Park Find" : "Park Finds"} (on the OpenStreetMap park map)`);
-  if (lucky > 0) parts.push(`${lucky} ${lucky === 1 ? "Lucky Find" : "Lucky Finds"} (Google review counts)`);
+  const parts = (["wild", "park", "lucky"] as const)
+    .map((s) => ({ s, n: count(s) }))
+    .filter((x) => x.n > 0)
+    .map((x) => `${x.n} ${x.n === 1 ? SECTION_NAME[x.s].replace(/s$/, "") : SECTION_NAME[x.s]}`);
   const n = pass.items.length;
-  const facts = n === 0 ? "No data available: this pass has no finds that passed our checks." : `${n} ${n === 1 ? "find" : "finds"} on this pass: ${parts.join(", ")}.`;
+  const facts = n === 0 ? "No data available: this pass has no finds that passed our checks." : `${parts.join(", ")}.`;
 
-  const tags: string[] = (["wild", "park", "lucky"] as const).filter((s) => count(s) > 0).map((s) => SECTION_NAME[s]);
+  // The sections are named in `facts`, so the tags list only the extras on the pass.
+  const tags: string[] = [];
   if (pass.spot?.status === "ok") tags.push("Find This Spot map");
   if (pass.october?.status === "ok") tags.push("October monarch box");
-  return { facts, tags };
+  return { facts, tags, count: n, type: passType(pass) };
 }
 
 export type LiveStatement = { text: string; live: boolean };

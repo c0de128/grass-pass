@@ -11,7 +11,8 @@ import { EXAMPLE_BAND, type ExampleStatus } from "@/lib/prewarm";
 /**
  * "See a real pass, right now" (Kevin's v0 photo cards), wired to the real pre-warmed example passes
  * (src/lib/prewarm.ts). A ready card links its saved pass ("See the pass") and lists real facts from that
- * pass: its finds by section, its sections as tags and when it was really made. A card with no pass is not a
+ * pass: its computed pass type (Wild / Mixed / Built, rule in passType), its real number of finds, its finds by
+ * section, the extras (map, October box) as tags and when it was really made. A card with no pass is not a
  * link and says why ("No data available yet: ..."). No distances (the page doesn't know where you are).
  * The pill says only a computed, true statement and pulses only while it is about today.
  * Server component, no client JavaScript.
@@ -24,13 +25,13 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
       <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 py-24 md:px-8 lg:py-32">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="flex max-w-2xl flex-col gap-4">
-            <p className="text-xs font-bold tracking-widest text-primary uppercase">Try it now</p>
+            <p className="text-xs font-bold tracking-widest text-primary uppercase">Explore</p>
             <h2 id="examples-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl lg:text-6xl">
               See a real pass, right now.
             </h2>
             <p className="text-lg leading-relaxed text-pretty text-muted-foreground">
               Passes for parks near Dallas, already written from live park data for{" "}
-              {AGE_BAND_INFO[EXAMPLE_BAND].label.toLowerCase()}. Tap one to open it: no sign-in needed.
+              {AGE_BAND_INFO[EXAMPLE_BAND].label.toLowerCase().replace("-", "–")}. Tap one to open it; no sign-up needed.
             </p>
           </div>
           <p
@@ -83,14 +84,28 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
                     {picture}
                     <div className="flex flex-1 flex-col gap-3 p-5">
                       {title}
+                      {facts.count > 0 ? (
+                        <p className="flex flex-wrap items-center gap-2 text-sm font-semibold text-ink" data-testid="pass-type">
+                          {facts.type ? (
+                            <span className="rounded-full bg-sun px-2.5 py-1 text-xs font-bold text-sun-foreground" data-kind={facts.type.kind}>
+                              {facts.type.label} <span aria-hidden="true">{facts.type.emoji}</span>
+                            </span>
+                          ) : null}
+                          <span>
+                            {facts.count} {facts.count === 1 ? "find" : "finds"} to spot
+                          </span>
+                        </p>
+                      ) : null}
                       <p className="text-sm leading-relaxed text-muted-foreground">{facts.facts}</p>
-                      <ul className="flex flex-wrap gap-1.5" aria-label="On this pass">
-                        {facts.tags.map((tag) => (
-                          <li key={tag} className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-ink">
-                            {tag}
-                          </li>
-                        ))}
-                      </ul>
+                      {facts.tags.length > 0 ? (
+                        <ul className="flex flex-wrap gap-1.5" aria-label="Also on this pass">
+                          {facts.tags.map((tag) => (
+                            <li key={tag} className="rounded-full bg-muted px-2.5 py-1 text-xs font-medium text-ink">
+                              {tag}
+                            </li>
+                          ))}
+                        </ul>
+                      ) : null}
                       <p className="text-xs text-muted-foreground">
                         Made {ex.madeAt}
                         {s.fresh ? "" : s.refreshing ? " (an older pass; today's is being made)" : " (an older pass)"}

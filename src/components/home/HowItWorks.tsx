@@ -16,7 +16,7 @@ export const HOW_STEPS: readonly Step[] = [
   {
     icon: Sparkles,
     title: "Gemma writes, code checks",
-    body: "Usually 10–30 seconds. Code reads the park map and the last 14 days of sightings nearby. Gemma 4, an open model, picks a fair mix and writes the clues. Code checks each clue against its source and drops any that fail.",
+    body: "Usually 10–30 seconds. Code reads the park map and 14 days of nearby sightings. Gemma 4 picks a fair mix and writes the clues. Code checks each one against its source.",
     ticker: ["Reading the park map…", "Checking what people spotted…", "Writing clues…"],
   },
   {

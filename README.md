@@ -1,43 +1,50 @@
-# Grass Pass: your ticket to get outside
+# Grass Pass: an open model reads your park and writes a one-page pass
 
-> Pick a park. Print a pass. Phone away.
+> Your ticket to get outside. Pick a park. Print a pass. Phone away.
 
-**Try it live:** TODO (PM): put the production URL here at deploy (Fri Oct 9). No login.
+**Try it live:** TODO (PM): put the production URL here at deploy (Fri Oct 9). The example passes open with no
+sign-in; to make your own, press **Try as a judge** (one click, no sign-up).
 
 TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with its date).
 
-Grass Pass makes a one-page, printable scavenger pass for a real park and a child's age (4-6, 6-10 or 10-13). The
-goal is about **30 seconds on a screen**: pick a park, pick an age, print. Then the phone goes away. The child ticks
-boxes with a pencil, and the grown-up keeps a tear-off stub with the answers, safety notes and sources.
+Grass Pass turns one real park into a one-page pass a child can carry outside. A grown-up picks a park and an age
+(4-6, 6-10 or 10-13). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
+DigitalOcean) picks a fair mix and writes kid-level clues in one call (plus one refill call if too few pass). Code then checks every clue against its
+source, drops any that fail, and writes every number, date and safety line itself. You print one black-and-white
+page: the kid ticks boxes with a pencil, and the grown-up keeps a tear-off stub with the answers, safety notes and
+sources.
 
-Every item on a pass is backed by real, dated data about **that** park:
+Why not a generic printable hunt? "Find a pinecone" fits every park and none. Two parks in Allen, TX, measured on
+Oct 5, 2026: Connemara Meadow had 70 wildlife species photographed in 14 days and no playgrounds, courts or
+shelters on the map; Celebration Park had 25 soccer fields and no recent sightings. Each gets its own pass, from:
 - **Park Finds:** what is mapped inside the park on OpenStreetMap (courts, playgrounds, shelters, bridges, ponds...).
 - **Wild Finds:** species people photographed within 1.5 km in the last 14 days (iNaturalist, research grade only).
-- **Find This Spot:** a black-and-white map of the park's paths with an X on one real landmark, drawn by code.
+- **Find This Spot:** a black-and-white map of the park's paths with an X on one real landmark, drawn by code, and a
+  riddle about it written by the model.
 - **Lucky Finds:** "maybe" finds (a dog out for a walk, someone on a bike), only when at least 3 Google visitor
   reviews of that park from the last 2 years mention them. Code counts the reviews through SerpApi; review text is
   never shown or sent to the AI.
-- **October special:** real monarch butterfly counts near the park, next to the same days last year.
+- **October special:** real monarch butterfly counts near the park, next to the same days last year (all code).
 
-An open-weight model (**Gemma 4**, Apache-2.0) picks a fair mix for each park and writes kid-level clues. Code checks
-every clue against its source and decides what is safe. If a source has nothing, the pass says **"No data
-available"** and why. It never pads the pass with generic items.
+If a source has nothing, the pass says **"No data available"** and why. It never pads the pass with generic items.
 
 Built for the DEV Hacktoberfest 2026 Open-Source AI Challenge, Week 1 "Touch Grass".
 
 ## Live demo
 Live demo: (link added at deploy, Fri Oct 9)
 
-No login, no account. To try it:
-1. On the home page, tap one of the **example parks** (for example Arbor Hills Nature Preserve, the first one). Its pass
-   for today is already made, so it opens right away.
+To try it:
+1. On the home page, tap one of the **example parks** (Arbor Hills Nature Preserve is the first). Its pass for today
+   is already made, so it opens right away, with no sign-in.
 2. Press **Print pass** (at the top of the pass page). One Letter page: the kid's pass on top, the grown-up's stub below.
-3. To make your own: search a park by name (for example "Connemara Meadow Preserve") or a town, pick a park from the
-   list, pick an age band and press **Make my pass**. A new pass usually takes 10-30 seconds, and up to about a minute and a half when the free map servers are slow.
+3. To make your own: search a park by name (for example "Arbor Hills Nature Preserve") or a town, pick a park from the
+   list, pick an age band and press **Make my pass**. A new pass needs a grown-up to sign in (GitHub or Google, 2 a
+   day); judges can press **Try as a judge** instead. It usually takes 10-30 seconds, and up to about a minute and a
+   half when the free map servers are slow.
 
-A town search lists the **10 nearest** named parks within 5 km, so a park you know may not be in the list for a town
-search (for example "Allen TX" lists 10 of its 53 nearby parks, and Connemara is not one of them). Search the park's
-own name instead, or use "Use my location".
+A town search lists the **10 nearest** named parks within 5 km, so a park you know may not be in the list (for
+example "Allen TX" lists 10 of its 53 nearby parks, and Connemara is not one of them). Search the park's own name
+instead, or press "Use my location".
 
 ## How it works
 The app has its own **How it works** page (`/how-it-works`, the "How it works" tab at the top of every page): every

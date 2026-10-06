@@ -131,9 +131,9 @@ describe("KidPass (top of the printed sheet)", () => {
   });
 
   it("density: real passes print roomy; side slots print snug; near-maximum clues print tight", async () => {
-    // Audit R3 recordings: Celebration's 8 finds fit the roomy budget; Connemara now prints 8 finds (was 7),
-    // 25 estimated lines, so it is set snug (still inside the tight budget).
-    for (const [park, alone] of [[PARKS.connemara, "snug"], [PARKS.celebration, "roomy"]] as const) {
+    // Celebration's 8 finds fit the roomy budget; Connemara prints 5 finds since builder M's R3-leftovers
+    // recording (17 estimated lines), so both are roomy.
+    for (const [park, alone] of [[PARKS.connemara, "roomy"], [PARKS.celebration, "roomy"]] as const) {
       const pass = await realPass(park.id);
       expect(estimatedLines(pass.items)).toBeLessThanOrEqual(alone === "roomy" ? SNUG_LINE_BUDGET : TIGHT_LINE_BUDGET);
       expect(passDensity(pass.items, false)).toBe(alone);
@@ -145,11 +145,12 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // Connemara (8 finds: 6 from the first answer + 2 from the real refill, audit R3 recording) lands in
-    // between as it is, with no padding.
+    // In between, with no padding: Connemara's 5 real finds plus Celebration's 3 real finds that take the most
+    // lines (25 estimated lines; before R3-leftovers Connemara's own 8 finds landed here).
     const connemara = await realPass(PARKS.connemara.id);
-    expect(connemara.items).toHaveLength(8);
-    const mid = connemara.items;
+    expect(connemara.items).toHaveLength(5);
+    const longest = [...pass.items].sort((x, y) => estimatedLines([y]) - estimatedLines([x]));
+    const mid = [...connemara.items, ...longest.slice(0, 3)];
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);

@@ -108,11 +108,11 @@ describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
 });
 
 describe("POST /api/pass: Connemara (live recordings)", () => {
-  it("streams the real steps, then an 8-item pass from the real first answer and its real refill", async () => {
+  it("streams the real steps, then a 5-item pass from the real first answer and its real refill (R3 leftovers recording)", async () => {
     const res = await route.POST(post(connemara));
     expect(res.status).toBe(200);
     const ls = await lines(res);
-    // Content tuning: the first answer keeps 6 of 8, so the one retry is a refill of the missing items.
+    // Content tuning: the first answer keeps 5 of 8, so the one retry is a refill of the missing items.
     expect(ls.filter((l) => l.type === "step").map((l) => (l.type === "step" ? l.step : ""))).toEqual(["map", "wildlife", "clues", "check", "retry", "check"]);
     const steps = ls.filter((l) => l.type === "step").map((l) => (l.type === "step" ? l.text : ""));
     expect(steps[2]).toBe("Writing clues with gemma-4-31B-it (open model)…");
@@ -120,19 +120,19 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    // Audit R3 recording: 9 asked (low-data pool: 8 + 1 spare). One duplicate id and two generic plant
-    // clues ("seeds in October" only) leave 6, so the refill asks for 2 + 1 spare from the 4 unused items. It
-    // keeps 2 (the elm's "a name like a color" is dropped as generic): 8 of 8.
-    expect(p.items).toHaveLength(8);
+    // Builder M's recording (R3 leftovers): 9 asked (low-data pool: 8 + 1 spare). Two duplicate ids, a generic
+    // plant clue and "white flowers" for White Morning-glory (a word of its own name) leave 5, so the refill asks
+    // for 3 + 1 spare from the 5 unused items. It keeps none (3 generic clues, 1 name leak): the pass prints 5 of 8.
+    expect(p.items).toHaveLength(5);
     expect(p.target).toBe(8);
-    expect(p.removed).toEqual({ notGrounded: 0, other: 4 });
+    expect(p.removed).toEqual({ notGrounded: 0, other: 8 });
     expect(p.model.attempts).toBe(2);
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: LUCKY_COPY.notConnected });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
-    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild"]);
     // Audit R3: no printed clue opens with filler or ends a command with "?".
     for (const i of p.items) expect(i.clue).not.toMatch(/^(Quick|Psst|Shh|Wow|Hmm|Ready|Stop)|^(Scan|Seek|Explore|Notice|Wander|Sneak|Discover|Track)[^.!?]*?$/);
     // R2-M5: the grown-up's line is code-written from these items. In this answer the only easy find that stays
@@ -176,8 +176,8 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
 
     // The pass page reads it back from the cache only.
     expect(await loadPass(p.id)).toEqual(p);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":6') && l.includes('"refill":false'))).toBe(true);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":2') && l.includes('"refill":true'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":5') && l.includes('"refill":false'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":0') && l.includes('"refill":true'))).toBe(true);
   });
 
   it("the same park + age today is answered from the cache: one line, cached:true, no upstream call", async () => {
@@ -341,8 +341,8 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(ls.some((l) => l.type === "step" && l.step === "retry")).toBe(true);
     const f = final(ls);
     if (f.type !== "result") throw new Error(f.type);
-    // Nothing was kept, so the retry is the whole request again (not a refill): the real first answer, 6 of 8.
-    expect(f.pass.items).toHaveLength(6);
+    // Nothing was kept, so the retry is the whole request again (not a refill): the real first answer, 5 of 8.
+    expect(f.pass.items).toHaveLength(5);
     expect(f.pass.model.attempts).toBe(2);
     expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(logs.filter((l) => l.includes('"event":"pass_checks"'))).toHaveLength(2);

@@ -272,17 +272,19 @@ store command:
   pass and its print page three times at the default limits and expects no 429.
 - **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, plus 1 for a
   signed-in visitor's report counts; `/api/pass` 5, `/api/parks` 4, `/api/report` 5, a sign-in start/callback or a
-  sign-in button 1, the session check 0; measured in `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour
-  per IP. Measured with the real store code (2026-10-06, accounts): a cache hit 3, a cached failure (not a park, too
-  big, too slow, OpenStreetMap resting) 4, a signed-out new-pass request 2, an account over its 2 a day 5 the first
-  time then 4, a report 4 (a repeat 3), a cached park search 3; a new pass about 100 (113 with the usage bookkeeping,
-  including the account count and the report lookup) and an uncached park search 15, which only an address's daily
-  share of new passes (20) and searches (60) can reach.
+  sign-in button 1, the judge passes left 1, the header's "who is signed in" check 0; measured in
+  `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP. Measured with the real store code
+  (2026-10-06, round 4): a cache hit 3, a cached failure (not a park, too big, too slow, OpenStreetMap resting) 4,
+  a signed-out new-pass request 2, an account over its 2 a day 5 the first time then 4, a judge over its 3 per
+  connection 5, a report 4 (a repeat 3, a judge demo report 4), a cached park search 3; a new pass 113 with the
+  usage bookkeeping (the biggest test park, Connemara), 118 when it also starts a fresh Lucky Finds lookup (4
+  SerpApi searches; Celebration Park 55), and an uncached park search 15, which only an address's daily share of
+  new passes (20) and searches (60) can reach.
 - **IPv6:** one shared bucket per /48 network (2 clients' worth), not one per /64.
 - **Pass ids that can't exist** (a day in the future or older than the 30-day pass life, a variant above 3, a
   malformed park id) are a 404 with no store read. Saved passes are kept in memory for 30 minutes after a read.
 
-With these defaults one IPv4 address can spend at most **about 160,000 commands a month (31.9%)**, new passes and
+With these defaults one IPv4 address can spend at most **about 163,000 commands a month (32.6%)**, new passes and
 park searches included. The math is in `src/lib/limits/prelimit.ts` and checked by a unit test. The limits are per
 server instance, so the optional firewall rule below is the backstop across instances.
 
@@ -318,26 +320,38 @@ Kevin's rules (2026-10-06): anyone can search parks, open the example passes and
 password is ever stored), **2 new passes a day per account** (Chicago day). A pass already made today for that park
 and age is served to anyone (it costs nothing). The order on `POST /api/pass` is: signed in? -> the account's daily
 count -> the existing per-IP and global limits; the account's count is given back unless an upstream call really
-started (a failed build that did call the model still counts).
+started (a failed build that did call the model still counts). A rebuild of today's pass after a source was down
+(at most 3 a day per park and age) does not count toward anyone's 2.
+
+A sign-in lasts **7 days** (GitHub, Google) or **1 day** (the judge demo), counted from signing in however much it is
+used; the cookie expires at the same time. GitHub is asked only for `read:user` (no email scope, and the email
+lookup is skipped), Google only for `openid profile`. The header reads who is signed in from `GET /api/me`, which only
+decodes the cookie: browsing without signing in sets no cookie at all.
 
 **Try as a judge:** a big one-click button signs in to a shared demo account (no OAuth, no typing). All judges
-together get `JUDGE_DEMO_DAILY_CAP` new passes a day (default 20), on top of the per-IP limits. Every judge sign-in is
-the SAME account for reports, so judges can never hide an item on their own. `JUDGE_DEMO=0` switches the button off.
+together get `JUDGE_DEMO_DAILY_CAP` new passes a day (default 60), at most 3 of them from one connection (IP), on top
+of the per-IP limits; the sign-in card shows the real number left (`GET /api/judge-passes`). Judge demo reports are
+**logged for review only**: they never count toward any threshold and never show in the counts, and each judge
+sign-in (browser) has its own "already reported today" check. `JUDGE_DEMO=0` switches the button off.
 
 **Reports** (signed-in only, on the screen pass, not the printout): Found it / Didn't find it / Not safe, one per
-account per find per day, 30 an hour per account and 60 an hour per IP. An item with at least 3 "didn't find"
-reports that are more than 60% of its reports in the last 30 days is left out of new passes for that park (the pool
-step, before the model sees anything). "Not safe" from 2 different accounts hides the item from new passes for that
-park at once. Reports are deleted after 90 days. Signed-in visitors see real counts ("Visitor reports, last 30 days:
-3 found it"), nothing when there are none.
+account per find per day, 30 an hour per account and 60 an hour per IP. Every threshold counts **different
+accounts, not reports**: an account is one voice per find (Found it / Didn't find it is one opinion, the latest
+wins). An item that at least 3 different accounts didn't find in the last 30 days, when they are more than 60% of
+the different accounts with an opinion on it, is left out of new passes for that park (the pool step, before the
+model sees anything). "Not safe" from 2 different accounts (not the judge demo) hides the item from new passes for
+that park at once. Reports are deleted after 90 days. Signed-in visitors see real counts of different visitors
+("Visitor reports, last 30 days: 3 found it"), nothing when there are none.
 
 **How Kevin reviews "Not safe" reports** (no admin page):
-- Vercel -> project -> Logs, search `report_not_safe` (every not-safe report: park, item, how many accounts) and
-  `report_item_hidden` (level error: an item was just hidden). No account id or name is ever logged.
+- Vercel -> project -> Logs, search `report_not_safe` (every not-safe report: park, item, how many accounts;
+  `"judge":true` for the judge demo, which never hides anything), `report_judge` (judge demo found / didn't find)
+  and `report_item_hidden` (level error: an item was just hidden). No account id or name is ever logged.
 - Upstash console -> Data Browser: `gp:meta:not-safe-hidden` counts hidden items; the park's hash
-  `gp:rep:{way/123}:h` holds `<item>|hide` (the day it was hidden) and the daily counts.
+  `gp:rep:{way/123}:h` holds `<item>|hide` (the day it was hidden) and one field per account opinion,
+  `<item>|<kind>|<reporter id>` = the day (the reporter id is a per-park HMAC of the account).
 - To un-hide an item after checking it: delete the `<item>|hide` field from that hash (HDEL) and the key
-  `gp:rep:{way/123}:ns:<item>` (the set of accounts that said not safe).
+  `gp:rep:{way/123}:ns:<item>` (the set of reporter ids that said not safe).
 
 **Setting up the sign-in providers** (env names in `.env.example`; a provider without both values has no button):
 - `AUTH_SECRET`: 32+ random bytes (`npx auth secret` or `openssl rand -base64 33`). It encrypts the session cookie and
@@ -365,8 +379,8 @@ SameSite=Lax sign-in cookie (Secure on https). What does leave the device (also 
 | Age band | our server, then the model on DigitalOcean (inside the prompt) | item count and reading level |
 | IP address | our server; in our storage (Upstash Redis) only as a keyed hash (HMAC), never the address itself, inside rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP address, web address, time) | our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on the Hobby plan). Park searches are POSTs, so these logs never hold the typed place or location | running the site |
-| Signing in (grown-ups only) | GitHub or Google send our server an account number and a name. Our storage keeps only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, no name, no avatar. A first name goes only into the person's own encrypted cookie, for the header. Cookie: 30 days (judge demo 1 day) | count 2 new passes a day and the reports |
-| Item reports | our storage: per park and item, counts per kind per day; for "Not safe" the hashed account IDs that said so; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
+| Signing in (grown-ups only) | GitHub or Google send our server an account number and a name. Our storage keeps only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, no name, no avatar. A first name goes only into the person's own encrypted cookie, for the header. We ask GitHub for `read:user` only and Google for `openid profile` only. Sign-in and cookie: 7 days from signing in (judge demo 1 day) | count 2 new passes a day and the reports |
+| Item reports | our storage: per park and item, each signed-in visitor's latest kind and day under a per-park reporter ID (an HMAC, so each person counts once and IDs can't be linked across parks); judge demo reports are only logged; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
 | The finished pass | saved in our storage (Upstash Redis) for 30 days | the pass link and print page |
 
 Our own server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.

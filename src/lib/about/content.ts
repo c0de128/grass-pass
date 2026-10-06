@@ -5,7 +5,7 @@
  * one list, and tests can check every fact without rendering. Every number comes from the app's own constants
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeShareCopy } from "@/lib/accounts/config";
 import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, PREVIOUS_RUN, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
@@ -154,13 +154,13 @@ export const PRIVACY_ROWS: readonly PrivacyRow[] = [
   {
     what: "Signing in with GitHub or Google (grown-ups, only to make a new pass or send a report)",
     where:
-      "GitHub or Google tell our server an account number (and a name, which only goes into your own encrypted sign-in cookie for the \"Hi, name\" in the header). Our storage keeps ONLY a scrambled ID made from the account number with a secret key (no email, no name, no picture). The sign-in cookie lasts 30 days (the judge demo: 1 day); Sign out removes it.",
+      "GitHub or Google tell our server an account number (and a name, which only goes into your own encrypted sign-in cookie for the \"Hi, name\" in the header). Our storage keeps ONLY a scrambled ID made from the account number with a secret key (no email, no name, no picture). We ask GitHub only for your public profile and Google only for your name; anything else in their answer is dropped at once. A sign-in lasts 7 days from when you sign in (the judge demo: 1 day), however much you use it, and the cookie expires then; Sign out removes it at once.",
     why: "To count your 2 new passes a day and your found-it reports.",
   },
   {
     what: "Your item reports (Found it, Didn't find it, Not safe)",
     where:
-      "Our storage (Upstash Redis): per park and item, how many of each kind per day, plus for \"Not safe\" the scrambled IDs of who said so (so 2 different people are needed). Deleted after 90 days.",
+      "Our storage (Upstash Redis): per park and item, which kind each signed-in visitor last reported and on which day, under a scrambled ID made for that park only (so each person counts once, and IDs can't be linked across parks). Reports from the shared judge demo account are only logged, never counted. Deleted after 90 days.",
     why: "To learn what is really findable, leave out finds nobody can spot, and catch anything unsafe.",
   },
   {
@@ -181,7 +181,7 @@ export const PRIVACY_NOTES: readonly string[] = [
 export function accountNotes(): string[] {
   return [
     `Anyone can search parks, open the example passes and any shared pass link, and print. Making a NEW pass needs a grown-up to sign in with GitHub or Google (${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time), because every new pass costs a real model call. ${ACCOUNT_COPY.grownUps} We never store a password.`,
-    `Judges can press "Try as a judge": one click signs in to a shared demo account with no sign-up. All judges together can make ${judgeDailyCap()} new passes a day, on top of the usual per-address limits.`,
+    `Judges can press "Try as a judge": one click signs in to a shared demo account with no sign-up, for 1 day. ${judgeShareCopy()}`,
     `Signed-in grown-ups can tell us about each find on a pass: Found it, Didn't find it or Not safe (one report per find per day). ${REPORT_COPY.rule}`,
   ];
 }
@@ -307,7 +307,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "A new pass needs a grown-up to sign in.",
-      detail: `${ACCOUNT_PASSES_PER_DAY} new passes a day each, with GitHub or Google. Judges can press "Try as a judge" (a shared demo account, ${judgeDailyCap()} new passes a day for all judges together). Saved passes, shared links, the examples and printing need no sign-in.`,
+      detail: `${ACCOUNT_PASSES_PER_DAY} new passes a day each, with GitHub or Google. Judges can press "Try as a judge" (a shared demo account): ${judgeShareCopy()} Saved passes, shared links, the examples and printing need no sign-in.`,
     },
     {
       title: "The model runs on DigitalOcean's servers.",

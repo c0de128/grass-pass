@@ -200,7 +200,7 @@ export function SpotMap({ spot, parkName, variant = "print", headingLevel = 2 }:
       <p className="text-lg font-semibold">{spot.riddle}</p>
       <p className="text-base">{spot.map.start ? "Start at START and follow the map to the X." : "Follow the map to the X."}</p>
       <figure className="flex max-w-xl flex-col gap-1">
-        <div className="overflow-hidden rounded-control border-2 border-line bg-white">
+        <div className="gp-spot-screen overflow-hidden rounded-control border-2 border-line bg-white">
           <SpotMapSvg map={spot.map} title={mapDescription(parkName, spot)} />
         </div>
         <figcaption className="flex flex-wrap gap-x-3 gap-y-1 text-sm">

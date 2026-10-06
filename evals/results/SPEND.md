@@ -54,3 +54,7 @@ Content tuning total (builder, 2026-10-06 CDT): smokes 0544 + 0550 + 0552 + 0602
 | 2026-10-06T14:08Z (approx) | Audit R3 (builder J): re-recording of the two model fixtures in tests/fixtures (the prompt changed; not an eval run): Celebration 1 call, Connemara 1 first call + 1 refill call | 3 | 6105 | 1195 | $0.0017 |
 
 Audit R3 builder J total (2026-10-06 CDT): 10-13 smoke 0859 $0.0029 + fixture re-recording $0.0017 = **about $0.0046** (7 calls).
+| 2026-10-06T15:15:35.813Z | 2026-10-06-partial-1015.md | 5 | 14435 | 2118 | $0.0037 |
+| 2026-10-06T15:06Z (approx) | Audit R3 leftovers (builder M): re-recording of the Connemara model fixture in tests/fixtures (the Wild Finds prompt rule changed; not an eval run): 1 first call + 1 refill call | 2 | 4377 | 796 | $0.0012 |
+
+Audit R3 leftovers builder M total (2026-10-06 CDT): fixture re-recording $0.0012 + 10-13 smoke 1015 $0.0037 = **about $0.0049** (7 calls).

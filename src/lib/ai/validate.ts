@@ -6,10 +6,14 @@
  * mismatch -> danger (blocked taxon, or a blocked word in the text) -> grounding (`sourceQuote` must
  * be a normalized substring of that item's sourceText; S8c: a quote with the next JSON field glued on
  * is cut back at the field marker and must then be a real substring) -> name leak (common/scientific name or a
- * distinctive part of it, plural too, in the clue; a leak only in `lookWhere` blanks that hint and keeps
- * the item) -> numbers not in the source. Then the mix limits computed by
+ * distinctive part of it, plural too, or a word built on a 5+ letter name word such as "Passifloraceae"
+ * for Passiflora, in the clue; a leak only in `lookWhere` blanks that hint and keeps the item) -> map
+ * (R1-m4: a pass without a Find This Spot map never says "map"; in lookWhere the hint is blanked) ->
+ * season (R1-M4: a plant's flowers or fruit only when iNaturalist records show them this month) ->
+ * numbers not in the source. Then the mix limits computed by
  * code are re-applied (extras beyond a section's max are dropped, in answer order).
  */
+import { seasonProblem } from "@/lib/pool/season";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import type { Mix } from "./prompt";
@@ -24,6 +28,8 @@ export type DropReason =
   | "danger"
   | "not_grounded"
   | "name_leak"
+  | "mentions_map"
+  | "out_of_season"
   | "number_not_in_source"
   | "over_section_max";
 
@@ -140,14 +146,33 @@ export function isGrounded(quote: string, source: string): boolean {
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 
-/** The first name word found in `text` (whole word, any case, simple plurals), or null. */
+/** Name words this long or longer also leak through words built on them (R1-m3). */
+export const STEM_MIN_LETTERS = 5;
+
+/**
+ * The stem a derived word must start with: the whole word up to 6 letters, else the word minus its
+ * last 2 letters ("passiflora" -> "passiflo" catches "Passifloraceae"; "maximiliani" -> "maximilia"
+ * catches "Maximilian"). Null for multi-word names and words under 5 letters.
+ */
+export function nameStem(word: string): string | null {
+  if (!/^\p{L}+$/u.test(word) || word.length < STEM_MIN_LETTERS) return null;
+  return word.length <= 6 ? word : word.slice(0, -2);
+}
+
+/**
+ * The first name word found in `text`, or null: the whole word (any case, simple plurals), or (R1-m3)
+ * any word of the text that starts with the stem of a single name word of 5+ letters.
+ */
 export function nameLeak(text: string, words: readonly string[]): string | null {
   const t = normalizeForMatch(text);
+  const tokens = t.match(/[\p{L}\p{N}]+/gu) ?? [];
   for (const w of words) {
     const word = normalizeForMatch(w);
     if (word.length < 3) continue;
     const re = new RegExp(`(^|[^\\p{L}\\p{N}])${escapeRe(word)}(s|es|'s)?(?=$|[^\\p{L}\\p{N}])`, "u");
     if (re.test(t)) return w;
+    const stem = nameStem(word);
+    if (stem && tokens.some((tok) => tok.startsWith(stem))) return w;
   }
   return null;
 }
@@ -161,7 +186,19 @@ export function numbersNotIn(text: string, source: string): string[] {
 }
 
 const MARKUP_RE = /https?:|www\.|<|>|\]\(|\bjavascript:/i;
-export const hasUrlOrMarkup = (s: string) => MARKUP_RE.test(s);
+/**
+ * R1-m7 (SEC-1-04): text printed for a child never carries a way to contact someone. Bare domains
+ * ("kidsprize.com", "x.com"), @handles, and phone-like runs of 7+ digits (spaces, dots, dashes and
+ * brackets between them allowed: "555 0100", "(214) 555-0100").
+ */
+const DOMAIN_RE = /\b[a-z0-9-]+\.(?:com|net|org|io|ly|gg|app|me|co|xyz|info|biz|us|tv|link|site|online|shop|store|club|live|fun)\b/i;
+const HANDLE_RE = /(?:^|[^\p{L}\p{N}])@[\p{L}\p{N}_]{2,}/u;
+const DIGITS_RE = /\d(?:[\s().-]*\d){6,}/;
+export const hasUrlOrMarkup = (s: string) => MARKUP_RE.test(s) || DOMAIN_RE.test(s) || HANDLE_RE.test(s) || DIGITS_RE.test(s);
+
+/** "map", "maps", "mapped" (R1-m4): only a pass with a Find This Spot map may point at one. */
+const MAP_RE = /\bmap(?:s|ped)?\b/i;
+export const mentionsMap = (s: string) => MAP_RE.test(s);
 
 /** Single-line plain text: control characters removed, spaces collapsed. */
 const tidy = (s: string) => s.replace(/[\u0000-\u001f\u007f]/g, " ").replace(/\s+/g, " ").trim();
@@ -179,7 +216,17 @@ function withCodeSection(o: Record<string, unknown>, byId: ReadonlyMap<string, P
   return item ? { ...o, section: item.section } : o;
 }
 
-export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[], mix: Mix): ValidationResult {
+export type ValidateOptions = {
+  /** The pass prints a Find This Spot map (R1-m4). Without one, no clue or hint may mention a map. */
+  hasMap: boolean;
+};
+
+export function validateDraft(
+  draft: PassDraftEnvelope,
+  pool: readonly PoolItem[],
+  mix: Mix,
+  opts: ValidateOptions = { hasMap: false },
+): ValidationResult {
   const byId = new Map(pool.map((p) => [p.id, p]));
   const drops: Partial<Record<DropReason, number>> = {};
   const drop = (r: DropReason) => {
@@ -242,6 +289,22 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
       lookWhere = "";
       lookWhereCleared++;
     }
+    // R1-m4: "Look: follow the map" on a pass that has no map.
+    if (!opts.hasMap) {
+      if (mentionsMap(d.clue)) {
+        drop("mentions_map");
+        continue;
+      }
+      if (lookWhere && mentionsMap(lookWhere)) {
+        lookWhere = "";
+        lookWhereCleared++;
+      }
+    }
+    // R1-M4: a plant's flowers or fruit only when iNaturalist records show them this month.
+    if (item.season && seasonProblem(`${d.clue} ${lookWhere}`, item.season)) {
+      drop("out_of_season");
+      continue;
+    }
     if (numbersNotIn(`${d.clue} ${lookWhere}`, item.sourceText).length > 0) {
       drop("number_not_in_source");
       continue;
@@ -279,9 +342,12 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
   };
 }
 
-/** Fewer valid items than this -> one retry (SPEC §6.2: "< n-2 survive"). */
+/**
+ * Fewer valid items than this -> one retry (SPEC §6.2 as changed in audit round 1, R1-m1: "< n-1
+ * survive"), so the retry fires exactly when the pass would not count as complete for M3.
+ */
 export function retryThreshold(n: number): number {
-  return Math.max(1, n - 2);
+  return Math.max(1, n - 1);
 }
 
 // ---------- Find This Spot riddle (S5) ----------

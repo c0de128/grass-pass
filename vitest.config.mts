@@ -11,6 +11,9 @@ export default defineConfig({
   },
   test: {
     environment: "node",
+    // Pass tests replay recorded iNaturalist answers through the app's real 1 request/second queue; a cold
+    // Connemara pass makes 5 iNat calls since the R1-M4 season check (species, taxa, 3 phenology), about 4-5 s.
+    testTimeout: 15_000,
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
     // R1: background OSM refreshes off by default (tests that check them switch them on).
     setupFiles: ["tests/unit/support/setup.ts"],

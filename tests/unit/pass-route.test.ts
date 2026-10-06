@@ -130,14 +130,21 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
-    // Two Overpass queries, two iNaturalist calls, one model call. (In October the S7 monarch box adds
-    // two free iNaturalist counts; they are tested with a fixed clock in october.test.ts.)
+    // Two Overpass queries, two iNaturalist calls plus the three R1-M4 season-check calls ("Flowers and
+    // Fruits" counts), one model call. (In October the S7 monarch box adds two free iNaturalist counts; they
+    // are tested with a fixed clock in october.test.ts.)
     // SEC-1-01: the park-features query goes FIRST; the optional Find This Spot geometry query starts only
     // after it confirmed a named park (it then runs alongside the wildlife step).
     const calls = replay.calls.filter((c) => !isOctoberCall(c));
     expect(calls[0].host).toBe("overpass-api.de");
     expect(overpassQuery(calls[0])).not.toContain("out geom");
-    expect(calls.map((c) => c.host).sort()).toEqual(["api.inaturalist.org", "api.inaturalist.org", "inference.do-ai.run", "overpass-api.de", "overpass-api.de"]);
+    expect(calls.map((c) => c.host).sort()).toEqual([
+      ...Array<string>(5).fill("api.inaturalist.org"),
+      "inference.do-ai.run",
+      "overpass-api.de",
+      "overpass-api.de",
+    ]);
+    expect(calls.filter((c) => new URL(c.url).searchParams.has("term_id"))).toHaveLength(3);
     expect(calls.at(-1)!.host).toBe("inference.do-ai.run");
     expect(replay.calls.filter((c) => overpassQuery(c).includes("out geom"))).toHaveLength(1);
     // Connemara has no single landmark on the map: the exact SPEC 5.4 copy, and the S3 prompt unchanged.
@@ -222,10 +229,14 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
 });
 
 describe("POST /api/pass: honest empties and failures", () => {
-  it("Celebration: 8 Park Finds, and Wild Finds shows the exact SPEC 5.4 copy", async () => {
+  it("Celebration: 7 of 8 Park Finds, and Wild Finds shows the exact SPEC 5.4 copy", async () => {
     const f = final(await lines(await route.POST(post(celebration))));
     if (f.type !== "result") throw new Error(f.type);
-    expect(f.pass.items).toHaveLength(8);
+    // The live answer's "Find a dirt diamond" is dropped: the fields are mapped as "Celebration Diamonds"
+    // (R1-m3 stem check). 7 of 8 survive, which is n-1, so no retry (R1-m1).
+    expect(f.pass.items).toHaveLength(7);
+    expect(f.pass.removed).toEqual({ notGrounded: 0, other: 1 });
+    expect(modelCalls(replay.calls)).toHaveLength(1);
     expect(f.pass.items.every((i) => i.section === "park")).toBe(true);
     expect(f.pass.sections.wild).toEqual({
       status: "empty",

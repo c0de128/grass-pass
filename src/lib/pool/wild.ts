@@ -5,6 +5,7 @@
  */
 import { blockedBy, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
 import type { Species, SpeciesList, TaxonSummary } from "@/lib/sources/inat";
+import { seasonFrom, type PhenologyCount } from "./season";
 import { distinctiveWords, type PoolItem, type SectionState } from "./types";
 
 /** Fewer eligible species than this -> the section shows its "No data available" line (SPEC §5.4). */
@@ -107,6 +108,19 @@ const KIND_BY_ICONIC: Record<string, string> = {
   Actinopterygii: "fish",
 };
 
+/** Plants among the summary candidates: the ids the season check asks iNaturalist about (R1-M4). */
+export function plantCandidateIds(list: SpeciesList): number[] {
+  return wildCandidates(list)
+    .candidates.filter((s) => s.iconic === "Plantae")
+    .map((s) => s.taxonId);
+}
+
+/**
+ * Season evidence for the plants (R1-M4): the month and the phenology counts per taxon id, or
+ * `phenology: null` when the lookup failed (then no plant's flowers or fruit count as in season).
+ */
+export type WildSeasonInput = { month: number; phenology: { taxa: Record<string, PhenologyCount> } | null };
+
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 
 /**
@@ -117,6 +131,7 @@ export function wildPool(
   list: SpeciesList,
   summaries: readonly TaxonSummary[],
   sinceDay: string,
+  season?: WildSeasonInput,
 ): { items: PoolItem[]; state: SectionState; blocked: number } {
   const { candidates, blocked: blockedFirst } = wildCandidates(list);
   const byId = new Map(summaries.map((s) => [s.id, s]));
@@ -151,6 +166,9 @@ export function wildPool(
       safety: safetyLineFor(taxon, sum.summary),
       stationary: isStationary(taxon),
       taxon,
+      ...(season && s.iconic === "Plantae"
+        ? { season: seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) }
+        : {}),
     });
   }
   const eligible = items.length;

@@ -23,7 +23,10 @@ import {
 } from "@/lib/pass/schema";
 import { parkPool } from "@/lib/pool/park";
 import type { PoolItem, Section, SectionState } from "@/lib/pool/types";
-import { WILD_DOWN_COPY, wildCandidates, wildPool } from "@/lib/pool/wild";
+import { monthOfDay } from "@/lib/pool/season";
+import { plantCandidateIds, WILD_DOWN_COPY, wildCandidates, wildPool, type WildSeasonInput } from "@/lib/pool/wild";
+import { loadPhenology } from "@/lib/sources/inat-phenology";
+import { localDay } from "@/lib/time";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import {
   speciesCounts,
@@ -206,12 +209,15 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
         await taxaCache.set(String(id), t, { now: at });
       }
     } catch (err) {
-      const partial = wildPool(list, summaries, since);
+      const partial = wildPool(list, summaries, since, { month: monthOfDay(localDay(deps.now())), phenology: null });
       if (partial.state.status === "ok") return { ...partial, checkedAt, since };
       return down(err);
     }
   }
-  const pool = wildPool(list, summaries, since);
+  // R1-M4: season evidence for the plants (never throws; null = flowers/fruit unsupported).
+  const month = monthOfDay(localDay(deps.now()));
+  const season: WildSeasonInput = { month, phenology: await loadPhenology(f.park.id, center, month, plantCandidateIds(list), srcDeps) };
+  const pool = wildPool(list, summaries, since, season);
   return { ...pool, checkedAt, since };
 }
 
@@ -326,7 +332,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const parkData = parkDataOf(f.park.name, fullPool);
   deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
-  const messages = buildMessages(f.park.name, pool, band, mix, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null);
+  const messages = buildMessages(f.park.name, pool, band, mix, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null, {
+    month: monthOfDay(input.day),
+  });
   const jsonSchema = passJsonSchema({
     n: mix.n,
     itemIds: pool.map((p) => p.id) as [string, ...string[]],
@@ -374,7 +382,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       modelLatency += r.latencyMs;
       answered = r.modelLabel;
       deps.emit("check", stepText("check", deps.env));
-      const v = validateDraft(r.data, pool, mix);
+      const v = validateDraft(r.data, pool, mix, { hasMap: target !== null });
       if (target && riddle === null) {
         const sv = validateSpot(r.data.spot, target);
         if (sv.ok) riddle = sv.riddle;

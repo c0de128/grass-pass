@@ -141,9 +141,9 @@ describe("KidPass (top of the printed sheet)", () => {
     expect(estimatedLines(long)).toBeGreaterThan(TIGHT_LINE_BUDGET);
     expect(passDensity(long, false)).toBe("tight");
     expect(passDensity(long, true)).toBe("tight");
-    // Celebration with every clue just over one printed line lands in between.
-    const celebration = await realPass(PARKS.celebration.id);
-    const mid = celebration.items.map((it) => ({ ...it, clue: it.clue.padEnd(70, " x") }));
+    // Connemara (8 finds) with 5 of its clues just over one printed line lands in between.
+    const connemara = await realPass(PARKS.connemara.id);
+    const mid = connemara.items.map((it, i) => (i < 5 ? { ...it, clue: it.clue.padEnd(70, " x") } : it));
     const lines = estimatedLines(mid);
     expect(lines).toBeGreaterThan(SNUG_LINE_BUDGET);
     expect(lines).toBeLessThanOrEqual(TIGHT_LINE_BUDGET);

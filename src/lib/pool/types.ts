@@ -3,6 +3,8 @@
  * The model only ever sees `id`, `section`, `kind` and `sourceText`; it picks ids and writes words.
  * Everything else (answer, evidence, safety line) is code-written and never comes from the model.
  */
+import type { Season } from "./season";
+
 export type Section = "park" | "wild" | "lucky";
 
 export type PoolItem = {
@@ -27,6 +29,8 @@ export type PoolItem = {
   stationary: boolean;
   /** iNaturalist taxon (Wild Finds only), used for the second danger check. */
   taxon?: { taxonId: number; ancestorIds: number[] };
+  /** Plants only (R1-M4): whether flowers / fruit are in season this month, from iNaturalist annotations. */
+  season?: Season;
 };
 
 export type SectionState =

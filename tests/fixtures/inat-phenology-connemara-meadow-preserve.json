@@ -1,0 +1,981 @@
+{
+  "_recording": {
+    "what": "Real iNaturalist species_counts answers for the R1-M4 season check: 'Flowers and Fruits' annotations (term 12; all, 13 Flowers, 14 Fruits or Seeds) on verifiable observations within 50 km of Connemara Meadow Preserve in October (all years), for the plant candidates of the recorded species list. Requested by src/lib/sources/inat-phenology.ts loadPhenology().",
+    "live": true,
+    "month": 10,
+    "taxonIds": [
+      135263,
+      51450,
+      58205,
+      62944,
+      119793,
+      119986,
+      126424,
+      128755,
+      130192,
+      130379,
+      135262,
+      286324,
+      50278,
+      53034,
+      53547,
+      54504
+    ],
+    "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+    "recordedAt": "2026-10-06T03:12:29.730Z",
+    "recordedBy": "builder R1 fix B: scratch Vitest config running loadPhenology() against the live API",
+    "parsed": {
+      "month": 10,
+      "taxa": {
+        "50278": {
+          "flowers": 0,
+          "fruits": 0,
+          "annotated": 6
+        },
+        "51450": {
+          "flowers": 5,
+          "fruits": 23,
+          "annotated": 115
+        },
+        "53034": {
+          "flowers": 11,
+          "fruits": 6,
+          "annotated": 17
+        },
+        "53547": {
+          "flowers": 0,
+          "fruits": 1,
+          "annotated": 10
+        },
+        "54504": {
+          "flowers": 0,
+          "fruits": 4,
+          "annotated": 4
+        },
+        "58205": {
+          "flowers": 0,
+          "fruits": 42,
+          "annotated": 43
+        },
+        "62944": {
+          "flowers": 5,
+          "fruits": 29,
+          "annotated": 32
+        },
+        "119793": {
+          "flowers": 1,
+          "fruits": 1,
+          "annotated": 2
+        },
+        "119986": {
+          "flowers": 0,
+          "fruits": 4,
+          "annotated": 15
+        },
+        "126424": {
+          "flowers": 3,
+          "fruits": 0,
+          "annotated": 3
+        },
+        "128755": {
+          "flowers": 0,
+          "fruits": 46,
+          "annotated": 84
+        },
+        "130192": {
+          "flowers": 26,
+          "fruits": 0,
+          "annotated": 27
+        },
+        "130379": {
+          "flowers": 9,
+          "fruits": 0,
+          "annotated": 10
+        },
+        "135262": {
+          "flowers": 12,
+          "fruits": 1,
+          "annotated": 13
+        },
+        "135263": {
+          "flowers": 22,
+          "fruits": 0,
+          "annotated": 22
+        },
+        "286324": {
+          "flowers": 0,
+          "fruits": 14,
+          "annotated": 25
+        }
+      }
+    },
+    "trimmed": "Real answers; each result keeps count and the taxon fields the app reads (id, name, rank, preferred_common_name, iconic_taxon_name, ancestor_ids), values exactly as received."
+  },
+  "exchanges": [
+    {
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&per_page=30&locale=en",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "fetchedAt": "2026-10-06T03:12:27.480Z",
+      "latencyMs": 485,
+      "body": {
+        "total_results": 16,
+        "page": 1,
+        "per_page": 30,
+        "results": [
+          {
+            "count": 115,
+            "taxon": {
+              "id": 51450,
+              "name": "Passiflora lutea",
+              "rank": "species",
+              "preferred_common_name": "yellow passionflower",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                51820,
+                51451,
+                853017,
+                853019,
+                51452,
+                878746,
+                1234460,
+                51450
+              ]
+            }
+          },
+          {
+            "count": 84,
+            "taxon": {
+              "id": 128755,
+              "name": "Prunus mexicana",
+              "rank": "species",
+              "preferred_common_name": "Mexican Plum",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                47148,
+                922110,
+                922113,
+                47351,
+                128755
+              ]
+            }
+          },
+          {
+            "count": 43,
+            "taxon": {
+              "id": 58205,
+              "name": "Maclura pomifera",
+              "rank": "species",
+              "preferred_common_name": "Osage-orange",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                50998,
+                1529475,
+                58206,
+                58205
+              ]
+            }
+          },
+          {
+            "count": 32,
+            "taxon": {
+              "id": 62944,
+              "name": "Cardiospermum halicacabum",
+              "rank": "species",
+              "preferred_common_name": "Lesser Balloon Vine",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                58321,
+                62946,
+                62944
+              ]
+            }
+          },
+          {
+            "count": 27,
+            "taxon": {
+              "id": 130192,
+              "name": "Helianthus maximiliani",
+              "rank": "species",
+              "preferred_common_name": "Maximilian sunflower",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                901801,
+                56955,
+                130192
+              ]
+            }
+          },
+          {
+            "count": 25,
+            "taxon": {
+              "id": 286324,
+              "name": "Sapindus drummondii",
+              "rank": "species",
+              "preferred_common_name": "Western Soapberry",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                58321,
+                62832,
+                286324
+              ]
+            }
+          },
+          {
+            "count": 22,
+            "taxon": {
+              "id": 135263,
+              "name": "Ipomoea cordatotriloba",
+              "rank": "species",
+              "preferred_common_name": "Tievine",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                48515,
+                52345,
+                1395312,
+                993824,
+                52346,
+                135263
+              ]
+            }
+          },
+          {
+            "count": 17,
+            "taxon": {
+              "id": 53034,
+              "name": "Ambrosia trifida",
+              "rank": "species",
+              "preferred_common_name": "giant ragweed",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                639449,
+                53036,
+                53034
+              ]
+            }
+          },
+          {
+            "count": 15,
+            "taxon": {
+              "id": 119986,
+              "name": "Zanthoxylum clava-herculis",
+              "rank": "species",
+              "preferred_common_name": "Hercules' club",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                50623,
+                1363294,
+                54837,
+                119986
+              ]
+            }
+          },
+          {
+            "count": 13,
+            "taxon": {
+              "id": 135262,
+              "name": "Ipomoea lacunosa",
+              "rank": "species",
+              "preferred_common_name": "White Morning-glory",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                48515,
+                52345,
+                1395312,
+                993824,
+                52346,
+                135262
+              ]
+            }
+          },
+          {
+            "count": 10,
+            "taxon": {
+              "id": 53547,
+              "name": "Ulmus americana",
+              "rank": "species",
+              "preferred_common_name": "American elm",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                53548,
+                53549,
+                1664435,
+                1664437,
+                53547
+              ]
+            }
+          },
+          {
+            "count": 10,
+            "taxon": {
+              "id": 130379,
+              "name": "Liatris punctata",
+              "rank": "species",
+              "preferred_common_name": "dotted gayfeather",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                153419,
+                901059,
+                48690,
+                130379
+              ]
+            }
+          },
+          {
+            "count": 6,
+            "taxon": {
+              "id": 50278,
+              "name": "Parthenocissus quinquefolia",
+              "rank": "species",
+              "preferred_common_name": "Virginia creeper",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                71291,
+                50279,
+                50280,
+                50278
+              ]
+            }
+          },
+          {
+            "count": 4,
+            "taxon": {
+              "id": 54504,
+              "name": "Juglans nigra",
+              "rank": "species",
+              "preferred_common_name": "eastern black walnut",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47853,
+                54497,
+                54495,
+                54504
+              ]
+            }
+          },
+          {
+            "count": 3,
+            "taxon": {
+              "id": 126424,
+              "name": "Parthenium hysterophorus",
+              "rank": "species",
+              "preferred_common_name": "Santa Maria feverfew",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                639449,
+                83894,
+                126424
+              ]
+            }
+          },
+          {
+            "count": 2,
+            "taxon": {
+              "id": 119793,
+              "name": "Pyrus calleryana",
+              "rank": "species",
+              "preferred_common_name": "Callery pear",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                47148,
+                922110,
+                723302,
+                58736,
+                119793
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&term_value_id=13&per_page=30&locale=en",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "fetchedAt": "2026-10-06T03:12:28.495Z",
+      "latencyMs": 167,
+      "body": {
+        "total_results": 9,
+        "page": 1,
+        "per_page": 30,
+        "results": [
+          {
+            "count": 26,
+            "taxon": {
+              "id": 130192,
+              "name": "Helianthus maximiliani",
+              "rank": "species",
+              "preferred_common_name": "Maximilian sunflower",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                901801,
+                56955,
+                130192
+              ]
+            }
+          },
+          {
+            "count": 22,
+            "taxon": {
+              "id": 135263,
+              "name": "Ipomoea cordatotriloba",
+              "rank": "species",
+              "preferred_common_name": "Tievine",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                48515,
+                52345,
+                1395312,
+                993824,
+                52346,
+                135263
+              ]
+            }
+          },
+          {
+            "count": 12,
+            "taxon": {
+              "id": 135262,
+              "name": "Ipomoea lacunosa",
+              "rank": "species",
+              "preferred_common_name": "White Morning-glory",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                48515,
+                52345,
+                1395312,
+                993824,
+                52346,
+                135262
+              ]
+            }
+          },
+          {
+            "count": 11,
+            "taxon": {
+              "id": 53034,
+              "name": "Ambrosia trifida",
+              "rank": "species",
+              "preferred_common_name": "giant ragweed",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                639449,
+                53036,
+                53034
+              ]
+            }
+          },
+          {
+            "count": 9,
+            "taxon": {
+              "id": 130379,
+              "name": "Liatris punctata",
+              "rank": "species",
+              "preferred_common_name": "dotted gayfeather",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                153419,
+                901059,
+                48690,
+                130379
+              ]
+            }
+          },
+          {
+            "count": 5,
+            "taxon": {
+              "id": 51450,
+              "name": "Passiflora lutea",
+              "rank": "species",
+              "preferred_common_name": "yellow passionflower",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                51820,
+                51451,
+                853017,
+                853019,
+                51452,
+                878746,
+                1234460,
+                51450
+              ]
+            }
+          },
+          {
+            "count": 5,
+            "taxon": {
+              "id": 62944,
+              "name": "Cardiospermum halicacabum",
+              "rank": "species",
+              "preferred_common_name": "Lesser Balloon Vine",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                58321,
+                62946,
+                62944
+              ]
+            }
+          },
+          {
+            "count": 3,
+            "taxon": {
+              "id": 126424,
+              "name": "Parthenium hysterophorus",
+              "rank": "species",
+              "preferred_common_name": "Santa Maria feverfew",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                639449,
+                83894,
+                126424
+              ]
+            }
+          },
+          {
+            "count": 1,
+            "taxon": {
+              "id": 119793,
+              "name": "Pyrus calleryana",
+              "rank": "species",
+              "preferred_common_name": "Callery pear",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                47148,
+                922110,
+                723302,
+                58736,
+                119793
+              ]
+            }
+          }
+        ]
+      }
+    },
+    {
+      "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08485&lng=-96.70155&radius=50&verifiable=true&month=10&taxon_id=50278%2C51450%2C53034%2C53547%2C54504%2C58205%2C62944%2C119793%2C119986%2C126424%2C128755%2C130192%2C130379%2C135262%2C135263%2C286324&term_id=12&term_value_id=14&per_page=30&locale=en",
+      "status": 200,
+      "contentType": "application/json; charset=utf-8",
+      "fetchedAt": "2026-10-06T03:12:29.510Z",
+      "latencyMs": 214,
+      "body": {
+        "total_results": 11,
+        "page": 1,
+        "per_page": 30,
+        "results": [
+          {
+            "count": 46,
+            "taxon": {
+              "id": 128755,
+              "name": "Prunus mexicana",
+              "rank": "species",
+              "preferred_common_name": "Mexican Plum",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                47148,
+                922110,
+                922113,
+                47351,
+                128755
+              ]
+            }
+          },
+          {
+            "count": 42,
+            "taxon": {
+              "id": 58205,
+              "name": "Maclura pomifera",
+              "rank": "species",
+              "preferred_common_name": "Osage-orange",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                50998,
+                1529475,
+                58206,
+                58205
+              ]
+            }
+          },
+          {
+            "count": 29,
+            "taxon": {
+              "id": 62944,
+              "name": "Cardiospermum halicacabum",
+              "rank": "species",
+              "preferred_common_name": "Lesser Balloon Vine",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                58321,
+                62946,
+                62944
+              ]
+            }
+          },
+          {
+            "count": 23,
+            "taxon": {
+              "id": 51450,
+              "name": "Passiflora lutea",
+              "rank": "species",
+              "preferred_common_name": "yellow passionflower",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                51820,
+                51451,
+                853017,
+                853019,
+                51452,
+                878746,
+                1234460,
+                51450
+              ]
+            }
+          },
+          {
+            "count": 14,
+            "taxon": {
+              "id": 286324,
+              "name": "Sapindus drummondii",
+              "rank": "species",
+              "preferred_common_name": "Western Soapberry",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                58321,
+                62832,
+                286324
+              ]
+            }
+          },
+          {
+            "count": 6,
+            "taxon": {
+              "id": 53034,
+              "name": "Ambrosia trifida",
+              "rank": "species",
+              "preferred_common_name": "giant ragweed",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47605,
+                47604,
+                632790,
+                605446,
+                639449,
+                53036,
+                53034
+              ]
+            }
+          },
+          {
+            "count": 4,
+            "taxon": {
+              "id": 54504,
+              "name": "Juglans nigra",
+              "rank": "species",
+              "preferred_common_name": "eastern black walnut",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47853,
+                54497,
+                54495,
+                54504
+              ]
+            }
+          },
+          {
+            "count": 4,
+            "taxon": {
+              "id": 119986,
+              "name": "Zanthoxylum clava-herculis",
+              "rank": "species",
+              "preferred_common_name": "Hercules' club",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47729,
+                50623,
+                1363294,
+                54837,
+                119986
+              ]
+            }
+          },
+          {
+            "count": 1,
+            "taxon": {
+              "id": 53547,
+              "name": "Ulmus americana",
+              "rank": "species",
+              "preferred_common_name": "American elm",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                53548,
+                53549,
+                1664435,
+                1664437,
+                53547
+              ]
+            }
+          },
+          {
+            "count": 1,
+            "taxon": {
+              "id": 119793,
+              "name": "Pyrus calleryana",
+              "rank": "species",
+              "preferred_common_name": "Callery pear",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                47132,
+                47148,
+                922110,
+                723302,
+                58736,
+                119793
+              ]
+            }
+          },
+          {
+            "count": 1,
+            "taxon": {
+              "id": 135262,
+              "name": "Ipomoea lacunosa",
+              "rank": "species",
+              "preferred_common_name": "White Morning-glory",
+              "iconic_taxon_name": "Plantae",
+              "ancestor_ids": [
+                48460,
+                47126,
+                211194,
+                47125,
+                47124,
+                48515,
+                52345,
+                1395312,
+                993824,
+                52346,
+                135262
+              ]
+            }
+          }
+        ]
+      }
+    }
+  ]
+}

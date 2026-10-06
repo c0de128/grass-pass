@@ -18,7 +18,15 @@ import type { PoolItem } from "@/lib/pool/types";
 import { wildPool } from "@/lib/pool/wild";
 import { parseSpeciesCounts, parseTaxa } from "@/lib/sources/inat";
 import { parseFeatures, parseParkId } from "@/lib/sources/overpass-features";
-import { modelRec, PARKS, rec, recordedDraft } from "./support/pass-replay";
+import { parsePhenology } from "@/lib/sources/inat-phenology";
+import { modelRec, PARKS, phenologyRec, rec, recordedDraft } from "./support/pass-replay";
+
+/** The live phenology answers (all annotated, flowers, fruits) for Connemara, parsed by the app's code (R1-M4). */
+function connemaraPhenology() {
+  const r = phenologyRec(PARKS.connemara.slug);
+  const body = (v: string | null) => r.exchanges.find((e) => new URL(e.url).searchParams.get("term_value_id") === v)!.body;
+  return parsePhenology(r._recording.month, body(null), body("13"), body("14"));
+}
 
 /**
  * The exact pool the app builds from the live recordings (same code path as buildPass), including the
@@ -31,7 +39,7 @@ function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
   const park = parkPool(f);
   const list = parseSpeciesCounts(rec(`inat-species-${p.slug}`).body);
   const summaries = p === PARKS.connemara ? parseTaxa(rec(`inat-taxa-${p.slug}`).body) : [];
-  const wild = wildPool(list, summaries, "2026-09-21");
+  const wild = wildPool(list, summaries, "2026-09-21", { month: 10, phenology: p === PARKS.connemara ? connemaraPhenology() : { taxa: {} } });
   const g = parseGeometry(rec(`overpass-geometry-${p.slug}`).body, ref)!;
   const target = pickTarget(g, { parkName: f.park.name, features: f, variant: 1 });
   const full: PoolItem[] = poolForSpot([...park.items, ...wild.items], target, "6-10");
@@ -145,7 +153,7 @@ describe("prompt (SPEC 6.1)", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool, f, spot } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", mix, spot));
+      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", mix, spot, { month: 10 }));
     }
   });
 
@@ -188,18 +196,25 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded S8c, no section in the answer): both 8/8", () => {
+  it("the real recorded Gemma answers (re-recorded R1, no section in the answer): Connemara 8/8, Celebration 7/8", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
-      const { pool } = poolFor(p);
+      const { pool, target } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
-      const out = validateDraft(draft, pool, mix);
+      const out = validateDraft(draft, pool, mix, { hasMap: target !== null });
       expect(out.returned).toBe(8);
       // S8c: the answer has no section field; code filled it from the pool for every item.
       expect((draft.items as Record<string, unknown>[]).every((i) => !("section" in i))).toBe(true);
-      expect(out.items).toHaveLength(8);
-      expect(out.drops).toEqual({});
-      expect(out.belowMin).toEqual([]);
+      if (p === PARKS.connemara) {
+        expect(out.items).toHaveLength(8);
+        expect(out.drops).toEqual({});
+        expect(out.belowMin).toEqual([]);
+      } else {
+        // "Find a dirt diamond." for the baseball fields mapped as "Celebration Diamonds" (R1-m3 stem check).
+        expect(out.items).toHaveLength(7);
+        expect(out.drops).toEqual({ name_leak: 1 });
+        expect(out.items.some((i) => i.item.id === "osm-baseball")).toBe(false);
+      }
       expect(out.quotesRepaired).toBe(0);
       for (const i of out.items) expect(i.sourceQuote.length).toBeLessThanOrEqual(QUOTE_WIRE_MAX);
     }
@@ -209,7 +224,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find a place with a roof on posts and tables for lunch." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables underneath!" });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -366,8 +381,10 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(sys).toContain("parentNote is ONE line for the whole pass (not one per item)");
   });
 
-  it("retry when fewer than n-2 items survive", () => {
-    expect(retryThreshold(8)).toBe(6);
-    expect(retryThreshold(3)).toBe(1);
+  it("retry when fewer than n-1 items survive (R1-m1: a 6 of 8 pass now gets its one retry)", () => {
+    expect(retryThreshold(8)).toBe(7);
+    expect(retryThreshold(6)).toBe(5);
+    expect(retryThreshold(3)).toBe(2);
+    expect(retryThreshold(1)).toBe(1);
   });
 });

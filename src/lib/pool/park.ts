@@ -4,6 +4,7 @@
  * plus a fixed kid-level description of that kind. Counts come from OSM; nothing is invented.
  */
 import { FEATURE_KINDS, FEATURE_KIND_IDS, type FeatureKind, type ParkFeatures } from "@/lib/sources/overpass-features";
+import { hasUrlOrMarkup } from "@/lib/ai/validate";
 import { distinctiveWords, type PoolItem, type SectionState } from "./types";
 
 /** SPEC §5.4, Park Finds empty copy. */
@@ -30,7 +31,9 @@ export function parkPool(f: ParkFeatures): { items: PoolItem[]; state: SectionSt
     const entry = f.features[kind];
     if (!entry || entry.count < 1) continue;
     const info = FEATURE_KINDS[kind];
-    const names = entry.names;
+    // R1-m7: anyone can edit an OSM name. A name with a link, domain, @handle or phone-like digits
+    // ("Text 555 0100 for a prize at kidsprize.com") never reaches the prompt or the answer key.
+    const names = entry.names.filter((nm) => !hasUrlOrMarkup(nm));
     const named = names.length > 0 ? ` Mapped name${names.length > 1 ? "s" : ""}: ${names.join(", ")}.` : "";
     const sourceText = `${f.park.name} has ${countPhrase(kind, entry.count)} on the map (OpenStreetMap).${named} ${info.describe}`;
     const evidence = NO_COUNT.has(kind)

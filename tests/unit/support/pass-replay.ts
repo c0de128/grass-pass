@@ -18,6 +18,13 @@ type Rec = { _recording: Record<string, unknown> & { status?: number; recordedAt
 type ModelRec = { _recording: { recordedAtMs: number }; request: { messages: { role: string; content: string }[]; response_format: { json_schema: { schema: unknown } } }; response: unknown };
 
 export const rec = (name: string) => fixture(name) as unknown as Rec;
+
+type PhenologyRec = {
+  _recording: { month: number; taxonIds: number[]; recordedAt: string };
+  exchanges: { url: string; status: number; body: unknown }[];
+};
+/** The live phenology answers for a park (R1-M4 season check). */
+export const phenologyRec = (slug: string) => fixture(`inat-phenology-${slug}`) as unknown as PhenologyRec;
 export const modelRec = (slug: string) => fixture(`do-gemma-4-31b-it-${slug}-pass`) as unknown as ModelRec;
 
 /** When the Connemara park data was recorded (the 14-day window and "today" in tests). The model answers were re-recorded later (S8b) from these same inputs. */
@@ -73,6 +80,14 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
         return json(rec(`overpass-features-${p.slug}`).body);
       }
       throw new Error(`no Overpass recording for ${q.slice(0, 80)}`);
+    }
+    if (u.host === "api.inaturalist.org" && u.pathname === "/v1/observations/species_counts" && u.searchParams.has("term_id")) {
+      // R1-M4 season check: "Flowers and Fruits" annotation counts, recorded live 2026-10-06 (Connemara only;
+      // Celebration has no species, so no plant ids and no call). Only the exact recorded URL is answered.
+      const r = phenologyRec(PARKS.connemara.slug);
+      const hit = r.exchanges.find((e) => e.url === url);
+      if (hit) return json(hit.body, hit.status);
+      throw new Error(`no phenology recording for ${u.search}`);
     }
     if (u.host === "api.inaturalist.org" && u.pathname === "/v1/observations/species_counts") {
       for (const p of Object.values(PARKS)) {

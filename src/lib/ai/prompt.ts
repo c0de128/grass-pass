@@ -5,6 +5,7 @@
  * <source> tags, and the system prompt says that text is data, not instructions.
  */
 import { AGE_BAND_INFO, type AgeBand } from "@/lib/pass/schema";
+import { monthName, seasonNote } from "@/lib/pool/season";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { CLUE_MAX, LOOK_WHERE_MAX, MIN_PASS_ITEMS, QUOTE_WIRE_MAX, RIDDLE_MAX } from "./schema";
 
@@ -86,15 +87,42 @@ function mixRules(mix: Mix): string {
   return parts.join("; ");
 }
 
-export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null): string {
+/** What the prompt needs to know about today (R1-M4). */
+export type PromptContext = {
+  /** 1-12, the pass day's month in Chicago time. */
+  month: number;
+  /** True when some pool plant carries a code-written season note. */
+  hasSeasonNotes?: boolean;
+};
+
+/** Bands old enough for Park Finds that make the child look closely (R1-m10). */
+const LOOK_CLOSELY_BANDS: ReadonlySet<AgeBand> = new Set<AgeBand>(["6-10", "10-13"]);
+
+export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null, ctx: PromptContext | null = null): string {
   const info = AGE_BAND_INFO[band];
   const hard = mix.hardMin > 0 ? `; at least ${mix.hardMin} must be "hard"` : "";
+  const month = ctx ? monthName(ctx.month) : null;
   return [
     `You build a park scavenger pass for a child aged ${band}. Choose items ONLY from POOL by id.`,
+    ...(month ? [`Today is in ${month}. The child goes outside today.`] : []),
     "Rules:",
     `- Exactly ${mix.n} items, each id at most once: ${mixRules(mix)}. An item's section is the section of its source.`,
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks, resident animals) over birds that fly away.",
+    // R1-M4: a plant's flowers or fruit only when the code-written season note says they are out now.
+    ...(month && ctx?.hasSeasonNotes
+      ? [
+          `- Plants: write about flowers, blooms, petals, fruit, berries, seeds or pods ONLY when that plant's season note says they are seen in ${month}. Otherwise describe leaves, bark, stems, shape or size. The season note is not SOURCE text: never copy it into sourceQuote.`,
+        ]
+      : []),
+    // R1-m10: Park Finds a child has to look for, not "a place to sit".
+    ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
+      ? [
+          `- Park Finds: make the child look closely, using facts in that SOURCE: a count to check or a detail to look for (Good: "Count the hoops on the court."). Bad: "Find a place to sit."`,
+        ]
+      : []),
+    // R1-m4: a pass with no Find This Spot map must not send the child to one.
+    ...(spot ? [] : ["- This pass has NO map. Never write map, mapped or \"on the map\" in a clue or lookWhere."]),
     "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, not even one word of its name (for a honey bee, never say honey or bee). Describe what it looks like or what it does.",
     `- lookWhere must not use a word from the item's name either. Bad: "at the pond" for a pond, "in a garden" for a garden spider. Good: "near the water", "on tall plants".`,
     `- Write at reading level grade ${info.grade}: short words, short sentences, fun and friendly.`,
@@ -115,18 +143,20 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
 }
 
 export function userPrompt(parkName: string, pool: readonly PoolItem[], spot: PromptSpot | null = null): string {
-  const lines = pool.map(
-    (p) => `<source id="${escapeSource(p.id)}" section="${p.section}" kind="${escapeSource(p.kind)}">${escapeSource(p.sourceText)}</source>`,
-  );
+  const lines = pool.map((p) => {
+    const season = p.season ? ` season="${escapeSource(seasonNote(p.season))}"` : "";
+    return `<source id="${escapeSource(p.id)}" section="${p.section}" kind="${escapeSource(p.kind)}"${season}>${escapeSource(p.sourceText)}</source>`;
+  });
   const spotLines = spot
     ? ["SPOT:", `<source id="${escapeSource(spot.id)}" section="spot" kind="${escapeSource(spot.label)}">${escapeSource(spot.sourceText)}</source>`]
     : [];
   return [`Park: <source id="park-name" section="park" kind="park name">${escapeSource(parkName)}</source>`, "POOL:", ...lines, ...spotLines].join("\n");
 }
 
-export function buildMessages(parkName: string, pool: readonly PoolItem[], band: AgeBand, mix: Mix, spot: PromptSpot | null = null) {
+export function buildMessages(parkName: string, pool: readonly PoolItem[], band: AgeBand, mix: Mix, spot: PromptSpot | null, ctx: PromptContext) {
+  const full: PromptContext = { ...ctx, hasSeasonNotes: pool.some((p) => p.season !== undefined) };
   return [
-    { role: "system" as const, content: systemPrompt(band, mix, spot) },
+    { role: "system" as const, content: systemPrompt(band, mix, spot, full) },
     { role: "user" as const, content: userPrompt(parkName, pool, spot) },
   ];
 }

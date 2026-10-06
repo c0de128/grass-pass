@@ -103,7 +103,7 @@ describe("POST /api/pass guards (before any limit, cache or upstream)", () => {
 });
 
 describe("POST /api/pass: Connemara (live recordings)", () => {
-  it("streams the real steps, then an 8-item pass from the model that actually answered", async () => {
+  it("streams the real steps, then a 7-item pass (8 asked, 1 real name leak dropped) from the model that actually answered", async () => {
     const res = await route.POST(post(connemara));
     expect(res.status).toBe(200);
     const ls = await lines(res);
@@ -114,13 +114,15 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    expect(p.items).toHaveLength(8);
+    expect(p.items).toHaveLength(7);
+    expect(p.target).toBe(8);
+    expect(p.removed).toEqual({ notGrounded: 0, other: 1 });
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: PASS_COPY.luckyOff });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
-    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild"]);
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
@@ -149,7 +151,7 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
 
     // The pass page reads it back from the cache only.
     expect(await loadPass(p.id)).toEqual(p);
-    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":8'))).toBe(true);
+    expect(logs.some((l) => l.includes('"event":"pass_checks"') && l.includes('"kept":7'))).toBe(true);
   });
 
   it("the same park + age today is answered from the cache: one line, cached:true, no upstream call", async () => {
@@ -224,7 +226,7 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(f.pass.items.every((i) => i.section === "park")).toBe(true);
     expect(f.pass.sections.wild).toEqual({
       status: "empty",
-      message: "No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist.",
+      message: "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.",
     });
     expect(f.pass.dataCheckedAt.inat).not.toBeNull();
     // Zero species -> no taxa call (the empty-id guard).
@@ -302,7 +304,7 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(ls.some((l) => l.type === "step" && l.step === "retry")).toBe(true);
     const f = final(ls);
     if (f.type !== "result") throw new Error(f.type);
-    expect(f.pass.items).toHaveLength(8);
+    expect(f.pass.items).toHaveLength(7); // the real retry answer: 7 of 8 pass the checks
     expect(f.pass.model.attempts).toBe(2);
     expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(logs.filter((l) => l.includes('"event":"pass_checks"'))).toHaveLength(2);

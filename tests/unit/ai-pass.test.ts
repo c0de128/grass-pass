@@ -8,8 +8,8 @@ import {
   passJsonSchema,
   passRequestSchema,
 } from "@/lib/ai/schema";
-import { isGrounded, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
-import { poolForSpot } from "@/lib/ai/build-pass";
+import { isGrounded, mergeResults, nameLeak, normalizeForMatch, numbersNotIn, retryThreshold, validateDraft, validateSpot } from "@/lib/ai/validate";
+import { mixFor, passMaxTokens, poolForSpot, PROMPT_SPARES, promptPool } from "@/lib/ai/build-pass";
 import { parseGeometry } from "@/lib/spot/geometry";
 import { pickTarget } from "@/lib/spot/pick-target";
 import { parkPool } from "@/lib/pool/park";
@@ -33,7 +33,9 @@ function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
   const wild = wildPool(list, summaries, "2026-09-21");
   const g = parseGeometry(rec(`overpass-geometry-${p.slug}`).body, ref)!;
   const target = pickTarget(g, { parkName: f.park.name, features: f, variant: 1 });
-  const pool: PoolItem[] = poolForSpot([...park.items, ...wild.items], target, "6-10");
+  const full: PoolItem[] = poolForSpot([...park.items, ...wild.items], target, "6-10");
+  // S8b: the model sees at most n + PROMPT_SPARES items per section.
+  const pool: PoolItem[] = promptPool(full, mixFor(full, "6-10")!.n);
   const spot = target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null;
   return { f, park, wild, pool, target, spot };
 }
@@ -183,16 +185,24 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers pass every check (Connemara 8/8, Celebration 8/8)", () => {
+  it("the real recorded Gemma answers (re-recorded S8b): Celebration 8/8; Connemara 7/8, one real name leak dropped", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool } = poolFor(p);
       const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
       const out = validateDraft(draft, pool, mix);
       expect(out.returned).toBe(8);
-      expect(out.items).toHaveLength(8);
-      expect(out.drops).toEqual({});
-      expect(out.belowMin).toEqual([]);
+      if (p === PARKS.celebration) {
+        expect(out.items).toHaveLength(8);
+        expect(out.drops).toEqual({});
+        expect(out.belowMin).toEqual([]);
+      } else {
+        expect(out.belowMin).toEqual(["wild"]); // 7 Wild Finds asked (the park has 1 mapped feature), 6 kept
+        // "Look for a plant that climbs and has puffs like balloons." for Lesser Balloon Vine: a real giveaway.
+        expect(out.items).toHaveLength(7);
+        expect(out.drops).toEqual({ name_leak: 1 });
+        expect(out.items.some((i) => i.item.id === "inat-62944")).toBe(false);
+      }
     }
     // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target) has a riddle for the X
     // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
@@ -200,7 +210,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find a place with a roof on posts and tables where people eat lunch." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Look for a roof on posts with tables where people eat lunch." });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -282,6 +292,65 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       over_section_max: 1,
     });
     expect(out.parentNote).toBe(""); // digits are not allowed in the parent note
+  });
+
+  it("S8b: a name word only in lookWhere blanks the hint and keeps the item; in the clue it still drops", () => {
+    const pool = poolFor(PARKS.celebration).park.items;
+    const mix = { n: 3, min: { park: 1, wild: 0, lucky: 0 }, max: { park: 3, wild: 0, lucky: 0 }, hardMin: 0 };
+    const bench = pool.find((p) => p.id === "osm-bench")!;
+    const play = pool.find((p) => p.id === "osm-playground")!;
+    const item = (id: string, src: PoolItem, clue: string, lookWhere: string) => ({
+      itemId: id,
+      section: "park",
+      clue,
+      lookWhere,
+      sourceQuote: src.sourceText.slice(-40),
+      difficulty: "easy",
+    });
+    const out = validateDraft(
+      {
+        items: [
+          item("osm-bench", bench, "Find a long seat for a rest.", "by the bench"), // leak only in lookWhere
+          item("osm-playground", play, "Find the playground slide!", "in the middle"), // leak in the clue
+        ],
+        parentNote: "Have fun.",
+      },
+      pool,
+      mix,
+    );
+    expect(out.items.map((i) => [i.item.id, i.lookWhere])).toEqual([["osm-bench", ""]]);
+    expect(out.lookWhereCleared).toBe(1);
+    expect(out.drops).toEqual({ name_leak: 1 });
+  });
+
+  it("S8b: the retry keeps valid items from both answers (no duplicates, inside the section limits)", () => {
+    const pool = poolFor(PARKS.celebration).park.items;
+    const mix = { n: 3, min: { park: 1, wild: 0, lucky: 0 }, max: { park: 3, wild: 0, lucky: 0 }, hardMin: 0 };
+    const get = (id: string) => pool.find((p) => p.id === id)!;
+    const item = (id: string, clue: string) => ({ itemId: id, section: "park", clue, lookWhere: "", sourceQuote: get(id).sourceText.slice(-40), difficulty: "easy" });
+    const first = validateDraft({ items: [item("osm-bench", "Find a long seat for a rest.")], parentNote: "" }, pool, mix);
+    const second = validateDraft(
+      { items: [item("osm-bench", "Find a seat to rest on."), item("osm-playground", "Find a place to climb.")], parentNote: "Enjoy the park." },
+      pool,
+      mix,
+    );
+    const merged = mergeResults(second, first, mix);
+    expect(merged.items.map((i) => i.item.id)).toEqual(["osm-bench", "osm-playground"]);
+    expect(merged.parentNote).toBe("Enjoy the park.");
+    const capped = mergeResults(second, first, { ...mix, n: 1 });
+    expect(capped.items).toHaveLength(2); // never removes what primary already has
+    const tight = mergeResults(first, second, { ...mix, max: { park: 1, wild: 0, lucky: 0 } });
+    expect(tight.items.map((i) => i.item.id)).toEqual(["osm-bench"]);
+  });
+
+  it("S8b: the model sees n + 4 spares per section and a smaller answer budget", () => {
+    const { pool } = poolFor(PARKS.connemara);
+    expect(pool.filter((i) => i.section === "wild")).toHaveLength(8 + PROMPT_SPARES);
+    expect(passMaxTokens("gemma-4-31B-it")).toBe(1_200);
+    expect(passMaxTokens("gpt-oss-120b")).toBe(2_000);
+    const sys = systemPrompt("6-10", computeMix({ park: 3, wild: 8, lucky: 0 }, "6-10")!);
+    expect(sys).toContain("lookWhere must not use a word from the item's name either");
+    expect(sys).toContain('copied word for word in one piece. Never skip words or write "...".');
   });
 
   it("retry when fewer than n-2 items survive", () => {

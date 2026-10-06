@@ -15,6 +15,29 @@ export const WILD_SUMMARY_CANDIDATES = 24;
 export const WILD_PROMPT_MAX = 16;
 /** A summary shorter than this can't ground a clue. */
 export const MIN_SUMMARY_CHARS = 60;
+/**
+ * Summary text offered to the model per species (S8b): whole sentences up to about this many
+ * characters. The full summaries made prompts of 2.5-4.5k tokens; two or three sentences hold the
+ * looks-like facts a clue needs. The clue's sourceQuote is checked against this same trimmed text.
+ */
+export const WILD_SOURCE_CHARS = 320;
+
+/** Whole sentences from the start of `text`, up to `max` characters (the first sentence is cut at a word if it alone is longer). */
+export function leadSentences(text: string, max: number = WILD_SOURCE_CHARS): string {
+  const t = text.replace(/\s+/g, " ").trim();
+  if (t.length <= max) return t;
+  const sentences = t.split(/(?<=[.!?])\s+(?=[A-Z0-9"“(])/u);
+  let out = "";
+  for (const sentence of sentences) {
+    const next = out ? `${out} ${sentence}` : sentence;
+    if (next.length > max) break;
+    out = next;
+  }
+  if (out) return out;
+  const cut = t.slice(0, max);
+  const space = cut.lastIndexOf(" ");
+  return space > max / 2 ? cut.slice(0, space) : cut;
+}
 
 const SPECIES_RANKS = new Set(["species", "subspecies", "variety", "form", "hybrid"]);
 
@@ -29,8 +52,14 @@ export function wildEvidence(count: number, sinceDay: string): string {
   return `seen ${times} since ${shortDate(sinceDay)} · iNaturalist`;
 }
 
-/** SPEC §5.4 Wild Finds empty copy. */
+/** SPEC §5.4 Wild Finds empty copy (N from the API; grammatical for 0 and 1, same meaning). */
 export function wildEmptyCopy(totalObservations: number): string {
+  if (totalObservations <= 0) {
+    return "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.";
+  }
+  if (totalObservations === 1) {
+    return "No data available: only 1 research-grade sighting within 1.5 km in the last 14 days on iNaturalist.";
+  }
   if (totalObservations < WILD_MIN_ELIGIBLE) {
     return `No data available: only ${totalObservations} research-grade sightings within 1.5 km in the last 14 days on iNaturalist.`;
   }
@@ -103,7 +132,7 @@ export function wildPool(
     }
     if (!sum?.summary || sum.summary.length < MIN_SUMMARY_CHARS) continue;
     const label = s.commonName ? `${cap(s.commonName)} (${s.name})` : s.name;
-    const sourceText = `${label}. ${sum.summary}`;
+    const sourceText = `${label}. ${leadSentences(sum.summary)}`;
     items.push({
       id: `inat-${s.taxonId}`,
       section: "wild",

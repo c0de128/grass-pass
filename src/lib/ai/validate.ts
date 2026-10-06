@@ -5,7 +5,8 @@
  * Per item, in order: spec zod schema -> URL/markup -> unknown id -> duplicate id -> section
  * mismatch -> danger (blocked taxon, or a blocked word in the text) -> grounding (`sourceQuote` must
  * be a normalized substring of that item's sourceText) -> name leak (common/scientific name or a
- * distinctive part of it, plural too) -> numbers not in the source. Then the mix limits computed by
+ * distinctive part of it, plural too, in the clue; a leak only in `lookWhere` blanks that hint and keeps
+ * the item) -> numbers not in the source. Then the mix limits computed by
  * code are re-applied (extras beyond a section's max are dropped, in answer order).
  */
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
@@ -42,6 +43,8 @@ export type ValidationResult = {
   /** Sections that ended below their minimum (logged; the pass still prints what is valid). */
   belowMin: Section[];
   hardCount: number;
+  /** Items kept with their lookWhere left out because it used a word of the answer's name. */
+  lookWhereCleared: number;
 };
 
 /** A grounding quote shorter than this proves nothing ("the", "tree"). */
@@ -120,6 +123,7 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
   };
   const used = new Set<string>();
   const kept: ValidItem[] = [];
+  let lookWhereCleared = 0;
 
   for (const raw of draft.items) {
     const parsed = PassItemDraft.safeParse(
@@ -157,16 +161,23 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
       drop("not_grounded");
       continue;
     }
-    if (nameLeak(d.clue, item.nameWords) || nameLeak(d.lookWhere, item.nameWords)) {
+    if (nameLeak(d.clue, item.nameWords)) {
       drop("name_leak");
       continue;
     }
-    if (numbersNotIn(`${d.clue} ${d.lookWhere}`, item.sourceText).length > 0) {
+    // A name word only in lookWhere ("at the pond" for a pond): the clue is fine, so keep the item and
+    // leave the hint out (S8b). lookWhere is optional on the pass; the answer is never printed for the kid.
+    let lookWhere = d.lookWhere;
+    if (nameLeak(lookWhere, item.nameWords)) {
+      lookWhere = "";
+      lookWhereCleared++;
+    }
+    if (numbersNotIn(`${d.clue} ${lookWhere}`, item.sourceText).length > 0) {
       drop("number_not_in_source");
       continue;
     }
     used.add(item.id);
-    kept.push({ item, clue: d.clue, lookWhere: d.lookWhere, difficulty: d.difficulty, sourceQuote: d.sourceQuote });
+    kept.push({ item, clue: d.clue, lookWhere, difficulty: d.difficulty, sourceQuote: d.sourceQuote });
   }
 
   // Re-check the mix limits computed by code.
@@ -193,6 +204,7 @@ export function validateDraft(draft: PassDraftEnvelope, pool: readonly PoolItem[
     parentNote,
     belowMin,
     hardCount: items.filter((i) => i.difficulty === "hard").length,
+    lookWhereCleared,
   };
 }
 
@@ -228,4 +240,31 @@ export function validateSpot(raw: unknown, target: SpotCheckTarget): { ok: true;
   if (nameLeak(d.riddle, target.nameWords)) return { ok: false, reason: "name_leak" };
   if (numbersNotIn(d.riddle, target.sourceText).length > 0) return { ok: false, reason: "number_not_in_source" };
   return { ok: true, riddle: d.riddle };
+}
+
+/**
+ * S8b: when a second call was needed, keep the valid items of BOTH answers instead of only the
+ * bigger one. Starts from `primary` (the better answer) and fills with the other answer's valid items
+ * whose ids are not used yet, inside the code-computed section maxima and the pass size n.
+ * Drop counts stay those of `primary` (the footer reports what was removed from that answer).
+ */
+export function mergeResults(primary: ValidationResult, other: ValidationResult, mix: Mix): ValidationResult {
+  const items = [...primary.items];
+  const used = new Set(items.map((v) => v.item.id));
+  const perSection: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  for (const v of items) perSection[v.item.section]++;
+  for (const v of other.items) {
+    if (items.length >= mix.n) break;
+    if (used.has(v.item.id) || perSection[v.item.section] >= mix.max[v.item.section]) continue;
+    used.add(v.item.id);
+    perSection[v.item.section]++;
+    items.push(v);
+  }
+  return {
+    ...primary,
+    items,
+    parentNote: primary.parentNote || other.parentNote,
+    belowMin: (Object.keys(perSection) as Section[]).filter((s) => perSection[s] < mix.min[s]),
+    hardCount: items.filter((i) => i.difficulty === "hard").length,
+  };
 }

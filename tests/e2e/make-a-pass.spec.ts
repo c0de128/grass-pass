@@ -75,7 +75,7 @@ test("Celebration Park: park finds, and Wild Finds shows the exact 'No data avai
   const pass = page.getByRole("article", { name: "Celebration Park" });
   const wild = pass.locator("section", { has: page.getByRole("heading", { name: "Wild Finds" }) });
   // The live count can change during the week; the sentence shape is the SPEC 5.4 copy with N from iNaturalist.
-  const empty = wild.getByText(/^No data available: (only \d+ research-grade sightings within 1\.5 km in the last 14 days on iNaturalist\.|\d+ research-grade sightings)/);
+  const empty = wild.getByText(/^No data available: (no research-grade sightings within 1\.5 km in the last 14 days on iNaturalist\.|only \d+ research-grade sightings? within 1\.5 km in the last 14 days on iNaturalist\.|\d+ research-grade sightings)/);
   const finds = wild.locator("ol > li");
   await expect(empty.or(finds.first())).toBeVisible();
   if (await finds.first().isVisible()) {

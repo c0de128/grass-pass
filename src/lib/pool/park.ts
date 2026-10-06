@@ -48,7 +48,7 @@ export function parkPool(f: ParkFeatures): { items: PoolItem[]; state: SectionSt
       answer,
       evidence,
       source: "OpenStreetMap",
-      nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...names.flatMap(distinctiveWords)])],
+      nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...names.flatMap((nm) => distinctiveWords(nm, { place: true }))])],
       safety: kind === "water" || kind === "creek" ? "Stay with your grown-up near water." : null,
       stationary: true,
     });

@@ -13,7 +13,7 @@ import { z } from "zod";
 import { createCachePair, createJsonCache, type Store } from "@/lib/cache";
 import type { QuotaTicket } from "@/lib/limits";
 import { log } from "@/lib/log";
-import { callModel, configuredModelId, ModelError, modelTimeoutMs, type ModelLogger } from "@/lib/model";
+import { callModel, configuredModelId, MAX_TOKENS, ModelError, modelTimeoutMs, type ModelLogger } from "@/lib/model";
 import { PARKS_COPY } from "@/lib/parks/schema";
 import {
   PASS_COPY,
@@ -41,7 +41,7 @@ import { finishSpot, geometryWithin, loadGeometry, planSpot, SPOT_WAIT_MS, type 
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, computeMix, type Mix } from "./prompt";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
+import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -276,11 +276,34 @@ export function poolForSpot(pool: PoolItem[], target: Pick<SpotTarget, "poolKind
 
 const SECTION_ORDER: Record<Section, number> = { park: 0, wild: 1, lucky: 2 };
 
-function better(a: ValidationResult | null, b: ValidationResult | null): ValidationResult | null {
+/** The better of two answers, topped up with the other's valid items (S8b: a leaky item gets its second chance in the retry). */
+function better(a: ValidationResult | null, b: ValidationResult | null, mix: Mix): ValidationResult | null {
   if (!a) return b;
   if (!b) return a;
-  return b.items.length > a.items.length ? b : a;
+  return b.items.length > a.items.length ? mergeResults(b, a, mix) : mergeResults(a, b, mix);
 }
+
+/**
+ * Spare pool items offered per section beyond the pass size (S8b, M7/M8): the model needs n items
+ * plus room to choose, not every bench and all 16 species. Measured on the 20 eval parks: prompts of
+ * 700-4,500 tokens before; completion tokens, not prompt tokens, set the latency (about 33 ms each).
+ */
+export const PROMPT_SPARES = 4;
+
+/** At most n + PROMPT_SPARES items per section, in the pool's own order (best first). */
+export function promptPool(pool: readonly PoolItem[], n: number): PoolItem[] {
+  const seen: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
+  return pool.filter((p) => ++seen[p.section] <= n + PROMPT_SPARES);
+}
+
+/**
+ * max_tokens for the pass call: measured completions were 348-696 tokens (Gemma 4 31B and Llama 4
+ * Maverick, 82 calls, S9). gpt-oss also spends tokens on reasoning, so it keeps the ADR 0001 budget.
+ */
+export function passMaxTokens(modelId: string): number {
+  return modelId.toLowerCase().startsWith("gpt-oss") ? MAX_TOKENS : PASS_MAX_TOKENS;
+}
+export const PASS_MAX_TOKENS = 1_200;
 
 export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<BuildOutcome> {
   const { band } = input;
@@ -310,7 +333,9 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
   const spotPlan: SpotPlan = planSpot(await geometryWithin(geometry, geoWait), { parkName: f.park.name, features: f, variant: input.variant });
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
-  const pool = poolForSpot([...park.items, ...wild.items], target, band);
+  const fullPool = poolForSpot([...park.items, ...wild.items], target, band);
+  const fullMix = mixFor(fullPool, band);
+  const pool = fullMix ? promptPool(fullPool, fullMix.n) : fullPool;
   const mix: Mix | null = mixFor(pool, band);
   if (!mix) {
     const bothEmpty = park.state.status === "empty" && wild.state.status === "empty";
@@ -324,7 +349,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
     };
   }
 
-  const parkData = parkDataOf(f.park.name, pool);
+  const parkData = parkDataOf(f.park.name, fullPool);
   deps.onPoolsReady?.({ id: f.park.id, lat: f.park.lat, lng: f.park.lng });
   const modelId = configuredModelId(deps.env);
   const messages = buildMessages(f.park.name, pool, band, mix, target ? { id: target.id, label: target.label, sourceText: target.sourceText } : null);
@@ -369,7 +394,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
     deps.pin();
     try {
       const r = await callModel(
-        { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope },
+        { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope, maxTokens: passMaxTokens(modelId) },
         { env: deps.env, fetch: deps.modelFetch, timeoutMs: Math.min(modelTimeoutMs(deps.env), remaining - 3_000), logger: deps.modelLogger },
       );
       attempts += r.attempts;
@@ -392,9 +417,10 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
         drops: v.drops,
         belowMin: v.belowMin,
         hard: v.hardCount,
+        lookWhereCleared: v.lookWhereCleared,
         hardMin: mix.hardMin,
       });
-      best = better(best, v);
+      best = better(best, v, mix);
       if (best && best.items.length >= retryThreshold(mix.n)) break;
     } catch (err) {
       if (!(err instanceof ModelError)) throw err;
@@ -433,6 +459,7 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
       answer: v.item.answer,
       safety: v.item.safety,
       source: v.item.source,
+      ...(v.item.section === "park" && v.item.id.startsWith("osm-") ? { feature: v.item.id.slice(4).replace(/-/g, "_") } : {}),
     }));
   const dropped = best.drops as Record<DropReason, number | undefined>;
   const other = Object.entries(dropped)

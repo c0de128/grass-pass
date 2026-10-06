@@ -114,18 +114,100 @@ export const GENERIC_WORDS = new Set([
 ]);
 
 /**
+ * Small words that never give an answer away, in any name ("Sheila and Jody Grant Children's Park"
+ * must not make "and" or "the" a forbidden word: the S9 eval dropped >= 8 good clues that way).
+ */
+export const NAME_STOPWORDS = new Set([
+  "a",
+  "an",
+  "and",
+  "the",
+  "of",
+  "at",
+  "in",
+  "on",
+  "for",
+  "with",
+  "to",
+  "by",
+  "from",
+  "or",
+  "near",
+  "into",
+  "over",
+  "under",
+  "its",
+  "his",
+  "her",
+  "their",
+  "our",
+  "your",
+  "de",
+  "la",
+  "el",
+  "del",
+  "los",
+  "las",
+  "san",
+  "st",
+  "mt",
+  "saint",
+]);
+
+/**
+ * Generic place words inside OpenStreetMap names ("Rowlett Creek Trail", "Bob Woodruff Park (North)").
+ * They name where something is, not what it is. When the place word IS the answer (a pond, a creek),
+ * the feature kind's own nameWords (overpass-features.ts) still forbid it.
+ */
+export const PLACE_WORDS = new Set([
+  "park",
+  "parks",
+  "trail",
+  "trails",
+  "path",
+  "area",
+  "center",
+  "centre",
+  "preserve",
+  "nature",
+  "creek",
+  "lake",
+  "pond",
+  "river",
+  "branch",
+  "north",
+  "south",
+  "east",
+  "west",
+  "upper",
+  "lower",
+  "old",
+  "new",
+  "city",
+  "county",
+  "community",
+  "children",
+  "kids",
+  "family",
+  "memorial",
+  "loop",
+]);
+
+/**
  * Distinct lower-case words of a name that would give it away: whole words of 3+ letters and
  * hyphen parts of 4+ letters ("red-shouldered hawk" -> red-shouldered, shouldered, hawk), minus
- * generic category words ("tree", "bird", "eastern").
+ * generic category words ("tree", "bird", "eastern") and stopwords ("and", "the").
+ * `place: true` (OpenStreetMap names of park features) also drops generic place words ("park", "trail").
  */
-export function distinctiveWords(name: string): string[] {
+export function distinctiveWords(name: string, opts: { place?: boolean } = {}): string[] {
   const out: string[] = [];
+  const skip = (w: string) => GENERIC_WORDS.has(w) || NAME_STOPWORDS.has(w) || (opts.place === true && PLACE_WORDS.has(w));
   const clean = (w: string) => w.replace(/^'+|'+$/g, "").replace(/'s$/, "");
   for (const raw of name.toLowerCase().normalize("NFKC").split(/[^\p{L}\p{N}'-]+/u)) {
     const w = clean(raw.replace(/^-+|-+$/g, ""));
-    if (w.length >= 3 && !GENERIC_WORDS.has(w)) out.push(w);
+    if (w.length >= 3 && !skip(w)) out.push(w);
     if (w.includes("-")) {
-      for (const part of w.split("-").map(clean)) if (part.length >= 4 && !GENERIC_WORDS.has(part)) out.push(part);
+      for (const part of w.split("-").map(clean)) if (part.length >= 4 && !skip(part)) out.push(part);
     }
   }
   return [...new Set(out)];

@@ -61,6 +61,8 @@ export const PassItemSchema = z.object({
   /** Fixed, code-written safety line, or null. */
   safety: z.string().max(120).nullable(),
   source: z.enum(["OpenStreetMap", "iNaturalist"]),
+  /** Park Finds: the mapped feature kind ("basketball", "bench"), for the row icon. Absent on older passes. */
+  feature: z.string().regex(/^[a-z_]{1,40}$/).optional(),
 });
 export type PassItem = z.infer<typeof PassItemSchema>;
 

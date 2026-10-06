@@ -17,8 +17,9 @@ import {
   windowStart,
 } from "@/lib/sources/inat";
 import { parkFindsEmptyCopy, parkPool } from "@/lib/pool/park";
-import { distinctiveWords } from "@/lib/pool/types";
-import { shortDate, WILD_DOWN_COPY, wildEmptyCopy, wildEvidence, wildPool } from "@/lib/pool/wild";
+import { distinctiveWords, NAME_STOPWORDS, PLACE_WORDS } from "@/lib/pool/types";
+import { nameLeak } from "@/lib/ai/validate";
+import { leadSentences, shortDate, WILD_DOWN_COPY, WILD_SOURCE_CHARS, wildEmptyCopy, wildEvidence, wildPool } from "@/lib/pool/wild";
 import { OVERPASS_DEFAULT_URLS } from "@/lib/sources/overpass";
 import { PARKS, rec, RECORDED_AT } from "./support/pass-replay";
 
@@ -184,7 +185,7 @@ describe("Wild Finds pool", () => {
     expect(items).toEqual([]);
     expect(state).toEqual({
       status: "empty",
-      message: "No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist.",
+      message: "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.",
     });
   });
 
@@ -199,5 +200,46 @@ describe("Wild Finds pool", () => {
     expect(distinctiveWords("Red-shouldered Hawk")).toEqual(["red-shouldered", "shouldered", "hawk"]);
     expect(distinctiveWords("Golden-eye Lichen")).toEqual([]);
     expect(distinctiveWords("Hercules' club")).toEqual(["hercules", "club"]);
+  });
+
+  it("zero and one sighting read as plain English (same meaning as SPEC 5.4)", () => {
+    expect(wildEmptyCopy(0)).toBe("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
+    expect(wildEmptyCopy(1)).toBe("No data available: only 1 research-grade sighting within 1.5 km in the last 14 days on iNaturalist.");
+    expect(wildEmptyCopy(0)).not.toMatch(/only 0/);
+  });
+
+  it("S8b: stopwords and OSM place words are never name words (S9 false leaks)", () => {
+    // "Sheila and Jody Grant Children's Park" put "and", "the", "park" into nameWords before.
+    expect(distinctiveWords("Sheila and Jody Grant Children's Park", { place: true })).toEqual(["sheila", "jody", "grant"]);
+    expect(distinctiveWords("The Lake at the Park of the Arts")).toEqual(["lake", "park", "arts"]);
+    expect(distinctiveWords("Rowlett Creek Trail", { place: true })).toEqual(["rowlett"]);
+    for (const w of ["and", "the", "of", "at", "in", "on", "for", "with", "to"]) expect(NAME_STOPWORDS.has(w)).toBe(true);
+    expect(PLACE_WORDS.has("park")).toBe(true);
+  });
+
+  it("S8b: real giveaways are still caught", () => {
+    // Western Honey Bee: "honey" stays a name word, so "an insect that makes honey" is a leak.
+    const bee = [...new Set(["western honey bee", ...distinctiveWords("Western Honey Bee"), "apis mellifera", ...distinctiveWords("Apis mellifera")])];
+    expect(bee).toContain("honey");
+    expect(nameLeak("Find a small insect that makes honey!", bee)).toBe("honey");
+    expect(nameLeak("Find a buzzing insect on the flowers.", bee)).toBeNull();
+    expect(distinctiveWords("Trumpet Creeper")).toEqual(["trumpet", "creeper"]);
+    expect(nameLeak("Look for flowers shaped like trumpets.", distinctiveWords("Trumpet Creeper"))).toBe("trumpet");
+    // A mapped playground name no longer forbids "and" / "park".
+    const words = distinctiveWords("Sheila and Jody Grant Children's Park", { place: true });
+    expect(nameLeak("Climb and slide in the park!", words)).toBeNull();
+  });
+
+  it("S8b: wild source text keeps whole lead sentences up to the cap", () => {
+    const long = "Aaa bbb ccc. ".repeat(40).trim();
+    const out = leadSentences(long, 100);
+    expect(out.length).toBeLessThanOrEqual(100);
+    expect(out.endsWith(".")).toBe(true);
+    expect(long.startsWith(out)).toBe(true);
+    expect(leadSentences("Short one. Two.", 320)).toBe("Short one. Two.");
+    const oneLong = "word ".repeat(100).trim();
+    expect(leadSentences(oneLong, 50).length).toBeLessThanOrEqual(50);
+    expect(oneLong.startsWith(leadSentences(oneLong, 50))).toBe(true);
+    expect(WILD_SOURCE_CHARS).toBe(320);
   });
 });

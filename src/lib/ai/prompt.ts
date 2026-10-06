@@ -95,13 +95,14 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Exactly ${mix.n} items, each id at most once: ${mixRules(mix)}. Each item's "section" must be the section of its source.`,
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks, resident animals) over birds that fly away.",
-    "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, not even part of a name. Describe what it looks like, feels like from far away, or what it does.",
+    "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, not even one word of its name (for a honey bee, never say honey or bee). Describe what it looks like or what it does.",
+    `- lookWhere must not use a word from the item's name either. Bad: "at the pond" for a pond, "in a garden" for a garden spider. Good: "near the water", "on tall plants".`,
     `- Write at reading level grade ${info.grade}: short words, short sentences, fun and friendly.`,
     `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look, e.g. "near the water").`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
     "- Do not write numbers unless that number is in the item's SOURCE. No links.",
-    `- sourceQuote must be copied exactly, word for word, from that item's SOURCE text (a phrase of 4 to ${QUOTE_MAX} characters that supports the clue).`,
-    "- parentNote: one friendly sentence for the grown-up, no numbers.",
+    `- sourceQuote: the shortest exact phrase from that item's SOURCE that proves the clue (usually 3 to 10 words, at most ${QUOTE_MAX} characters), copied word for word in one piece. Never skip words or write "...".`,
+    "- parentNote: one short friendly sentence (under 15 words) for the grown-up, no numbers.",
     // S5: only when code picked a Find This Spot target (a pass without one gets exactly the S3 prompt).
     ...(spot
       ? [

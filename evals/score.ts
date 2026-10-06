@@ -147,6 +147,8 @@ export function expectedParkEmpty(parkName: string): string {
   return `No data available: OpenStreetMap has no mapped playgrounds, courts or shelters inside ${parkName}.`;
 }
 export function expectedWildEmpty(totalObservations: number): string {
+  if (totalObservations === 0) return "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.";
+  if (totalObservations === 1) return "No data available: only 1 research-grade sighting within 1.5 km in the last 14 days on iNaturalist.";
   return totalObservations < 3
     ? `No data available: only ${totalObservations} research-grade sightings within 1.5 km in the last 14 days on iNaturalist.`
     : `No data available: ${totalObservations} research-grade sightings within 1.5 km in the last 14 days on iNaturalist, but fewer than 3 are safe, kid-friendly finds with a description we can check.`;

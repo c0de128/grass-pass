@@ -19,8 +19,8 @@ type ModelRec = { _recording: { recordedAtMs: number }; request: { messages: { r
 export const rec = (name: string) => fixture(name) as unknown as Rec;
 export const modelRec = (slug: string) => fixture(`do-gemma-4-31b-it-${slug}-pass`) as unknown as ModelRec;
 
-/** When the Connemara pass was recorded (the 14-day window and "today" in tests). */
-export const RECORDED_AT = modelRec(PARKS.connemara.slug)._recording.recordedAtMs;
+/** When the Connemara park data was recorded (the 14-day window and "today" in tests). The model answers were re-recorded later (S8b) from these same inputs. */
+export const RECORDED_AT = rec(`inat-species-${PARKS.connemara.slug}`)._recording.recordedAtMs as number;
 
 /** The recorded model answer's content (the JSON the model wrote). */
 export function recordedDraft(slug: string): unknown {

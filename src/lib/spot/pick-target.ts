@@ -186,7 +186,7 @@ export function pickTarget(
     center: c.center,
     onePitchOf: c.onePitchOf,
     sourceText,
-    nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...(name ? distinctiveWords(name) : [])])],
+    nameWords: [...new Set([...info.nameWords.map((w) => w.toLowerCase()), ...(name ? distinctiveWords(name, { place: true }) : [])])],
     answer: cap(answer),
     start,
     walk,

@@ -84,6 +84,12 @@ export type MakeDeps = {
   now?: () => number;
   onStep?: (step: { step: PassStep; text: string }) => void;
   modelLogger?: ModelLogger;
+  /**
+   * Server-side pre-warm of the example parks (src/lib/prewarm.ts), never set by the route: skips the
+   * per-IP burst/minute limits and the per-IP daily share, but still counts against every GLOBAL cap
+   * (AI_DAILY_CAP and the global new-pass share).
+   */
+  internal?: boolean;
 };
 
 export type MakeOutcome =
@@ -120,7 +126,9 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
   if (!ref) return { kind: "error", status: 400, error: { code: "BAD_INPUT", message: "That park id doesn't look right." } };
 
   try {
-    const burst = await hitRateLimit(store, { name: "pass-burst", key: deps.ip, limit: PASS_BURST_PER_MIN, windowSec: 60, now: now() });
+    const burst = deps.internal
+      ? { ok: true as const }
+      : await hitRateLimit(store, { name: "pass-burst", key: deps.ip, limit: PASS_BURST_PER_MIN, windowSec: 60, now: now() });
     if (!burst.ok) {
       return {
         kind: "error",
@@ -146,7 +154,7 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     const flightKey = `${key}|${variant}`;
 
     // Joining an identical build that is already running costs nothing extra.
-    if (!inflight().has(flightKey)) {
+    if (!deps.internal && !inflight().has(flightKey)) {
       const rl = await hitRateLimit(store, { name: "pass", key: deps.ip, limit: cfg.passPerIpPerMin, windowSec: 60, now: now() });
       if (!rl.ok) {
         return {
@@ -199,7 +207,7 @@ async function build(ctx: {
   const share = await reserveQuota(store, {
     name: "pass-new",
     key: ctx.deps.ip,
-    perKey: cfg.passPerIpPerDay,
+    perKey: ctx.deps.internal ? Infinity : cfg.passPerIpPerDay,
     global: Math.max(cfg.aiDailyCap, 1) * 2,
     period: { kind: "day" },
     now: now(),

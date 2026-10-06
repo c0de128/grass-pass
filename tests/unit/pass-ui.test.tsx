@@ -42,7 +42,7 @@ describe("PassPreview (screen pass)", () => {
     const t = text(html);
     expect(html).toContain('<h1 id="pass-title"');
     expect(t).toContain("Celebration Park");
-    expect(t).toContain("No data available: only 0 research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
+    expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).toContain(PASS_COPY.luckyOff);
     expect((t.match(/on the park map · OpenStreetMap/g) ?? []).length).toBeGreaterThanOrEqual(8);
     expect(t).toContain(`Made ${formatTime(pass.generatedAt)} by gemma-4-31B-it (open model, Apache-2.0)`);

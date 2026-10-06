@@ -27,43 +27,43 @@ export const PAGE_LINKS = [
 export function SiteHeader() {
   return (
     <header className="sticky top-0 z-40 w-full border-b border-border bg-background/85 backdrop-blur-md print:hidden">
-      <div className="mx-auto flex h-16 max-w-7xl items-center justify-between gap-3 px-4 sm:gap-6 sm:px-5 md:px-8">
+      {/* Phones (under 640 px): the logo and the dark mode switch on top, the page tabs on a second row, so
+          "How it works" and "About" stay visible without sideways scrolling (360 px measured). */}
+      <div className="mx-auto flex max-w-7xl flex-wrap items-center gap-x-3 px-4 pt-1.5 sm:h-16 sm:flex-nowrap sm:gap-6 sm:px-5 sm:pt-0 md:px-8">
         <Link href="/" prefetch={false} aria-label="Grass Pass home" className="inline-flex min-h-11 shrink-0 items-center rounded-md text-foreground">
           <Logo />
         </Link>
-        <div className="flex items-center gap-2 sm:gap-3 lg:gap-8">
-          <nav aria-label="Site" className="flex items-center">
-            <ul className="flex items-center gap-2 sm:gap-4 lg:gap-8">
-              {HOME_SECTIONS.map((link) => (
-                <li key={link.href} className="hidden lg:block">
-                  <Link href={link.href} prefetch={false} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-              {PAGE_LINKS.map((link) => (
-                <li key={link.href}>
-                  <Link
-                    href={link.href}
-                    className="inline-flex min-h-11 items-center px-1 text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-1.5 lg:min-h-0 lg:px-0"
-                  >
-                    {link.label}
-                  </Link>
-                </li>
-              ))}
-            </ul>
-          </nav>
-          <div className="flex items-center gap-2 sm:gap-3">
-            <ThemeToggle />
-            <Link
-              href="/#find"
-              prefetch={false}
-              className="group hidden h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-on-ink transition-transform motion-safe:hover:-translate-y-0.5 sm:inline-flex"
-            >
-              Make a pass
-              <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
-            </Link>
-          </div>
+        <nav aria-label="Site" className="order-last flex basis-full items-center border-t border-border sm:order-none sm:ml-auto sm:basis-auto sm:border-0">
+          <ul className="flex items-center gap-5 sm:gap-4 lg:gap-8">
+            {HOME_SECTIONS.map((link) => (
+              <li key={link.href} className="hidden lg:block">
+                <Link href={link.href} prefetch={false} className="text-sm font-medium text-muted-foreground transition-colors hover:text-foreground">
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+            {PAGE_LINKS.map((link) => (
+              <li key={link.href}>
+                <Link
+                  href={link.href}
+                  className="inline-flex min-h-11 items-center text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-1.5 lg:min-h-0 lg:px-0"
+                >
+                  {link.label}
+                </Link>
+              </li>
+            ))}
+          </ul>
+        </nav>
+        <div className="ml-auto flex items-center gap-2 sm:ml-0 sm:gap-3">
+          <ThemeToggle />
+          <Link
+            href="/#find"
+            prefetch={false}
+            className="group hidden h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold text-on-ink transition-transform motion-safe:hover:-translate-y-0.5 sm:inline-flex"
+          >
+            Make a pass
+            <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
+          </Link>
         </div>
       </div>
     </header>

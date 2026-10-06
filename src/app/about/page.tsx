@@ -44,7 +44,7 @@ const resultsUrl = `${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}`;
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="scroll-mt-20 text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
+      <h2 id={id} className="scroll-mt-28 sm:scroll-mt-20 text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
         {title}
       </h2>
       {children}

@@ -33,7 +33,7 @@ export const HOW_STEPS: readonly Step[] = [
 
 export function HowItWorks() {
   return (
-    <section id="how" aria-labelledby="how-title" className="relative scroll-mt-16">
+    <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
         <div className="flex max-w-2xl flex-col gap-4">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>

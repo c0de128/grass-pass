@@ -49,7 +49,7 @@ const smokeId = SMOKE_10_13.summary.replace(/^evals\/results\//, "").replace(/\.
 
 function Section({ id, eyebrow, title, children }: { id: string; eyebrow: string; title: string; children: ReactNode }) {
   return (
-    <section aria-labelledby={id} className="flex scroll-mt-20 flex-col gap-4">
+    <section aria-labelledby={id} className="flex scroll-mt-28 sm:scroll-mt-20 flex-col gap-4">
       <p className="text-xs font-bold tracking-widest text-primary uppercase">{eyebrow}</p>
       <h2 id={id} className="-mt-2 text-3xl leading-tight font-extrabold tracking-tight text-balance text-ink sm:text-4xl">
         {title}
@@ -73,19 +73,22 @@ function Steps({ steps }: { steps: readonly Step[] }) {
   return (
     <ol aria-label="How a pass is made, step by step" className="relative flex flex-col gap-5">
       {steps.map((s, i) => (
-        <li key={s.id} id={`step-${s.id}`} className="relative flex scroll-mt-20 gap-4 sm:gap-5">
-          {/* The connecting line of the diagram (decorative). */}
+        <li key={s.id} id={`step-${s.id}`} className="relative flex scroll-mt-28 sm:scroll-mt-20 gap-4 sm:gap-5">
+          {/* The connecting line of the diagram (decorative): down the icon rail from 640 px, between the cards on phones. */}
           {i < steps.length - 1 ? (
-            <span aria-hidden="true" className="absolute top-14 bottom-[-1.25rem] left-6 w-0.5 -translate-x-1/2 bg-line sm:left-7" />
+            <>
+              <span aria-hidden="true" className="absolute top-14 bottom-[-1.25rem] left-7 hidden w-0.5 -translate-x-1/2 bg-line sm:block" />
+              <span aria-hidden="true" className="absolute bottom-[-1.25rem] left-1/2 h-5 w-0.5 -translate-x-1/2 bg-line sm:hidden" />
+            </>
           ) : null}
-          <span
-            aria-hidden="true"
-            className="relative z-10 flex size-12 shrink-0 items-center justify-center rounded-2xl bg-ink text-on-ink sm:size-14"
-          >
+          <span aria-hidden="true" className="relative z-10 hidden size-14 shrink-0 items-center justify-center rounded-2xl bg-ink text-on-ink sm:flex">
             <s.icon className="size-6" />
           </span>
           <div className="flex min-w-0 flex-1 flex-col gap-3 rounded-3xl bg-card p-5 ring-1 ring-border sm:p-6">
             <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
+              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink text-on-ink sm:hidden">
+                <s.icon className="size-5" />
+              </span>
               <h3 className="text-xl leading-tight font-extrabold text-ink">
                 <span className="text-muted-foreground">Step {i + 1}.</span> {s.title}
               </h3>

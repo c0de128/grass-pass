@@ -13,7 +13,7 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
-    <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-16 overflow-hidden">
+    <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-28 sm:scroll-mt-16 overflow-hidden">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-12 pb-20 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-28">
         <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">

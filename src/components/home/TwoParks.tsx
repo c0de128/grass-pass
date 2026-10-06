@@ -28,7 +28,7 @@ export const TWO_PARKS_SOURCE =
 
 export function TwoParks() {
   return (
-    <section id="why" aria-labelledby="why-title" className="gp-band scroll-mt-16 bg-band text-band-foreground">
+    <section id="why" aria-labelledby="why-title" className="gp-band scroll-mt-28 sm:scroll-mt-16 bg-band text-band-foreground">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32">
         <div className="grid gap-6 lg:grid-cols-2 lg:items-end">
           <div className="flex flex-col gap-4">

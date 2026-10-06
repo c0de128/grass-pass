@@ -224,7 +224,7 @@ export function PassMaker() {
       {park ? (
         <section
           aria-labelledby={`${ids}-make`}
-          className="scroll-mt-24 rounded-3xl bg-card p-5 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-6"
+          className="scroll-mt-28 rounded-3xl bg-card p-5 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-6"
         >
           <form onSubmit={onSubmit} className="flex flex-col gap-4" aria-label="Make a pass">
             <h2 id={`${ids}-make`} ref={headingRef} tabIndex={-1} className="text-2xl font-extrabold tracking-tight text-ink">

@@ -99,11 +99,38 @@ with the real pass builder: [`evals/results/2026-10-05.md`](evals/results/2026-1
 | Cost per pass | $0.00086 | $0.00098 | $0 |
 
 ## Why open
-*Coming*, built on the eval numbers above.
+The clue writer is an open-weight model: `gemma-4-31B-it` (Gemma 4, Apache-2.0) on DigitalOcean serverless
+inference by default. Measured in the eval above (same parks, same checks for every column):
+- **It makes the words kid-sized:** Gemma's clues read at FK grade 2.3 (median); the no-AI template on the same data
+  reads at 5.9.
+- **It sticks to the facts:** 99.2% of its clues quoted their source word for word before any filter; 0 blocked
+  species printed in 60 runs.
+- **It is cheap enough for a classroom:** about $0.00086 per pass at DigitalOcean list prices.
+- **The safety rules live in our code, not a vendor's:** the same checks run on any model, and switching is one
+  setting (`MODEL_ID`); Llama 4 Maverick ran through the same code in the eval.
+- **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
+  server, e.g. Ollama. A self-hosted run has **not** been measured for this app yet.
+
+No closed model was compared (open models only; the closed models on our DigitalOcean tier answered 403 on Oct 5).
+What did not pass yet: complete passes 64.7% (target 90%), name leaks before the filter 17.5% (target 5%), model
+time 13.8 s p50 / 24.3 s p95 (target 10 s / 20 s), and the human kid check is not done. The app's `/about` page shows
+the same numbers (`src/lib/about/eval-summary.ts`, checked against the results JSON by a unit test).
 
 ## Privacy
-*Coming.* Short version of the plan: no accounts, nothing about the child leaves the device, location is rounded
-in the browser to about 1 km, no analytics.
+No accounts, no names, no photos, no cookies, no analytics. Nothing about the child is asked for or sent. What does
+leave the device (also on `/about`):
+
+| What | Where it goes | Why |
+|---|---|---|
+| Typed place text | our server, then Nominatim (answers cached 30 days by the text, not by who typed it) | find the town or park |
+| "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
+| The chosen park (public place + map position) | our server, then Overpass and iNaturalist | park map, sightings, monarch counts |
+| Age band | our server, then the model on DigitalOcean (inside the prompt) | item count and reading level |
+| IP address | our server only, as a rate-limit counter that expires within about a day (IPv6 by /64) | abuse and cost limits |
+| The finished pass | saved on our server for 30 days | the pass link and print page |
+
+Server logs record source/model, timing, outcome and pass ids, never the prompt, the IP address or the typed text.
+The browser keeps only the light/dark choice and the last age band (localStorage).
 
 ## Limitations
 *Coming.*
@@ -117,8 +144,10 @@ Any commit made after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will
   practice project (same author, MIT).
 - Brand: logo and explorer scene are redrawn as SVG from the author's own banner design (`brand/`, `scripts/brand/art.mjs`;
   the kid's clothes and hair are cleaned traces of that drawing in `scripts/brand/kid-trace.json`).
-- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) and [Nunito](https://fonts.google.com/specimen/Nunito)
-  for the site text (served by `next/font`). The logo lettering is outlined to SVG paths from
+- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) 600/700 and [Nunito](https://fonts.google.com/specimen/Nunito)
+  400/600/700 for the site text: the latin `.woff2` files from [Fontsource](https://fontsource.org/) 5.3.0
+  (`@fontsource/fredoka`, `@fontsource/nunito`) are committed in `src/app/fonts/` with their OFL licence texts and
+  served by `next/font/local`, so neither the build nor the browser contacts Google Fonts. The logo lettering is outlined to SVG paths from
   [M PLUS Rounded 1c](https://fonts.google.com/specimen/M+PLUS+Rounded+1c) ExtraBold ("GRASS PASS") and
   [Varela Round](https://fonts.google.com/specimen/Varela+Round) (tagline), via their `@fontsource` copies (dev only).
   All four are SIL Open Font License 1.1.

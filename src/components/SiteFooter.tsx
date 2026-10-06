@@ -38,21 +38,21 @@ export function SiteFooter() {
           </nav>
         </div>
         <p className="border-t border-band-foreground/15 pt-6 text-sm leading-relaxed text-band-muted">
-          Park map data ©{" "}
+          Map data ©{" "}
           <a className={credit} href="https://www.openstreetmap.org/copyright">
             OpenStreetMap
           </a>{" "}
-          contributors (ODbL) · Wildlife sightings from{" "}
+          contributors (ODbL) · Sightings:{" "}
           <a className={credit} href="https://www.inaturalist.org/">
             iNaturalist
           </a>{" "}
-          observers · Species summaries from Wikipedia (CC BY-SA) · Lucky Finds: Google review counts via{" "}
+          observers · Species facts: Wikipedia (CC BY-SA) · Lucky Finds: Google review counts via{" "}
           <a className={credit} href="https://serpapi.com/">
             SerpApi
           </a>{" "}
-          · Clues written by an open model (Gemma 4 by default, Apache-2.0) · Icons: Lucide (ISC) · Fonts: Bricolage
-          Grotesque and DM Sans on screen, Fredoka and Nunito on the printed pass (SIL OFL 1.1) · Park photos: Robert Nunnally
-          (CC BY 2.0) and Vulturesong (CC0), credits on the{" "}
+          · Clues: Gemma 4 by default (open model, Apache-2.0) · Icons: Lucide (ISC) · Fonts: Bricolage Grotesque and DM Sans (site),
+          Fredoka and Nunito (print), SIL OFL 1.1 · Park photos: Robert Nunnally (CC BY 2.0) and Vulturesong (CC0), details on
+          the{" "}
           <Link className={credit} href="/about#credits">
             About page
           </Link>{" "}

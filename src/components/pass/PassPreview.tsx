@@ -127,8 +127,8 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
 
         {short > 0 ? (
           <p className="rounded-control border-2 border-dashed border-line px-3 py-2">
-            No data available for {short} more {short === 1 ? "find" : "finds"}: the clues we got for them didn&apos;t pass our
-            checks, so we left them off instead of guessing.
+            No data available for {short} more {short === 1 ? "find" : "finds"}: {short === 1 ? "its clue" : "their clues"}{" "}
+            didn&apos;t pass our checks, so we left {short === 1 ? "it" : "them"} off.
           </p>
         ) : null}
 

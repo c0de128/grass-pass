@@ -63,7 +63,7 @@ export function aboutStatTiles(): StatTile[] {
 export const WHY_OPEN_POINTS: readonly string[] = [
   "Anyone can download, run and build on the weights.",
   "Our safety rules live in our code, not a vendor's.",
-  "Self-hosting is possible; not measured yet.",
+  "Self-hosting is possible, but not measured yet.",
 ];
 
 /** The four data sources: what they give, and the licence or rule we follow. */
@@ -77,28 +77,28 @@ export function dataSources(): DataSource[] {
       gives: "Parks, paths and what is mapped inside them",
       licence: "ODbL 1.0",
       detail:
-        "Park names, places and features: © OpenStreetMap contributors, ODbL 1.0, through the Nominatim search and public Overpass API servers. Named parks and nature reserves within 5 km; Park Finds are what is mapped inside the park (courts, playgrounds, shelters, bridges, ponds...). The Find This Spot map is drawn by code from the same data.",
+        "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within 5 km and what is mapped inside them. Code draws the Find This Spot map from it.",
     },
     {
       name: "iNaturalist",
       url: "https://www.inaturalist.org/",
       gives: "Wildlife people really spotted nearby",
       licence: "Names + counts only",
-      detail: `Wildlife sightings and monarch counts: iNaturalist observers. Wild Finds are species photographed within ${WILD_RADIUS_KM} km in the last ${WILD_WINDOW_DAYS} days, research grade only. From ${OCTOBER_WINDOW_LABEL} the October special box adds monarch butterfly counts (within ${MONARCH_RADIUS_KM} km, the last 14 days, next to the same days last year) and milkweed seen within ${MILKWEED_RADIUS_KM} km. We show species names and counts only, no photos.`,
+      detail: `iNaturalist observers. Wild Finds: research-grade species photographed within ${WILD_RADIUS_KM} km in the last ${WILD_WINDOW_DAYS} days. From ${OCTOBER_WINDOW_LABEL}, the October box adds monarch counts within ${MONARCH_RADIUS_KM} km (last 14 days, next to the same days last year) and milkweed within ${MILKWEED_RADIUS_KM} km. Names and counts only, no photos.`,
     },
     {
       name: "Wikipedia",
       url: "https://www.wikipedia.org/",
       gives: "A short fact about each species",
       licence: "CC BY-SA",
-      detail: "Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API. The model must quote these words exactly.",
+      detail: "Species summaries, via the iNaturalist API. The model must quote these words exactly.",
     },
     {
       name: "SerpApi",
       url: "https://serpapi.com/",
       gives: "How often Google Maps reviews mention dogs or bikes",
       licence: "Counts only, no review text",
-      detail: `Lucky Finds: Google Maps review counts via SerpApi. Code finds the same park on Google Maps and counts reviews from the last ${WINDOW_MONTHS / 12} years that mention dogs, bikes, ducks or skateboards; a Lucky Find needs at least ${MIN_MENTIONS} such reviews. We count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI, only the word, the count and the newest month. Nothing about you is sent to SerpApi (only the park's name and map position).`,
+      detail: `Lucky Finds: Google Maps review counts via SerpApi, from the last ${WINDOW_MONTHS / 12} years (dogs, bikes, ducks, skateboards; at least ${MIN_MENTIONS}). We count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI. SerpApi gets only the park's name and position.`,
     },
   ];
 }
@@ -119,83 +119,75 @@ export type PrivacyRow = { what: string; where: string; why: string };
 export const PRIVACY_ROWS: readonly PrivacyRow[] = [
   {
     what: "The place you type (for example \"Allen TX\")",
-    where:
-      "Our server (inside the request, never in the web address), then OpenStreetMap's Nominatim search. Answers are cached for 30 days in our storage (Upstash Redis) by the text typed, not by who typed it.",
+    where: "Our server (never in the web address), then OpenStreetMap's Nominatim. Cached 30 days by the text, not by who typed it.",
     why: "To find the town or park.",
   },
   {
     what: "\"Use my location\"",
-    where: "Rounded in your browser to 2 decimals (about 1 km), then our server, then OpenStreetMap's Overpass servers.",
+    where: "Rounded in your browser to about 1 km, then our server, then OpenStreetMap's Overpass.",
     why: "To list parks near you.",
   },
   {
-    what: "The park you pick (a public place and its map position)",
-    where:
-      "Our server, then OpenStreetMap (Overpass), iNaturalist and SerpApi (its name and map position, to find the same park on Google Maps and count its reviews).",
-    why: "To read the park map, recent wildlife sightings, monarch counts and how often visitors' reviews mention dogs or bikes.",
+    what: "The park you pick (a public place)",
+    where: "Our server, then OpenStreetMap, iNaturalist and SerpApi (name and map position only).",
+    why: "For the park map, sightings, monarch counts and review counts.",
   },
   {
     what: "The age band (for example 6-10)",
-    where: "Our server, then the model on DigitalOcean, inside the prompt with the park facts.",
-    why: "To set how many items and how easy the words are.",
+    where: "Our server, then the model on DigitalOcean, in the prompt.",
+    why: "To set how many finds and how easy the words are.",
   },
   {
     what: "Your IP address",
-    where:
-      "Our server. Our storage (Upstash Redis) gets only a scrambled code made from it (a keyed hash), never the address itself, inside rate-limit counters that delete themselves within about a day (IPv6 by its /64 and /48 network).",
+    where: "Our server. Our storage (Upstash Redis) keeps only a keyed hash, never the address itself, in rate-limit counters that expire within a day.",
     why: "To stop abuse and keep the free model budget fair.",
   },
   {
-    what: "Every page or search request (your IP address, the web address, the time)",
-    where:
-      "Our hosting provider's request logs (Vercel), kept for a short time (about 1 hour on our plan). Park searches are sent inside the request, so these logs never show the place you typed or your location.",
+    what: "Every request (IP address, web address, time)",
+    where: "Our hosting provider's request logs (Vercel), kept about 1 hour. They never show what you typed or where you are.",
     why: "Running the website.",
   },
   {
-    what: "Signing in with GitHub or Google (grown-ups, only to make a new pass or send a report)",
-    where:
-      "GitHub or Google tell our server an account number (and a name, which only goes into your own encrypted sign-in cookie for the \"Hi, name\" in the header). Our storage keeps ONLY a scrambled ID made from the account number with a secret key (no email, no name, no picture). We ask GitHub only for your public profile and Google only for your name; anything else in their answer is dropped at once. A sign-in lasts 7 days from when you sign in (the judge demo: 1 day), however much you use it, and the cookie expires then; Sign out removes it at once.",
-    why: "To count your 2 new passes a day and your found-it reports.",
+    what: "Signing in with GitHub or Google (grown-ups only)",
+    where: "The provider sends an account number and a name. We store only a scrambled ID made from the number: no email, no name, no picture. The name stays in your own encrypted cookie. Sign-in lasts 7 days (judge demo: 1 day).",
+    why: "To count your 2 new passes a day and your reports.",
   },
   {
-    what: "Your item reports (Found it, Didn't find it, Not safe)",
-    where:
-      "Our storage (Upstash Redis): per park and item, which kind each signed-in visitor last reported and on which day, under a scrambled ID made for that park only (so each person counts once, and IDs can't be linked across parks). Reports from the shared judge demo account are only logged, never counted. Deleted after 90 days.",
-    why: "To learn what is really findable, leave out finds nobody can spot, and catch anything unsafe.",
+    what: "Your reports (Found it, Didn't find it, Not safe)",
+    where: "Our storage: your latest report per find and its day, under an ID made for that park only. Deleted after 90 days.",
+    why: "To learn what is findable and catch anything unsafe.",
   },
   {
-    what: "The finished pass (park, age band, items, clues, times)",
-    where: "Saved in our storage (Upstash Redis) for 30 days, so the pass link and the print page work.",
+    what: "The finished pass (park, age band, finds, clues, times)",
+    where: "Saved in our storage (Upstash Redis) for 30 days, so the link and print page work.",
     why: "Nothing in it is about you or your child.",
   },
 ];
 
 /** The paragraph under the privacy table. */
 export const PRIVACY_NOTES: readonly string[] = [
-  `No names, no photos, no analytics, and nothing about the child is ever asked for or sent. Browsing, the example passes, shared pass links and printing need no account and set no cookie. Only a grown-up who signs in (to make a new pass or send a report) gets one sign-in cookie. ${ACCOUNT_COPY.privacy} The only other things kept in your browser are your light or dark choice and the last age band you picked.`,
-  "The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device. For Lucky Finds we count mentions in Google Maps reviews via SerpApi; review text is never shown or sent to the AI, and nothing about you is sent to SerpApi (only the park's name and map position).",
-  "Our own server logs say what happened (which source or model, how long it took, the outcome, the pass id) and never the prompt, your IP address or the text you typed. Our storage is Upstash Redis (caches, saved passes and rate-limit counters). Our hosting provider (Vercel) keeps its own short request logs, as every website host does.",
+  `No names, no photos, no analytics; nothing about the child is asked for. Only a grown-up who signs in gets a cookie. ${ACCOUNT_COPY.privacy} Your browser keeps only your light or dark choice and the last age band.`,
+  "The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device.",
+  "Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.",
 ];
 
 /** Accounts and visitor reports (Builder O, 2026-10-06): the rules, from the same constants the code uses. */
 export function accountNotes(): string[] {
   return [
-    `Anyone can search parks, open the example passes and any shared pass link, and print. Making a NEW pass needs a grown-up to sign in with GitHub or Google (${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time), because every new pass costs a real model call. ${ACCOUNT_COPY.grownUps} We never store a password.`,
-    `Judges can press "Try as a judge": one click signs in to a shared demo account with no sign-up, for 1 day. ${judgeShareCopy()}`,
-    `Signed-in grown-ups can tell us about each find on a pass: Found it, Didn't find it or Not safe (one report per find per day). ${REPORT_COPY.rule}`,
+    `Anyone can search, open examples and shared links, and print. A NEW pass is a real model call, so a grown-up signs in with GitHub or Google: ${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time. No password is stored.`,
+    `Judges: "Try as a judge" is one click, no sign-up. ${judgeShareCopy()}`,
+    `Signed-in grown-ups can report each find (Found it, Didn't find it, Not safe). ${REPORT_COPY.rule}`,
   ];
 }
 
 /** Short privacy lines on /how-it-works. */
 export function howPrivacyPoints(): string[] {
   return [
-    "No names, no photos, no analytics. Browsing, the examples, shared passes and printing need no account and set no cookie.",
-    `Signing in (grown-ups, only to make a new pass or send a report): ${ACCOUNT_COPY.privacy} No password is ever stored. Reports are deleted after 90 days.`,
-    "The place you type goes to our server and OpenStreetMap's search, never in the web address.",
-    "\"Use my location\" is rounded to about 1 km in your browser first.",
-    "Your IP address is only kept as a scrambled code inside rate-limit counters that delete themselves within about a day.",
+    "No names, no photos, no analytics. Browsing and printing set no cookie.",
+    `Signing in (grown-ups, only for new passes and reports): ${ACCOUNT_COPY.privacy} No password is stored.`,
+    "What you type goes to our server and OpenStreetMap, never into the web address.",
+    "\"Use my location\" is rounded to about 1 km in your browser.",
     "The model sees the park's public facts and the age band, nothing about you.",
-    "Your browser keeps only your light or dark choice and the last age band.",
   ];
 }
 
@@ -223,46 +215,43 @@ export function aboutLimits(): Limit[] {
   return [
     {
       title: `Clues repeat across parks: Gemma ${pct(g.repeatPct)}`,
-      detail: `of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}% or lower). That is up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before (${PREVIOUS_RUN.id}), so it got worse and does not pass. Most of the repeats are Park Finds that copy a phrase of the code-written park facts ("paths that cross over water"). Wrong counts pass: ${g.wrongCounts} of ${g.countClues} printed count clues (${g.wrongCountsRemoved} wrong ones were removed by code before printing).`,
+      detail: `of printed clues share 5 words in a row with 2+ other parks (target ${t.repeatPct}%), up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before (${PREVIOUS_RUN.id}): a miss. Most are Park Finds copying our park facts ("paths that cross over water").`,
     },
     {
       title: `Speed: Gemma only just passes (${secs(g.p50s)} typical, ${secs(g.p95s)} slow-case; target ${t.p50s} s / ${t.p95s} s).`,
-      detail: `The typical call took ${GEMMA_P50_EXACT_S} s, and that per-call figure includes the short second calls that fill a short pass (about 4 s each). First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical, which is over the mark. Most of the wait is the model writing its answer. Llama 4 Maverick is too slow to be the default: ${secs(l.p50s)} typical, with ${pct(l.completePct)} complete passes and ${usd(l.costPerPass)} a pass, over the ${usd(t.costPerPass)} mark (${l.timeouts} of its calls hit its 60 s limit).`,
+      detail: `The typical call took ${GEMMA_P50_EXACT_S} s, counting short refill calls. First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical, which is over the mark. Llama 4 Maverick is too slow to be the default: ${secs(l.p50s)} typical, ${pct(l.completePct)} complete passes, ${usd(l.costPerPass)} a pass, over the ${usd(t.costPerPass)} mark (${l.timeouts} of its calls hit its 60 s limit).`,
     },
     {
       title: `Complete passes: Gemma passes (${pct(g.completePct)}, ${g.complete} of ${g.dataRichRuns}; target ${t.completePct}% or more).`,
-      detail: `The one short pass was Spring Creek Forest Preserve, a park with little data, which ended 2 finds short even after its second try. No call failed or timed out in this run. A short pass says how many finds are missing; it is never padded.`,
+      detail: "The one short pass was Spring Creek Forest Preserve, a park with little data. No call failed or timed out in this run.",
     },
     {
       title: "Answers that name themselves:",
-      detail: `Gemma passes (${pct(g.nameLeakPct)} of its clues or "look where" hints used a word of their own answer before the filter; target ${t.nameLeakPct}% or lower), but Llama 4 Maverick does not (${pct(l.nameLeakPct)}). Code catches every one: a clue that names its answer is dropped, and a hint that does is left off. So nothing is given away on the pass, but those clues are lost.`,
+      detail: `Gemma passes (${pct(g.nameLeakPct)} of its clues or hints, before the checks; target ${t.nameLeakPct}%), Llama 4 Maverick does not (${pct(l.nameLeakPct)}). Code removes every one.`,
     },
     {
-      title: "A model glitch we saw in an earlier run:",
-      detail:
-        "in 3 of Gemma's 56 answers, all for the same park, the next part of the answer was stuck onto the end of every quote. Code now cuts that stuck-on text off and keeps the quote only if what is left is really, word for word, in the source. It did not happen in the run above.",
+      title: "An earlier glitch:",
+      detail: "3 of 56 Gemma answers had the next field stuck onto every quote. Code now cuts it off; not seen since.",
     },
     {
       title: "Not in this test:",
-      detail: `the Find This Spot map and riddle (the map data was not recorded for the ${EVAL_PARKS} test parks), and Lucky Finds (the test parks have no recorded Google Maps review counts, and the free SerpApi searches are kept for the live site).`,
+      detail: `Find This Spot (no map data was recorded for the ${EVAL_PARKS} test parks) and Lucky Finds (the test parks have no recorded Google Maps review counts, and the free SerpApi searches are kept for the live site).`,
     },
     {
       title: "Kid check not done yet.",
-      detail: "A grown-up reading 10 clues as a 7-year-old would is planned; it is not automated.",
+      detail: "Reading 10 clues as a 7-year-old would is planned for the real walk.",
     },
     {
       title: "Lucky Finds run on a free plan.",
-      detail: `SerpApi's free plan allows ${SERPAPI_FREE_MONTHLY} searches a month, and a new park uses up to 4 (one to find it on Google Maps, up to 3 review counts). Grass Pass stops at ${serp.daily} searches a day and ${serp.monthly} a month and keeps each park's counts for 30 days. When a limit is reached, the pass says Lucky Finds are off for today (free search limit) instead. A count says how many reviews mention a thing, not that it is there today, so the pass calls them "maybe". No photos are printed.`,
+      detail: `SerpApi's free plan allows ${SERPAPI_FREE_MONTHLY} searches a month; a new park uses up to 4. Grass Pass stops at ${serp.daily} searches a day and ${serp.monthly} a month and keeps counts 30 days. A count is a "maybe": visitors wrote about it, it may not be there today.`,
     },
     {
       title: "Sparse data happens.",
-      detail:
-        "3 of the 17 North Texas parks in the test had no research-grade iNaturalist sightings in the last 14 days; the pass then says so instead of inventing Wild Finds.",
+      detail: "3 of 17 North Texas test parks had no research-grade sightings in 14 days; their passes say so.",
     },
     {
       title: "Self-hosting is not measured.",
-      detail:
-        "Gemma 4's weights are downloadable under Apache-2.0, and the app talks to any OpenAI-compatible server (for example Ollama). We have not measured a self-hosted run for this app yet.",
+      detail: "The app talks to any OpenAI-compatible server, such as Ollama. We have not measured a self-hosted run for this app yet.",
     },
   ];
 }
@@ -278,40 +267,39 @@ export function howLimits(): Limit[] {
   return [
     {
       title: "Clues repeat across parks.",
-      detail: `${pct(g.repeatPct)} of printed clues share 5 words in a row with clues on at least 2 other parks (target ${t.repeatPct}%), up from ${pct(PREVIOUS_RUN.repeatPct)} in the run before.`,
+      detail: `${pct(g.repeatPct)} share 5 words in a row with 2+ other parks (target ${t.repeatPct}%).`,
     },
     {
       title: "Speed only just meets its target.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow per model call (target ${t.p50s} s / ${t.p95s} s), and ${g.timeouts} model calls in ${g.runs} test passes hit the ${MODEL_TIMEOUT_MS / 1000} s limit. First calls alone took ${GEMMA_FIRST_CALL_P50_S} s typical.`,
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s); ${g.timeouts} timeouts at ${MODEL_TIMEOUT_MS / 1000} s in ${g.runs} test passes.`,
     },
     {
       title: "Parks with little data make shorter passes.",
-      detail: `A short pass says how many finds are missing. Some parks had no research-grade sightings in the last ${WILD_WINDOW_DAYS} days.`,
+      detail: "The pass says how many are missing.",
     },
     {
       title: "The kid check is not done yet.",
-      detail: "A grown-up reading 10 printed clues as a 7-year-old would is planned; until then it is pending, not passed.",
+      detail: "Planned for the real walk.",
     },
     {
       title: "Lucky Finds run on a free plan.",
-      detail: `${serp.daily} searches a day. A count means visitors wrote about a thing, not that it is there today, so the pass says "maybe".`,
+      detail: `${serp.daily} searches a day; a count is a "maybe", not a promise.`,
     },
     {
       title: "Public map servers can be busy.",
-      detail:
-        "Mostly in the US evening. Then a park search may use the saved Dallas-area list, and a new pass may say its map data could not be fetched in time.",
+      detail: "Mostly US evenings: search falls back to a saved Dallas-area list.",
     },
     {
       title: "Find This Spot is not in the eval, and self-hosting is not measured.",
-      detail: "Its map data was not recorded for the test parks, and a self-hosted model run has not been measured.",
+      detail: "No map data was recorded for the test parks.",
     },
     {
       title: "A new pass needs a grown-up to sign in.",
-      detail: `${ACCOUNT_PASSES_PER_DAY} new passes a day each, with GitHub or Google. Judges can press "Try as a judge" (a shared demo account): ${judgeShareCopy()} Saved passes, shared links, the examples and printing need no sign-in.`,
+      detail: `${ACCOUNT_PASSES_PER_DAY} a day each; judges can press "Try as a judge".`,
     },
     {
       title: "The model runs on DigitalOcean's servers.",
-      detail: "So the park facts and the age band leave your device.",
+      detail: "The park facts and age band leave your device.",
     },
   ];
 }

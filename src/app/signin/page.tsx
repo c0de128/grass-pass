@@ -81,11 +81,11 @@ export default async function SignInPage(props: PageProps<"/signin">) {
           Why sign in?
         </h2>
         <ul className="flex list-disc flex-col gap-1 pl-5">
-          <li>You only need it to make a NEW pass (2 a day) and to tell us what you found. The example passes, shared pass links and printing work without it.</li>
+          <li>Only to make a NEW pass (2 a day) or to report what you found. Examples, shared links and printing work without it.</li>
           <li>{ACCOUNT_COPY.privacy}</li>
           <li>{ACCOUNT_COPY.grownUps}</li>
           <li>
-            Judges: <strong>Try as a judge</strong> signs you in to a shared demo account with one click, for 1 day. {judgeShareCopy()}
+            Judges: <strong>Try as a judge</strong> signs in to a shared demo account in one click, for 1 day. {judgeShareCopy()}
           </li>
         </ul>
         <p>

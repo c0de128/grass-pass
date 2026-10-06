@@ -150,14 +150,14 @@ function Steps({ steps }: { steps: readonly Step[] }) {
 const bullets = "flex list-disc flex-col gap-1.5 pl-5";
 
 const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: MapPinned, title: "Pick a park", body: "A grown-up picks a real park and the child's age (4-6, 6-10 or 10-13)." },
+  { icon: MapPinned, title: "Pick a park", body: "A grown-up picks a real park and an age: 4-6, 6-10 or 10-13." },
   {
     icon: Database,
     title: "Read real data",
-    body: `That park's map, what people spotted nearby in the last ${WILD_WINDOW_DAYS} days, and what visitor reviews mention.`,
+    body: `The park's map, ${WILD_WINDOW_DAYS} days of nearby sightings, and what visitor reviews mention.`,
   },
-  { icon: Bot, title: "One AI call", body: "Gemma 4 picks a fair mix from that list and writes kid-sized clues. Code checks every one." },
-  { icon: Printer, title: "Print, phone away", body: "One black-and-white page: the kid's pass, a tear line and the grown-up's stub." },
+  { icon: Bot, title: "One AI call", body: "Gemma 4 picks a fair mix and writes kid-sized clues. Code checks each one." },
+  { icon: Printer, title: "Print, phone away", body: "One page: the kid's pass and the grown-up's stub." },
 ];
 
 export default function HowItWorksPage() {
@@ -174,18 +174,12 @@ export default function HowItWorksPage() {
       icon: Search,
       who: "code",
       title: "Find the park",
-      summary: "Type a town, ZIP or park name, or use your location (rounded to about 1 km). Code lists named parks within 5 km from OpenStreetMap.",
+      summary: "Type a town, ZIP or park name, or use your location (rounded to about 1 km). Code lists parks within 5 km from OpenStreetMap.",
       more: (
         <>
           <p>
-            You type a town, a ZIP code or a park name, or press &quot;Use my location&quot; (rounded in your browser to about
-            1 km). Code looks the place up with OpenStreetMap&apos;s Nominatim search and lists named parks and nature reserves
-            within 5 km from the Overpass API (the 10 nearest).
-          </p>
-          <p>
-            If Overpass is slow (it waits 10 s), code uses a saved list of 1,321 named parks in the Dallas area, and then one
-            Nominatim park search. The list says when it came from a fallback. When nothing can answer, the page says
-            &quot;No data available&quot; and why.
+            Nominatim finds the place; the Overpass API lists the 10 nearest named parks and nature reserves. If Overpass takes
+            over 10 s, code falls back to a saved list of 1,321 Dallas-area parks, then a Nominatim park search, and says so.
           </p>
         </>
       ),
@@ -196,31 +190,28 @@ export default function HowItWorksPage() {
       who: "code",
       title: "Collect real facts about that park",
       summary:
-        "Code fills three lists, each item with its source and date: Park Finds (OpenStreetMap), Wild Finds (iNaturalist and Wikipedia) and Lucky Finds (Google Maps review counts via SerpApi).",
+        "Code fills three lists, each fact dated and sourced: Park Finds (OpenStreetMap), Wild Finds (iNaturalist, Wikipedia) and Lucky Finds (review counts via SerpApi).",
       more: (
         <>
           <ul className={bullets}>
             <li>
-              <strong>Park Finds:</strong> what is mapped inside the park&apos;s outline on OpenStreetMap (courts, playgrounds,
-              shelters, bridges, benches, ponds...), with the map&apos;s own count and a short fact sheet that code writes for
-              each kind.
+              <strong>Park Finds:</strong> what is mapped inside the park, with the map&apos;s count and a short fact sheet per
+              kind.
             </li>
             <li>
-              <strong>Wild Finds:</strong> species people photographed within {WILD_RADIUS_KM} km in the last {WILD_WINDOW_DAYS}{" "}
-              days on iNaturalist, research grade only, each with the first sentences of its Wikipedia summary. A species whose
-              summary never says how it looks is left out (a clue could only be generic).
+              <strong>Wild Finds:</strong> research-grade iNaturalist species within {WILD_RADIUS_KM} km, last{" "}
+              {WILD_WINDOW_DAYS} days, each with the start of its Wikipedia summary. If the summary never says how it looks, it is
+              left out.
             </li>
             <li>
-              <strong>Lucky Finds:</strong> &quot;maybe&quot; finds (a dog, a bike, ducks or a skateboard). Code finds the same
-              park on Google Maps through SerpApi and counts reviews from the last {WINDOW_MONTHS / 12} years whose own text
-              mentions the thing. A keyword needs at least {MIN_MENTIONS} such reviews. Only the word, the count and the newest
-              month are kept: review text is never stored, shown or sent to the AI.
+              <strong>Lucky Finds:</strong> &quot;maybe&quot; finds (a dog, a bike, ducks, a skateboard) that at least{" "}
+              {MIN_MENTIONS} Google Maps reviews from the last {WINDOW_MONTHS / 12} years mention, counted via SerpApi. Review
+              text is never stored, shown or sent to the AI.
             </li>
           </ul>
           <p>
-            From {OCTOBER_WINDOW_LABEL} code also counts monarch butterflies seen within {MONARCH_RADIUS_KM} km in the last 14
-            full days, next to the same days last year, and checks for milkweed within {MILKWEED_RADIUS_KM} km. That box is all
-            code; the AI never sees it.
+            From {OCTOBER_WINDOW_LABEL}, code also counts monarchs seen within {MONARCH_RADIUS_KM} km in the last 14 full days
+            (next to the same days last year) and checks for milkweed within {MILKWEED_RADIUS_KM} km. The AI never sees that box.
           </p>
         </>
       ),
@@ -230,18 +221,17 @@ export default function HowItWorksPage() {
       icon: ShieldCheck,
       who: "code",
       title: "Take out anything unsafe",
-      summary: `Code removes ${BLOCKED_TAXA.length} blocked groups of risky species before the model sees the list, and checks again after. Every Wild Find gets a fixed "Look, don't touch." line.`,
+      summary: `Code removes ${BLOCKED_TAXA.length} blocked groups of risky species before the model sees the list, and checks again after.`,
       more: (
         <>
           <p>
-            Before the model sees the list, code removes every species in {BLOCKED_TAXA.length} blocked groups (venomous snakes
-            and spiders, fire ants, poison ivy, stinging plants and caterpillars...) by its iNaturalist taxon id and all of its
-            parent groups. The same check runs again on every item the model picks, and a clue that even names a blocked thing
-            is removed.
+            Code checks each species&apos; iNaturalist taxon id and all its parent groups against the blocked list (venomous
+            snakes and spiders, fire ants, poison ivy, stinging plants and caterpillars...). The check runs again on every
+            find the model picks, and a clue that even names a blocked thing is removed.
           </p>
           <p>
-            Every Wild Find gets a fixed safety line written by code (&quot;Look, don&apos;t touch.&quot;), and a pond or creek
-            gets &quot;Stay with your grown-up near water.&quot; The model never decides what is safe.
+            Code writes the safety lines (&quot;Look, don&apos;t touch.&quot;, &quot;Stay with your grown-up near water.&quot;).
+            The model never decides what is safe.
           </p>
         </>
       ),
@@ -255,33 +245,29 @@ export default function HowItWorksPage() {
         <>
           <strong>One</strong> request to <code>{modelId}</code>
           {modelId === "gemma-4-31B-it" ? " (Google's Gemma 4, open weights, Apache-2.0)" : ""} on DigitalOcean serverless
-          inference. It picks items by id and writes a short clue and a proof quote for each, plus one riddle.
+          inference. It picks finds by id and writes a clue and a proof quote for each, plus one riddle.
         </>
       ),
       more: (
         <>
           <p>
-            The server makes one request, in the US. There is no automatic switch to another model: if it fails, the pass says
-            so. The model can be changed with one setting (<code>MODEL_ID</code>), and every pass names the model that really
-            answered.
+            There is no automatic switch to another model: if the call fails, the pass says so. <code>MODEL_ID</code> changes
+            the model, and every pass names the one that answered.
           </p>
           <p>
-            <strong>What the model is given:</strong> the park&apos;s name; for each item an id, its section, its kind and its
-            fact text (the OpenStreetMap fact sheet, the Wikipedia sentences, or a Lucky Find line such as &quot;reviews from
-            the last two years mention dogs&quot;); the age band&apos;s rules (how many finds: {AGE_BAND_INFO["4-6"].items} for
-            ages 4-6, {AGE_BAND_INFO["6-10"].items} for 6-10, {AGE_BAND_INFO["10-13"].items} with {AGE_BAND_INFO["10-13"].hardMin}{" "}
-            hard ones for 10-13, and the reading level); the month; and, when the park has a landmark, the one place code picked
-            for Find This Spot.
+            <strong>What the model is given:</strong> the park&apos;s name; each fact&apos;s id, section, kind and text; the age
+            rules ({AGE_BAND_INFO["4-6"].items} finds for 4-6, {AGE_BAND_INFO["6-10"].items} for 6-10,{" "}
+            {AGE_BAND_INFO["10-13"].items} with {AGE_BAND_INFO["10-13"].hardMin} hard ones for 10-13, and a reading level); the
+            month; and the Find This Spot place, if code picked one.
           </p>
           <p>
-            <strong>What it is NOT given:</strong> review text, reviewer names or review counts, and anything about you or your
-            child (no name, no location, no IP address, nothing you typed).
+            <strong>What it is NOT given:</strong> review text, reviewer names or review counts, and nothing about you or your
+            child (no name, location, IP address or anything you typed).
           </p>
           <p>
-            <strong>What it sends back:</strong> a strict JSON answer whose shape (a JSON schema) only allows the real ids from
-            the list. For each item: the id, a short clue, an optional &quot;look where&quot; hint, easy / medium / hard, and a
-            proof quote copied from the item&apos;s facts. Plus one riddle for the Find This Spot X. It waits at most{" "}
-            {modelTimeoutMs() / 1000} s.
+            <strong>What it sends back:</strong> strict JSON whose schema only allows the real ids. For each find: the id, a
+            clue, an optional &quot;look where&quot; hint, easy / medium / hard, and a proof quote from its facts. Plus the
+            riddle. It waits at most {modelTimeoutMs() / 1000} s.
           </p>
         </>
       ),
@@ -291,10 +277,10 @@ export default function HowItWorksPage() {
       icon: ListChecks,
       who: "code",
       title: "Code checks every clue",
-      summary: `The answer is never trusted as it is. Code removes any clue that fails a check: ${always.length} hard rules (proof quote, name leaks, numbers, safety) and ${softer.length} style preferences.`,
+      summary: `Code never trusts the answer as it is. It removes any clue that breaks one of ${always.length} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss ${softer.length} style rules when it can.`,
       more: (
         <>
-          <p>Code checks each clue, one by one, and removes it for any of these reasons:</p>
+          <p>A clue is removed when:</p>
           <ul className={bullets} aria-label="Reasons a clue is removed">
             {always.map((r) => (
               <li key={r}>
@@ -302,10 +288,7 @@ export default function HowItWorksPage() {
               </li>
             ))}
           </ul>
-          <p>
-            Some checks are about style, not truth. A clue that fails one is only the first to go when a spare clue can take its
-            place:
-          </p>
+          <p>Style rules (not truth): a clue that misses one goes first when a spare can replace it.</p>
           <ul className={bullets} aria-label="Style preferences">
             {softer.map((r) => (
               <li key={r}>
@@ -316,13 +299,12 @@ export default function HowItWorksPage() {
             ))}
           </ul>
           <p>
-            Safety, the proof quote, name leaks, numbers and counts are never relaxed. A &quot;look where&quot; hint that names
-            the answer (or says &quot;map&quot; on a pass with no map) is left off, and the clue stays.
+            Safety, proof quotes, name leaks, numbers and counts are never relaxed. A &quot;look where&quot; hint that names the
+            answer (or says &quot;map&quot; with no map) is dropped; its clue stays.
           </p>
           <p>
-            Code never rewrites a clue to make it pass. The only two edits it makes: it takes a filler opener (&quot;Quick!&quot;,
-            &quot;Psst,&quot;) off the front, and it turns the question mark after a command (&quot;Track 3 fields?&quot;) into a
-            full stop.
+            Code never rewrites a clue to make it pass. It makes only two edits: it cuts a filler opener (&quot;Quick!&quot;,
+            &quot;Psst,&quot;) and turns &quot;?&quot; after a command (&quot;Track 3 fields?&quot;) into a full stop.
           </p>
         </>
       ),
@@ -332,28 +314,25 @@ export default function HowItWorksPage() {
       icon: RotateCcw,
       who: "code",
       title: "Refill once, or print it short",
-      summary: "Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass prints what passed and says how many are missing.",
+      summary: "Too few clues survive? Code asks once more for the missing ones. Still short? The pass says how many are missing.",
       more: (
         <>
           <p>
-            On a park with little data, the model is asked for one spare item. If fewer than all but one of the finds survive the
-            checks, code asks the model <strong>once more</strong>:
+            On a park with little data, the model is asked for one spare. If more than one find is lost to the checks, code asks{" "}
+            <strong>once more</strong>:
           </p>
           <ul className={bullets}>
             <li>
-              When some clues were kept, the second call is a <strong>refill</strong>: it asks only for the missing finds (plus
-              one spare), from items not used yet, skips items whose clue already failed when it can, and tells the model which
-              words it copied or which clues were too generic.
+              If some clues were kept, the second call is a <strong>refill</strong>: only the missing finds (plus one spare),
+              from unused facts, skipping facts whose clue already failed, and naming what was copied or too generic.
             </li>
-            <li>When nothing was kept, the second call is the whole request again.</li>
+            <li>If nothing was kept, it is the whole request again.</li>
             <li>
-              A network error or a server error is tried once more inside the same call. A timeout is not retried, and the
-              second call only starts when at least 20 s of the pass&apos;s 85 s budget is left.
+              A network or server error is retried once inside the call. A timeout is not, and the second call starts only if
+              20 s of the pass&apos;s 85 s budget remain.
             </li>
           </ul>
-          <p>
-            It is never padded with made-up items. A section with no data says &quot;No data available&quot; and why.
-          </p>
+          <p>Nothing is padded with made-up finds.</p>
         </>
       ),
     },
@@ -362,22 +341,20 @@ export default function HowItWorksPage() {
       icon: MapPinned,
       who: "code",
       title: "Find This Spot and the October box",
-      summary: "Code picks one real landmark, draws a map with an X and measures the walk. The October monarch box is all code.",
+      summary: "Code picks a landmark, draws a map with an X and measures the walk. The October box is all code.",
       more: (
         <>
           <p>
-            Code picks one real place in the park from OpenStreetMap: a landmark the park has only one of (a picnic shelter, a
-            playground, a bridge), or else the middle of one sports field. It draws a black-and-white map of the park&apos;s
-            paths with an X on that place, a START at the nearest mapped parking lot or entrance, a north arrow and a scale. The
-            walking distance and direction on the grown-up&apos;s stub are measured by code.
+            Code picks a landmark the park has only one of (a shelter, a playground, a bridge), or else a sports field. It
+            draws the paths with an X there, a START at the nearest parking lot or entrance, a north arrow and a scale, and
+            measures the walk.
           </p>
           <p>
-            The model writes the riddle in the same call, from that place&apos;s fact sheet. The riddle gets the same checks
-            (proof quote, no name, no new numbers). If it fails, or the map arrives late (code waits about 2 s before the model
-            call and 3 s after it), the pass uses a fixed riddle written by code. A park with nothing to point at gets &quot;No
+            The model writes the riddle in the same call, under the same checks. If it fails, or the map is late (code waits
+            about 2 s before the call and 3 s after), code uses a fixed riddle. A park with nothing to point at gets &quot;No
             Find This Spot today&quot;.
           </p>
-          <p>The October special box (monarch counts and milkweed, step 2) is written entirely by code, with its numbers and dates.</p>
+          <p>The October box (step 2) is all code, numbers and dates included.</p>
         </>
       ),
     },
@@ -386,15 +363,14 @@ export default function HowItWorksPage() {
       icon: Printer,
       who: "you",
       title: "Print one page",
-      summary: "One black-and-white page: the kid's pass on top, a dashed tear line, and the grown-up's stub with answers, safety notes and sources.",
+      summary: "One black-and-white page: the kid's pass on top, the grown-up's stub with answers and sources below.",
       more: (
         <>
           <p>
-            One US Letter page (A4 works too). The kid&apos;s pass has the finds with tick boxes, each with its safety line and
-            where its fact came from in small print, the Find This Spot map and riddle, and the October box. The grown-up&apos;s
-            stub has the answers, the safety notes, the sources with their dates, and the model that answered and when.
+            US Letter (A4 works too). Top: finds with tick boxes, safety lines and sources, the map and riddle, the October box.
+            Bottom: answers, safety notes, dated sources, and which model answered when.
           </p>
-          <p>Every number and date on the page is written by code, never by the model.</p>
+          <p>Code writes every number and date on the page.</p>
         </>
       ),
     },
@@ -403,38 +379,29 @@ export default function HowItWorksPage() {
       icon: Timer,
       who: "code",
       title: "Saving work, and fair limits",
-      summary: `Finished passes are saved for 30 days. A new pass needs a grown-up signed in (${ACCOUNT_PASSES_PER_DAY} a day); daily limits keep the free model budget and the public map servers fair.`,
+      summary: `Passes are saved for 30 days. A new pass needs a grown-up signed in (${ACCOUNT_PASSES_PER_DAY} a day); daily limits protect the model budget and the free map servers.`,
       more: (
         <>
           <p>
-            A finished pass is saved per park, age band and day (Dallas time) for 30 days, so the next visitor gets it at once
-            and the link and print page keep working. &quot;Make a different pass&quot; can make up to {MAX_VARIANTS} per day.
-            Park data is saved too: park map features 7 days, park outlines for the map 7 days, the iNaturalist sightings list 6
-            hours, species summaries 7 days, Lucky Find counts 30 days, place searches 30 days, park lists 7 days. A failed lookup
-            (for example a map server that timed out) is usually remembered for 15 minutes, so a busy server is not asked again
-            and again.
+            A pass is saved per park, age band and day (Dallas time) for 30 days, so the next visitor gets it at once.
+            &quot;Make a different pass&quot; allows {MAX_VARIANTS} a day. Park data is cached for 6 hours (sightings) to 30
+            days (review counts, place searches); a failed lookup is remembered for about 15 minutes.
           </p>
           <ul className={bullets}>
+            <li>{limits.aiDailyCap} model calls a day for everyone ({limits.aiReservePct}% kept for the examples).</li>
             <li>
-              At most {limits.aiDailyCap} model calls a day for everyone together ({limits.aiReservePct}% kept for the example
-              parks).
+              Per internet address: {limits.passPerIpPerDay} new passes a day ({limits.passPerIpPerMin} a minute) and{" "}
+              {limits.parksPerIpPerDay} park searches; {limits.parksDailyCap} searches a day for everyone.
             </li>
-            <li>
-              Each internet address: {limits.passPerIpPerDay} new passes a day ({limits.passPerIpPerMin} a minute) and{" "}
-              {limits.parksPerIpPerDay} new park searches a day; {limits.parksDailyCap} new park searches a day for everyone.
-            </li>
-            <li>
-              Lucky Finds: {serp.daily} SerpApi searches a day and {serp.monthly} a month (the free plan).
-            </li>
-            <li>A pass that came out degraded (a source was down) is rebuilt at most 3 times a day. A rebuild doesn&apos;t count toward anyone&apos;s {ACCOUNT_PASSES_PER_DAY} a day.</li>
+            <li>Lucky Finds: {serp.daily} SerpApi searches a day, {serp.monthly} a month (free plan).</li>
+            <li>A pass made while a source was down is rebuilt at most 3 times a day, not counted toward anyone&apos;s {ACCOUNT_PASSES_PER_DAY}.</li>
             <li>
               A new pass needs a grown-up signed in with GitHub or Google: {ACCOUNT_PASSES_PER_DAY} new passes a day each. Judges
-              can press &quot;Try as a judge&quot; (a shared demo account): {judgeShareCopy()} Saved passes, shared links, the
-              examples and printing need no sign-in.
+              can press &quot;Try as a judge&quot;: {judgeShareCopy()}
             </li>
           </ul>
-          <p>Visitor reports feed back in: {REPORT_COPY.rule}</p>
-          <p>When a limit is reached, the page says so in plain words; saved passes and the example passes keep working.</p>
+          <p>Reports: {REPORT_COPY.rule}</p>
+          <p>At a limit, the page says so; saved and example passes keep working.</p>
         </>
       ),
     },
@@ -511,16 +478,15 @@ export default function HowItWorksPage() {
         <p className="flex items-start gap-2 text-muted-foreground">
           <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
           <span>
-            A new pass usually takes 10-30 seconds. No data for a section? It says &quot;No data available&quot; and why, never a
-            made-up item.
+            A new pass usually takes 10-30 seconds. A section with no data says &quot;No data available&quot; and why.
           </span>
         </p>
       </Band>
 
       <Band id="steps" eyebrow="Step by step" title="From a park name to a printed page" tone="muted" width="max-w-4xl">
         <p className="-mt-2 max-w-[65ch]">
-          Each step says who does it: <strong>code</strong> (our own program, the same every time) or{" "}
-          <strong>the open model</strong> (the AI). The AI does one step.
+          Each step says who does it: <strong>code</strong> (the same every time) or <strong>the open model</strong>. The AI
+          does one step.
         </p>
         <Steps steps={steps} />
       </Band>
@@ -533,10 +499,10 @@ export default function HowItWorksPage() {
               The AI does
             </h3>
             <ul className={bullets}>
-              <li>Pick which items from the list go on the pass (inside the mix code allows).</li>
-              <li>Write a short clue for each one in kid words, plus an optional &quot;look where&quot; hint.</li>
-              <li>Say how hard each find is.</li>
-              <li>Copy a proof quote from each item&apos;s facts.</li>
+              <li>Pick the finds, inside the mix code allows.</li>
+              <li>Write each clue in kid words, plus a hint.</li>
+              <li>Rate each find easy, medium or hard.</li>
+              <li>Copy a proof quote from its facts.</li>
               <li>Write the Find This Spot riddle.</li>
             </ul>
           </div>
@@ -546,33 +512,33 @@ export default function HowItWorksPage() {
               Code does
             </h3>
             <ul className={bullets}>
-              <li>Find the park and collect every fact, with its source and date.</li>
-              <li>Remove unsafe species, before and after the model.</li>
-              <li>Decide the mix and the number of finds.</li>
-              <li>Check every clue and remove the ones that fail.</li>
-              <li>Pick the Find This Spot place, draw the map, measure the walk.</li>
-              <li>Write every number, date, safety line, answer and the grown-up&apos;s tip.</li>
+              <li>Collect every fact, with its source and date.</li>
+              <li>Remove unsafe species, before and after.</li>
+              <li>Set the mix and the number of finds.</li>
+              <li>Check every clue; remove failures.</li>
+              <li>Pick the spot, draw the map, measure the walk.</li>
+              <li>Write every number, date, safety line and answer.</li>
             </ul>
           </div>
         </div>
         <p className="max-w-[65ch]">
-          The AI can never add an item: the answer&apos;s schema only allows ids from the park&apos;s own list.
+          The AI can&apos;t add a find: the answer&apos;s schema only allows ids from the park&apos;s own list.
         </p>
       </Band>
 
       <Band id="why-open" eyebrow="Why an open model" title="Open weights, our own rules" tone="dark">
         <ul className="grid gap-4 md:grid-cols-3">
           {[
-            { icon: Scale, title: "The licence is open.", body: "Gemma 4's weights are released under Apache-2.0: anyone can download, run and build on them." },
+            { icon: Scale, title: "The licence is open.", body: "Gemma 4's weights are Apache-2.0: anyone can download, run and build on them." },
             {
               icon: Hammer,
               title: "It can be self-hosted.",
-              body: "The app talks to any OpenAI-compatible server (for example Ollama on your own computer). We have not measured a self-hosted run for this app yet.",
+              body: "Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.",
             },
             {
               icon: ShieldCheck,
               title: "Our rules, not a vendor's.",
-              body: "The same checks run on any model; Llama 4 Maverick went through the same code in our test.",
+              body: "The same checks run on any model; Llama 4 Maverick went through them in our test.",
             },
           ].map((c) => (
             <li key={c.title} className="flex flex-col gap-2 rounded-3xl bg-band-foreground/[0.06] p-6 ring-1 ring-band-foreground/10">
@@ -585,8 +551,8 @@ export default function HowItWorksPage() {
         <p className="flex max-w-[65ch] items-start gap-2 text-band-muted">
           <Gauge aria-hidden="true" className="mt-1 size-4 shrink-0 text-sun" />
           <span>
-            Measured on {EVAL_PARKS} parks: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (a no-AI
-            template: {template.fkGrade.toFixed(1)}), speed met just, repeats across parks missed. All numbers on the{" "}
+            On {EVAL_PARKS} parks: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
+            {template.fkGrade.toFixed(1)}). All numbers: the{" "}
             <Link className={bandLink} href="/about#measured">
               About page
             </Link>
@@ -595,7 +561,7 @@ export default function HowItWorksPage() {
         </p>
         <Disclosure tone="band" icon={Gauge} title={`What we measured: run ${EVAL_RUN_ID}`} hint="Each number, its target, met or missed">
           <p>
-            What we measured, on {EVAL_PARKS} real parks, age band 6-10, run <code>{EVAL_RUN_ID}</code> on {EVAL_DAY} (
+            {EVAL_PARKS} real parks, ages 6-10 (
             <a className={bandLink} href={resultsUrl}>
               full results
             </a>
@@ -637,20 +603,19 @@ export default function HowItWorksPage() {
             </table>
           </div>
           <p>
-            The no-AI template on the same data reads at grade {template.fkGrade.toFixed(1)}; Gemma&apos;s clues read at grade{" "}
-            {gemma.fkGrade.toFixed(1)}. Speed is met, just: the typical call took {GEMMA_P50_EXACT_S} s, helped by the short second calls that fill a short pass; first calls alone took {GEMMA_FIRST_CALL_P50_S} s typical. Lucky Finds and Find This Spot are not in this test.
+            Speed is met, just: the typical call took {GEMMA_P50_EXACT_S} s, helped by the short refill calls; first calls alone
+            took {GEMMA_FIRST_CALL_P50_S} s typical. Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
-            The newest results file is a smaller check for ages {SMOKE_10_13.ageBand} (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
+            Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
             {SMOKE_10_13.parks} parks, one run each,{" "}
             <a className={bandLink} href={smokeUrl}>
               results
             </a>
-            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete, reading grade {SMOKE_10_13.fkGrade}, model time{" "}
-            {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow, and {usd(SMOKE_10_13.costPerPass)} per pass, which is{" "}
-            <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target (the 10-13 pass is longer). Before the checks,{" "}
-            {SMOKE_10_13.nameLeakPct}% of its clues named their own answer; code removed all of them before printing. It is a
-            partial run, not the frozen numbers.
+            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete, grade {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s
+            typical and {SMOKE_10_13.p95s} s slow, and {usd(SMOKE_10_13.costPerPass)} per pass, which is <strong>over</strong>{" "}
+            the {usd(EVAL_THRESHOLDS.costPerPass)} target (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}%
+            of its clues named their answer; code removed them all.
           </p>
         </Disclosure>
       </Band>
@@ -673,11 +638,11 @@ export default function HowItWorksPage() {
             ))}
           </ul>
           <p>
-            The full list, with the numbers, is on the{" "}
+            All limits, with numbers:{" "}
             <Link className={ext} href="/about#limits-detail">
               About page
-            </Link>{" "}
-            and in the README.
+            </Link>
+            .
           </p>
         </Disclosure>
       </Band>
@@ -694,7 +659,7 @@ export default function HowItWorksPage() {
         <p className="flex items-center gap-2">
           <Lock aria-hidden="true" className="size-4 shrink-0 text-primary" />
           <span>
-            The full table of what leaves your device is on the{" "}
+            What leaves your device, in full: the{" "}
             <Link className={ext} href="/about#privacy-table">
               About page
             </Link>
@@ -706,23 +671,20 @@ export default function HowItWorksPage() {
       <Band id="built" eyebrow="How this app was built" title="Built in the contest week, with AI coding agents">
         <p className="max-w-[65ch]">
           Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding
-          agents wrote and reviewed most of the code. The clues on every pass come from the open model named on that pass.
+          agents wrote and reviewed most of the code.
         </p>
         <Disclosure icon={Hammer} title="Who built what, and how it is checked" hint="Builders, auditors and the tests">
           <ul className={bullets}>
+            <li>AI coding agents (Claude Code) wrote most of the code as &quot;builders&quot; and reviewed it as &quot;auditors&quot;.</li>
             <li>
-              AI coding agents (Claude Code) wrote most of the code as &quot;builders&quot; and reviewed it as
-              &quot;auditors&quot;.
+              Each audit round runs five reviews (contest rules, security, quality, accessibility and design, and a judge
+              simulator); builders then fix the findings. Four rounds so far (Oct 6, 2026).
             </li>
             <li>
-              Each audit round runs five separate reviews: contest rules, security, quality, accessibility and design, and a
-              judge simulator. The builders then fix what they found. Four audit rounds have run so far (Oct 6, 2026).
+              Every change passes lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
+              answers, a production build, and browser tests with accessibility checks.
             </li>
-            <li>
-              Every change is checked before it is merged: lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
-              answers, a production build, and browser tests with automatic accessibility checks.
-            </li>
-            <li>Claude helped build the app. It never writes a pass: the clues on every pass come from the open model named on that pass.</li>
+            <li>Claude never writes a pass: every clue comes from the open model named on that pass.</li>
           </ul>
         </Disclosure>
         <p className="flex flex-wrap gap-3">

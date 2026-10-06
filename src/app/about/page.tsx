@@ -36,7 +36,6 @@ import {
   aboutLimits,
   aboutStatTiles,
   dataSources,
-  pct,
 } from "@/lib/about/content";
 import { CLOSED_MODELS_403_DAY, EVAL_COLUMNS, EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, evalColumn } from "@/lib/about/eval-summary";
 import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
@@ -298,25 +297,19 @@ export default function AboutPage() {
 
           <Disclosure id="measured-table" icon={Table2} title="Why open: the full measured table" hint="Gemma 4, Llama 4 and a no-AI template, side by side">
             <p>
-              We ran the real pass builder on {EVAL_PARKS} real parks and wrote down every result, including the ones that
-              failed (
+              <strong>In short:</strong> the real pass builder made passes for {EVAL_PARKS} real parks with each model, and we
+              counted how often the clues were safe, true to the data, complete, easy to read, quick and cheap. Failures stay
+              in (
               <a className={ext} href={resultsUrl}>
                 full results
               </a>
-              ; the whole run cost ${EVAL_TOTAL_USD.toFixed(2)}). Gemma&apos;s clues read at grade {gemma.fkGrade.toFixed(1)}; a
-              no-AI template on the same data reads at grade {template.fkGrade.toFixed(1)}. {pct(gemma.groundedPct)} of
-              Gemma&apos;s clues quoted their source word for word before any filter.
-            </p>
-            <p>
-              <strong>In short:</strong> we made passes for {EVAL_PARKS} real parks with each model and counted how often the
-              clues were safe, true to the data, complete, easy to read, quick and cheap. Each row says in plain words what it
-              counts; the last column is the goal we set before the test.
+              ; the run cost ${EVAL_TOTAL_USD.toFixed(2)}). The last column is the goal we set before the test. Gemma&apos;s clues
+              read at grade {gemma.fkGrade.toFixed(1)}, the no-AI template&apos;s at {template.fkGrade.toFixed(1)}.
             </p>
             <EvalTable columns={EVAL_COLUMNS} />
             <p>
               No closed model was compared: we chose open models only, and the closed models on our DigitalOcean account
-              answered &quot;403 Forbidden&quot; when we tried them on {CLOSED_MODELS_403_DAY}. Switching models is one setting (
-              <code>MODEL_ID</code>); Llama 4 Maverick ran through the same code in this test.
+              answered &quot;403 Forbidden&quot; on {CLOSED_MODELS_403_DAY}. Switching models is one setting (<code>MODEL_ID</code>).
             </p>
           </Disclosure>
 
@@ -394,7 +387,7 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
-            <p>Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot; line written by code, not by the model.</p>
+            <p>Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot; line written by code.</p>
           </Disclosure>
         </div>
       </section>
@@ -436,7 +429,7 @@ export default function AboutPage() {
                 <a className={ext} href="https://www.inaturalist.org/">
                   iNaturalist
                 </a>{" "}
-                observers (we show species names and counts only, no photos).
+                observers (names and counts only, no photos).
               </li>
               <li>Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API.</li>
               <li>
@@ -444,7 +437,7 @@ export default function AboutPage() {
                 <a className={ext} href="https://serpapi.com/">
                   SerpApi
                 </a>{" "}
-                (we show counts and months only, never review text or reviewer names).
+                (counts and months only, never review text or names).
               </li>
               <li>
                 Clues:{" "}
@@ -454,36 +447,29 @@ export default function AboutPage() {
                 , Apache-2.0, on DigitalOcean serverless inference.
               </li>
               <li>
-                Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It only
-                answers real visitors if the server is switched to it (<code>MODEL_ID</code>); every pass names the model that
-                answered and shows &quot;{BUILT_WITH_LLAMA}&quot; when it is a Llama model.
+                Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It answers
+                visitors only if <code>MODEL_ID</code> is switched to it; passes then show &quot;{BUILT_WITH_LLAMA}&quot;.
               </li>
               <li>
-                Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported into this app by hand. The site logo
-                is a small green ticket with a sprout icon from{" "}
+                Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported by hand. Logo sprout and all icons:{" "}
                 <a className={ext} href="https://lucide.dev/">
                   Lucide
                 </a>{" "}
-                (ISC licence), which also draws the other icons on the site.
-              </li>
-              <li>
-                Park photos on the home page and above: real photos of each park, used under their free licences (credited
-                above).
+                (ISC).
               </li>
               <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
               <li>
                 Printed pass logo: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
-                hand-cleaned SVG redraw of it. App icons and share images: the v3 site logo (the green ticket with the Lucide
-                sprout) drawn as SVG by our own script.
+                hand-cleaned SVG redraw of it. App icons and share images: the v3 logo, drawn as SVG by our own script.
               </li>
               <li>
-                Fonts: Bricolage Grotesque and DM Sans on the site, Fredoka and Nunito on the printed pass (all SIL Open Font
-                License 1.1), served from this site.
+                Fonts: Bricolage Grotesque and DM Sans (site), Fredoka and Nunito (printed pass), all SIL OFL 1.1, served from
+                this site.
               </li>
               <li>
-                App code: MIT licence. A few generic building blocks (the model client, rate limits and caps, request guards and
-                in-flight de-duplication) were adapted from the same author&apos;s unpublished practice project, written on Oct
-                2, 2026, before the contest entry period. Everything specific to Grass Pass was written from Oct 5, 2026.
+                App code: MIT. A few generic building blocks (model client, rate limits, request guards, in-flight
+                de-duplication) were adapted from the same author&apos;s unpublished practice project, written on Oct 2, 2026,
+                before the contest entry period. Everything specific to Grass Pass was written from Oct 5, 2026.
               </li>
             </ul>
           </Disclosure>

@@ -39,6 +39,26 @@ export const OVERPASS_DEFAULT_URLS = [
 ];
 /** Server-side query timeout we put in every query. */
 export const OVERPASS_QUERY_TIMEOUT_SEC = 25;
+/**
+ * R2-m2 (SEC-2-03): memory cap we put in every park query (`[maxsize:]`, bytes). Overpass's own default
+ * is 512 MiB; a park query (features or the Find This Spot map) that needs more than this is refused at
+ * once with an "out of memory" remark (-> too_heavy, cached 15 min) instead of running until our client
+ * gives up. The biggest real park answers (White Rock Lake, 2026-10-06) run far below it.
+ */
+export const OVERPASS_MAXSIZE_BYTES = 128 * 1024 * 1024;
+
+/** `[out:json][timeout:25][maxsize:134217728];` (the head of every park query). */
+export function parkQueryHead(timeoutSec: number = OVERPASS_QUERY_TIMEOUT_SEC): string {
+  return `[out:json][timeout:${timeoutSec}][maxsize:${OVERPASS_MAXSIZE_BYTES}];`;
+}
+
+/**
+ * A query without its `[maxsize:]` setting. Replays of answers recorded before R2-m2 compare queries
+ * this way: the memory cap changes nothing in an answer that came back whole.
+ */
+export function withoutMaxsize(query: string): string {
+  return query.replace(/\[maxsize:\d+\]/g, "");
+}
 /** Client timeout per attempt (ADR 0002: 30 s, then fail over once). */
 export const OVERPASS_CLIENT_TIMEOUT_MS = 30_000;
 /** Longest we wait for one of the 2 concurrent slots (also capped by the query's total budget). */

@@ -5,6 +5,8 @@
  * Celebration Park. Shapes built inside a test (a second shelter, a hung server) are labelled as such.
  */
 import { renderToStaticMarkup } from "react-dom/server";
+import { withoutMaxsize } from "@/lib/sources/overpass";
+import { MIN_FIT } from "@/components/pass/PrintFit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KidPass } from "@/components/pass/KidPass";
 import { ParentStub } from "@/components/pass/ParentStub";
@@ -66,8 +68,8 @@ describe("geometry query (one fixed query per park, ADR 0002)", () => {
     for (const p of [CEL, CON]) {
       const q = geometryQuery(parseParkId(p.id)!);
       // Recorded before R1 added the park tag filter; re-recorded live with it 2026-10-06, same parse.
-      expect(rec(`overpass-geometry-${p.slug}`)._recording.overpassQuery).toBe(q.replace(PARK_FILTER, ""));
-      expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(\d+\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out geom;\.p map_to_area->\.a;/);
+      expect(rec(`overpass-geometry-${p.slug}`)._recording.overpassQuery).toBe(withoutMaxsize(q).replace(PARK_FILTER, ""));
+      expect(q).toMatch(/^\[out:json\]\[timeout:25\]\[maxsize:134217728\];way\(\d+\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out geom;\.p map_to_area->\.a;/);
       expect(q).toContain('nwr(around.p:80)["amenity"="parking"]');
       expect(q).toContain('node(around.p:40)["entrance"]');
       expect(q.endsWith("out geom qt;")).toBe(true);
@@ -247,10 +249,10 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
     expect(d.x.d).toMatch(/^M\d+ \d+L\d+ \d+M\d+ \d+L\d+ \d+$/);
     expect(d.start?.label.anchor).toBe("start");
     expect(d.parkingLabels.length).toBeGreaterThan(0);
-    // Printed 3.2 in wide (230.4 pt over MAP_W units, print.css); PrintFit never goes below 0.85.
+    // Printed 3.2 in wide (230.4 pt over MAP_W units, print.css); PrintFit never goes below MIN_FIT (0.91).
     const ptPerUnit = 230.4 / MAP_W;
     for (const st of Object.values(LAYER_STYLE)) expect(st.width).toBeGreaterThanOrEqual(STROKE_MIN);
-    expect(STROKE_MIN * ptPerUnit * 0.85).toBeGreaterThanOrEqual(1);
+    expect(STROKE_MIN * ptPerUnit * MIN_FIT).toBeGreaterThanOrEqual(1);
   });
 
   it("the SVG is black and white only, has a title for screen readers, the X, START, north arrow and scale bar", () => {

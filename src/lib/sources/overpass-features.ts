@@ -12,7 +12,7 @@ import "server-only";
 import "@/lib/zod-config";
 import { z } from "zod";
 import { isValidLatLng } from "@/lib/geo";
-import { runOverpass, OVERPASS_QUERY_TIMEOUT_SEC, type OverpassDeps } from "./overpass";
+import { parkQueryHead, runOverpass, type OverpassDeps } from "./overpass";
 
 export type OsmType = "node" | "way" | "relation";
 export type ParkRef = { type: OsmType; id: number };
@@ -61,13 +61,20 @@ export function parkSelector(ref: ParkRef): string {
 
 /** The fixed Overpass QL for one park. Only the numeric id comes from the request (validated). */
 export function featuresQuery(ref: ParkRef): string {
-  const head = `[out:json][timeout:${OVERPASS_QUERY_TIMEOUT_SEC}];`;
-  if (ref.type === "node") {
+  return `${parkQueryHead()}${parkSelector(ref)}${featuresStatements(ref.type)}`;
+}
+
+/**
+ * What the features query does once the park is in set `.p` (shared with the batched recording in
+ * evals/osm-snapshot.ts, which runs the same statements per park inside `foreach->.p`).
+ */
+export function featuresStatements(type: OsmType): string {
+  if (type === "node") {
     const body = SELECTORS.map((s) => s.replace("SCOPE", `around.p:${NODE_PARK_RADIUS_M}`)).join(";");
-    return `${head}${parkSelector(ref)}.p out;(${body};);out tags center qt;`;
+    return `.p out;(${body};);out tags center qt;`;
   }
   const body = SELECTORS.map((s) => s.replace("SCOPE", "area.a")).join(";");
-  return `${head}${parkSelector(ref)}.p out tags center;.p map_to_area->.a;(${body};);out tags center qt;`;
+  return `.p out tags center;.p map_to_area->.a;(${body};);out tags center qt;`;
 }
 
 // ---------- feature kinds ----------

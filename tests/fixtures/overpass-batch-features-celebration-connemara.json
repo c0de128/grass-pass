@@ -1,0 +1,1140 @@
+{
+ "_recording": {
+  "what": "Real Overpass answer to evals/osm-dfw-parks.ts batchQuery('features', 'way', [Celebration Park, Connemara Meadow Preserve]): the app's per-park features statements run inside foreach, with a gp_end marker after each park (R2-M3).",
+  "live": true,
+  "url": "https://maps.mail.ru/osm/tools/overpass/api/interpreter",
+  "method": "POST",
+  "overpassQuery": "[out:json][timeout:180][maxsize:536870912];way(id:188145317,306191453)[\"leisure\"~\"^(park|nature_reserve)$\"][\"name\"];foreach->.p(.p out tags center;.p map_to_area->.a;(nwr(area.a)[\"leisure\"~\"^(pitch|playground|dog_park|fitness_station|picnic_table|swimming_pool|track|garden|bleachers|splash_pad)$\"];nwr(area.a)[\"amenity\"~\"^(shelter|drinking_water|bench|fountain|bbq)$\"];nwr(area.a)[\"tourism\"~\"^(artwork|information|viewpoint|picnic_site)$\"];nwr(area.a)[\"natural\"~\"^(water|tree)$\"];way(area.a)[\"waterway\"~\"^(stream|river|canal)$\"];nwr(area.a)[\"man_made\"~\"^(bridge|tower|observation_tower|flagpole)$\"];way(area.a)[\"highway\"][\"bridge\"=\"yes\"];nwr(area.a)[\"playground\"];nwr(area.a)[\"historic\"];);out tags center qt;make gp_end pid=p.u(id());out;);",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "fetchedAt": "2026-10-06T06:36:02.094Z",
+  "latencyMs": 17180,
+  "recordedBy": "builder R2 fix F: scratch Vitest script",
+  "trimmed": "Full body, untrimmed."
+ },
+ "body": {
+  "version": 0.6,
+  "generator": "Overpass API 0.7.62.4 2390de5a",
+  "osm3s": {
+   "timestamp_osm_base": "2026-10-06T06:34:34Z",
+   "timestamp_areas_base": "2026-10-06T04:24:35Z",
+   "copyright": "The data included in this document is from www.openstreetmap.org. The data is made available under ODbL."
+  },
+  "elements": [
+   {
+    "type": "way",
+    "id": 306191453,
+    "center": {
+     "lat": 33.0848505,
+     "lon": -96.7015488
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Connemara Meadow Preserve",
+     "operator": "Connemara Conservancy",
+     "website": "https://connemaraconservancy.org/"
+    }
+   },
+   {
+    "type": "way",
+    "id": 441713627,
+    "center": {
+     "lat": 33.0801746,
+     "lon": -96.6965242
+    },
+    "tags": {
+     "name": "Rowlett Creek",
+     "waterway": "river"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1361253436,
+    "center": {
+     "lat": 33.0902148,
+     "lon": -96.702098
+    },
+    "tags": {
+     "intermittent": "yes",
+     "waterway": "stream"
+    }
+   },
+   {
+    "type": "gp_end",
+    "id": 1,
+    "tags": {
+     "pid": "306191453"
+    }
+   },
+   {
+    "type": "way",
+    "id": 188145317,
+    "center": {
+     "lat": 33.1082419,
+     "lon": -96.6246777
+    },
+    "tags": {
+     "leisure": "park",
+     "name": "Celebration Park"
+    }
+   },
+   {
+    "type": "node",
+    "id": 3707417322,
+    "lat": 33.1094735,
+    "lon": -96.6271781,
+    "tags": {
+     "leisure": "pitch",
+     "name": "Celebration Park Baseball Diamonds",
+     "sport": "baseball"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850422,
+    "lat": 33.1105734,
+    "lon": -96.6266508,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850423,
+    "lat": 33.110647,
+    "lon": -96.6267353,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850424,
+    "lat": 33.1102381,
+    "lon": -96.6263169,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850425,
+    "lat": 33.110305,
+    "lon": -96.62639,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850426,
+    "lat": 33.1103679,
+    "lon": -96.6264571,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850427,
+    "lat": 33.1104134,
+    "lon": -96.6265536,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850428,
+    "lat": 33.1105852,
+    "lon": -96.6268426,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850429,
+    "lat": 33.1106504,
+    "lon": -96.6268761,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850430,
+    "lat": 33.1105942,
+    "lon": -96.6269244,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850431,
+    "lat": 33.1105706,
+    "lon": -96.6270103,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850432,
+    "lat": 33.1105583,
+    "lon": -96.6271095,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850454,
+    "lat": 33.110747,
+    "lon": -96.6277935,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850455,
+    "lat": 33.1109339,
+    "lon": -96.6275407,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850456,
+    "lat": 33.1108447,
+    "lon": -96.6278391,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850457,
+    "lat": 33.1107358,
+    "lon": -96.6281287,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850458,
+    "lat": 33.1103415,
+    "lon": -96.6278712,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850459,
+    "lat": 33.1104886,
+    "lon": -96.6279745,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850460,
+    "lat": 33.1106189,
+    "lon": -96.6280536,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850461,
+    "lat": 33.1105122,
+    "lon": -96.6273905,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850462,
+    "lat": 33.1108015,
+    "lon": -96.6274917,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850463,
+    "lat": 33.1099457,
+    "lon": -96.6273599,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850464,
+    "lat": 33.1100703,
+    "lon": -96.6274207,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850465,
+    "lat": 33.1101958,
+    "lon": -96.6274819,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850466,
+    "lat": 33.1103257,
+    "lon": -96.6275454,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850467,
+    "lat": 33.1102999,
+    "lon": -96.6276231,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850468,
+    "lat": 33.1101715,
+    "lon": -96.627561,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850469,
+    "lat": 33.1100449,
+    "lon": -96.6274998,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850470,
+    "lat": 33.1099165,
+    "lon": -96.6274376,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850471,
+    "lat": 33.1097899,
+    "lon": -96.6273764,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850472,
+    "lat": 33.1098174,
+    "lon": -96.6272973,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 12560317787,
+    "lat": 33.1067383,
+    "lon": -96.6266173,
+    "tags": {
+     "amenity": "bench",
+     "armrest": "yes",
+     "backrest": "yes",
+     "colour": "red",
+     "material": "metal"
+    }
+   },
+   {
+    "type": "node",
+    "id": 12560317789,
+    "lat": 33.1068609,
+    "lon": -96.6273535,
+    "tags": {
+     "amenity": "bench",
+     "armrest": "yes",
+     "backrest": "yes",
+     "colour": "red",
+     "material": "metal"
+    }
+   },
+   {
+    "type": "node",
+    "id": 12560317791,
+    "lat": 33.1077501,
+    "lon": -96.6276241,
+    "tags": {
+     "amenity": "bench",
+     "armrest": "yes",
+     "backrest": "yes",
+     "colour": "red",
+     "material": "metal"
+    }
+   },
+   {
+    "type": "node",
+    "id": 12560317798,
+    "lat": 33.1064138,
+    "lon": -96.6275966,
+    "tags": {
+     "amenity": "bench",
+     "armrest": "yes",
+     "backrest": "yes",
+     "colour": "red",
+     "material": "metal"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850603,
+    "lat": 33.104951,
+    "lon": -96.6207862,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850604,
+    "lat": 33.1050229,
+    "lon": -96.6208063,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850605,
+    "lat": 33.1051425,
+    "lon": -96.6208331,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850606,
+    "lat": 33.1052009,
+    "lon": -96.6207916,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850607,
+    "lat": 33.1053616,
+    "lon": -96.6207621,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 3707417485,
+    "lat": 33.1061432,
+    "lon": -96.6251808,
+    "tags": {
+     "leisure": "pitch",
+     "name": "Celebration Park Soccer Fields",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519750,
+    "lat": 33.108452,
+    "lon": -96.6247532,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519751,
+    "lat": 33.1086003,
+    "lon": -96.6251448,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519752,
+    "lat": 33.1086138,
+    "lon": -96.6250187,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519753,
+    "lat": 33.1082206,
+    "lon": -96.6251689,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519754,
+    "lat": 33.1082318,
+    "lon": -96.6250455,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519755,
+    "lat": 33.1083554,
+    "lon": -96.6251367,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519756,
+    "lat": 33.1083374,
+    "lon": -96.6252199,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944519757,
+    "lat": 33.1082431,
+    "lon": -96.6252682,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944520719,
+    "lat": 33.1087194,
+    "lon": -96.6246486,
+    "tags": {
+     "amenity": "fountain"
+    }
+   },
+   {
+    "type": "node",
+    "id": 4944520720,
+    "lat": 33.1091013,
+    "lon": -96.6249302,
+    "tags": {
+     "amenity": "fountain"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850608,
+    "lat": 33.1055604,
+    "lon": -96.6207567,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850609,
+    "lat": 33.1056941,
+    "lon": -96.6207607,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850610,
+    "lat": 33.1058154,
+    "lon": -96.6207654,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850611,
+    "lat": 33.1059177,
+    "lon": -96.620756,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850612,
+    "lat": 33.1066175,
+    "lon": -96.6210792,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850613,
+    "lat": 33.1065625,
+    "lon": -96.6212127,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850614,
+    "lat": 33.1065046,
+    "lon": -96.6211523,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850615,
+    "lat": 33.1064749,
+    "lon": -96.6210618,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "node",
+    "id": 5194850616,
+    "lat": 33.106649,
+    "lon": -96.6211302,
+    "tags": {
+     "natural": "tree"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628780,
+    "center": {
+     "lat": 33.105526,
+     "lon": -96.6273465
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628987,
+    "center": {
+     "lat": 33.1091567,
+     "lon": -96.6261651
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "baseball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443076,
+    "center": {
+     "lat": 33.1059557,
+     "lon": -96.6259788
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443095,
+    "center": {
+     "lat": 33.1074777,
+     "lon": -96.6260473
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628779,
+    "center": {
+     "lat": 33.1060107,
+     "lon": -96.6269197
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628981,
+    "center": {
+     "lat": 33.1088419,
+     "lon": -96.6276469
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "baseball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628983,
+    "center": {
+     "lat": 33.109879,
+     "lon": -96.6279101
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "baseball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628985,
+    "center": {
+     "lat": 33.1101266,
+     "lon": -96.626927
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "baseball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 474665164,
+    "center": {
+     "lat": 33.1074711,
+     "lon": -96.6270479
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 474665165,
+    "center": {
+     "lat": 33.1070974,
+     "lon": -96.6269793
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 536185861,
+    "center": {
+     "lat": 33.1094803,
+     "lon": -96.6271359
+    },
+    "tags": {
+     "amenity": "shelter"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443092,
+    "center": {
+     "lat": 33.1058781,
+     "lon": -96.6276536
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443096,
+    "center": {
+     "lat": 33.1071947,
+     "lon": -96.6266056
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443097,
+    "center": {
+     "lat": 33.1077335,
+     "lon": -96.6267045
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1472426851,
+    "center": {
+     "lat": 33.1067415,
+     "lon": -96.6283028
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "tennis"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1472426852,
+    "center": {
+     "lat": 33.1067915,
+     "lon": -96.6281577
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "tennis"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1472426853,
+    "center": {
+     "lat": 33.10725,
+     "lon": -96.628261
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "tennis"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1472426854,
+    "center": {
+     "lat": 33.1072985,
+     "lon": -96.6281147
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "tennis"
+    }
+   },
+   {
+    "type": "way",
+    "id": 366756038,
+    "center": {
+     "lat": 33.1056601,
+     "lon": -96.6212839
+    },
+    "tags": {
+     "natural": "water",
+     "water": "reservoir"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443093,
+    "center": {
+     "lat": 33.1057052,
+     "lon": -96.6233142
+    },
+    "tags": {
+     "leisure": "pitch"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443094,
+    "center": {
+     "lat": 33.1059161,
+     "lon": -96.6222821
+    },
+    "tags": {
+     "leisure": "pitch"
+    }
+   },
+   {
+    "type": "way",
+    "id": 366756039,
+    "center": {
+     "lat": 33.1087953,
+     "lon": -96.6247748
+    },
+    "tags": {
+     "natural": "water",
+     "water": "reservoir"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628791,
+    "center": {
+     "lat": 33.1084174,
+     "lon": -96.6256525
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "basketball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 374628792,
+    "center": {
+     "lat": 33.1084051,
+     "lon": -96.6254752
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "basketball"
+    }
+   },
+   {
+    "type": "way",
+    "id": 474665167,
+    "center": {
+     "lat": 33.107546,
+     "lon": -96.6243317
+    },
+    "tags": {
+     "leisure": "playground"
+    }
+   },
+   {
+    "type": "way",
+    "id": 590235515,
+    "center": {
+     "lat": 33.108441,
+     "lon": -96.6227772
+    },
+    "tags": {
+     "bridge": "yes",
+     "highway": "path",
+     "layer": "1",
+     "surface": "concrete"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443077,
+    "center": {
+     "lat": 33.1058018,
+     "lon": -96.6248821
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443078,
+    "center": {
+     "lat": 33.1061645,
+     "lon": -96.6250233
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443079,
+    "center": {
+     "lat": 33.1064916,
+     "lon": -96.6249435
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443080,
+    "center": {
+     "lat": 33.1064018,
+     "lon": -96.6252688
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443081,
+    "center": {
+     "lat": 33.1065975,
+     "lon": -96.6253454
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443082,
+    "center": {
+     "lat": 33.1066867,
+     "lon": -96.6250198
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443083,
+    "center": {
+     "lat": 33.1062996,
+     "lon": -96.623766
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443084,
+    "center": {
+     "lat": 33.1068001,
+     "lon": -96.6244086
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443085,
+    "center": {
+     "lat": 33.1067451,
+     "lon": -96.6246629
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443086,
+    "center": {
+     "lat": 33.106506,
+     "lon": -96.6243185
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443087,
+    "center": {
+     "lat": 33.1064521,
+     "lon": -96.624576
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443088,
+    "center": {
+     "lat": 33.106213,
+     "lon": -96.624238
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443089,
+    "center": {
+     "lat": 33.1061618,
+     "lon": -96.6244901
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443090,
+    "center": {
+     "lat": 33.1059164,
+     "lon": -96.6241511
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "way",
+    "id": 1101443091,
+    "center": {
+     "lat": 33.1058652,
+     "lon": -96.6244022
+    },
+    "tags": {
+     "leisure": "pitch",
+     "sport": "soccer"
+    }
+   },
+   {
+    "type": "gp_end",
+    "id": 2,
+    "tags": {
+     "pid": "188145317"
+    }
+   }
+  ]
+ }
+}

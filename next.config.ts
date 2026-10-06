@@ -9,6 +9,12 @@ const headers = securityHeaders({
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // R2-M3: the saved per-park OpenStreetMap answers are read from disk (src/lib/sources/osm-snapshot.ts)
+  // only when a pass needs one, so they must be traced into the functions that build passes.
+  outputFileTracingIncludes: {
+    "/api/pass": ["./src/data/osm/parks/**/*"],
+    "/": ["./src/data/osm/parks/**/*"],
+  },
   experimental: {
     // src/proxy.ts (the pre-limiter) makes Next buffer request bodies; keep that buffer small. Our POST
     // routes cap bodies at 2 KB themselves (src/lib/http/guard.ts), so anything over this is refused anyway.

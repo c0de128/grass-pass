@@ -56,9 +56,24 @@ export const PhenologySchema = z.object({
 });
 export type Phenology = z.infer<typeof PhenologySchema>;
 
-/** Counts per taxon from the three answers (species_counts bodies). */
-export function parsePhenology(month: number, all: unknown, flowers: unknown, fruits: unknown): Phenology {
-  const counts = (json: unknown) => new Map(parseSpeciesCounts(json).species.map((s) => [s.taxonId, s.count]));
+/**
+ * Counts per taxon from the three answers (species_counts bodies).
+ *
+ * R2-m7 (Q-2-06): species_counts answers with LEAF taxa, so observations of a candidate plant logged as
+ * a subspecies or variety (or, for a genus candidate, as one of its species) come back under another
+ * id. With `candidates`, every returned taxon is counted for each candidate that is the taxon itself
+ * or one of its ancestors (iNaturalist's `ancestor_ids`), so those records are not lost.
+ */
+export function parsePhenology(month: number, all: unknown, flowers: unknown, fruits: unknown, candidates?: readonly number[]): Phenology {
+  const wanted = candidates ? new Set(candidates) : null;
+  const counts = (json: unknown) => {
+    const m = new Map<number, number>();
+    for (const sp of parseSpeciesCounts(json).species) {
+      const ids = wanted ? [...new Set([sp.taxonId, ...sp.ancestorIds])].filter((id) => wanted.has(id)) : [sp.taxonId];
+      for (const id of ids) m.set(id, (m.get(id) ?? 0) + sp.count);
+    }
+    return m;
+  };
   const a = counts(all);
   const fl = counts(flowers);
   const fr = counts(fruits);
@@ -97,7 +112,7 @@ export async function loadPhenology(
     const all = await getJson(phenologyUrl(center, month, ids, null), "phenology", d);
     const flowers = await getJson(phenologyUrl(center, month, ids, PHENOLOGY_FLOWERS), "phenology", d);
     const fruits = await getJson(phenologyUrl(center, month, ids, PHENOLOGY_FRUITS), "phenology", d);
-    const p = parsePhenology(month, all, flowers, fruits);
+    const p = parsePhenology(month, all, flowers, fruits, ids);
     await cache.set(key, p, { now: now() });
     return p;
   } catch (err) {

@@ -7,6 +7,7 @@
  * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
  */
 import { PARK_FILTER } from "@/lib/sources/overpass-features";
+import { withoutMaxsize } from "@/lib/sources/overpass";
 import { fixture } from "./osm-replay";
 
 export const PARKS = {
@@ -74,7 +75,7 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
           // R1 (SEC-1-01) added the park tag filter to the `.p` selector. Re-recorded live 2026-10-06
           // ~03:15 UTC with the filter (src/data/osm/examples.json): both parks parse identically, so the
           // recording answers the filtered query too. Any other change to the query is still an error.
-          if (g._recording.overpassQuery !== q.replace(PARK_FILTER, "")) throw new Error(`geometry query changed since the recording for ${p.id}`);
+          if (g._recording.overpassQuery !== withoutMaxsize(q).replace(PARK_FILTER, "")) throw new Error(`geometry query changed since the recording for ${p.id}`);
           return json(g.body);
         }
         return json(rec(`overpass-features-${p.slug}`).body);

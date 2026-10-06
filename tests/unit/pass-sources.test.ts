@@ -21,7 +21,7 @@ import { parkFindsEmptyCopy, parkPool } from "@/lib/pool/park";
 import { distinctiveWords, NAME_STOPWORDS, PLACE_WORDS } from "@/lib/pool/types";
 import { nameLeak } from "@/lib/ai/validate";
 import { leadSentences, shortDate, WILD_DOWN_COPY, WILD_SOURCE_CHARS, wildEmptyCopy, wildEvidence, wildPool } from "@/lib/pool/wild";
-import { OVERPASS_DEFAULT_URLS } from "@/lib/sources/overpass";
+import { OVERPASS_DEFAULT_URLS, withoutMaxsize } from "@/lib/sources/overpass";
 import { PARKS, rec, RECORDED_AT } from "./support/pass-replay";
 
 const features = (slug: string, id: string) => parseFeatures(rec(`overpass-features-${slug}`).body, parseParkId(id)!)!;
@@ -35,14 +35,14 @@ describe("Overpass park features (live recordings 2026-10-05)", () => {
 
   it("the query is fixed: an area of the park for ways/relations, 150 m around a node park", () => {
     const q = featuresQuery({ type: "way", id: 306191453 });
-    expect(q).toMatch(/^\[out:json\]\[timeout:25\];way\(306191453\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out tags center;\.p map_to_area->\.a;/);
+    expect(q).toMatch(/^\[out:json\]\[timeout:25\]\[maxsize:134217728\];way\(306191453\)\["leisure"~"\^\(park\|nature_reserve\)\$"\]\["name"\]->\.p;\.p out tags center;\.p map_to_area->\.a;/);
     expect(q).toContain('nwr(area.a)["leisure"~"^(pitch|playground');
     // SEC-1-01: the requested element itself must be a NAMED park/nature reserve, for every OSM type.
     expect(featuresQuery({ type: "relation", id: 5 })).toContain(`rel(5)${PARK_FILTER}->.p`);
     expect(featuresQuery({ type: "node", id: 7 })).toContain(`node(7)${PARK_FILTER}->.p`);
     expect(featuresQuery({ type: "node", id: 7 })).toContain("nwr(around.p:150)");
     // Recorded before R1 added the filter; the same park selects the same element with it.
-    expect(rec(`overpass-features-${PARKS.connemara.slug}`)._recording.overpassQuery).toBe(q.replace(PARK_FILTER, ""));
+    expect(rec(`overpass-features-${PARKS.connemara.slug}`)._recording.overpassQuery).toBe(withoutMaxsize(q).replace(PARK_FILTER, ""));
   });
 
   it("Celebration Park: the architect's live counts (25 soccer, 4 tennis, 2 basketball, playground, shelter)", () => {

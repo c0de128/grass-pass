@@ -6,7 +6,11 @@
  *      bad id can't be sent again at once;
  *   3. the saved answer (src/data/osm, a real recorded Overpass answer with its fetch time) for the
  *      example parks, so examples never need live Overpass (R1-B1);
- *   4. one live Overpass query, stopped by the pass deadline (R1-M1).
+ *   4. one live Overpass query, stopped by the pass deadline (R1-M1);
+ *   5. R2-M3: when that live query fails for ANY reason (Overpass down or busy, our queue full, too
+ *      heavy, the deadline), the saved answer recorded for every park in the DFW index
+ *      (src/data/osm/parks, real Overpass answers with their fetch time) is used instead, so a pass for
+ *      any Dallas-area park survives an Overpass outage. Outside DFW the honest error stays.
  * Every failure maps to its own honest code: our queue busy (BUSY_HERE), Overpass down
  * (OSM_UNAVAILABLE), park too heavy (PARK_TOO_BIG), deadline (DATA_TOO_SLOW).
  */
@@ -17,7 +21,7 @@ import { createCachePair, createJsonCache, type Store } from "@/lib/cache";
 import { log } from "@/lib/log";
 import { PARKS_COPY } from "@/lib/parks/schema";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
-import { savedFeatures } from "@/lib/sources/osm-snapshot";
+import { savedDfwFeatures, savedFeatures, type SavedAnswer } from "@/lib/sources/osm-snapshot";
 import { REFRESH_AFTER_SEC, REFRESH_BUDGET_MS, refreshLater } from "@/lib/sources/osm-refresh";
 import { parkFeatures, ParkFeaturesSchema, parkIdOf, type ParkFeatures, type ParkRef } from "@/lib/sources/overpass-features";
 import { PASS_COPY } from "./schema";
@@ -109,7 +113,11 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps): Promise<Fe
     return { ok: true, value: hit.value, at: hit.storedAt, from: "cache" };
   }
   if (await featuresCache.negative.get(key, deps.now())) return fail(404, { code: "NOT_A_PARK", message: PASS_COPY.notAPark });
-  if (await heavyCache.get(key, deps.now())) return fail(503, { code: "PARK_TOO_BIG", message: PARKS_COPY.parkTooBig, retryAfter: HEAVY_TTL_SEC });
+  if (await heavyCache.get(key, deps.now())) {
+    const dfw = savedDfwFeatures(key);
+    if (dfw) return fromSavedDfw(ref, key, dfw, deps, "too_heavy");
+    return fail(503, { code: "PARK_TOO_BIG", message: PARKS_COPY.parkTooBig, retryAfter: HEAVY_TTL_SEC });
+  }
 
   const saved = savedFeatures(key);
   if (saved) {
@@ -132,6 +140,24 @@ export async function loadFeatures(ref: ParkRef, deps: ParkDataDeps): Promise<Fe
     if (!(err instanceof SourceError)) throw err;
     log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
     if (err.code === "too_heavy") await heavyCache.set(key, true, { now: deps.now() });
+    const dfw = savedDfwFeatures(key);
+    if (dfw) return fromSavedDfw(ref, key, dfw, deps, err.code);
     return { ok: false, outcome: featuresFailure(err) };
   }
+}
+
+/**
+ * R2-M3: the saved DFW answer after live Overpass failed. It goes into the features cache with its REAL
+ * fetch time (so the pass says "map data checked <that date>" and the next pass for this park doesn't
+ * wait for a dead Overpass again), and one low-priority live refresh is queued for later.
+ */
+async function fromSavedDfw(ref: ParkRef, key: string, saved: SavedAnswer<ParkFeatures>, deps: ParkDataDeps, why: string): Promise<FeaturesResult> {
+  log("pass_features_saved_fallback", { park: key, why, fetchedAt: new Date(saved.fetchedAt).toISOString() }, "warn");
+  try {
+    await featuresCache.positive.set(key, saved.value, { now: saved.fetchedAt, ttlSec: FEATURES_TTL_SEC });
+  } catch {
+    // The store hiccuped: the saved answer is still good for this pass.
+  }
+  scheduleRefresh(ref, key, deps);
+  return { ok: true, value: saved.value, at: saved.fetchedAt, from: "saved" };
 }

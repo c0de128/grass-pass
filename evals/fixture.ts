@@ -26,6 +26,7 @@ import { loadPhenology } from "@/lib/sources/inat-phenology";
 import { monthOfDay } from "@/lib/pool/season";
 import { plantCandidateIds } from "@/lib/pool/wild";
 import { localDay } from "@/lib/time";
+import { withoutMaxsize } from "@/lib/sources/overpass";
 import { PARK_FILTER, parkFeatures, parseParkId, type ParkFeatures } from "@/lib/sources/overpass-features";
 
 export const APP_ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
@@ -274,7 +275,10 @@ export function createReplayFetch(fx: EvalFixture): Replay {
     let contentType: string | null = "application/json";
     let hit: Exchange | undefined;
     if (method === "POST") {
-      const q = overpassQueryOf(typeof init?.body === "string" ? init.body : null);
+      // R2-m2 added `[maxsize:]` to the park queries: a memory cap changes nothing in an answer that came
+      // back whole, so the recordings (made before it) answer the capped query too.
+      const sent = overpassQueryOf(typeof init?.body === "string" ? init.body : null);
+      const q = sent === null ? null : withoutMaxsize(sent);
       if (q !== null && q.includes("out geom")) {
         // Find This Spot (S5) geometry was not part of the 2026-10-05 recordings. The app treats a failed
         // geometry query as "no map today" and the prompt then has no SPOT, exactly like the S9 run, so

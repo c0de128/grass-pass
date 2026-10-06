@@ -31,9 +31,18 @@ export const NOMINATIM_RECORDINGS: Record<string, string> = {
   "connemara meadow preserve": "nominatim-connemara-meadow-preserve",
   "celebration park allen tx": "nominatim-celebration-park-allen-tx",
   "zzqxjv nowhere plorf": "nominatim-no-match",
-  // R1-B1 park fallback (q=park in a 5 km box around the Allen TX point), recorded 2026-10-06.
-  park: "nominatim-parks-allen-tx",
+  // T2 (audit R4): a park searched by its own name, outside the saved Dallas-area list. Recorded 2026-10-06.
+  "tenney park madison wi": "nominatim-tenney-park-madison-wi",
+  "tenney park": "nominatim-tenney-park",
 };
+
+/** Park fallback searches (q=park in a 5 km box), one recording per box, matched by the exact URL. */
+export const NOMINATIM_PARK_RECORDINGS = [
+  // R1-B1: around the Allen TX point, recorded 2026-10-06.
+  "nominatim-parks-allen-tx",
+  // T2 (audit R4): around the Tenney Park, Madison WI point; the 37 parks it lists do not include Tenney Park.
+  "nominatim-parks-tenney-park-madison-wi",
+];
 
 export const OVERPASS_RECORDINGS = [
   "overpass-parks-allen-tx",
@@ -77,10 +86,14 @@ export function osmReplay(
       const o = await overrides.nominatim?.({ url, init });
       if (o) return o;
       const q = (u.searchParams.get("q") ?? "").toLowerCase();
+      if (q === "park") {
+        // Each park fallback was recorded for one box only: any other box is not answered.
+        const park = NOMINATIM_PARK_RECORDINGS.find((n) => (fixture(n)._recording as { url?: string }).url === url);
+        if (!park) throw new Error(`no Nominatim park recording for ${url}`);
+        return recordedResponse(park);
+      }
       const name = NOMINATIM_RECORDINGS[q];
       if (!name) throw new Error(`no Nominatim recording for "${q}"`);
-      // The park fallback was recorded for one box only: any other box is not answered.
-      if (q === "park" && (fixture(name)._recording as { url?: string }).url !== url) throw new Error(`no Nominatim park recording for ${url}`);
       return recordedResponse(name);
     }
     const query = new URLSearchParams(String(init?.body ?? "")).get("data") ?? "";

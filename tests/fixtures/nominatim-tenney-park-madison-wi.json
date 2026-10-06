@@ -1,0 +1,37 @@
+{
+  "_recording": {
+    "what": "Nominatim search for \"Tenney Park Madison WI\"",
+    "live": true,
+    "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Tenney+Park+Madison+WI&limit=1&addressdetails=0&accept-language=en",
+    "method": "GET",
+    "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "fetchedAt": "2026-10-06T17:56:38.004Z",
+    "latencyMs": 87,
+    "recordedBy": "builder R1 (audit R4 T2): scratch script, same URL rules as src/lib/sources/nominatim.ts (the test checks the URL)"
+  },
+  "body": [
+    {
+      "place_id": 372035647,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "way",
+      "osm_id": 28768070,
+      "lat": "43.0932283",
+      "lon": "-89.3697558",
+      "category": "leisure",
+      "type": "park",
+      "place_rank": 24,
+      "importance": 0.08006964446478977,
+      "addresstype": "park",
+      "name": "Tenney Park",
+      "display_name": "Tenney Park, 1414, Madison, Dane County, Wisconsin, 53704, United States",
+      "boundingbox": [
+        "43.0901222",
+        "43.0962797",
+        "-89.3733982",
+        "-89.3650920"
+      ]
+    }
+  ]
+}

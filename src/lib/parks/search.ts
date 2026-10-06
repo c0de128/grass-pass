@@ -26,7 +26,8 @@ import { isValidLatLng, roundCoord, type LatLng } from "@/lib/geo";
 import { cleanPlaceQuery, geocode, nominatimParks, PlaceSchema, type Place } from "@/lib/sources/nominatim";
 import { savedParksNear } from "@/lib/sources/osm-snapshot";
 import { readyExample } from "@/lib/prewarm";
-import { parksNear } from "@/lib/sources/overpass-parks";
+import { DUPLICATE_NAME_RADIUS_M, normName, parksNear } from "@/lib/sources/overpass-parks";
+import { distanceM } from "@/lib/geo";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import {
   LOCATION_DECIMALS,
@@ -35,6 +36,7 @@ import {
   PARKS_COPY,
   ParkSchema,
   PlaceQueryLimits,
+  type Park,
   type ExampleLink,
   type ParksResult,
 } from "./schema";
@@ -96,7 +98,8 @@ const NoneSchema = z.object({ none: z.literal(true) });
 const ParksNearSchema = z.object({ parks: z.array(ParkSchema).max(MAX_PARKS), totalFound: z.number().int().min(0) });
 
 const placeCache = createCachePair({
-  name: "geocode",
+  // "-v2": places now carry parkKind (T2, audit R4); older cached places without it are not reused.
+  name: "geocode-v2",
   schema: PlaceSchema,
   negativeSchema: NoneSchema,
   ttlSec: PLACE_TTL_SEC,
@@ -280,6 +283,7 @@ async function runSearch(
     let center: LatLng;
     let query: ParksResult["query"];
     let placeAt: number | null = null;
+    let pin: Park | null = null;
 
     if (input.kind === "text") {
       const pkey = normalizeKey(input.q);
@@ -301,6 +305,7 @@ async function runSearch(
       }
       center = { lat: place.lat, lng: place.lng };
       query = { kind: "text", text: input.q, matched: place.displayName };
+      pin = placePark(place);
     } else {
       center = { lat: input.lat, lng: input.lng };
       query = { kind: "location" };
@@ -308,9 +313,9 @@ async function runSearch(
 
     const ckey = pointKey(center);
     const parksHit = await parksCache.positive.get(ckey, now());
-    if (parksHit) return found(query, center, parksHit.value, parksHit.storedAt, true);
+    if (parksHit) return pinFirst(found(query, center, parksHit.value, parksHit.storedAt, true), pin);
     const parksMiss = await parksCache.negative.get(ckey, now());
-    if (parksMiss) return found(query, center, { parks: [], totalFound: 0 }, parksMiss.storedAt, true);
+    if (parksMiss) return pinFirst(found(query, center, { parks: [], totalFound: 0 }, parksMiss.storedAt, true), pin);
 
     await ensureTicket();
     let near: { parks: ParksResult["parks"]; totalFound: number };
@@ -328,12 +333,12 @@ async function runSearch(
     } catch (err) {
       if (!(err instanceof SourceError) || err.code === "aborted") throw err;
       log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status, next: "fallback" }, "warn");
-      return await fallbackParks(query, center, err, { ...ctx, onStart });
+      return pinFirst(await fallbackParks(query, center, err, { ...ctx, onStart }), pin);
     }
     const at = now();
     if (near.parks.length === 0) await parksCache.negative.set(ckey, { none: true }, { now: at });
     else await parksCache.positive.set(ckey, near, { now: at });
-    return found(query, center, near, at, false);
+    return pinFirst(found(query, center, near, at, false), pin);
   } catch (err) {
     if (err instanceof LimitRefusal) return { ok: false, status: err.status, error: err.error };
     if (err instanceof SourceError) {
@@ -379,6 +384,35 @@ async function fallbackParks(
     // The answer names what really failed first: the park server (or our own queue), not the fallback.
     return await sourceFailure(overpassErr, now);
   }
+}
+
+/** The searched place as a park, when the geocoder's match is itself a named park (T2). */
+export function placePark(place: Place): Park | null {
+  if (!place.parkKind || !place.osmRef) return null;
+  const p = ParkSchema.safeParse({
+    id: place.osmRef,
+    name: place.name.slice(0, 120),
+    kind: place.parkKind,
+    lat: Math.round(place.lat * 1e5) / 1e5,
+    lng: Math.round(place.lng * 1e5) / 1e5,
+    distanceM: 0,
+  });
+  return p.success ? p.data : null;
+}
+
+/**
+ * T2 (audit R4): a search by a park's own name lists that park first. If the nearby list already has it (same OSM
+ * id, or the same name within the duplicate radius) it moves to the top; if the list left it out (the Nominatim
+ * fallback ranks 40 parks by importance, not distance), it is added at the top and the list stays at MAX_PARKS.
+ */
+export function pinFirst(outcome: SearchOutcome, pin: Park | null): SearchOutcome {
+  if (!pin || !outcome.ok) return outcome;
+  const r = outcome.result;
+  const i = r.parks.findIndex((p) => p.id === pin.id || (normName(p.name) === normName(pin.name) && distanceM(p, pin) <= DUPLICATE_NAME_RADIUS_M));
+  if (i === 0) return outcome;
+  const parks = i > 0 ? [r.parks[i], ...r.parks.slice(0, i), ...r.parks.slice(i + 1)] : [pin, ...r.parks].slice(0, MAX_PARKS);
+  const totalFound = i > 0 ? r.totalFound : r.totalFound + 1;
+  return { ok: true, result: { ...r, parks, totalFound, empty: null } };
 }
 
 function noPlace(text: string, at: number, cached: boolean): SearchOutcome {

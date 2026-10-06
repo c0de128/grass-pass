@@ -3,13 +3,14 @@ import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapsh
 import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { breakerRetryAfter, quotaUsage, tripBreaker } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
-import { FIELD_COPY, parseSearchParams, resetParksSearch, searchParks, type SearchDeps } from "@/lib/parks/search";
+import { FIELD_COPY, parseSearchParams, pinFirst, placePark, resetParksSearch, searchParks, type SearchDeps } from "@/lib/parks/search";
 import { PARKS_COPY, ParksResultSchema } from "@/lib/parks/schema";
 import { NOMINATIM_SOURCE } from "@/lib/sources/nominatim";
 import { breakerName, OVERPASS_DEFAULT_URLS } from "@/lib/sources/overpass";
 import { aroundPoint, fixture, osmReplay, recordedResponse } from "./support/osm-replay";
 import { SEARCH_OVERPASS_BUDGET_MS } from "@/lib/parks/search";
-import { nominatimParksUrl, parseNominatimParks } from "@/lib/sources/nominatim";
+import { nominatimParksUrl, parseNominatim, parseNominatimParks } from "@/lib/sources/nominatim";
+import { parseParks } from "@/lib/sources/overpass-parks";
 import { savedIndexInfo } from "@/lib/sources/osm-snapshot";
 import { SourceError } from "@/lib/sources/common";
 import { featuresFailure } from "@/lib/pass/park-data";
@@ -332,5 +333,76 @@ describe("R1-B1: park search survives a public Overpass outage", () => {
     const err = new SourceError("overpass", "queue_full", { started: false, retryAfter: 5 });
     expect(featuresFailure(err).error).toMatchObject({ code: "BUSY_HERE", message: PARKS_COPY.busyHere });
     expect(PARKS_COPY.busyHere).not.toMatch(/OpenStreetMap/);
+  });
+});
+
+describe("T2 (audit R4): a search by a park's own name lists that park first", () => {
+  const busyOverpass = () => recordedResponse("overpass-504-too-busy");
+
+  it("the recorded geocode for Tenney Park is itself a park (leisure=park)", () => {
+    for (const name of ["nominatim-tenney-park-madison-wi", "nominatim-tenney-park"]) {
+      const place = parseNominatim(fixture(name).body)!;
+      expect(place).toMatchObject({ name: "Tenney Park", osmRef: "way/28768070", parkKind: "park" });
+      expect(placePark(place)).toMatchObject({ id: "way/28768070", name: "Tenney Park", kind: "park", distanceM: 0 });
+    }
+    // A town is not a park: no pin.
+    const town = parseNominatim(fixture("nominatim-allen-tx").body)!;
+    expect(town.parkKind).toBeNull();
+    expect(placePark(town)).toBeNull();
+  });
+
+  it("the recorded Nominatim park fallback around Tenney Park really leaves it out (the judge's bug)", () => {
+    const rec = fixture("nominatim-parks-tenney-park-madison-wi");
+    const meta = rec._recording as unknown as { url: string; center: { lat: number; lng: number } };
+    expect(nominatimParksUrl(meta.center)).toBe(meta.url);
+    const out = parseNominatimParks(rec.body, meta.center);
+    expect(out.parks.length).toBe(10);
+    expect(out.parks.some((p) => /Tenney/.test(p.name))).toBe(false);
+  });
+
+  it.each(["Tenney Park Madison WI", "Tenney Park"])("Overpass down, Nominatim fallback: %s -> Tenney Park is first, the list stays at 10", async (q) => {
+    const { fetchImpl, calls } = osmReplay({ overpass: busyOverpass });
+    const r = await searchParks({ kind: "text", q }, deps(fetchImpl));
+    if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
+    expect(r.result.fallback?.kind).toBe("nominatim");
+    expect(r.result.parks[0]).toMatchObject({ id: "way/28768070", name: "Tenney Park", kind: "park", distanceM: 0 });
+    expect(r.result.parks).toHaveLength(10);
+    expect(new Set(r.result.parks.map((p) => p.id)).size).toBe(10);
+    // The rest is the recorded fallback list in its own order (nearest first), minus the last one.
+    const rec = fixture("nominatim-parks-tenney-park-madison-wi");
+    const fallback = parseNominatimParks(rec.body, (rec._recording as unknown as { center: { lat: number; lng: number } }).center);
+    expect(r.result.parks.slice(1)).toEqual(fallback.parks.slice(0, 9));
+    expect(r.result.totalFound).toBe(fallback.totalFound + 1);
+    expect(ParksResultSchema.safeParse(r.result).success).toBe(true);
+    expect(calls.map((c) => new URL(c.url).searchParams.get("q")).filter(Boolean)).toEqual([q, "park"]);
+  });
+
+  it("a park already in the list moves to the top (real Allen TX Overpass list), nothing added", () => {
+    const rec = fixture("overpass-parks-allen-tx");
+    const center = (rec._recording as unknown as { center: { lat: number; lng: number } }).center;
+    const list = parseParks(rec.body, center);
+    const fifth = list.parks[4];
+    const outcome = {
+      ok: true as const,
+      result: { query: { kind: "text" as const, text: fifth.name, matched: fifth.name }, center, radiusM: 5000, parks: list.parks, totalFound: list.totalFound, empty: null, checkedAt: new Date(0).toISOString(), cached: false, fallback: null },
+    };
+    const pin = { ...fifth, distanceM: 0 };
+    const r = pinFirst(outcome, pin);
+    if (!r.ok) throw new Error("expected ok");
+    expect(r.result.parks[0]).toEqual(fifth);
+    expect(r.result.parks).toHaveLength(list.parks.length);
+    expect(r.result.totalFound).toBe(list.totalFound);
+    expect(new Set(r.result.parks.map((p) => p.id))).toEqual(new Set(list.parks.map((p) => p.id)));
+    // Already first, or no pin: unchanged.
+    expect(pinFirst(outcome, { ...list.parks[0], distanceM: 0 })).toBe(outcome);
+    expect(pinFirst(outcome, null)).toBe(outcome);
+  });
+
+  it("a live Overpass list for a park's own name still starts with that park (Connemara, recorded)", async () => {
+    const { fetchImpl } = osmReplay();
+    const r = await searchParks({ kind: "text", q: "Connemara Meadow Preserve" }, deps(fetchImpl));
+    if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
+    expect(r.result.fallback ?? null).toBeNull();
+    expect(r.result.parks[0].id).toBe("way/306191453");
   });
 });

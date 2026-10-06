@@ -47,6 +47,11 @@ export const PlaceSchema = z.object({
   lng: z.number().min(-180).max(180),
   /** e.g. "way/306191453"; null when Nominatim returned no OSM object (rare). */
   osmRef: z.string().max(40).nullable(),
+  /**
+   * T2 (audit R4): the match is itself a park (OSM leisure=park | nature_reserve), so a search by a park's own
+   * name can list that park first even when the nearby-parks list left it out. Absent on places cached before.
+   */
+  parkKind: z.enum(["park", "nature_reserve"]).nullable().optional(),
 });
 export type Place = z.infer<typeof PlaceSchema>;
 
@@ -57,6 +62,8 @@ const NominatimHit = z.object({
   lon: z.string().regex(/^-?\d+(\.\d+)?$/),
   name: z.string().optional(),
   display_name: z.string().min(1),
+  category: z.string().optional(),
+  type: z.string().optional(),
 });
 const NominatimBody = z.array(z.unknown());
 
@@ -73,7 +80,9 @@ export function parseNominatim(json: unknown): Place | null {
     const name = (hit.data.name?.trim() || displayName.split(",")[0].trim()).slice(0, 200);
     if (!name || !displayName) continue;
     const osmRef = hit.data.osm_type && hit.data.osm_id ? `${hit.data.osm_type}/${hit.data.osm_id}` : null;
-    return { name, displayName, lat, lng, osmRef };
+    const t = hit.data.type;
+    const parkKind = hit.data.category === "leisure" && (t === "park" || t === "nature_reserve") ? t : null;
+    return { name, displayName, lat, lng, osmRef, parkKind };
   }
   return null;
 }

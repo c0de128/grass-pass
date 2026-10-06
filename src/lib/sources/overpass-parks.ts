@@ -30,7 +30,7 @@ const Element = z.object({
 /** Two park objects with the same name this close together are one park mapped twice. */
 export const DUPLICATE_NAME_RADIUS_M = 1_000;
 
-const normName = (s: string) => s.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
+export const normName = (s: string) => s.normalize("NFKC").toLowerCase().replace(/\s+/g, " ").trim();
 
 /**
  * Turn an Overpass answer into the nearest named parks. Elements that are not a named

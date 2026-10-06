@@ -282,6 +282,20 @@ describe("serpapiGet: key, host, redirects, caps and failures", () => {
     expect(await usage(Date.now())).toEqual({ day: 2, month: 2 });
   });
 
+  it("SERPAPI_DAILY_CAP=0 / SERPAPI_MONTHLY_CAP=0 switch searches off (no request is sent)", async () => {
+    expect(serpapiCaps({ SERPAPI_DAILY_CAP: "0" }).daily).toBe(0);
+    expect(serpapiCaps({ SERPAPI_MONTHLY_CAP: " 0 " }).monthly).toBe(0);
+    expect(serpapiCaps({ SERPAPI_DAILY_CAP: "-1" }).daily).toBe(12);
+    for (const [k, kind] of [
+      ["SERPAPI_DAILY_CAP", "daily_cap"],
+      ["SERPAPI_MONTHLY_CAP", "monthly_cap"],
+    ] as const) {
+      const r = serpReplay();
+      await expect(serpapiGet(params(), "maps", { store, env: { ...ENV, [k]: "0" }, fetchImpl: r.fetchImpl })).rejects.toMatchObject({ kind, started: false });
+      expect(r.calls).toHaveLength(0);
+    }
+  });
+
   it("the monthly cap stops searches too, and is hard-clamped to the free 250", async () => {
     const r = serpReplay();
     const env = { ...ENV, SERPAPI_MONTHLY_CAP: "1" };

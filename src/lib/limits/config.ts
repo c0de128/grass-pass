@@ -12,6 +12,14 @@ export function intFromEnv(value: string | undefined, fallback: number): number 
   return Number.isInteger(n) && n > 0 ? n : fallback;
 }
 
+/**
+ * Like intFromEnv, but an explicit "0" means 0 (switched off). For caps where 0 is a real setting: before this,
+ * SERPAPI_DAILY_CAP=0 silently became the default 12 and spent real searches (found by builder R1, audit round 4).
+ */
+export function capFromEnv(value: string | undefined, fallback: number): number {
+  return value?.trim() === "0" ? 0 : intFromEnv(value, fallback);
+}
+
 export type LimitsConfig = {
   /** Model calls per Chicago day, all users together (~$0.20 at 400). */
   aiDailyCap: number;
@@ -78,8 +86,8 @@ export function limitsConfig(env: Env = process.env): LimitsConfig {
     parksPerIpPerMin: intFromEnv(env.PARKS_PER_IP_PER_MIN, d.parksPerIpPerMin),
     parksPerIpPerDay: intFromEnv(env.PARKS_PER_IP_PER_DAY, d.parksPerIpPerDay),
     parksDailyCap: intFromEnv(env.PARKS_DAILY_CAP, d.parksDailyCap),
-    serpapiDailyCap: intFromEnv(env.SERPAPI_DAILY_CAP, d.serpapiDailyCap),
-    serpapiMonthlyCap: Math.min(intFromEnv(env.SERPAPI_MONTHLY_CAP, d.serpapiMonthlyCap), SERPAPI_FREE_MONTHLY),
+    serpapiDailyCap: capFromEnv(env.SERPAPI_DAILY_CAP, d.serpapiDailyCap),
+    serpapiMonthlyCap: Math.min(capFromEnv(env.SERPAPI_MONTHLY_CAP, d.serpapiMonthlyCap), SERPAPI_FREE_MONTHLY),
     aiReservePct: env.AI_RESERVE_PCT?.trim() === "0" ? 0 : Math.min(intFromEnv(env.AI_RESERVE_PCT, d.aiReservePct), 50),
     preLimitBurst: intFromEnv(env.PRELIMIT_BURST, d.preLimitBurst),
     preLimitPerSec: intFromEnv(env.PRELIMIT_PER_SEC, d.preLimitPerSec),

@@ -1,0 +1,664 @@
+{
+ "meta": {
+  "startedAt": "2026-10-06T11:02:47.576Z",
+  "finishedAt": "2026-10-06T11:04:24.239Z",
+  "day": "2026-10-06",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    1,
+    3,
+    4,
+    11,
+    13,
+    16
+   ],
+   "budgetUsd": 0.0055
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": 30000,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 1,
+   "slug": "connemara-meadow-preserve",
+   "name": "Connemara Meadow Preserve",
+   "parkId": "way/306191453",
+   "note": "",
+   "fixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+   "fetchedAt": "2026-10-05T23:46:35.238Z",
+   "pool": {
+    "park": 1,
+    "wild": 11
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "name": "Arbor Hills Nature Preserve",
+   "parkId": "way/38113837",
+   "note": "",
+   "fixture": "tests/fixtures/evals/arbor-hills-nature-preserve.json",
+   "fetchedAt": "2026-10-05T23:47:26.795Z",
+   "pool": {
+    "park": 10,
+    "wild": 8
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 4,
+   "slug": "oak-point-park",
+   "name": "Oak Point Park and Nature Preserve",
+   "parkId": "way/556800335",
+   "note": "",
+   "fixture": "tests/fixtures/evals/oak-point-park.json",
+   "fetchedAt": "2026-10-05T23:47:37.812Z",
+   "pool": {
+    "park": 6,
+    "wild": 12
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 11,
+   "slug": "breckinridge-park",
+   "name": "Breckinridge Park",
+   "parkId": "way/290091068",
+   "note": "",
+   "fixture": "tests/fixtures/evals/breckinridge-park.json",
+   "fetchedAt": "2026-10-05T23:52:56.690Z",
+   "pool": {
+    "park": 11,
+    "wild": 0
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 12
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 16,
+   "slug": "trinity-river-audubon-center",
+   "name": "Trinity River Audubon Center",
+   "parkId": "way/1255375776",
+   "note": "",
+   "fixture": "tests/fixtures/evals/trinity-river-audubon-center.json",
+   "fetchedAt": "2026-10-05T23:54:41.432Z",
+   "pool": {
+    "park": 6,
+    "wild": 9
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12567,"status":200,"error":null,"poolMatches":true,"promptTokens":2519,"completionTokens":548,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Shh, do you hear the gentle rushing sound of moving water?","difficulty":"easy","itemId":"osm-creek","lookWhere":"by the muddy bank","sourceQuote":"can make a gentle rushing sound"},{"clue":"Wow, can you spot bright-orange bits with tiny spines on the rim?","difficulty":"hard","itemId":"inat-55553","lookWhere":"on tree trunks","sourceQuote":"bright-orange with spiny projections"},{"clue":"Guess if you see a bumpy, yellow-green ball on a tree?","difficulty":"medium","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green"},{"clue":"Quick, look for a tree with corky lumps on the bark!","difficulty":"medium","itemId":"inat-119986","lookWhere":"on tree trunks","sourceQuote":"spined thick, corky lumps"},{"clue":"Which tree has leaves that are glossy dark green on top?","difficulty":"medium","itemId":"inat-119793","lookWhere":"by the path","sourceQuote":"glossy dark green above"},{"clue":"What white flowers can you find on a vine?","difficulty":"easy","itemId":"inat-135262","lookWhere":"on bushes","sourceQuote":"show it with flowers"},{"clue":"Sneak up to see a tree with seeds or fruit in October!","difficulty":"medium","itemId":"inat-54504","lookWhere":"near the water","sourceQuote":"show it with fruit or seeds"},{"clue":"Stop and search for a plant with seeds or fruit!","difficulty":"medium","itemId":"inat-51450","lookWhere":"in tall grass","sourceQuote":"show it with fruit or seeds"},{"clue":"Squint to see a medium-sized hawk in the air?","difficulty":"hard","itemId":"inat-5206","lookWhere":"up in the sky","sourceQuote":"is a medium-sized hawk"}]},
+    {"latencyMs":3640,"status":200,"error":null,"poolMatches":true,"promptTokens":1659,"completionTokens":168,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Stop! Do you see a tree with dark nuts?","difficulty":"easy","itemId":"inat-54504","lookWhere":"by the path","sourceQuote":"show it with fruit or seeds"},{"clue":"Sneak up on a plant with seeds?","difficulty":"medium","itemId":"inat-51450","lookWhere":"on bushes","sourceQuote":"show it with fruit or seeds"},{"clue":"Squint at a medium-sized bird?","difficulty":"hard","itemId":"inat-5206","lookWhere":"up in the sky","sourceQuote":"is a medium-sized hawk"}]}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Shh, do you hear the gentle rushing sound of moving water?","lookWhere":"by the muddy bank","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"Wow, can you spot bright-orange bits with tiny spines on the rim?","lookWhere":"on tree trunks","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"Guess if you see a bumpy, yellow-green ball on a tree?","lookWhere":"on the ground","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"Quick, look for a tree with corky lumps on the bark!","lookWhere":"on tree trunks","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"Which tree has leaves that are glossy dark green on top?","lookWhere":"by the path","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"What white flowers can you find on a vine?","lookWhere":"on bushes","answer":"White Morning-glory (Ipomoea lacunosa)"},
+    {"section":"wild","clue":"Squint at a medium-sized bird?","lookWhere":"up in the sky","answer":"Red-shouldered Hawk (Buteo lineatus)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 5
+   },
+   "wallMs": 17271
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12528,"status":200,"error":null,"poolMatches":true,"promptTokens":2835,"completionTokens":571,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Who is a bug with a leg span over 4 inches?","difficulty":"hard","itemId":"inat-120596","lookWhere":"on the ground","sourceQuote":"grow in excess of a four-inch leg span"},{"clue":"Quick, find a vine with seeds and flowers now.","difficulty":"medium","itemId":"inat-204420","lookWhere":"on bushes","sourceQuote":"show it with flowers and with fruit or seeds"},{"clue":"Ready to spot 4 roofs with poles and tables below?","difficulty":"easy","itemId":"osm-shelter","lookWhere":"by the path","sourceQuote":"has 4 picnic shelters"},{"clue":"What makes a quiet gurgling sound?","difficulty":"medium","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"make a quiet gurgling sound"},{"clue":"Guess how many long outdoor seats there are? There are 2.","difficulty":"medium","itemId":"osm-bench","lookWhere":"by the path","sourceQuote":"has 2 benches"},{"clue":"Stop and listen for feet that thump on planks.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"near the water","sourceQuote":"feet thump on its planks"},{"clue":"Psst, can you find 4 paths with railings to hold?","difficulty":"easy","itemId":"osm-bridge","lookWhere":"near the water","sourceQuote":"has 4 bridges"},{"clue":"Hunt for a tree with seeds but no flowers now.","difficulty":"medium","itemId":"inat-54781","lookWhere":"on tree trunks","sourceQuote":"show it with fruit or seeds, not flowers"},{"clue":"Track down a plant with seeds and no flowers now.","difficulty":"medium","itemId":"inat-54764","lookWhere":"on bushes","sourceQuote":"show it with fruit or seeds, not flowers"}]},
+    {"latencyMs":5727,"status":200,"error":null,"poolMatches":true,"promptTokens":2509,"completionTokens":282,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Hunt for 3 flat tops where people eat.","difficulty":"easy","itemId":"osm-picnic-table","lookWhere":"by the path","sourceQuote":"has 3 picnic tables"},{"clue":"Track a brown spider with a leg span over 4 inches.","difficulty":"hard","itemId":"inat-120596","lookWhere":"on the ground","sourceQuote":"excess of a four-inch leg span"},{"clue":"Psst, find a vine with large, intricate flowers.","difficulty":"medium","itemId":"inat-51453","lookWhere":"on bushes","sourceQuote":"large, intricate flowers"},{"clue":"Who can spot a seat that hangs from ropes?","difficulty":"easy","itemId":"osm-swing","lookWhere":"on the ground","sourceQuote":"seat that hangs from ropes"},{"clue":"Quick, find a plant with fruit or seeds and smooth skin.","difficulty":"medium","itemId":"inat-54764","lookWhere":"on the ground","sourceQuote":"with fruit or seeds, not flowers"}]}
+   ],
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Ready to spot 4 roofs with poles and tables below?","lookWhere":"by the path","answer":"Picnic shelters"},
+    {"section":"park","clue":"What makes a quiet gurgling sound?","lookWhere":"near the water","answer":"Creek or stream"},
+    {"section":"park","clue":"Guess how many long outdoor seats there are? There are 2.","lookWhere":"by the path","answer":"Benches"},
+    {"section":"park","clue":"Stop and listen for feet that thump on planks.","lookWhere":"near the water","answer":"Bridges (Tower Overlook, Arbor Hills Loop)"},
+    {"section":"park","clue":"Who can spot a seat that hangs from ropes?","lookWhere":"on the ground","answer":"Swing"},
+    {"section":"wild","clue":"Psst, find a vine with large, intricate flowers.","lookWhere":"on bushes","answer":"Purple passionflower (Passiflora incarnata)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 8
+   },
+   "wallMs": 19308
+  },
+  {
+   "caseN": 4,
+   "slug": "oak-point-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":10513,"status":200,"error":null,"poolMatches":true,"promptTokens":2992,"completionTokens":560,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Ready to count? There are 8 paths that go over water or a dip in the ground.","difficulty":"easy","itemId":"osm-bridge","lookWhere":"by the path","sourceQuote":"8 bridges on the map"},{"clue":"What gives you a sip of water from a spout? There are 2 of these.","difficulty":"medium","itemId":"osm-drinking-water","lookWhere":"by the path","sourceQuote":"2 drinking fountains on the map"},{"clue":"Track a big tree with bumpy, yellow-green fruit that looks like a ball.","difficulty":"medium","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-gen"},{"clue":"Here is a vine with large, intricate flowers.","difficulty":"hard","itemId":"inat-51453","lookWhere":"on bushes","sourceQuote":"large, intricate flowers"},{"clue":"Point out a tiny bug that is green with blue on its tail end.","difficulty":"hard","itemId":"inat-70191","lookWhere":"near the water","sourceQuote":"green with blue on abdominal segments 8 and 9"},{"clue":"Tiptoe to a big body of water that glitters like a mirror.","difficulty":"easy","itemId":"osm-water","lookWhere":"near the water","sourceQuote":"glitters like a mirror"},{"clue":"Guess which plant has a red stem.","difficulty":"medium","itemId":"inat-60210","lookWhere":"in tall grass","sourceQuote":"known by several common names, including valley redstem"},{"clue":"Quick! Find a narrow ribbon of moving water with muddy banks.","difficulty":"easy","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"narrow ribbon of moving water"}]},
+    {"latencyMs":5983,"status":200,"error":null,"poolMatches":true,"promptTokens":2433,"completionTokens":198,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Tiptoe to find a tree with bumpy, bright yellow-green balls.","difficulty":"easy","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green"},{"clue":"Guess if you can spot a bug with red on its shoulders.","difficulty":"medium","itemId":"inat-127669","lookWhere":"on bushes","sourceQuote":"known as the red-shouldered bug"},{"clue":"Track down a long outdoor seat for resting.","difficulty":"hard","itemId":"osm-bench","lookWhere":"by the path","sourceQuote":"long outdoor seat for resting"}]}
+   ],
+   "parkName": "Oak Point Park and Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Ready to count? There are 8 paths that go over water or a dip in the ground.","lookWhere":"by the path","answer":"Bridges (Rowlett Creek Trail, Oak Point Park & Nature Preserve, High Meadow Trail)"},
+    {"section":"park","clue":"What gives you a sip of water from a spout? There are 2 of these.","lookWhere":"by the path","answer":"Drinking fountains"},
+    {"section":"park","clue":"Tiptoe to a big body of water that glitters like a mirror.","lookWhere":"near the water","answer":"Ponds or lakes"},
+    {"section":"park","clue":"Quick! Find a narrow ribbon of moving water with muddy banks.","lookWhere":"near the water","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"park","clue":"Track down a long outdoor seat for resting.","lookWhere":"by the path","answer":"Bench"},
+    {"section":"wild","clue":"Here is a vine with large, intricate flowers.","lookWhere":"on bushes","answer":"Purple passionflower (Passiflora incarnata)"},
+    {"section":"wild","clue":"Point out a tiny bug that is green with blue on its tail end.","lookWhere":"near the water","answer":"Rambur's Forktail (Ischnura ramburii)"},
+    {"section":"wild","clue":"Tiptoe to find a tree with bumpy, bright yellow-green balls.","lookWhere":"on the ground","answer":"Osage-orange (Maclura pomifera)"}
+   ],
+   "removed": {
+    "notGrounded": 2,
+    "other": 1
+   },
+   "wallMs": 17531
+  },
+  {
+   "caseN": 11,
+   "slug": "breckinridge-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":9706,"status":200,"error":null,"poolMatches":true,"promptTokens":1789,"completionTokens":454,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Ready to count? Look for 4 places with dirt in the middle and a base at each corner.","difficulty":"medium","itemId":"osm-baseball","lookWhere":"on the grass","sourceQuote":"4 baseball fields"},{"clue":"Which one has a low spout for kids or a bowl for dogs?","difficulty":"easy","itemId":"osm-drinking-water","lookWhere":"by the path","sourceQuote":"low spout for kids"},{"clue":"Here is a secret: search for 3 spots of still water where fish swim.","difficulty":"medium","itemId":"osm-water","lookWhere":"near the water","sourceQuote":"3 ponds or lakes"},{"clue":"What makes a soft rushing sound as it flows?","difficulty":"hard","itemId":"osm-creek","lookWhere":"by the muddy bank","sourceQuote":"soft rushing sound"},{"clue":"Hunt for 6 rows of seats stepped up high.","difficulty":"medium","itemId":"osm-bleachers","lookWhere":"next to a field","sourceQuote":"6 sets of bleachers"},{"clue":"Scan for a way across the water that has rails on each side.","difficulty":"easy","itemId":"osm-bridge","lookWhere":"over the water","sourceQuote":"rails on each side"},{"clue":"Psst! Can you spot 2 places where the ground is soft sand or wood chips?","difficulty":"medium","itemId":"osm-playground","lookWhere":"on the ground","sourceQuote":"2 playgrounds"},{"clue":"Who can find 6 seats that have a back to lean on?","difficulty":"easy","itemId":"osm-bench","lookWhere":"by the path","sourceQuote":"6 benches"}]}
+   ],
+   "parkName": "Breckinridge Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: 10 research-grade sightings within 1.5 km in the last 14 days on iNaturalist, but fewer than 3 are safe, kid-friendly finds with a description we can check."},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Ready to count? Look for 4 places with dirt in the middle and a base at each corner.","lookWhere":"on the grass","answer":"Baseball fields"},
+    {"section":"park","clue":"Which one has a low spout for kids or a bowl for dogs?","lookWhere":"by the path","answer":"Drinking fountains"},
+    {"section":"park","clue":"Here is a secret: search for 3 spots of still water where fish swim.","lookWhere":"near the water","answer":"Ponds or lakes"},
+    {"section":"park","clue":"What makes a soft rushing sound as it flows?","lookWhere":"by the muddy bank","answer":"Creek or stream (Rowlett Creek, Beck Branch, Murphy Branch)"},
+    {"section":"park","clue":"Scan for a way across the water that has rails on each side.","lookWhere":"over the water","answer":"Bridges (Breckinridge Park Nature Trail)"},
+    {"section":"park","clue":"Psst! Can you spot 2 places where the ground is soft sand or wood chips?","lookWhere":"on the ground","answer":"Playgrounds"},
+    {"section":"park","clue":"Who can find 6 seats that have a back to lean on?","lookWhere":"by the path","answer":"Benches"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 10716
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":9478,"status":200,"error":null,"poolMatches":true,"promptTokens":3331,"completionTokens":495,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Scan for 3 big fields. Do they have a dirt mound in the middle?","difficulty":"medium","itemId":"osm-baseball","lookWhere":"on the ground","sourceQuote":"3 baseball fields"},{"clue":"Tiptoe to the water. Can you hear it splashing?","difficulty":"easy","itemId":"osm-fountain","lookWhere":"near the water","sourceQuote":"hear its water splashing"},{"clue":"Quick! How many playgrounds are here? Are there 8?","difficulty":"medium","itemId":"osm-playground","lookWhere":"by the path","sourceQuote":"8 playgrounds"},{"clue":"Point to a metal box on a post. Is it dark from smoke?","difficulty":"easy","itemId":"osm-bbq","lookWhere":"on the ground","sourceQuote":"dark from smoke"},{"clue":"Guess who has a chunky white body and checkered wings?","difficulty":"hard","itemId":"inat-84549","lookWhere":"near the water","sourceQuote":"chunky white body"},{"clue":"Listen for a tiny bug. Does it have orange or amber wings?","difficulty":"hard","itemId":"inat-59776","lookWhere":"on bushes","sourceQuote":"orange or amber wings"},{"clue":"Here is a plant. Does it have white flowers?","difficulty":"medium","itemId":"inat-135262","lookWhere":"by the path","sourceQuote":"show it with flowers"},{"clue":"Squint to see a bug. Is it green with blue on its tail?","difficulty":"hard","itemId":"inat-70191","lookWhere":"on bushes","sourceQuote":"green with blue"}]}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Scan for 3 big fields. Do they have a dirt mound in the middle?","lookWhere":"on the ground","answer":"Baseball fields"},
+    {"section":"park","clue":"Tiptoe to the water. Can you hear it splashing?","lookWhere":"near the water","answer":"Fountains (Fogelson Fountain)"},
+    {"section":"park","clue":"Point to a metal box on a post. Is it dark from smoke?","lookWhere":"on the ground","answer":"Barbecue grills"},
+    {"section":"wild","clue":"Guess who has a chunky white body and checkered wings?","lookWhere":"near the water","answer":"Common Whitetail (Plathemis lydia)"},
+    {"section":"wild","clue":"Listen for a tiny bug. Does it have orange or amber wings?","lookWhere":"on bushes","answer":"Eastern Amberwing (Perithemis tenera)"},
+    {"section":"wild","clue":"Here is a plant. Does it have white flowers?","lookWhere":"by the path","answer":"White Morning-glory (Ipomoea lacunosa)"},
+    {"section":"wild","clue":"Squint to see a bug. Is it green with blue on its tail?","lookWhere":"on bushes","answer":"Rambur's Forktail (Ischnura ramburii)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 10514
+  },
+  {
+   "caseN": 16,
+   "slug": "trinity-river-audubon-center",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":11639,"status":200,"error":null,"poolMatches":true,"promptTokens":2477,"completionTokens":495,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Scan for 2 big tables with benches that are stuck to the sides.","difficulty":"easy","itemId":"osm-picnic-table","lookWhere":"on the ground","sourceQuote":"2 picnic tables"},{"clue":"Quick, find 3 high spots where you can see far away.","difficulty":"medium","itemId":"osm-viewpoint","lookWhere":"on the ground","sourceQuote":"3 viewpoints"},{"clue":"What is this? It is a tiny bird with a long black tail and white edges.","difficulty":"hard","itemId":"inat-7493","lookWhere":"up in the sky","sourceQuote":"long black tail edged in white"},{"clue":"Peek at the 3 paths that go over water or dips.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"by the path","sourceQuote":"3 bridges"},{"clue":"Wander to a plant with yellow flowers in October.","difficulty":"easy","itemId":"inat-194109","lookWhere":"on the ground","sourceQuote":"show it with flowers"},{"clue":"Wow, look for a tiny bird with a white eye.","difficulty":"hard","itemId":"inat-17408","lookWhere":"up in the sky","sourceQuote":"white-eyed"},{"clue":"Hunt for a place where plants grow in tidy beds with edges.","difficulty":"easy","itemId":"osm-garden","lookWhere":"on the ground","sourceQuote":"tidy beds with edges"},{"clue":"Point to 13 areas of still water where turtles might swim.","difficulty":"medium","itemId":"osm-water","lookWhere":"on the ground","sourceQuote":"13 ponds or lakes"},{"clue":"Squint to see a snake that lives mostly in water.","difficulty":"hard","itemId":"inat-29317","lookWhere":"near the water","sourceQuote":"mostly aquatic"}]}
+   ],
+   "parkName": "Trinity River Audubon Center",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Scan for 2 big tables with benches that are stuck to the sides.","lookWhere":"on the ground","answer":"Picnic tables"},
+    {"section":"park","clue":"Quick, find 3 high spots where you can see far away.","lookWhere":"on the ground","answer":"Viewpoints"},
+    {"section":"park","clue":"Peek at the 3 paths that go over water or dips.","lookWhere":"by the path","answer":"Bridges (Wetland Trail)"},
+    {"section":"park","clue":"Hunt for a place where plants grow in tidy beds with edges.","lookWhere":"on the ground","answer":"Garden (Polinator Garden)"},
+    {"section":"park","clue":"Point to 13 areas of still water where turtles might swim.","lookWhere":"on the ground","answer":"Ponds or lakes (Great Egret Pond, Raccoon Pond, Spider Web Pond)"},
+    {"section":"wild","clue":"What is this? It is a tiny bird with a long black tail and white edges.","lookWhere":"up in the sky","answer":"Blue-gray Gnatcatcher (Polioptila caerulea)"},
+    {"section":"wild","clue":"Wow, look for a tiny bird with a white eye.","lookWhere":"up in the sky","answer":"White-eyed Vireo (Vireo griseus)"},
+    {"section":"wild","clue":"Squint to see a snake that lives mostly in water.","lookWhere":"near the water","answer":"Banded Watersnake (Nerodia fasciata)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 12660
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-creek","section":"park","clue":"Running water in it can make a gentle rushing sound.","lookWhere":"","sourceQuote":"Running water in it can make a gentle rushing sound.","difficulty":"medium"},{"itemId":"inat-55553","section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","sourceQuote":"Teloschistes chrysophthalmus, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-119793","section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","sourceQuote":"Pyrus calleryana, the Callery pear, is a species of pear native to China and Vietnam, in the family Rosaceae.","difficulty":"medium"},{"itemId":"inat-119986","section":"wild","clue":"____ (____, ____-____, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United","lookWhere":"","sourceQuote":"Zanthoxylum clava-herculis (Hercules' club, Hercules-club, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United States.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","difficulty":"medium"},{"itemId":"inat-51450","section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","sourceQuote":"Passiflora lutea, the yellow passionflower, is a flowering plant in the family Passifloraceae, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and","difficulty":"medium"},{"itemId":"inat-135262","section":"wild","clue":"____, the whitestar, ____ or pitted morningglory, is a species that belongs to the ____ genus.","lookWhere":"","sourceQuote":"Ipomoea lacunosa, the whitestar, white morning-glory or pitted morningglory, is a species that belongs to the Ipomoea genus.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Running water in it can make a gentle rushing sound.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"____ (____, ____-____, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United","lookWhere":"","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","answer":"Globular Drop Snail (Helicina orbiculata)"}
+   ]
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-playground","section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","sourceQuote":"It usually has a low fence or a border round it.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"A tall frame holds it up from above.","lookWhere":"","sourceQuote":"A tall frame holds it up from above.","difficulty":"medium"},{"itemId":"inat-5212","section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","sourceQuote":"The red-tailed hawk (Buteo jamaicensis) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern Canada to as far south as Panama and the West Indies.","difficulty":"medium"},{"itemId":"inat-204420","section":"wild","clue":"____ (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names","lookWhere":"","sourceQuote":"Strophostyles helvola (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names amberique-bean, trailing wild bean, and trailing fuzzy-bean.","difficulty":"medium"},{"itemId":"inat-4765","section":"wild","clue":"The ____ (____), also known as the American ____, is a bird in the New World ____ family whose range extends from the","lookWhere":"","sourceQuote":"The black vulture (Coragyps atratus), also known as the American black vulture, is a bird in the New World vulture family whose range extends from the southeastern United States to Peru, Central Chile and Uruguay in South America.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","sourceQuote":"Each one gives cool shade from the sun and cover in the rain.","difficulty":"medium"},{"itemId":"inat-36202","section":"wild","clue":"The ____ (____) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas","lookWhere":"","sourceQuote":"The Texas spiny lizard (Sceloporus olivaceus) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas","difficulty":"medium"},{"itemId":"osm-picnic-table","section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","sourceQuote":"People sit on both sides of it to share food outside.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","answer":"Playground"},
+    {"section":"park","clue":"A tall frame holds it up from above.","lookWhere":"","answer":"Swing"},
+    {"section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","answer":"Red-tailed Hawk (Buteo jamaicensis)"},
+    {"section":"wild","clue":"____ (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names","lookWhere":"","answer":"Trailing fuzzy-bean (Strophostyles helvola)"},
+    {"section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","answer":"Picnic shelters"},
+    {"section":"wild","clue":"The ____ (____) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas","lookWhere":"","answer":"Texas Spiny Lizard (Sceloporus olivaceus)"},
+    {"section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","answer":"Picnic tables"}
+   ]
+  },
+  {
+   "caseN": 4,
+   "slug": "oak-point-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-shelter","section":"park","clue":"It has a cover on poles and tables underneath where people share a meal.","lookWhere":"","sourceQuote":"It has a cover on poles and tables underneath where people share a meal.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Many face a trail or a nice view.","lookWhere":"","sourceQuote":"Many face a trail or a nice view.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii) is a member of the damselfly family Coenagrionidae.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-36514","section":"wild","clue":"The Carolina ____ (____) (US: /əˈnoʊ.li/ ( listen)) is an arboreal lizard found primarily in the southeastern United","lookWhere":"","sourceQuote":"The Carolina anole (Anolis carolinensis) (US: /əˈnoʊ.li/ ( listen)) is an arboreal lizard found primarily in the southeastern United States and some Caribbean islands.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"A small arc of water bobs up from its spout.","lookWhere":"","sourceQuote":"A small arc of water bobs up from its spout.","difficulty":"medium"},{"itemId":"inat-67707","section":"wild","clue":"The spider species ____ is commonly known as the ____, black and ____, golden ____ spider, writing spider, corn spider","lookWhere":"","sourceQuote":"The spider species Argiope aurantia is commonly known as the yellow garden spider, black and yellow garden spider, golden garden spider, writing spider, corn spider, or McKinley spider.","difficulty":"medium"},{"itemId":"osm-water","section":"park","clue":"On a calm day it glitters like a mirror.","lookWhere":"","sourceQuote":"On a calm day it glitters like a mirror.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Oak Point Park and Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It has a cover on poles and tables underneath where people share a meal.","lookWhere":"","answer":"Picnic shelter (Lakeside Pavilion)"},
+    {"section":"park","clue":"Many face a trail or a nice view.","lookWhere":"","answer":"Bench"},
+    {"section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","answer":"Rambur's Forktail (Ischnura ramburii)"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"park","clue":"A small arc of water bobs up from its spout.","lookWhere":"","answer":"Drinking fountains"},
+    {"section":"wild","clue":"The spider species ____ is commonly known as the ____, black and ____, golden ____ spider, writing spider, corn spider","lookWhere":"","answer":"Yellow Garden Spider (Argiope aurantia)"},
+    {"section":"park","clue":"On a calm day it glitters like a mirror.","lookWhere":"","answer":"Ponds or lakes"}
+   ]
+  },
+  {
+   "caseN": 11,
+   "slug": "breckinridge-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-soccer","section":"park","clue":"It is a big grassy field with a goal with a net at both ends.","lookWhere":"","sourceQuote":"It is a big grassy field with a goal with a net at both ends.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"A high fence stands behind home plate to stop the ball.","lookWhere":"","sourceQuote":"A high fence stands behind home plate to stop the ball.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Kids climb steps and ladders on it to reach the top of the play set.","lookWhere":"","sourceQuote":"Kids climb steps and ladders on it to reach the top of the play set.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"Its sides are open, so the breeze passes right through it.","lookWhere":"","sourceQuote":"Its sides are open, so the breeze passes right through it.","difficulty":"medium"},{"itemId":"osm-picnic-table","section":"park","clue":"Many are made of wood, metal or thick plastic.","lookWhere":"","sourceQuote":"Many are made of wood, metal or thick plastic.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"They can be made of stone, wood or metal.","lookWhere":"","sourceQuote":"They can be made of stone, wood or metal.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"Each one gives you a sip of water when you push a button.","lookWhere":"","sourceQuote":"Each one gives you a sip of water when you push a button.","difficulty":"medium"},{"itemId":"osm-bleachers","section":"park","clue":"They are usually metal and next to a field or court.","lookWhere":"","sourceQuote":"They are usually metal and next to a field or court.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Breckinridge Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: 10 research-grade sightings within 1.5 km in the last 14 days on iNaturalist, but fewer than 3 are safe, kid-friendly finds with a description we can check."}
+   },
+   "items": [
+    {"section":"park","clue":"It is a big grassy field with a goal with a net at both ends.","lookWhere":"","answer":"Soccer field"},
+    {"section":"park","clue":"A high fence stands behind home plate to stop the ball.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"park","clue":"Kids climb steps and ladders on it to reach the top of the play set.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"park","clue":"Its sides are open, so the breeze passes right through it.","lookWhere":"","answer":"Picnic shelters"},
+    {"section":"park","clue":"Many are made of wood, metal or thick plastic.","lookWhere":"","answer":"Picnic tables"},
+    {"section":"park","clue":"They can be made of stone, wood or metal.","lookWhere":"","answer":"Benches"},
+    {"section":"park","clue":"Each one gives you a sip of water when you push a button.","lookWhere":"","answer":"Drinking fountains"},
+    {"section":"park","clue":"They are usually metal and next to a field or court.","lookWhere":"","answer":"Sets of bleachers"}
+   ]
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","sourceQuote":"Painted lines on its ground make big boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","sourceQuote":"Teams wait their turn on long benches in sunken dugouts beside it.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-84549","section":"wild","clue":"The ____ or long-tailed skimmer (____) is a common dragonfly across much of North America, with a striking and unusual","lookWhere":"","sourceQuote":"The common whitetail or long-tailed skimmer (Plathemis lydia) is a common dragonfly across much of North America, with a striking and unusual appearance.","difficulty":"medium"},{"itemId":"inat-59776","section":"wild","clue":"The ____ (____) is a species of dragonfly in the family Libellulidae.","lookWhere":"","sourceQuote":"The eastern amberwing (Perithemis tenera) is a species of dragonfly in the family Libellulidae.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Each one is a place with things to climb, swing on and slide down.","lookWhere":"","sourceQuote":"Each one is a place with things to climb, swing on and slide down.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii) is a member of the damselfly family Coenagrionidae.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","sourceQuote":"Some seats are flat, and some are a big round nest you can lie in.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","answer":"Tennis court"},
+    {"section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)"},
+    {"section":"wild","clue":"The ____ or long-tailed skimmer (____) is a common dragonfly across much of North America, with a striking and unusual","lookWhere":"","answer":"Common Whitetail (Plathemis lydia)"},
+    {"section":"wild","clue":"The ____ (____) is a species of dragonfly in the family Libellulidae.","lookWhere":"","answer":"Eastern Amberwing (Perithemis tenera)"},
+    {"section":"park","clue":"Each one is a place with things to climb, swing on and slide down.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","answer":"Rambur's Forktail (Ischnura ramburii)"},
+    {"section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","answer":"Swing"}
+   ]
+  },
+  {
+   "caseN": 16,
+   "slug": "trinity-river-audubon-center",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-picnic-table","section":"park","clue":"Its seats are fixed to the table on both long sides.","lookWhere":"","sourceQuote":"Its seats are fixed to the table on both long sides.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"A little arc of water bubbles up from its spout.","lookWhere":"","sourceQuote":"A little arc of water bubbles up from its spout.","difficulty":"medium"},{"itemId":"inat-7493","section":"wild","clue":"The ____ or blue-grey ____ (____) is a very small songbird, 10–13 cm (3.9–5.1 in) in length and weighing only 5–7 g","lookWhere":"","sourceQuote":"The blue-gray gnatcatcher or blue-grey gnatcatcher (Polioptila caerulea) is a very small songbird, 10–13 cm (3.9–5.1 in) in length and weighing only 5–7 g (0.18–0.25 oz).","difficulty":"medium"},{"itemId":"inat-84844","section":"wild","clue":"The ____ ____ mud ____ (____) is a predatory ____ in the family Crabronidae.","lookWhere":"","sourceQuote":"The organ pipe mud dauber (Trypoxylon politum) is a predatory wasp in the family Crabronidae.","difficulty":"medium"},{"itemId":"inat-151627","section":"wild","clue":"____, the ____ or slough ____, is a freshwater mussel native to the United States and Mexico.","lookWhere":"","sourceQuote":"Lampsilis teres, the yellow sandshell or slough sandshell, is a freshwater mussel native to the United States and Mexico.","difficulty":"medium"},{"itemId":"osm-garden","section":"park","clue":"Its plants grow in rows or in tidy beds with edges.","lookWhere":"","sourceQuote":"Its plants grow in rows or in tidy beds with edges.","difficulty":"medium"},{"itemId":"inat-194109","section":"wild","clue":"____ (syn.","lookWhere":"","sourceQuote":"Grindelia ciliata (syn.","difficulty":"medium"},{"itemId":"osm-viewpoint","section":"park","clue":"From there you can see far away.","lookWhere":"","sourceQuote":"From there you can see far away.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Trinity River Audubon Center",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Its seats are fixed to the table on both long sides.","lookWhere":"","answer":"Picnic tables"},
+    {"section":"park","clue":"A little arc of water bubbles up from its spout.","lookWhere":"","answer":"Drinking fountain"},
+    {"section":"wild","clue":"The ____ or blue-grey ____ (____) is a very small songbird, 10–13 cm (3.9–5.1 in) in length and weighing only 5–7 g","lookWhere":"","answer":"Blue-gray Gnatcatcher (Polioptila caerulea)"},
+    {"section":"wild","clue":"The ____ ____ mud ____ (____) is a predatory ____ in the family Crabronidae.","lookWhere":"","answer":"Organ-pipe Mud-dauber Wasp (Trypoxylon politum)"},
+    {"section":"wild","clue":"____, the ____ or slough ____, is a freshwater mussel native to the United States and Mexico.","lookWhere":"","answer":"Yellow Sandshell (Lampsilis teres)"},
+    {"section":"park","clue":"Its plants grow in rows or in tidy beds with edges.","lookWhere":"","answer":"Garden (Polinator Garden)"},
+    {"section":"wild","clue":"____ (syn.","lookWhere":"","answer":"Spanish Gold (Grindelia ciliata)"},
+    {"section":"park","clue":"From there you can see far away.","lookWhere":"","answer":"Viewpoints"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 6,
+   "passes": 6,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 60,
+    "returned": 62,
+    "rate": 0.967741935483871,
+    "pass": true
+   },
+   "m3": {
+    "complete": 5,
+    "dataRichRuns": 6,
+    "rate": 0.8333333333333334,
+    "pass": false
+   },
+   "m4": {
+    "ok": 1,
+    "checked": 1,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 1.8733333333333313,
+    "clues": 43,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 3,
+    "clueLeaks": 3,
+    "returned": 62,
+    "rate": 0.04838709677419355,
+    "clueRate": 0.04838709677419355,
+    "pass": true
+   },
+   "m7": {
+    "calls": 9,
+    "p50Ms": 9706,
+    "p95Ms": 12551.4,
+    "passP50": true,
+    "passP95": true,
+    "perPassP50Ms": 13923
+   },
+   "m8": {
+    "costPerPass": 0.0009905699999999999,
+    "totalUsd": 0.00594342,
+    "promptTokens": 22544,
+    "completionTokens": 3771,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 43,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 13,
+    "rawWrong": 2,
+    "details": [],
+    "returned": 62,
+    "pass": true
+   },
+   "retries": 3,
+   "drops": {
+    "all": {"generic_clue":7,"name_leak":3,"number_not_in_source":2,"duplicate_id":1,"out_of_season":2,"wrong_count":2,"not_grounded":2},
+    "incomplete": {"number_not_in_source":2,"generic_clue":1,"duplicate_id":1,"out_of_season":2,"wrong_count":1,"name_leak":1},
+    "byRun": [{"caseN":1,"run":1,"kept":7,"n":8,"drops":{"generic_clue":4,"name_leak":1}},{"caseN":3,"run":1,"kept":6,"n":8,"drops":{"number_not_in_source":2,"generic_clue":1,"duplicate_id":1,"out_of_season":2,"wrong_count":1,"name_leak":1}},{"caseN":4,"run":1,"kept":8,"n":8,"drops":{"not_grounded":2,"generic_clue":1}},{"caseN":11,"run":1,"kept":7,"n":8,"drops":{"wrong_count":1}},{"caseN":13,"run":1,"kept":7,"n":8,"drops":{"name_leak":1}},{"caseN":16,"run":1,"kept":8,"n":8,"drops":{"generic_clue":1}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 6,
+   "passes": 6,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 48,
+    "returned": 48,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 5,
+    "dataRichRuns": 6,
+    "rate": 0.8333333333333334,
+    "pass": false
+   },
+   "m4": {
+    "ok": 1,
+    "checked": 1,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.7181818181818187,
+    "clues": 44,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 2,
+    "clueLeaks": 2,
+    "returned": 48,
+    "rate": 0.041666666666666664,
+    "clueRate": 0.041666666666666664,
+    "pass": true
+   },
+   "m7": {
+    "calls": 6,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 3,
+    "clues": 44,
+    "rate": 0.06818181818181818,
+    "top": [{"gram":"the is a species of","parks":3}],
+    "pass": false
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 3,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 48,
+    "pass": true
+   },
+   "retries": 0
+  }
+ ],
+ "spend": {
+  "usd": 0.00594342,
+  "modelCalls": 9,
+  "promptTokens": 22544,
+  "completionTokens": 3771
+ }
+}

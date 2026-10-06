@@ -1,0 +1,606 @@
+{
+ "meta": {
+  "startedAt": "2026-10-06T10:50:15.316Z",
+  "finishedAt": "2026-10-06T10:51:33.222Z",
+  "day": "2026-10-06",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    1,
+    5,
+    12,
+    13,
+    14,
+    19
+   ],
+   "budgetUsd": 0.015
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": 30000,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 1,
+   "slug": "connemara-meadow-preserve",
+   "name": "Connemara Meadow Preserve",
+   "parkId": "way/306191453",
+   "note": "",
+   "fixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+   "fetchedAt": "2026-10-05T23:46:35.238Z",
+   "pool": {
+    "park": 1,
+    "wild": 11
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 5,
+   "slug": "bob-woodruff-park",
+   "name": "Bob Woodruff Park (North)",
+   "parkId": "way/556800332",
+   "note": "OSM maps Bob Woodruff Park as two parks, (North) way/556800332 and (South) way/197183588. We use (North), Nominatim's first hit.",
+   "fixture": "tests/fixtures/evals/bob-woodruff-park.json",
+   "fetchedAt": "2026-10-05T23:48:22.272Z",
+   "pool": {
+    "park": 9,
+    "wild": 10
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 12,
+   "slug": "spring-creek-forest-preserve",
+   "name": "Spring Creek Forest Preserve Park",
+   "parkId": "way/280159375",
+   "note": "Nominatim found no 'Spring Creek Forest Preserve'; Overpass has it as 'Spring Creek Forest Preserve Park' (way/280159375).",
+   "fixture": "tests/fixtures/evals/spring-creek-forest-preserve.json",
+   "fetchedAt": "2026-10-05T23:53:31.141Z",
+   "pool": {
+    "park": 2,
+    "wild": 7
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 12
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 14,
+   "slug": "klyde-warren-park",
+   "name": "Klyde Warren Park",
+   "parkId": "way/419524736",
+   "note": "",
+   "fixture": "tests/fixtures/evals/klyde-warren-park.json",
+   "fetchedAt": "2026-10-05T23:54:20.188Z",
+   "pool": {
+    "park": 4,
+    "wild": 6
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 19,
+   "slug": "golden-gate-park",
+   "name": "Golden Gate Park",
+   "parkId": "way/158602261",
+   "note": "",
+   "fixture": "tests/fixtures/evals/golden-gate-park.json",
+   "fetchedAt": "2026-10-05T23:55:40.332Z",
+   "pool": {
+    "park": 30,
+    "wild": 10
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":16365,"status":200,"error":null,"poolMatches":true,"promptTokens":2522,"completionTokens":587,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"What makes a soft rushing sound?","difficulty":"easy","itemId":"osm-creek","lookWhere":"by the water","sourceQuote":"make a soft rushing sound"},{"clue":"Stop! Do you see bright-orange spots with tiny spines?","difficulty":"hard","itemId":"inat-55553","lookWhere":"on tree trunks","sourceQuote":"bright-orange with spiny projections"},{"clue":"Wow! Which tree has bumpy, yellow-green balls?","difficulty":"medium","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"spherical, bumpy, 8 to 15 centimetres"},{"clue":"Quick, spot the tree with thick, corky lumps and spines on its skin?","difficulty":"medium","itemId":"inat-119986","lookWhere":"on tree trunks","sourceQuote":"spined thick, corky lumps"},{"clue":"Sneak up on a tree with glossy dark green leaves!","difficulty":"easy","itemId":"inat-119793","lookWhere":"by the path","sourceQuote":"glossy dark green above"},{"clue":"Point to the plant with white flowers!","difficulty":"easy","itemId":"inat-135262","lookWhere":"on bushes","sourceQuote":"show it with flowers"},{"clue":"Guess which tree has a crown shaped like a cone?","difficulty":"medium","itemId":"inat-119793","lookWhere":"by the path","sourceQuote":"conic to rounded crown"},{"clue":"Shh, can you find the tree with fruit or seeds in October?","difficulty":"medium","itemId":"inat-54504","lookWhere":"near the water","sourceQuote":"show it with fruit or seeds"},{"clue":"Which plant has fruit or seeds in October?","difficulty":"medium","itemId":"inat-51450","lookWhere":"in tall grass","sourceQuote":"show it with fruit or seeds"},{"clue":"Squint to find the tree that is 10 to 17 m tall!","difficulty":"hard","itemId":"inat-119986","lookWhere":"by the path","sourceQuote":"grows to 10–17 m tall"}]},
+    {"latencyMs":5109,"status":403,"error":"HTTP 403","poolMatches":true,"promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"What makes a soft rushing sound?","lookWhere":"by the water","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"Stop! Do you see bright-orange spots with tiny spines?","lookWhere":"on tree trunks","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"Wow! Which tree has bumpy, yellow-green balls?","lookWhere":"on the ground","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"Quick, spot the tree with thick, corky lumps and spines on its skin?","lookWhere":"on tree trunks","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"Sneak up on a tree with glossy dark green leaves!","lookWhere":"by the path","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"Point to the plant with white flowers!","lookWhere":"on bushes","answer":"White Morning-glory (Ipomoea lacunosa)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 4
+   },
+   "wallMs": 22554
+  },
+  {
+   "caseN": 5,
+   "slug": "bob-woodruff-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":5060,"status":403,"error":"HTTP 403","poolMatches":true,"promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null}
+   ],
+   "parkName": "Bob Woodruff Park (North)",
+   "kind": "error",
+   "errorCode": "MODEL_PROVIDER",
+   "message": "Gemma couldn't write clues right now (the AI service had a problem answering). Your park data is below; try again in a minute.",
+   "sections": {},
+   "items": [],
+   "wallMs": 6080
+  },
+  {
+   "caseN": 12,
+   "slug": "spring-creek-forest-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":5060,"status":403,"error":"HTTP 403","poolMatches":true,"promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null}
+   ],
+   "parkName": "Spring Creek Forest Preserve Park",
+   "kind": "error",
+   "errorCode": "MODEL_PROVIDER",
+   "message": "Gemma couldn't write clues right now (the AI service had a problem answering). Your park data is below; try again in a minute.",
+   "sections": {},
+   "items": [],
+   "wallMs": 6078
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":5052,"status":403,"error":"HTTP 403","poolMatches":true,"promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "error",
+   "errorCode": "MODEL_PROVIDER",
+   "message": "Gemma couldn't write clues right now (the AI service had a problem answering). Your park data is below; try again in a minute.",
+   "sections": {},
+   "items": [],
+   "wallMs": 6064
+  },
+  {
+   "caseN": 14,
+   "slug": "klyde-warren-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":5058,"status":403,"error":"HTTP 403","poolMatches":true,"promptTokens":null,"completionTokens":null,"finishReason":null,"answeredModel":null,"rawItems":null}
+   ],
+   "parkName": "Klyde Warren Park",
+   "kind": "error",
+   "errorCode": "MODEL_PROVIDER",
+   "message": "Gemma couldn't write clues right now (the AI service had a problem answering). Your park data is below; try again in a minute.",
+   "sections": {},
+   "items": [],
+   "wallMs": 6079
+  },
+  {
+   "caseN": 19,
+   "slug": "golden-gate-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":14543,"status":200,"error":null,"poolMatches":true,"promptTokens":2853,"completionTokens":452,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Wander to find 16 places with white lines that make long and short boxes.","difficulty":"medium","itemId":"osm-tennis","lookWhere":"by the path","sourceQuote":"16 tennis courts"},{"clue":"Track a bug with black wings that have a blue shine on the back.","difficulty":"hard","itemId":"inat-49972","lookWhere":"on bushes","sourceQuote":"black with iridescent-blue hindwings"},{"clue":"Psst, look for a bird with a black head and top body.","difficulty":"medium","itemId":"inat-8234","lookWhere":"up in the sky","sourceQuote":"black head and upper body"},{"clue":"Stop and count the 5 places where you can climb, slide and swing.","difficulty":"medium","itemId":"osm-playground","lookWhere":"by the path","sourceQuote":"5 playgrounds"},{"clue":"Peek at a bird that is small and grayish.","difficulty":"easy","itemId":"inat-10094","lookWhere":"on the ground","sourceQuote":"small grayish American sparrows"},{"clue":"Hunt for a smooth slope that is shiny metal or bright plastic.","difficulty":"easy","itemId":"osm-slide","lookWhere":"by the path","sourceQuote":"shiny metal or bright plastic"},{"clue":"Wow, look for a bird with a large size that wades in the water.","difficulty":"medium","itemId":"inat-4956","lookWhere":"near the water","sourceQuote":"large wading bird"},{"clue":"Spy a low box filled with soft sand for digging.","difficulty":"easy","itemId":"osm-sandbox","lookWhere":"by the path","sourceQuote":"low box filled with sand"}]},
+    {"latencyMs":4902,"status":200,"error":null,"poolMatches":true,"promptTokens":2455,"completionTokens":232,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Stop and count the areas where you play games with a net. There are 5.","difficulty":"medium","itemId":"osm-pickleball","lookWhere":"by the path","sourceQuote":"has 5 pickleball courts"},{"clue":"Hunt for a reptile that has a red mark by its ear.","difficulty":"hard","itemId":"inat-39782","lookWhere":"near the water","sourceQuote":"red-eared slider"},{"clue":"Spy a smooth slope that you can sit on and zoom down.","difficulty":"easy","itemId":"osm-slide","lookWhere":"on the ground","sourceQuote":"smooth slope you sit on and zoom down"},{"clue":"Wander to find a roof on posts with tables under it.","difficulty":"easy","itemId":"osm-shelter","lookWhere":"by the path","sourceQuote":"roof on posts and tables underneath"}]}
+   ],
+   "parkName": "Golden Gate Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not available yet (we haven't built this part of Grass Pass)."}
+   },
+   "items": [
+    {"section":"park","clue":"Wander to find 16 places with white lines that make long and short boxes.","lookWhere":"by the path","answer":"Tennis courts (Taube Family Championship Court, Taube Family Feature Court)"},
+    {"section":"park","clue":"Stop and count the areas where you play games with a net. There are 5.","lookWhere":"by the path","answer":"Pickleball courts"},
+    {"section":"wild","clue":"Track a bug with black wings that have a blue shine on the back.","lookWhere":"on bushes","answer":"Pipevine Swallowtail (Battus philenor)"},
+    {"section":"wild","clue":"Psst, look for a bird with a black head and top body.","lookWhere":"up in the sky","answer":"Steller's Jay (Cyanocitta stelleri)"},
+    {"section":"wild","clue":"Peek at a bird that is small and grayish.","lookWhere":"on the ground","answer":"Dark-eyed Junco (Junco hyemalis)"},
+    {"section":"wild","clue":"Wow, look for a bird with a large size that wades in the water.","lookWhere":"near the water","answer":"Great Blue Heron (Ardea herodias)"},
+    {"section":"wild","clue":"Hunt for a reptile that has a red mark by its ear.","lookWhere":"near the water","answer":"Pond Slider (Trachemys scripta)"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 5
+   },
+   "wallMs": 20514
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-creek","section":"park","clue":"Running water in it can make a soft rushing sound.","lookWhere":"","sourceQuote":"Running water in it can make a soft rushing sound.","difficulty":"medium"},{"itemId":"inat-55553","section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","sourceQuote":"Teloschistes chrysophthalmus, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-119793","section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","sourceQuote":"Pyrus calleryana, the Callery pear, is a species of pear native to China and Vietnam, in the family Rosaceae.","difficulty":"medium"},{"itemId":"inat-119986","section":"wild","clue":"____ (____, ____-____, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United","lookWhere":"","sourceQuote":"Zanthoxylum clava-herculis (Hercules' club, Hercules-club, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United States.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk in the family Helicinidae.","difficulty":"medium"},{"itemId":"inat-51450","section":"wild","clue":"____, the ____, is a flowering plant in the family Passifloraceae, native North America, in the eastern and","lookWhere":"","sourceQuote":"Passiflora lutea, the yellow passionflower, is a flowering plant in the family Passifloraceae, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and","difficulty":"medium"},{"itemId":"inat-135262","section":"wild","clue":"____, the whitestar, ____ or pitted morningglory, is a species that belongs to the ____ genus.","lookWhere":"","sourceQuote":"Ipomoea lacunosa, the whitestar, white morning-glory or pitted morningglory, is a species that belongs to the Ipomoea genus.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Running water in it can make a soft rushing sound.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)"},
+    {"section":"wild","clue":"____, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)"},
+    {"section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam, in the family Rosaceae.","lookWhere":"","answer":"Callery pear (Pyrus calleryana)"},
+    {"section":"wild","clue":"____ (____, ____-____, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United","lookWhere":"","answer":"Hercules' club (Zanthoxylum clava-herculis)"},
+    {"section":"wild","clue":"____, also known as ____ (Oligyra) ____ and as Oligyra ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","answer":"Globular Drop Snail (Helicina orbiculata)"}
+   ]
+  },
+  {
+   "caseN": 5,
+   "slug": "bob-woodruff-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-basketball","section":"park","clue":"Players bounce a big ball on it and try to drop the ball through a ring.","lookWhere":"","sourceQuote":"Players bounce a big ball on it and try to drop the ball through a ring.","difficulty":"medium"},{"itemId":"osm-volleyball","section":"park","clue":"It has a high net across the middle, above the players' heads.","lookWhere":"","sourceQuote":"It has a high net across the middle, above the players' heads.","difficulty":"medium"},{"itemId":"inat-51743","section":"wild","clue":"The ____ butterfly (____) is a North and South American butterfly in the family Nymphalidae with a wingspan of 70–88 mm","lookWhere":"","sourceQuote":"The queen butterfly (Danaus gilippus) is a North and South American butterfly in the family Nymphalidae with a wingspan of 70–88 mm (2.8–3.5 in).","difficulty":"medium"},{"itemId":"inat-4940","section":"wild","clue":"The ____ (____) is a small white heron.","lookWhere":"","sourceQuote":"The snowy egret (Egretta thula) is a small white heron.","difficulty":"medium"},{"itemId":"inat-14801","section":"wild","clue":"The ____ (____) is a small songbird of the ____ family which breeds in old-growth woodland across much of temperate","lookWhere":"","sourceQuote":"The white-breasted nuthatch (Sitta carolinensis) is a small songbird of the nuthatch family which breeds in old-growth woodland across much of temperate North America.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"The ground under it is often soft: wood chips, sand or rubber.","lookWhere":"","sourceQuote":"The ground under it is often soft: wood chips, sand or rubber.","difficulty":"medium"},{"itemId":"inat-48662","section":"wild","clue":"The ____ butterfly or simply ____ (____) is a milkweed butterfly (subfamily Danainae) in the family Nymphalidae.","lookWhere":"","sourceQuote":"The monarch butterfly or simply monarch (Danaus plexippus) is a milkweed butterfly (subfamily Danainae) in the family Nymphalidae.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"Families and groups often meet under it for parties and picnics.","lookWhere":"","sourceQuote":"Families and groups often meet under it for parties and picnics.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Bob Woodruff Park (North)",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Players bounce a big ball on it and try to drop the ball through a ring.","lookWhere":"","answer":"Basketball court"},
+    {"section":"park","clue":"It has a high net across the middle, above the players' heads.","lookWhere":"","answer":"Volleyball court (Bob Woodruff Volleyball Sand Court)"},
+    {"section":"wild","clue":"The ____ butterfly (____) is a North and South American butterfly in the family Nymphalidae with a wingspan of 70–88 mm","lookWhere":"","answer":"Queen (Danaus gilippus)"},
+    {"section":"wild","clue":"The ____ (____) is a small white heron.","lookWhere":"","answer":"Snowy Egret (Egretta thula)"},
+    {"section":"wild","clue":"The ____ (____) is a small songbird of the ____ family which breeds in old-growth woodland across much of temperate","lookWhere":"","answer":"White-breasted Nuthatch (Sitta carolinensis)"},
+    {"section":"park","clue":"The ground under it is often soft: wood chips, sand or rubber.","lookWhere":"","answer":"Playground"},
+    {"section":"wild","clue":"The ____ butterfly or simply ____ (____) is a milkweed butterfly (subfamily Danainae) in the family Nymphalidae.","lookWhere":"","answer":"Monarch (Danaus plexippus)"},
+    {"section":"park","clue":"Families and groups often meet under it for parties and picnics.","lookWhere":"","answer":"Picnic shelters (Bob Woodruff Park Pavillion)"}
+   ]
+  },
+  {
+   "caseN": 12,
+   "slug": "spring-creek-forest-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-water","section":"park","clue":"Its edge may have reeds, rocks or mud.","lookWhere":"","sourceQuote":"Its edge may have reeds, rocks or mud.","difficulty":"medium"},{"itemId":"osm-creek","section":"park","clue":"It is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","sourceQuote":"It is a narrow line of moving water with a muddy or rocky bank on each side.","difficulty":"medium"},{"itemId":"inat-50340","section":"wild","clue":"The ____ (____) is a butterfly of the family Hesperiidae and is approximately 1 inch (2.5 cm) long.","lookWhere":"","sourceQuote":"The fiery skipper (Hylephila phyleus) is a butterfly of the family Hesperiidae and is approximately 1 inch (2.5 cm) long.","difficulty":"medium"},{"itemId":"inat-67707","section":"wild","clue":"The spider species ____ is commonly known as the ____, black and ____, golden ____ spider, writing spider, corn spider","lookWhere":"","sourceQuote":"The spider species Argiope aurantia is commonly known as the yellow garden spider, black and yellow garden spider, golden garden spider, writing spider, corn spider, or McKinley spider.","difficulty":"medium"},{"itemId":"inat-36202","section":"wild","clue":"The ____ (____) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas","lookWhere":"","sourceQuote":"The Texas spiny lizard (Sceloporus olivaceus) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas and Oklahoma, and northeastern Mexico in the states of Coahuila, Nuevo León, Tamaulipas","difficulty":"medium"},{"itemId":"inat-49399","section":"wild","clue":"____ — its common names include red cedar, ____, Virginian juniper, eastern juniper, red juniper, pencil cedar, and","lookWhere":"","sourceQuote":"Juniperus virginiana — its common names include red cedar, eastern redcedar, Virginian juniper, eastern juniper, red juniper, pencil cedar, and aromatic cedar — is a species of juniper native to eastern North America from southeastern","difficulty":"medium"},{"itemId":"inat-54781","section":"wild","clue":"____, the ____, sometimes spelled burr ____, is a species of ____ in the white ____ section ____ sect.","lookWhere":"","sourceQuote":"Quercus macrocarpa, the bur oak, sometimes spelled burr oak, is a species of oak in the white oak section Quercus sect.","difficulty":"medium"},{"itemId":"inat-75842","section":"wild","clue":"____ is a species of perennial grass in the family Poaceae, found throughout much of the world.","lookWhere":"","sourceQuote":"Bothriochloa ischaemum is a species of perennial grass in the family Poaceae, found throughout much of the world.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Spring Creek Forest Preserve Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Its edge may have reeds, rocks or mud.","lookWhere":"","answer":"Pond or lake"},
+    {"section":"park","clue":"It is a narrow line of moving water with a muddy or rocky bank on each side.","lookWhere":"","answer":"Creek or stream (Spring Creek)"},
+    {"section":"wild","clue":"The ____ (____) is a butterfly of the family Hesperiidae and is approximately 1 inch (2.5 cm) long.","lookWhere":"","answer":"Fiery Skipper (Hylephila phyleus)"},
+    {"section":"wild","clue":"The spider species ____ is commonly known as the ____, black and ____, golden ____ spider, writing spider, corn spider","lookWhere":"","answer":"Yellow Garden Spider (Argiope aurantia)"},
+    {"section":"wild","clue":"The ____ (____) is a species of phrynosomatid lizard native to the south central United States, in the states of Texas","lookWhere":"","answer":"Texas Spiny Lizard (Sceloporus olivaceus)"},
+    {"section":"wild","clue":"____, the ____, sometimes spelled burr ____, is a species of ____ in the white ____ section ____ sect.","lookWhere":"","answer":"Bur oak (Quercus macrocarpa)"},
+    {"section":"wild","clue":"____ is a species of perennial grass in the family Poaceae, found throughout much of the world.","lookWhere":"","answer":"King Ranch bluestem (Bothriochloa ischaemum)"}
+   ]
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"White lines on its ground make long boxes and short boxes.","lookWhere":"","sourceQuote":"White lines on its ground make long boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Players wait their turn on long benches in low dugouts beside it.","lookWhere":"","sourceQuote":"Players wait their turn on long benches in low dugouts beside it.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-84549","section":"wild","clue":"The ____ or long-tailed skimmer (____) is a common dragonfly across much of North America, with a striking and unusual","lookWhere":"","sourceQuote":"The common whitetail or long-tailed skimmer (Plathemis lydia) is a common dragonfly across much of North America, with a striking and unusual appearance.","difficulty":"medium"},{"itemId":"inat-59776","section":"wild","clue":"The ____ (____) is a species of dragonfly in the family Libellulidae.","lookWhere":"","sourceQuote":"The eastern amberwing (Perithemis tenera) is a species of dragonfly in the family Libellulidae.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Each one is a place with things to climb, slide and swing on.","lookWhere":"","sourceQuote":"Each one is a place with things to climb, slide and swing on.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii) is a member of the damselfly family Coenagrionidae.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"Some seats are flat, and some are a big round basket you can lie in.","lookWhere":"","sourceQuote":"Some seats are flat, and some are a big round basket you can lie in.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"White lines on its ground make long boxes and short boxes.","lookWhere":"","answer":"Tennis court"},
+    {"section":"park","clue":"Players wait their turn on long benches in low dugouts beside it.","lookWhere":"","answer":"Baseball fields"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)"},
+    {"section":"wild","clue":"The ____ or long-tailed skimmer (____) is a common dragonfly across much of North America, with a striking and unusual","lookWhere":"","answer":"Common Whitetail (Plathemis lydia)"},
+    {"section":"wild","clue":"The ____ (____) is a species of dragonfly in the family Libellulidae.","lookWhere":"","answer":"Eastern Amberwing (Perithemis tenera)"},
+    {"section":"park","clue":"Each one is a place with things to climb, slide and swing on.","lookWhere":"","answer":"Playgrounds"},
+    {"section":"wild","clue":"____ (____) is a member of the damselfly family Coenagrionidae.","lookWhere":"","answer":"Rambur's Forktail (Ischnura ramburii)"},
+    {"section":"park","clue":"Some seats are flat, and some are a big round basket you can lie in.","lookWhere":"","answer":"Swing"}
+   ]
+  },
+  {
+   "caseN": 14,
+   "slug": "klyde-warren-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-playground","section":"park","clue":"It is a place with things to climb, slide and swing on.","lookWhere":"","sourceQuote":"It is a place with things to climb, slide and swing on.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Many face a path or a nice view.","lookWhere":"","sourceQuote":"Many face a path or a nice view.","difficulty":"medium"},{"itemId":"inat-145276","section":"wild","clue":"____ (____) is a small New World ____.","lookWhere":"","sourceQuote":"Wilson's warbler (Cardellina pusilla) is a small New World warbler.","difficulty":"medium"},{"itemId":"inat-10243","section":"wild","clue":"The ____ (____) is a large songbird found in North America, and is the only member of the family Icteriidae.","lookWhere":"","sourceQuote":"The yellow-breasted chat (Icteria virens) is a large songbird found in North America, and is the only member of the family Icteriidae.","difficulty":"medium"},{"itemId":"inat-10286","section":"wild","clue":"The ____ (____) is a species of New World ____, and the only member of its genus, ____.","lookWhere":"","sourceQuote":"The black-and-white warbler (Mniotilta varia) is a species of New World warbler, and the only member of its genus, Mniotilta.","difficulty":"medium"},{"itemId":"inat-54781","section":"wild","clue":"____, the ____, sometimes spelled burr ____, is a species of ____ in the white ____ section ____ sect.","lookWhere":"","sourceQuote":"Quercus macrocarpa, the bur oak, sometimes spelled burr oak, is a species of oak in the white oak section Quercus sect.","difficulty":"medium"},{"itemId":"inat-40522","section":"wild","clue":"The ____ (____) is a species of ____ in the family Vespertilionidae.","lookWhere":"","sourceQuote":"The eastern red bat (Lasiurus borealis) is a species of bat in the family Vespertilionidae.","difficulty":"medium"},{"itemId":"osm-fountain","section":"park","clue":"Some shoot water up high, and some let it trickle down.","lookWhere":"","sourceQuote":"Some shoot water up high, and some let it trickle down.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Klyde Warren Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It is a place with things to climb, slide and swing on.","lookWhere":"","answer":"Playground (Sheila and Jody Grant Children's Park)"},
+    {"section":"park","clue":"Many face a path or a nice view.","lookWhere":"","answer":"Benches"},
+    {"section":"wild","clue":"____ (____) is a small New World ____.","lookWhere":"","answer":"Wilson's Warbler (Cardellina pusilla)"},
+    {"section":"wild","clue":"The ____ (____) is a species of New World ____, and the only member of its genus, ____.","lookWhere":"","answer":"Black-and-white Warbler (Mniotilta varia)"},
+    {"section":"wild","clue":"____, the ____, sometimes spelled burr ____, is a species of ____ in the white ____ section ____ sect.","lookWhere":"","answer":"Bur oak (Quercus macrocarpa)"},
+    {"section":"wild","clue":"The ____ (____) is a species of ____ in the family Vespertilionidae.","lookWhere":"","answer":"Eastern Red Bat (Lasiurus borealis)"},
+    {"section":"park","clue":"Some shoot water up high, and some let it trickle down.","lookWhere":"","answer":"Fountains (Nancy Best Fountain)"}
+   ]
+  },
+  {
+   "caseN": 19,
+   "slug": "golden-gate-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"White lines on its ground make long boxes and short boxes.","lookWhere":"","sourceQuote":"White lines on its ground make long boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-pickleball","section":"park","clue":"Lines on its ground mark a short zone right next to the net.","lookWhere":"","sourceQuote":"Lines on its ground mark a short zone right next to the net.","difficulty":"medium"},{"itemId":"inat-42051","section":"wild","clue":"The ____ (____); from Nahuatl pronunciation (help·info)) is a canine native to North America.","lookWhere":"","sourceQuote":"The coyote (Canis latrans); from Nahuatl pronunciation (help·info)) is a canine native to North America.","difficulty":"medium"},{"itemId":"inat-49972","section":"wild","clue":"____, the ____ or blue ____, is a ____ butterfly found in North America and Central America.","lookWhere":"","sourceQuote":"Battus philenor, the pipevine swallowtail or blue swallowtail, is a swallowtail butterfly found in North America and Central America.","difficulty":"medium"},{"itemId":"inat-8234","section":"wild","clue":"The ____ (____) is a ____ native to western North America, closely related to the blue ____ found in the rest of the","lookWhere":"","sourceQuote":"The Steller's jay (Cyanocitta stelleri) is a jay native to western North America, closely related to the blue jay found in the rest of the continent, but with a black head and upper body.","difficulty":"medium"},{"itemId":"osm-soccer","section":"park","clue":"A circle is painted on the grass in the middle of it.","lookWhere":"","sourceQuote":"A circle is painted on the grass in the middle of it.","difficulty":"medium"},{"itemId":"inat-39782","section":"wild","clue":"The ____ (____) is a species of common, medium-sized, semiaquatic turtle.","lookWhere":"","sourceQuote":"The pond slider (Trachemys scripta) is a species of common, medium-sized, semiaquatic turtle.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Players wait their turn on long benches in low dugouts beside it.","lookWhere":"","sourceQuote":"Players wait their turn on long benches in low dugouts beside it.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Golden Gate Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"White lines on its ground make long boxes and short boxes.","lookWhere":"","answer":"Tennis courts (Taube Family Championship Court, Taube Family Feature Court)"},
+    {"section":"park","clue":"Lines on its ground mark a short zone right next to the net.","lookWhere":"","answer":"Pickleball courts"},
+    {"section":"wild","clue":"The ____ (____); from Nahuatl pronunciation (help·info)) is a canine native to North America.","lookWhere":"","answer":"Coyote (Canis latrans)"},
+    {"section":"wild","clue":"____, the ____ or blue ____, is a ____ butterfly found in North America and Central America.","lookWhere":"","answer":"Pipevine Swallowtail (Battus philenor)"},
+    {"section":"park","clue":"A circle is painted on the grass in the middle of it.","lookWhere":"","answer":"Soccer fields"},
+    {"section":"wild","clue":"The ____ (____) is a species of common, medium-sized, semiaquatic turtle.","lookWhere":"","answer":"Pond Slider (Trachemys scripta)"},
+    {"section":"park","clue":"Players wait their turn on long benches in low dugouts beside it.","lookWhere":"","answer":"Baseball field (Big Rec Baseball Diamonds)"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 6,
+   "passes": 2,
+   "errors": {
+    "MODEL_PROVIDER": 4
+   },
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 22,
+    "returned": 22,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 1,
+    "dataRichRuns": 6,
+    "rate": 0.16666666666666666,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 1.8733333333333313,
+    "clues": 13,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 22,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 8,
+    "p50Ms": 5060,
+    "p95Ms": 15727.3,
+    "passP50": true,
+    "passP95": true,
+    "perPassP50Ms": 5060
+   },
+   "m8": {
+    "costPerPass": 0.00034081666666666667,
+    "totalUsd": 0.0020449,
+    "promptTokens": 7830,
+    "completionTokens": 1271,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 13,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 2,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 22,
+    "pass": true
+   },
+   "retries": 2,
+   "drops": {
+    "all": {"duplicate_id":2,"generic_clue":2,"copies_source":5},
+    "incomplete": {"duplicate_id":2,"generic_clue":2},
+    "byRun": [{"caseN":1,"run":1,"kept":6,"n":8,"drops":{"duplicate_id":2,"generic_clue":2}},{"caseN":5,"run":1,"kept":0,"n":8,"drops":{}},{"caseN":12,"run":1,"kept":0,"n":8,"drops":{}},{"caseN":13,"run":1,"kept":0,"n":8,"drops":{}},{"caseN":14,"run":1,"kept":0,"n":8,"drops":{}},{"caseN":19,"run":1,"kept":7,"n":8,"drops":{"copies_source":5}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 6,
+   "passes": 6,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 48,
+    "returned": 48,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 5,
+    "dataRichRuns": 6,
+    "rate": 0.8333333333333334,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 6.310588235294119,
+    "clues": 43,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 4,
+    "clueLeaks": 4,
+    "returned": 48,
+    "rate": 0.08333333333333333,
+    "clueRate": 0.08333333333333333,
+    "pass": false
+   },
+   "m7": {
+    "calls": 6,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 6,
+    "clues": 43,
+    "rate": 0.13953488372093023,
+    "top": [{"gram":"the is a species of","parks":5}],
+    "pass": false
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 3,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 48,
+    "pass": true
+   },
+   "retries": 0
+  }
+ ],
+ "spend": {
+  "usd": 0.0020449,
+  "modelCalls": 8,
+  "promptTokens": 7830,
+  "completionTokens": 1271
+ }
+}

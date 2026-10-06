@@ -512,6 +512,7 @@ export function fitToMix<T extends { item: { section: Section } }>(valid: readon
     per[v.item.section]++;
     items.push(v);
   }
+  capLucky(items, per, mix);
   for (let i = items.length - 1; i >= 0 && items.length > mix.n; i--) {
     const s = items[i].item.section;
     if (per[s] > mix.min[s]) {
@@ -521,6 +522,27 @@ export function fitToMix<T extends { item: { section: Section } }>(valid: readon
   }
   while (items.length > mix.n) items.pop();
   return { items, spares: valid.length - items.length };
+}
+
+/**
+ * R3 (Arbor Hills, 2026-10-06): Lucky Finds may not crowd out the sure finds. While Park Finds or Wild
+ * Finds are below their minimum, at most ONE Lucky Find is printed (the live Arbor pass printed 2 Lucky
+ * Finds and 1 Wild Find, minimum 2). The lucky item left out is a spare, not a removed clue; the pass
+ * is then short, so the refill asks for the missing sure find (prompt.ts `refillPlan` offers no lucky).
+ */
+export function luckyLimit(per: Readonly<Record<Section, number>>, mix: Pick<Mix, "min" | "max">): number {
+  const short = per.park < mix.min.park || per.wild < mix.min.wild;
+  return short ? Math.min(1, mix.max.lucky) : mix.max.lucky;
+}
+
+/** Drops the last Lucky Finds of `items` (in place) beyond `luckyLimit`; updates `per`. */
+function capLucky<T extends { item: { section: Section } }>(items: T[], per: Record<Section, number>, mix: Pick<Mix, "min" | "max">): void {
+  const limit = luckyLimit(per, mix);
+  for (let i = items.length - 1; i >= 0 && per.lucky > limit; i--) {
+    if (items[i].item.section !== "lucky") continue;
+    items.splice(i, 1);
+    per.lucky--;
+  }
 }
 
 /**
@@ -571,13 +593,18 @@ export function mergeResults(primary: ValidationResult, other: ValidationResult,
   const used = new Set(items.map((v) => v.item.id));
   const perSection: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
   for (const v of items) perSection[v.item.section]++;
-  for (const v of other.items) {
+  // R3: the other answer's sure finds (park, wild) first, then its Lucky Finds inside `luckyLimit`.
+  const others = [...other.items.filter((v) => v.item.section !== "lucky"), ...other.items.filter((v) => v.item.section === "lucky")];
+  for (const v of others) {
     if (items.length >= mix.n) break;
-    if (used.has(v.item.id) || perSection[v.item.section] >= mix.max[v.item.section]) continue;
+    const s = v.item.section;
+    if (used.has(v.item.id) || perSection[s] >= mix.max[s]) continue;
+    if (s === "lucky" && perSection.lucky >= luckyLimit(perSection, mix)) continue;
     used.add(v.item.id);
-    perSection[v.item.section]++;
+    perSection[s]++;
     items.push(v);
   }
+  capLucky(items, perSection, mix);
   return {
     ...primary,
     items,

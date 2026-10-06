@@ -175,13 +175,19 @@ export function refillPlan(
   const untried = unused.filter((p) => !failed.has(p.id));
   const fits = (pool: readonly PoolItem[]) =>
     pool.length >= need && SECTIONS.every((s) => pool.filter((p) => p.section === s).length >= Math.max(0, plan.mix.min[s] - have[s]));
-  const pool = failed.size > 0 && fits(untried) ? untried : unused;
+  // R3 (Arbor Hills): while a sure section (park, wild) is below its minimum, the refill offers no
+  // second Lucky Find: the missing slot is for the sure find (validate.ts `luckyLimit`).
+  const shortSure = have.park < plan.mix.min.park || have.wild < plan.mix.min.wild;
+  const luckyMax = shortSure ? Math.min(1, plan.mix.max.lucky) : plan.mix.max.lucky;
+  const chosen = failed.size > 0 && fits(untried) ? untried : unused;
+  const pool = have.lucky >= luckyMax ? chosen.filter((p) => p.section !== "lucky") : chosen;
+  if (pool.length === 0) return null;
   const left: Record<Section, number> = { park: 0, wild: 0, lucky: 0 };
   for (const p of pool) left[p.section]++;
   const min = {} as Record<Section, number>;
   const max = {} as Record<Section, number>;
   for (const s of SECTIONS) {
-    max[s] = Math.max(0, Math.min(left[s], plan.mix.max[s] - have[s]));
+    max[s] = Math.max(0, Math.min(left[s], (s === "lucky" ? luckyMax : plan.mix.max[s]) - have[s]));
     min[s] = Math.min(max[s], Math.max(0, plan.mix.min[s] - have[s]));
   }
   const room = SECTIONS.reduce((a, s) => a + max[s], 0);

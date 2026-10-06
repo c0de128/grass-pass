@@ -61,3 +61,8 @@ Audit R3 leftovers builder M total (2026-10-06 CDT): fixture re-recording $0.001
 | 2026-10-06T15:33:01Z | PM decision 1B (builder N): re-recording of the Connemara REFILL call only in tests/fixtures (the first answer now keeps 6, so the refill request changed; not an eval run) | 1 | 1699 | 170 | $0.0004 |
 
 PM decision 1B builder N total (2026-10-06 CDT): **about $0.0004** (1 call).
+| 2026-10-06T16:58:24.211Z | 2026-10-06-4.md | 105 | 246775 | 42302 | $0.0746 |
+| 2026-10-06T17:18:02.471Z | 2026-10-06-partial-1218.md | 5 | 14364 | 2035 | $0.0036 |
+| 2026-10-06T16:58Z (approx) | Eval r4 (builder Q): 1 provider speed probe before the full run (not an eval run; 4.9 s, 182 answer tokens) | 1 | 30 | 182 | about $0.0001 |
+
+Eval r4 builder Q total (2026-10-06 CDT): probe about $0.0001 + full run 2026-10-06-4 $0.0746 (cap $0.09) + 10-13 smoke partial-1218 $0.0036 = **about $0.0783** (111 calls). SerpApi: 0 searches (the eval replays recorded data; Lucky Finds are not in the eval).

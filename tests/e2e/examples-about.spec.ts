@@ -54,7 +54,7 @@ test.describe("example parks", () => {
     await expect(page.getByRole("heading", { level: 1, name })).toBeVisible();
     expect(Date.now() - started).toBeLessThan(3_000);
     await expect(page).toHaveURL(/\/pass\/[nwr]\d+-6to10-\d{8}-[1-3]\?example=1$/);
-    await expect(page.getByText(/^Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/)).toBeVisible();
+    await expect(page.getByText(/^Clues written [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/)).toBeVisible();
     await expect(page.getByRole("link", { name: "Print pass" })).toBeVisible();
   });
 
@@ -114,7 +114,7 @@ test.describe("example parks", () => {
 test("/about: how a pass is made, measured numbers, Find This Spot, Lucky Finds and their free-plan limit", async ({ page }) => {
   const res = await page.goto("/about");
   expect(res?.status()).toBe(200);
-  await expect(page.getByRole("heading", { level: 1, name: "About Grass Pass" })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "An open model, a real park and a pencil." })).toBeVisible();
   for (const h of ["Measured, not promised.", "Open model. Real data. Rules in code.", "Details, one click away.", "Credits and licences"]) {
     await expect(page.getByRole("heading", { level: 2, name: h })).toBeVisible();
   }

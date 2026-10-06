@@ -11,7 +11,7 @@ export default function NotFound() {
           <h1 id="nf-title" className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
             Page not found
           </h1>
-          <p>There is no page at this address. It may have been typed wrong.</p>
+          <p>There&apos;s no page at this address (maybe a typo). Good news: the parks are right where you left them.</p>
           <Link href="/" prefetch={false} className={buttonClassName("primary", "self-start")}>
             Make a pass
           </Link>

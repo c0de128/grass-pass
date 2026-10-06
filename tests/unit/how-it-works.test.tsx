@@ -26,7 +26,7 @@ const t = text(html);
 describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detail, accurate to the code", () => {
   it("has one h1, the seven sections and an in-page index", () => {
     expect(html.match(/<h1/g)).toHaveLength(1);
-    expect(t).toContain("How Grass Pass works");
+    expect(t).toContain("How a park becomes a pass.");
     for (const id of ["quick", "steps", "ai-role", "why-open", "limits", "privacy", "built"]) {
       expect(html, id).toContain(`id="${id}"`);
       expect(html, id).toContain(`href="#${id}"`);

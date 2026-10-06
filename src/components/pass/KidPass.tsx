@@ -126,7 +126,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
           <span className="gp-name-line" aria-hidden="true" />
         </p>
         <p className="gp-intro">
-          {n === 1 ? "Find this thing." : `Find these ${n} things.`} Tick a box when you find one!
+          {n === 1 ? "Find this thing." : `Find these ${n} things.`} Spot one? Tick its box!
         </p>
       </div>
 

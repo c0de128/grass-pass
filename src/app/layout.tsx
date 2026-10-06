@@ -46,9 +46,9 @@ const Nunito = localFont({
   fallback: ["ui-rounded", "system-ui", "sans-serif"],
 });
 
-const TITLE = "Grass Pass: Gemma 4 reads your park and writes a one-page pass";
+const TITLE = "Grass Pass: Family time is back, powered by AI.";
 const DESCRIPTION =
-  "Pick a park and your kid's age. Gemma 4, an open-weight AI model, reads that park's map and the last 14 days of wildlife sightings and writes a one-page pass to print. Code checks every clue against its source.";
+  "A free one-page treasure hunt for your local park. Gemma 4, an open-weight AI model, reads that park's real map and the last 14 days of wildlife sightings and writes the clues. Code checks every one. Print it, and the phone stays in your pocket.";
 
 export const metadata: Metadata = {
   metadataBase: siteUrl(),

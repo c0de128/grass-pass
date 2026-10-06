@@ -4,7 +4,7 @@ export default function manifest(): MetadataRoute.Manifest {
   return {
     name: "Grass Pass",
     short_name: "Grass Pass",
-    description: "Your ticket to get outside: one-page park passes that Gemma 4 writes from each park's real map and wildlife sightings.",
+    description: "Your ticket to get outside: one-page park treasure hunts that Gemma 4, an open AI model, writes from each park's real map and wildlife sightings.",
     start_url: "/",
     display: "standalone",
     background_color: "#EEF3E2",

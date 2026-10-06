@@ -8,7 +8,7 @@ import { PassAnatomy } from "@/components/home/PassAnatomy";
 import { SampleParks } from "@/components/home/SampleParks";
 import { TWO_PARKS_SOURCE, TwoParks } from "@/components/home/TwoParks";
 import { AgePicker } from "@/components/pass/PassMaker";
-import { cardFacts, heroCard, liveStatement, passType, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
+import { cardFacts, heroCard, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
@@ -100,32 +100,14 @@ describe("home showcase (v0 slots filled with real data)", () => {
     const empty = cardFacts({ ...pass, items: [] });
     expect(empty.facts).toMatch(/^No data available/);
     expect(empty.count).toBe(0);
-    expect(empty.type).toBeNull();
     expect(empty.tags).toEqual([...(pass.spot?.status === "ok" ? ["Find This Spot map"] : []), ...(pass.october?.status === "ok" ? ["October monarch box"] : [])]);
   });
 
-  it("pass-type label: computed from the real Wild vs Park counts (Lucky left out), none when both are 0", () => {
+  it("A2 (Kevin 2026-10-06): the card shows only the real number of finds, no Wild / Mixed / Built label", () => {
     const pass = realPass();
-    const base = pass.items[0]!;
-    const make = (wild: number, park: number, lucky = 0): Pass => ({
-      ...pass,
-      items: [
-        ...Array.from({ length: wild }, (_, i) => ({ ...base, id: `w${i}`, section: "wild" as const })),
-        ...Array.from({ length: park }, (_, i) => ({ ...base, id: `p${i}`, section: "park" as const })),
-        ...Array.from({ length: lucky }, (_, i) => ({ ...base, id: `l${i}`, section: "lucky" as const })),
-      ],
-    });
-    expect(passType(make(6, 2))?.label).toBe("Wild Pass");
-    expect(passType(make(4, 2))?.label).toBe("Wild Pass");
-    expect(passType(make(3, 5))?.label).toBe("Mixed Pass");
-    expect(passType(make(4, 4))?.label).toBe("Mixed Pass");
-    expect(passType(make(2, 4))?.label).toBe("Built Pass");
-    expect(passType(make(0, 8))?.label).toBe("Built Pass");
-    expect(passType(make(0, 0, 3))).toBeNull();
     const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("connemara", pass)]} enabled />);
-    const t = passType(pass);
-    if (t) expect(html).toContain(t.label);
     expect(html).toContain(`${pass.items.length} finds to spot`);
+    for (const label of ["Wild Pass", "Mixed Pass", "Built Pass"]) expect(html).not.toContain(label);
     for (const fake of ["50+", "30+", "20+", "40+", "google.com"]) expect(html).not.toContain(fake);
   });
 

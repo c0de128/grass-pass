@@ -7,8 +7,8 @@ import { expect, test, type Page } from "@playwright/test";
 
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
 const PAGES = [
-  { path: "/about", h1: "About Grass Pass" },
-  { path: "/how-it-works", h1: "How Grass Pass works" },
+  { path: "/about", h1: "An open model, a real park and a pencil." },
+  { path: "/how-it-works", h1: "How a park becomes a pass." },
 ] as const;
 
 const openAll = (page: Page) => page.evaluate(() => document.querySelectorAll("details").forEach((d) => (d.open = true)));

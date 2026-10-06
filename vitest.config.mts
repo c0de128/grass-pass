@@ -15,7 +15,9 @@ export default defineConfig({
     // Connemara pass makes 5 iNat calls since the R1-M4 season check (species, taxa, 3 phenology), about 4-5 s.
     testTimeout: 15_000,
     include: ["tests/unit/**/*.test.ts", "tests/unit/**/*.test.tsx"],
+    // R1 follow-up: the clock starts at the recording time and moves (support/recording-clock.ts), so the
+    // October-only recordings (season check, October box) keep matching after October. Loaded first.
     // R1: background OSM refreshes off by default (tests that check them switch them on).
-    setupFiles: ["tests/unit/support/setup.ts"],
+    setupFiles: ["tests/unit/support/recording-clock.ts", "tests/unit/support/setup.ts"],
   },
 });

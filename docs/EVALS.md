@@ -28,8 +28,8 @@ was switched off for the run).
 | M11 Printed clues with a wrong count (target 0) | 0 of 96 (12 removed by the check) | 0 of 11 (12 removed) | 0 of 6 | 0 of 81 (13 removed) | not measured |
 
 Errors in this run: **no Gemma pass was lost.** 3 Gemma first calls failed (2 at the 30 s limit, 1 HTTP 403) and each
-got the new whole retry; all 3 passes finished complete (7/8). Gemma made 80 calls for 60 passes: 33 passes used 1
-call, 16 used 2, 5 used 3 (6 no-data parks made none). Llama: 4 passes lost to its 60 s limit, and 6 of its refills hit
+got the new whole retry; all 3 passes finished complete (7/8). Gemma made 80 calls for 60 test runs (54 passes): 33 passes used 1
+call, 16 used 2, 5 used 3 (6 runs on the 2 no-data parks made none). Llama: 4 passes lost to its 60 s limit, and 6 of its refills hit
 the new 20 s refill limit (at about 17.7 tokens/s a 300-token refill does not fit); its M6 rose to 16.7%.
 
 What changed since run `-5`, and why (details in the notes):

@@ -5,10 +5,10 @@ import { TicketCard } from "@/components/ui/TicketCard";
 /** Any address that isn't a page here (HTTP 404). */
 export default function NotFound() {
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8 focus:outline-none">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-14 focus:outline-none sm:py-20">
       <TicketCard as="section" aria-labelledby="nf-title">
         <div className="flex flex-col gap-4">
-          <h1 id="nf-title" className="text-3xl font-bold">
+          <h1 id="nf-title" className="text-4xl font-extrabold tracking-tight text-ink sm:text-5xl">
             Page not found
           </h1>
           <p>There is no page at this address. It may have been typed wrong.</p>

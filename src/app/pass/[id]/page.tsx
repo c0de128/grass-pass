@@ -34,14 +34,14 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   if (!pass) notFound();
 
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-8 focus:outline-none">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 focus:outline-none sm:py-14">
       {/* Print first: on a phone the pass is long, and printing is the point (R1 judge/UX). */}
       <div className="flex flex-wrap items-center gap-3">
         {/* Opens the one-page print layout, which opens the print dialog once (ADR 0004). */}
         <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
           Print pass
         </Link>
-        <p className="text-base">One black-and-white page. Cut it in two: the kid takes the top.</p>
+        <p className="text-base text-muted-foreground">One black-and-white page. Cut it in two: the kid takes the top.</p>
       </div>
       <PassPreview pass={pass} reused={sp.reused === "1"} />
       <div className="flex flex-col gap-4">

@@ -19,6 +19,9 @@ import { configuredModelId } from "@/lib/model";
 import { OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
+import { PhotoCreditLine } from "@/components/home/PhotoCredits";
+import { PARK_PHOTOS } from "@/data/photo-credits";
+import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { REPO_URL } from "@/lib/site-url";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
@@ -41,7 +44,7 @@ const resultsUrl = `${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}`;
 function Section({ id, title, children }: { id: string; title: string; children: ReactNode }) {
   return (
     <section aria-labelledby={id} className="flex flex-col gap-3">
-      <h2 id={id} className="text-2xl font-bold sm:text-3xl">
+      <h2 id={id} className="scroll-mt-20 text-3xl leading-tight font-extrabold tracking-tight text-ink sm:text-4xl">
         {title}
       </h2>
       {children}
@@ -118,7 +121,7 @@ function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
     { label: "Licence", plain: "The rules for using the model's weights.", cell: (c) => c.licence },
   ];
   return (
-    <div className="overflow-x-auto rounded-control border-2 border-line" role="region" aria-labelledby="eval-caption" tabIndex={0}>
+    <div className="overflow-x-auto rounded-3xl bg-card ring-1 ring-border" role="region" aria-labelledby="eval-caption" tabIndex={0}>
       <table className="w-full min-w-[640px] border-collapse text-left text-base">
         <caption id="eval-caption" className="px-4 pt-3 pb-2 text-left font-bold">
           Measured on {EVAL_PARKS} real parks, age band {EVAL_AGE_BAND}, {EVAL_DAY} (same park data, same safety and grounding
@@ -209,10 +212,11 @@ export default function AboutPage() {
   // Llama 4 Community Licence: show "Built with Llama" whenever the server is set to answer with a Llama model.
   const servingLlama = isLlamaModel(configuredModelId());
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-10 px-5 py-8 focus:outline-none">
+    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-12 px-5 py-10 focus:outline-none sm:py-14">
       <TicketCard as="section" aria-labelledby="about-title">
         <div className="flex flex-col gap-3">
-          <h1 id="about-title" className="text-4xl font-bold">
+          <p className="text-xs font-bold tracking-widest text-primary uppercase">About</p>
+          <h1 id="about-title" className="text-5xl leading-[0.95] font-extrabold tracking-tighter text-ink">
             About Grass Pass
           </h1>
           <p className="text-lg font-semibold">Your ticket to get outside.</p>
@@ -341,7 +345,7 @@ export default function AboutPage() {
         </p>
         <EvalTable columns={EVAL_COLUMNS} />
 
-        <h3 className="mt-2 text-xl font-bold">What did not pass yet (current limitations)</h3>
+        <h3 className="mt-2 text-xl font-extrabold text-ink">What did not pass yet (current limitations)</h3>
         <ul className="flex list-disc flex-col gap-2 pl-6">
           <li>
             <strong>Complete passes: Gemma just passes ({pct(gemma.completePct)}, {gemma.complete} of {gemma.dataRichRuns};
@@ -402,7 +406,7 @@ export default function AboutPage() {
           No accounts, no names, no photos, no cookies, no analytics. The only things kept in your browser are your light or
           dark choice and the last age band you picked. Nothing about the child is ever asked for or sent.
         </p>
-        <div className="overflow-x-auto rounded-control border-2 border-line" role="region" aria-labelledby="privacy-caption" tabIndex={0}>
+        <div className="overflow-x-auto rounded-3xl bg-card ring-1 ring-border" role="region" aria-labelledby="privacy-caption" tabIndex={0}>
           <table className="w-full min-w-[560px] border-collapse text-left text-base">
             <caption id="privacy-caption" className="px-4 pt-3 pb-2 text-left font-bold">
               Everything that leaves your device, where it goes and why
@@ -486,10 +490,31 @@ export default function AboutPage() {
             ) : null}
           </li>
           <li>
-            Logo and art: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced,
-            hand-cleaned SVG redraw of it.
+            Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported into this app by hand. The site
+            logo is a small green ticket with a sprout icon from{" "}
+            <a className={ext} href="https://lucide.dev/">
+              Lucide
+            </a>{" "}
+            (ISC licence), which also draws the other icons on the site.
           </li>
-          <li>Fonts: Fredoka and Nunito (SIL Open Font License 1.1), served from this site.</li>
+          <li>
+            Park photos on the home page (real photos of each park, used under their free licences):
+            <ul className="mt-1 list-disc pl-6" data-testid="about-photo-credits">
+              {Object.values(PARK_PHOTOS).map((p) => (
+                <li key={p.src}>
+                  <PhotoCreditLine photo={p} />
+                </li>
+              ))}
+            </ul>
+          </li>
+          <li>{ILLUSTRATION_CREDIT} It shows no real child or park.</li>
+          <li>
+            Printed pass logo, app icons and share images: the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned SVG redraw of it.
+          </li>
+          <li>
+            Fonts: Bricolage Grotesque and DM Sans on the site, Fredoka and Nunito on the printed pass (all SIL Open Font
+            License 1.1), served from this site.
+          </li>
           <li>
             App code: MIT licence. A few generic building blocks (the model client, rate limits and caps, request guards
             and in-flight de-duplication) were adapted from the same author&apos;s unpublished practice project, written on

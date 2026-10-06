@@ -319,16 +319,34 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   They have changed a lot since (shared Upstash store, hashed IP keys, Overpass queues). Everything specific to Grass
   Pass was written from **Oct 5, 2026**: data sources, pools, safety filter, prompt, clue checks, the pass, print
   layout, Find This Spot map, October box, evals and brand.
-- **Brand:** the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned
-  SVG redraw of it (`brand/`, `scripts/brand/art.mjs`; the kid's clothes and hair are cleaned traces in
-  `scripts/brand/kid-trace.json`).
-- Fonts: [Fredoka](https://fonts.google.com/specimen/Fredoka) 600/700 and [Nunito](https://fonts.google.com/specimen/Nunito)
-  400/600/700 for the site text: the latin `.woff2` files from [Fontsource](https://fontsource.org/) 5.3.0
-  (`@fontsource/fredoka`, `@fontsource/nunito`) are committed in `src/app/fonts/` with their OFL licence texts and
+- **Site design (v3, Oct 6, 2026):** designed by Kevin in [v0 by Vercel](https://v0.app/) and ported into this app by
+  hand (no v0 runtime code, no analytics). Site logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
+- **Home page pictures:** the hero picture is an AI illustration generated with v0 by Vercel (labelled "AI illustration"
+  on the page; it shows no real child or park). The four park pictures are real photos of those parks, used under
+  their free licences (credited on each photo, under the cards and on `/about`; details in `src/data/photo-credits.ts`):
+  - Arbor Hills Nature Preserve: [trail vista](https://commons.wikimedia.org/wiki/File:Arbor_Hills_Nature_Preserve.jpg)
+    by Robert Nunnally, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (Wikimedia Commons).
+  - White Rock Lake: [Dallas Texas - HCP - September 21, 2022 - 007 - White Rock Lake](https://commons.wikimedia.org/wiki/File:Dallas_Texas_-_HCP_-_September_21,_2022_-_007_-_White_Rock_Lake.jpg)
+    by Vulturesong, [CC0 1.0](https://creativecommons.org/publicdomain/zero/1.0/) (Wikimedia Commons).
+  - Celebration Park: [Sunday morning walk](https://www.flickr.com/photos/46183897@N00/6369488567/) by Robert Nunnally,
+    [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (Flickr).
+  - Connemara Meadow Preserve: [Connemara Meadow](https://www.flickr.com/photos/46183897@N00/17345556215/) by Robert
+    Nunnally, [CC BY 2.0](https://creativecommons.org/licenses/by/2.0/) (Flickr).
+
+  All four were resized and converted to WebP (no other changes).
+- **Brand (printed pass, icons, share images):** the original banner was made by Kevin with Google Gemini; the logo and
+  scene are a traced, hand-cleaned SVG redraw of it (`brand/`, `scripts/brand/art.mjs`; the kid's clothes and hair are
+  cleaned traces in `scripts/brand/kid-trace.json`).
+- Fonts: [Bricolage Grotesque](https://fonts.google.com/specimen/Bricolage+Grotesque) and
+  [DM Sans](https://fonts.google.com/specimen/DM+Sans) for the site (v3; the latin variable "wght" `.woff2` files from
+  `@fontsource-variable` 5.3.0), and [Fredoka](https://fonts.google.com/specimen/Fredoka) 600/700 and
+  [Nunito](https://fonts.google.com/specimen/Nunito) 400/600/700 for the printed pass (the latin `.woff2` files from
+  [Fontsource](https://fontsource.org/) 5.3.0, `@fontsource/fredoka`, `@fontsource/nunito`). All are committed in
+  `src/app/fonts/` with their OFL licence texts and
   served by `next/font/local`, so neither the build nor the browser contacts Google Fonts. The logo lettering is outlined to SVG paths from
   [M PLUS Rounded 1c](https://fonts.google.com/specimen/M+PLUS+Rounded+1c) ExtraBold ("GRASS PASS") and
   [Varela Round](https://fonts.google.com/specimen/Varela+Round) (tagline), via their `@fontsource` copies (dev only).
-  All four are SIL Open Font License 1.1.
+  All six are SIL Open Font License 1.1.
 - Asset tooling (dev only): [opentype.js](https://github.com/opentypejs/opentype.js) (MIT) and
   [@resvg/resvg-js](https://github.com/thx/resvg-js) (MPL-2.0).
 - Park names, locations and features: © [OpenStreetMap contributors](https://www.openstreetmap.org/copyright), ODbL 1.0,

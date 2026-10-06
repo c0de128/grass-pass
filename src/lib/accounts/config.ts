@@ -5,7 +5,7 @@
  * Which sign-in buttons exist is decided here from the env, so a provider without its keys never shows
  * a button that can't work. Nothing here is a secret.
  */
-import { intFromEnv } from "@/lib/limits/config";
+import { capFromEnv } from "@/lib/limits/config";
 
 type Env = Record<string, string | undefined>;
 
@@ -76,7 +76,8 @@ export function judgeDemoEnabled(env: Env = process.env): boolean {
 }
 
 export function judgeDailyCap(env: Env = process.env): number {
-  return intFromEnv(env.JUDGE_DEMO_DAILY_CAP, JUDGE_DEMO_DAILY_CAP_DEFAULT);
+  // SEC-5-02: JUDGE_DEMO_DAILY_CAP=0 means the judge demo makes no new passes (it used to silently mean 60).
+  return capFromEnv(env.JUDGE_DEMO_DAILY_CAP, JUDGE_DEMO_DAILY_CAP_DEFAULT);
 }
 
 /** Sign-in works at all only with AUTH_SECRET (it encrypts the session cookie and keys the account ids). */
@@ -116,6 +117,7 @@ export function judgeLimitMessage(scope: "global" | "key", env: Env = process.en
   // RULES-4-02: name only the providers set up on this server.
   const names = oauthProviderNames(env);
   const after = `Saved passes and the examples still work${names ? `, or sign in with ${names}` : ""}. New demo passes again after midnight (Dallas time).`;
+  if (scope === "global" && judgeDailyCap(env) === 0) return `The judge demo is paused today: it makes no new passes right now. ${after}`;
   if (scope === "global") return `0 of ${judgeDailyCap(env)} judge passes left today: the judge demo account has made all its new passes (shared by every judge). ${after}`;
   return `0 judge passes left today for your connection: it has made its ${JUDGE_PASSES_PER_IP_PER_DAY} judge demo passes (other judges have their own). ${after}`;
 }

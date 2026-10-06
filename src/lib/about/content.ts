@@ -167,7 +167,7 @@ export function privacyRows(): PrivacyRow[] {
     },
     {
       what: `Signing in ${[names ? `with ${names}` : null, judgeDemoEnabled() ? `with "Try as a judge"` : null].filter(Boolean).join(" or ")} (grown-ups only)`.replace("Signing in  (", "Signing in ("),
-      where: "The provider sends an account number and a name. We store only a scrambled ID made from the number: no email, no name, no picture. The name stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.",
+      where: "GitHub or Google send your public profile (account number, name, picture link; for GitHub any public email). We store only a scrambled ID made from the number; the rest is dropped at once, except your first name, which stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.",
       why: "To count your 2 new passes a day and your reports.",
     },
     {

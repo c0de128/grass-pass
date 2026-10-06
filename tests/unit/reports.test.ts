@@ -289,6 +289,25 @@ describe("POST /api/report and the pool step", () => {
     expect(last).toBe(429);
   });
 
+  it("SEC-5-01: one judge browser using up its hourly reports does not block another judge; 404s never use it up", async () => {
+    const a = await newAccountCookie();
+    const pass = await makePassAs(a.cookie);
+    const ref = pass.items[0].ref!;
+    const jA = await judgeCookie();
+    const jB = await judgeCookie();
+    // Made-up pass ids answer 404 before the per-account limit, so 40 of them leave judge A's hour untouched.
+    for (let i = 0; i < 40; i++) {
+      expect((await reportRoute.POST(jsonPost("/api/report", { passId: "w123-6to10-20261006-1", ref: "osm-playground", kind: "notfound" }, jA.cookie))).status).toBe(404);
+    }
+    const statuses: number[] = [];
+    for (let i = 0; i < 31; i++) statuses.push((await reportRoute.POST(jsonPost("/api/report", { passId: pass.id, ref, kind: "found" }, jA.cookie))).status);
+    expect(statuses.slice(0, 30).every((s) => s === 200)).toBe(true);
+    expect(statuses[30]).toBe(429);
+    const b = await reportRoute.POST(jsonPost("/api/report", { passId: pass.id, ref, kind: "found" }, jB.cookie));
+    expect(b.status).toBe(200);
+    expect(((await b.json()) as { status: string }).status).toBe("logged");
+  });
+
   it("the judge demo: its reports are logged, never counted or shown; each judge browser has its own dedupe", async () => {
     const a = await newAccountCookie();
     const pass = await makePassAs(a.cookie);

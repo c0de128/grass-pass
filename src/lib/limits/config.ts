@@ -21,7 +21,13 @@ export function capFromEnv(value: string | undefined, fallback: number): number 
 }
 
 export type LimitsConfig = {
-  /** Model calls per Chicago day, all users together (~$0.20 at 400). */
+  /**
+   * Model calls per Chicago day, all users together (each pass makes 1-3 calls; each call counts). SEC-5-03: at 400
+   * calls a day that is about $0.28 typical ($0.0004-0.0009 a call) and at most about $0.55 (a ~4,000-token prompt +
+   * 1,200 max output at $0.18/$0.50 per million). callModel may send one counted call twice on a network error or
+   * 5xx (usually unbilled). The $10 prepaid DigitalOcean credit is the hard ceiling, not this cap.
+   * SEC-5-02: AI_DAILY_CAP=0 switches new model passes off ("paused").
+   */
   aiDailyCap: number;
   passPerIpPerMin: number;
   passPerIpPerDay: number;
@@ -80,7 +86,7 @@ export const SERPAPI_FREE_MONTHLY = 250;
 export function limitsConfig(env: Env = process.env): LimitsConfig {
   const d = LIMIT_DEFAULTS;
   return {
-    aiDailyCap: intFromEnv(env.AI_DAILY_CAP, d.aiDailyCap),
+    aiDailyCap: capFromEnv(env.AI_DAILY_CAP, d.aiDailyCap),
     passPerIpPerMin: intFromEnv(env.PASS_PER_IP_PER_MIN, d.passPerIpPerMin),
     passPerIpPerDay: intFromEnv(env.PASS_PER_IP_PER_DAY, d.passPerIpPerDay),
     parksPerIpPerMin: intFromEnv(env.PARKS_PER_IP_PER_MIN, d.parksPerIpPerMin),
@@ -100,9 +106,10 @@ export function limitsConfig(env: Env = process.env): LimitsConfig {
 
 /**
  * The AI_DAILY_CAP a request may use: the whole cap for the example parks and the server pre-warm,
- * the cap minus the reserved slice for everything else (SEC-1-05). Always at least 1.
+ * the cap minus the reserved slice for everything else (SEC-1-05). At least 1, unless the cap is 0 (switched off).
  */
 export function aiCapFor(cfg: Pick<LimitsConfig, "aiDailyCap" | "aiReservePct">, reserved: boolean): number {
+  if (cfg.aiDailyCap <= 0) return 0;
   if (reserved) return cfg.aiDailyCap;
   return Math.max(1, cfg.aiDailyCap - Math.ceil((cfg.aiDailyCap * cfg.aiReservePct) / 100));
 }

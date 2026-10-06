@@ -96,6 +96,11 @@ Every environment variable is explained in [`.env.example`](.env.example); keys 
 works and a new pass says the model is not configured. `AUTH_SECRET` switches on sign-in and "Try as a judge";
 without it, examples, search, shared passes and printing work, but new passes can't be made.
 
+**Stopping spend in an emergency:** `AI_DAILY_CAP=0` pauses new model passes and `JUDGE_DEMO_DAILY_CAP=0` stops new judge
+passes (`SERPAPI_DAILY_CAP=0` does the same for SerpApi); an empty `DO_INFERENCE_API_KEY` stops every model call.
+At the default `AI_DAILY_CAP=400` calls (a pass makes 1-3), a full day costs about $0.28 typical and at most about $0.55
+at DigitalOcean list prices; the $10 prepaid credit is the hard ceiling.
+
 | Script | What it does |
 |---|---|
 | `pnpm lint` | ESLint, zero warnings allowed |
@@ -256,7 +261,7 @@ https). What leaves the device (also on `/about`):
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP, web address, time) | Vercel request logs, about 1 hour on the Hobby plan; searches are POSTs, so the logs never hold the typed place or location | running the site |
-| Signing in (grown-ups only) | GitHub (or Google, when configured) sends an account number and a name. We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`): no email, name or avatar. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in; the judge demo sign-in stops working after 1 day | count 2 new passes a day and the reports |
+| Signing in (grown-ups only) | GitHub (or Google, when configured) sends the public profile (account number, name, picture link; for GitHub any public email). We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`); the rest is dropped at once: no email, name or avatar is stored. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in; the judge demo sign-in stops working after 1 day | count 2 new passes a day and the reports |
 | Item reports | per park and item, each visitor's latest kind and day under a per-park reporter ID (an HMAC, so IDs can't be linked across parks); judge demo reports only logged; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
 | The finished pass | Upstash Redis, 30 days | the pass link and print page |
 

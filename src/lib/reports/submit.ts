@@ -1,7 +1,7 @@
 /**
  * POST /api/report behind its guards. Order: same origin / resting / JSON / 2 KB body / zod (guardJsonPost)
- * -> signed in (401) -> per-account and per-IP hourly limits (429) -> the pass exists and has that item (404)
- * -> one report (src/lib/reports). CSRF: same-origin check + JSON content type (no simple cross-site form
+ * -> signed in (401) -> per-IP hourly limit (429) -> the pass exists and has that item (404) -> per-account hourly
+ * limit (429; the judge demo: per judge sign-in, SEC-5-01) -> one report (src/lib/reports). CSRF: same-origin check + JSON content type (no simple cross-site form
  * can send it) + the SameSite=Lax session cookie.
  *
  * Store commands (measured in tests/unit/store-cost.test.ts): 2 rate-limit EVALs, at most 1 pass GET
@@ -46,24 +46,26 @@ export async function submitReport(req: Request, now: () => number = () => Date.
   if (!account) return jsonError(401, { code: "SIGN_IN_REQUIRED", message: "Sign in to send a report (it's for grown-ups)." });
 
   const store = getStore("limits");
+  const limited = (retryAfter: number) =>
+    jsonError(429, {
+      code: "RATE_LIMITED",
+      message: `That's a lot of reports in an hour. Please wait ${waitText(retryAfter)} and try again.`,
+      retryAfter,
+    });
   try {
-    for (const [name, key, limit] of [
-      ["report-acct", account.key, REPORTS_PER_ACCOUNT_PER_HOUR],
-      ["report-ip", clientIp(req), REPORTS_PER_IP_PER_HOUR],
-    ] as const) {
-      const rl = await hitRateLimit(store, { name, key, limit, windowSec: 3600, now: now() });
-      if (!rl.ok) {
-        return jsonError(429, {
-          code: "RATE_LIMITED",
-          message: `That's a lot of reports in an hour. Please wait ${waitText(rl.retryAfter)} and try again.`,
-          retryAfter: rl.retryAfter,
-        });
-      }
-    }
+    // Per IP first (it guards the pass lookup below), then the pass/item check, then the per-account limit.
+    const ip = await hitRateLimit(store, { name: "report-ip", key: clientIp(req), limit: REPORTS_PER_IP_PER_HOUR, windowSec: 3600, now: now() });
+    if (!ip.ok) return limited(ip.retryAfter);
     const pass = await loadPass(g.data.passId, now());
     if (!pass || !pass.items.some((it) => it.ref === g.data.ref)) {
       return jsonError(404, { code: "NOT_FOUND", message: "That item isn't on a saved pass anymore, so it can't be reported." });
     }
+    // SEC-5-01: every "Try as a judge" sign-in shares ONE account key, so the judge demo's per-account limit is keyed
+    // on the per-sign-in (browser) id; otherwise one judge could use up every judge's hour. Made-up pass ids (404)
+    // never reach it.
+    const acctKey = account.judge && account.session ? `j:${account.session}` : account.key;
+    const acct = await hitRateLimit(store, { name: "report-acct", key: acctKey, limit: REPORTS_PER_ACCOUNT_PER_HOUR, windowSec: 3600, now: now() });
+    if (!acct.ok) return limited(acct.retryAfter);
     const r = await recordItemReport(store, {
       parkId: pass.park.id,
       ref: g.data.ref,

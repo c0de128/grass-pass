@@ -192,6 +192,13 @@ describe("which sign-in buttons exist", () => {
     expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "-1" })).toBe(60);
   });
 
+  it("SEC-5-02: JUDGE_DEMO_DAILY_CAP=0 means no new judge passes (not the default), with an honest paused message", () => {
+    expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "0" })).toBe(0);
+    expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: " 0 " })).toBe(0);
+    expect(judgeLimitMessage("global", { JUDGE_DEMO_DAILY_CAP: "0" })).toMatch(/^The judge demo is paused today/);
+    expect(judgeLimitMessage("global", {})).toMatch(/^0 of 60 judge passes left today/);
+  });
+
   it("session cookies: JWT strategy, Auth.js defaults are httpOnly + SameSite=Lax (+ Secure on https)", () => {
     const cfg = authConfig(ENV);
     expect(cfg.session?.strategy).toBe("jwt");

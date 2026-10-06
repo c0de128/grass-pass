@@ -167,6 +167,15 @@ describe("IPv6 /48 bucket and the reserved AI slice (SEC-1-05)", () => {
     expect(aiCapFor(cfg, false)).toBe(360);
     expect(aiCapFor(limitsConfig({ AI_RESERVE_PCT: "0" }), false)).toBe(400);
     expect(aiCapFor(limitsConfig({ AI_RESERVE_PCT: "90" }), false)).toBe(200); // capped at 50%
+  });
+
+  it("SEC-5-02: AI_DAILY_CAP=0 switches new model passes off for everyone (it used to silently mean 400)", () => {
+    expect(limitsConfig({ AI_DAILY_CAP: "0" }).aiDailyCap).toBe(0);
+    expect(limitsConfig({ AI_DAILY_CAP: "-3" }).aiDailyCap).toBe(400);
+    expect(limitsConfig({}).aiDailyCap).toBe(400);
+    expect(aiCapFor(limitsConfig({ AI_DAILY_CAP: "0" }), true)).toBe(0);
+    expect(aiCapFor(limitsConfig({ AI_DAILY_CAP: "0" }), false)).toBe(0);
+    expect(aiCapFor(limitsConfig({ AI_DAILY_CAP: "1" }), false)).toBe(1);
     expect(aiCapFor(limitsConfig({ AI_DAILY_CAP: "1" }), false)).toBe(1);
   });
 

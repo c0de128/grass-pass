@@ -402,7 +402,9 @@ export function validateDraft(
     const traitHit = traits.length > 0 && nameLeak(d.clue, traits) !== null;
     // ... but a clue that says the trait word is in its NAME ("Sneak up on a tree with a white name." for
     // American elm, also called white elm: builder N's live refill, 2026-10-06) gives the name away: a hard leak.
-    if (traitHit && NAME_TALK_RE.test(d.clue)) {
+    // Audit R4-C2: a Wild Find clue about its NAME ("a tree with a name like a pencil" for pencil cedar, "flowers that
+    // have a worm-like root name", builder R2 live smoke) is a name riddle, never something to see: a hard leak.
+    if ((traitHit || item.section === "wild") && NAME_TALK_RE.test(d.clue)) {
       drop("name_leak");
       continue;
     }

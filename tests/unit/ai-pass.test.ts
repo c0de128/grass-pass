@@ -267,11 +267,11 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       rp.mix,
       { ...rp.validate, prior: conn.items },
     );
-    // The refill keeps nothing: "Which tree has a name like a color?" (American elm), "Watch for a medium-sized bird
-    // of prey?" (hawk) and "Somewhere, a tiny creature has a round shell?" carry no trait of their own (R3 generic
-    // check). The pass prints 6 of 8, honestly.
+    // The refill keeps nothing: "Which tree has a name like a color?" (American elm) talks about its name (a hard leak
+    // for a Wild Find since audit R4), and "Watch for a medium-sized bird of prey?" (hawk) and "Somewhere, a tiny
+    // creature has a round shell?" carry no trait of their own (R3 generic check). The pass prints 6 of 8, honestly.
     expect(rv.items).toEqual([]);
-    expect(rv.drops).toEqual({ generic_clue: 3 });
+    expect(rv.drops).toEqual({ generic_clue: 2, name_leak: 1 });
     expect(withRefill(conn, rv, connPlan.mix).items).toHaveLength(6);
     // S5: Celebration's live answer has a riddle for the X at the picnic shelter, and it passes every riddle
     // check (the shelter fact's words vary per park now: "pillars"); Connemara has no target and no spot.

@@ -103,6 +103,17 @@ describe("C2: a name's own describing phrase is a hard leak; a lone colour word 
   });
 });
 
+describe("C2: a Wild Find clue about its name is a hard leak", () => {
+  it("real clues: 'a name like a pencil', 'a worm-like root name'; a Park Find's plant tags stay", () => {
+    const pool = data["white-rock-lake-park"].pool;
+    const glory = item("white-rock-lake-park", /^White Morning-glory/);
+    const out = validateDraft({ items: [draft(glory, "Somewhere you will see a plant with flowers that have a worm-like root name.", "show it with flowers")] }, pool, oneOf("wild"));
+    expect(out.drops).toEqual({ name_leak: 1 });
+    const tree = pool.find((p) => p.section === "wild" && p.kind === "plant" && p !== glory)!;
+    expect(validateDraft({ items: [draft(tree, "Find a tree with a name like a pencil.")] }, pool, oneOf("wild")).drops).toEqual({ name_leak: 1 });
+  });
+});
+
 describe("C2: clue voice", () => {
   it("the opener bank holds no rotating fancy verbs, and no voice asks for 'I and my' riddles", () => {
     for (const w of ["Explore", "Glance", "Track", "Seek", "Discover", "Scan", "Squint", "Tiptoe", "Sneak", "Wander", "Spy"]) expect(OPENER_BANK).not.toContain(w);

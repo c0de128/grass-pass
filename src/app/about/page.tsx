@@ -232,7 +232,7 @@ export default function AboutPage() {
                 ))}
               </ul>
               <p className="text-sm text-muted-foreground">
-                No data for a park? The pass says <strong className="text-ink">&quot;No data available&quot;</strong> and why.
+                No data? The pass says <strong className="text-ink">&quot;No data available&quot;</strong> and why.
                 Never padded.
               </p>
             </article>

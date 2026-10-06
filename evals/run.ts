@@ -479,16 +479,16 @@ export async function checkReplay(): Promise<{ lane: number; caseN: number; kind
   const meter = new SpendMeter(1);
   const noKey = {};
   const spec = MODEL_SPECS["gemma-4-31B-it"];
-  const loaded: { c: EvalCase; fx: EvalFixture; data: CaseData }[] = [];
-  for (const c of casesFile.cases) {
-    const fx = loadFixture(c.slug);
-    const r = await caseDataOrNull(fx, casesFile.ageBand);
-    if (!r.data) throw new Error(`case ${c.n}: ${r.problem}`);
-    loaded.push({ c, fx, data: r.data });
-  }
   const out: { lane: number; caseN: number; kind: RunRecord["kind"]; errorCode?: string; message?: string }[] = [];
   const restore = setLogSink(() => undefined);
   try {
+    const loaded: { c: EvalCase; fx: EvalFixture; data: CaseData }[] = [];
+    for (const c of casesFile.cases) {
+      const fx = loadFixture(c.slug);
+      const r = await caseDataOrNull(fx, casesFile.ageBand);
+      if (!r.data) throw new Error(`case ${c.n}: ${r.problem}`);
+      loaded.push({ c, fx, data: r.data });
+    }
     await Promise.all(
       [1, 2].map(async (lane) => {
         for (const l of loaded) {

@@ -1,9 +1,14 @@
 import { after, connection } from "next/server";
-import { ExampleChips, ExampleParks } from "@/components/ExampleParks";
-import { Hero } from "@/components/Hero";
+import { FinalCta } from "@/components/home/FinalCta";
+import { HomeHero } from "@/components/home/HomeHero";
+import { HowItWorks } from "@/components/home/HowItWorks";
+import { PassAnatomy } from "@/components/home/PassAnatomy";
+import { SampleParks } from "@/components/home/SampleParks";
+import { TwoParks } from "@/components/home/TwoParks";
 import { RestingNotice } from "@/components/RestingNotice";
 import { PassMaker } from "@/components/pass/PassMaker";
 import { memoize } from "@/lib/cache/memo";
+import { heroCard, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { restingState } from "@/lib/limits/budget";
 import { exampleStatuses, prewarmEnabled, prewarmIdle } from "@/lib/prewarm";
 
@@ -20,6 +25,10 @@ export const maxDuration = 90;
 const EXAMPLES_MEMO_MS = 5 * 60_000;
 const EXAMPLES_UNSETTLED_MEMO_MS = 30_000;
 
+/**
+ * v3 home (Kevin's v0 design, 2026-10-06). Every slot the design filled with sample text shows real data from
+ * the saved example passes, or says why there is none (src/lib/home/showcase.ts).
+ */
 export default async function Home() {
   // Request-time: never baked at build.
   await connection();
@@ -33,23 +42,16 @@ export default async function Home() {
   // Keep any background refresh this visit started alive after the response (serverless).
   after(() => prewarmIdle());
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-5xl flex-1 flex-col gap-6 px-5 py-8 focus:outline-none">
-      <Hero title="Your ticket to get outside." lead="Pick a park. Print a pass. Phone away.">
-        <div className="flex flex-col gap-2">
-          <p className="text-base">
-            Just looking?{" "}
-            <a href="#examples-title" className="font-semibold underline">
-              See a real example pass
-            </a>
-            .
-          </p>
-          {/* Phones: the example cards sit below the fold, so the ready ones are one tap away here. */}
-          <ExampleChips statuses={statuses} />
-        </div>
+    <main id="main" tabIndex={-1} className="flex w-full flex-1 flex-col focus:outline-none">
+      <HomeHero card={heroCard(statuses)} examples={readyExamples(statuses)}>
         <RestingNotice state={resting} />
         <PassMaker />
-      </Hero>
-      <ExampleParks statuses={statuses} enabled={enabled} />
+      </HomeHero>
+      <TwoParks />
+      <HowItWorks />
+      <PassAnatomy spot={spotQuote(statuses)} />
+      <SampleParks statuses={statuses} enabled={enabled} />
+      <FinalCta />
     </main>
   );
 }

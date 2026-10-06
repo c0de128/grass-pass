@@ -151,6 +151,11 @@ export type ExampleStatus = {
   example: ExamplePark;
   /** The last good pass (link target), or null when none was made yet. */
   pass: Saved | null;
+  /**
+   * That pass itself (already read for the link check, so no extra store read): the home page shows its real
+   * park facts, sections and first finds. Absent when there is no pass.
+   */
+  passData?: Pass | null;
   /** True when that pass is from today (Chicago day) and not a degraded one that may be rebuilt now. */
   fresh: boolean;
   /** True when this server is making a new one right now. */
@@ -268,7 +273,7 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
             : err
               ? `No data available yet: the last try didn't work because ${failureReason(err.code)}.`
               : "No data available yet: no pass has been made for it today.";
-    out.push({ example: ex, pass: saved, fresh, refreshing, missing });
+    out.push({ example: ex, pass: saved, passData: saved ? pass : null, fresh, refreshing, missing });
   }
   return out;
 }

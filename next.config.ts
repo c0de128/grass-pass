@@ -9,6 +9,8 @@ const headers = securityHeaders({
 
 const nextConfig: NextConfig = {
   poweredByHeader: false,
+  // v3 home illustrations (public/illustrations, WebP sources): served as AVIF/WebP at the size each slot needs.
+  images: { formats: ["image/avif", "image/webp"] },
   // R2-M3: the saved per-park OpenStreetMap answers are read from disk (src/lib/sources/osm-snapshot.ts)
   // only when a pass needs one, so they must be traced into the functions that build passes.
   outputFileTracingIncludes: {

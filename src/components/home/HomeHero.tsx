@@ -1,0 +1,74 @@
+import { PhoneOff } from "lucide-react";
+import Image from "next/image";
+import type { ReactNode } from "react";
+import { ExampleChips } from "@/components/home/ExampleChips";
+import { HeroPassCard } from "@/components/home/HeroPassCard";
+import type { HeroCard, ReadyExample } from "@/lib/home/showcase";
+import { HERO_ILLUSTRATION } from "@/lib/illustrations";
+
+/**
+ * v3 hero (Kevin's v0 design): the yellow "Phone away" badge, the big headline with the sunflower underline
+ * under "outside.", the lead, and the real park search card (children: RestingNotice + PassMaker); on the
+ * right the meadow picture with the tilted real example pass and the "Fits on 1 page" sticker.
+ */
+export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
+  return (
+    <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-16 overflow-hidden">
+      <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-12 pb-20 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-28">
+        <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">
+          <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
+            <PhoneOff className="size-3.5" aria-hidden="true" />
+            Phone away, nature ahead
+          </p>
+
+          <h1 id="hero-title" className="text-6xl leading-[0.92] font-extrabold tracking-tighter text-balance text-ink sm:text-7xl xl:text-8xl">
+            Your ticket to get{" "}
+            <span className="relative inline-block text-primary">
+              outside.
+              <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
+                <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
+              </svg>
+            </span>
+          </h1>
+
+          <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
+            Pick a real park and your kid&apos;s age. Grass Pass makes a one-page scavenger hunt built from that park&apos;s
+            actual map and the last two weeks of wildlife sightings. Print it, and the pencil comes out and the phone stays
+            home.
+          </p>
+
+          <ExampleChips examples={examples} />
+
+          <div className="flex flex-col gap-4">{children}</div>
+        </div>
+
+        <div className="relative lg:sticky lg:top-24 lg:col-span-6">
+          <div className="relative mx-auto max-w-md lg:mr-0 lg:ml-auto lg:max-w-none lg:pl-16">
+            <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-2xl shadow-shadow">
+              <Image
+                src={HERO_ILLUSTRATION.src}
+                alt={HERO_ILLUSTRATION.alt}
+                width={HERO_ILLUSTRATION.width}
+                height={HERO_ILLUSTRATION.height}
+                priority
+                fetchPriority="high"
+                sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
+                className="h-full w-full object-cover"
+              />
+              <span className="absolute right-3 bottom-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
+                {HERO_ILLUSTRATION.caption}
+              </span>
+            </div>
+            <div className="gp-rise absolute -bottom-12 -left-2 w-64 -rotate-6 sm:-left-10 sm:w-72 lg:-left-2 lg:w-80">
+              <HeroPassCard card={card} />
+            </div>
+            <p className="absolute top-8 -right-1 rotate-6 rounded-full bg-sun px-4 py-2 font-heading text-sm font-extrabold text-sun-foreground shadow-lg sm:-right-6">
+              Fits on 1 page
+            </p>
+          </div>
+        </div>
+      </div>
+    </section>
+  );
+}

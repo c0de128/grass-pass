@@ -22,7 +22,7 @@ test("landing page loads with headers, no console errors and no CSP issues", asy
   expect(headers["x-content-type-options"]).toBe("nosniff");
   expect(headers["x-powered-by"]).toBeUndefined();
 
-  await expect(page.getByRole("heading", { level: 1, name: "AI reads your park. Kids go outside." })).toBeVisible();
+  await expect(page.getByRole("heading", { level: 1, name: "A new way to explore, play and learn outside." })).toBeVisible();
   await expect(page.getByText(/^Pick a real park and your kid's age\./)).toBeVisible();
   await expect(page.getByRole("form", { name: "Find a park" })).toBeVisible();
   await page.waitForLoadState("networkidle");

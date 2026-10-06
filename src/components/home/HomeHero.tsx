@@ -19,11 +19,11 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
         <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">
           <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
             <PhoneOff className="size-3.5" aria-hidden="true" />
-            Gemma 4 · real park data
+            Powered by AI · Gemma 4 · real park data
           </p>
 
           <h1 id="hero-title" className="text-6xl leading-[0.92] font-extrabold tracking-tighter text-balance text-ink sm:text-7xl xl:text-8xl">
-            AI reads your park. Kids go{" "}
+            A new way to explore, play and learn{" "}
             <span className="relative inline-block text-primary">
               outside.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">

@@ -43,7 +43,7 @@ export default async function Home() {
   const resting = restingState();
   // Accounts: signed in or not (the session cookie only, no store command), and which sign-in buttons exist.
   const session = await currentSession();
-  const account = { signedIn: session !== null, options: signInOptions() };
+  const account = { signedIn: session !== null, judge: session?.p === "judge", options: signInOptions() };
   // Keep any background refresh this visit started alive after the response (serverless).
   after(() => prewarmIdle());
   return (

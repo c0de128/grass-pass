@@ -7,6 +7,7 @@ import { describe, expect, it } from "vitest";
 import AboutPage from "@/app/about/page";
 import HowItWorksPage from "@/app/how-it-works/page";
 import { ACCOUNT_COPY, judgeDailyCap, judgeLimitMessage, oauthProviderNames, signInWith } from "@/lib/accounts/config";
+import { signedInNote } from "@/components/pass/PassMaker";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 
 const text = (html: string) =>
@@ -98,5 +99,12 @@ describe("RULES-4-02/03/04: the pages name only the sign-in providers set up on 
     expect(t).toContain("a slower alternative you can switch to");
     expect(t).toContain("the judge demo sign-in stops working after 1 day");
     expect(t).not.toContain("the judge demo: 1 day");
+  });
+});
+
+describe("UX-4-03: the note after signing in", () => {
+  it("names the judge demo, and tells the visitor the next step", () => {
+    expect(signedInNote(true)).toBe("Signed in as a judge. You can make this pass now.");
+    expect(signedInNote(false)).toBe("Signed in. You can make this pass now.");
   });
 });

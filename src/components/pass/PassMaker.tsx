@@ -8,7 +8,7 @@
  * shows the real park data we found (never as a pass).
  *
  * Accounts (2026-10-06): a signed-out visitor sees "Sign in to make this pass" (GitHub / Google / Try as a
- * judge) instead of the make button, plus "Open today's pass" for a pass someone already made today (free,
+ * judge) instead of the make button, plus "Open a pass someone already made today" for a pass made today (free,
  * no sign-in). The park + age are kept in sessionStorage across the sign-in round trip and restored on
  * `/?resume=1`.
  */
@@ -62,7 +62,13 @@ export function takeResume(): { park: Park; band: AgeBand } | null {
 }
 
 /** Who is making the pass (from the server page): signed in or not, and which sign-in buttons exist. */
-export type PassMakerAccount = { signedIn: boolean; options: SignInOptions };
+/** `judge`: signed in with "Try as a judge" (for the "Signed in as a judge" announcement, UX-4-03). */
+export type PassMakerAccount = { signedIn: boolean; judge?: boolean; options: SignInOptions };
+
+/** Said (polite live region) and shown after coming back from signing in, as focus moves to "Make my pass". */
+export function signedInNote(judge: boolean): string {
+  return judge ? "Signed in as a judge. You can make this pass now." : "Signed in. You can make this pass now.";
+}
 
 /** Real seconds since the request started, ticking once a second while it runs. */
 function useElapsedSeconds(startedAt: number | null): number {
@@ -198,6 +204,11 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
   const [pickedBand, setPickedBand] = useState<AgeBand | null>(null);
   const band = pickedBand ?? storedBand;
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const makeRef = useRef<HTMLButtonElement>(null);
+  // UX-4-03: back from signing in -> announce it and move focus to "Make my pass" (not the heading).
+  const [resumed, setResumed] = useState(false);
+  const resumedRef = useRef(false);
+  const [note, setNote] = useState<string | null>(null);
   const resultRef = useRef<HTMLDivElement>(null);
   const router = useRouter();
   const { state, run, reset } = usePassRequest();
@@ -220,18 +231,38 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
     setPark(r.park);
     setPickedBand(r.band);
     storeBand(r.band);
+    resumedRef.current = true;
+    setResumed(true);
   }, [resume]);
 
   // After a park is picked, bring the "make a pass" step into view and move focus to its heading (R1 UX m2):
   // with 10 parks listed it starts ~700 px further down on a phone.
   useEffect(() => {
-    if (!park) return;
+    if (!park || resumedRef.current) return;
     const h = headingRef.current;
     if (!h) return;
     h.focus({ preventScroll: true });
     const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
     h.scrollIntoView({ block: "start", behavior: reduce ? "auto" : "smooth" });
   }, [park]);
+
+  // Back from signing in with the park restored: once the session shows signed in, say so and focus the make
+  // button. Still signed out (the sign-in failed or was cancelled): the heading gets focus as usual.
+  const signedInNow = account?.signedIn === true && !needsSignIn;
+  const judgeNow = account?.judge === true;
+  useEffect(() => {
+    if (!resumed || !park) return;
+    const target = signedInNow ? makeRef.current : headingRef.current;
+    /* eslint-disable react-hooks/set-state-in-effect -- one-time hand-off after the sign-in round trip */
+    resumedRef.current = false;
+    setResumed(false);
+    if (signedInNow) setNote(signedInNote(judgeNow));
+    /* eslint-enable react-hooks/set-state-in-effect */
+    if (!target) return;
+    target.focus({ preventScroll: true });
+    const reduce = window.matchMedia?.("(prefers-reduced-motion: reduce)").matches;
+    target.scrollIntoView({ block: "center", behavior: reduce ? "auto" : "smooth" });
+  }, [resumed, park, signedInNow, judgeNow]);
 
   useEffect(() => {
     if (state.kind === "done") {
@@ -243,6 +274,7 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
 
   function onPick(p: Park) {
     reset();
+    setNote(null);
     setPark(p);
   }
 
@@ -293,14 +325,18 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
             <p className="text-sm text-muted-foreground">
               Only the park and this age range are sent to make the pass. We remember your choice on this device only.
             </p>
+            {/* Always in the page while a park is open, so the sign-in note is announced when it appears (UX-4-03). */}
+            <p role="status" className={note ? "rounded-2xl bg-muted px-3 py-2 text-base font-semibold" : "sr-only"} data-testid="signed-in-note">
+              {note}
+            </p>
             {needsSignIn ? (
               <Button type="submit" variant="secondary" className="self-start" aria-disabled={working || undefined}>
-                {working ? "Looking for today's pass…" : "Open today's pass if one was made"}
+                {working ? "Looking for today's pass…" : "Open a pass someone already made today"}
               </Button>
             ) : (
-              <Button type="submit" className="self-start" aria-disabled={working || undefined}>
+              <button ref={makeRef} type="submit" className={buttonClassName("primary", "self-start")} aria-disabled={working || undefined}>
                 {working ? "Making your pass…" : "Make my pass"}
-              </Button>
+              </button>
             )}
           </form>
 

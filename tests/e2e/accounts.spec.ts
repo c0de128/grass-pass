@@ -100,6 +100,14 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   await expect(page).toHaveURL(/\/#find$/);
   await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible();
   await expect(page.getByTestId("chosen-age")).toContainText("Ages 6-10");
+  // UX-4-03: the sign-in is announced (polite status, also visible) and focus is on the next step.
+  const note = page.getByTestId("signed-in-note");
+  await expect(note).toHaveText("Signed in as a judge. You can make this pass now.");
+  await expect(note).toHaveAttribute("role", "status");
+  await expect(page.getByRole("button", { name: "Make my pass" })).toBeFocused();
+  // Axe on the restored, signed-in pass maker (the note box sits on the muted fill).
+  const axe = await new AxeBuilder({ page }).withTags(AXE_TAGS).include("#find").analyze();
+  expect(axe.violations.map((v) => v.id)).toEqual([]);
   await page.getByRole("button", { name: "Make my pass" }).click();
 
   const failed = page.locator("[data-error-code]");

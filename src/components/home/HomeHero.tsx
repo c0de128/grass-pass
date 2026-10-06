@@ -24,9 +24,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </p>
 
           <h1 id="hero-title" className="text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
-            <span className="lg:whitespace-nowrap">Family time is back,</span>{" "}
+            <span className="lg:whitespace-nowrap">Family time is back!</span>{" "}
             <br />
-            <span className="relative mt-1 ml-[0.75em] inline-block text-primary sm:ml-[1.25em] lg:whitespace-nowrap">
+            <span className="relative mt-2 ml-[0.75em] inline-block text-[0.667em] text-primary sm:ml-[1.25em] lg:whitespace-nowrap">
               powered by AI.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
                 <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />

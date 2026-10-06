@@ -1,4 +1,4 @@
-# Grass Pass: Family time is back, powered by AI.
+# Grass Pass: Family time is back! Powered by AI.
 
 > Your ticket to get outside. Pick a park. Print a pass. Phone away.
 

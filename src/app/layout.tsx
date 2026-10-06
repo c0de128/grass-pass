@@ -46,7 +46,7 @@ const Nunito = localFont({
   fallback: ["ui-rounded", "system-ui", "sans-serif"],
 });
 
-const TITLE = "Grass Pass: Family time is back, powered by AI.";
+const TITLE = "Grass Pass: Family time is back! Powered by AI.";
 const DESCRIPTION =
   "A free one-page treasure hunt for your local park. Gemma 4, an open-weight AI model, reads that park's real map and the last 14 days of wildlife sightings and writes the clues. Code checks every one. Print it, and the phone stays in your pocket.";
 

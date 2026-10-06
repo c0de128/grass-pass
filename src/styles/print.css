@@ -83,7 +83,10 @@
 .gp-kid {
   border: 2pt solid #000;
   border-radius: 12pt;
-  padding: 0.14in 0.22in 0.14in;
+  /* R1 print fit: 0.12 in (was 0.14) top and bottom, with the stub padding and tear margin below. After the
+     roomier stub (UX m5) a full Celebration pass with the map measured 0.94, so the map printed 3.07 in (< 3.1 in);
+     these three trims bring it back to 0.96 (map 3.14 in) without touching any text size. */
+  padding: 0.12in 0.22in 0.12in;
   break-inside: avoid;
 }
 
@@ -370,7 +373,7 @@
   display: flex;
   align-items: center;
   gap: 0.08in;
-  margin: 0.08in 0;
+  margin: 0.06in 0;
   font-size: 9pt;
   font-weight: 700;
 }
@@ -391,7 +394,7 @@
 .gp-stub {
   border: 1.5pt solid #000;
   border-radius: 10pt;
-  padding: 0.12in 0.2in 0.14in;
+  padding: 0.1in 0.2in 0.1in;
   break-inside: avoid;
 }
 

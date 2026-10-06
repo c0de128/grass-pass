@@ -35,7 +35,7 @@ import { SPOT_COPY } from "@/lib/spot/types";
 import { fixture } from "./support/osm-replay";
 import { PARKS, passReplay, type Call } from "./support/pass-replay";
 
-const FAKE_KEY = "test-key-not-real";
+const FAKE_KEY = "test-key-not-real"; // gitleaks:allow (dummy test value)
 const ENV = { DO_INFERENCE_API_KEY: FAKE_KEY, MODEL_BASE_URL: "", MODEL_ID: "", AI_DAILY_CAP: "" };
 /** A day outside the October-box window (Sep 15 - Nov 15), noon in Dallas. */
 const DEC_5 = Date.UTC(2026, 11, 5, 18, 0, 0);

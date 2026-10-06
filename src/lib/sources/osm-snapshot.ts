@@ -180,10 +180,12 @@ export function dfwParkFile(parkId: string): DfwParkFile | null {
   const name = dfwParkFileName(parkId);
   let out: DfwParkFile | null = null;
   if (name) {
-    const file = path.join(dfwDir ?? path.join(process.cwd(), DFW_PARKS_DIR), name);
+    // SEC-3-05: a computed path makes Turbopack trace the whole project into every server function. The
+    // ignore comments stop that; next.config.ts `outputFileTracingIncludes` ships src/data/osm/parks/**.
+    const file = path.join(/*turbopackIgnore: true*/ dfwDir ?? path.join(/*turbopackIgnore: true*/ process.cwd(), DFW_PARKS_DIR), name);
     try {
-      if (existsSync(file)) {
-        const parsed = DfwParkFileSchema.safeParse(JSON.parse(brotliDecompressSync(readFileSync(file)).toString("utf8")));
+      if (existsSync(/*turbopackIgnore: true*/ file)) {
+        const parsed = DfwParkFileSchema.safeParse(JSON.parse(brotliDecompressSync(readFileSync(/*turbopackIgnore: true*/ file)).toString("utf8")));
         if (parsed.success && parsed.data.parkId === parkId) out = parsed.data;
       }
     } catch {

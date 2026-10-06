@@ -170,7 +170,9 @@ describe("Wild Finds pool", () => {
   it("Connemara: up to 16 items, each with real evidence, a safety line and its name words", () => {
     const { items, state, blocked } = wildPool(list, summaries, "2026-09-21");
     expect(state).toEqual({ status: "ok" });
-    expect(items.length).toBe(16);
+    // R2-M5: only species whose summary says how they look (11 of the 16 safe ones with a summary).
+    expect(items.length).toBe(11);
+    expect(wildPool(list, summaries, "2026-09-21", undefined, { describableOnly: false }).items.length).toBe(16);
     expect(blocked).toBeGreaterThanOrEqual(4);
     const snail = items.find((i) => i.id === "inat-126257")!;
     expect(snail.answer).toBe("Globular Drop Snail (Helicina orbiculata)");

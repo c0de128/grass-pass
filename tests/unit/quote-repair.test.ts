@@ -10,6 +10,9 @@ import path from "node:path";
 import { beforeAll, describe, expect, it } from "vitest";
 import { APP_ROOT, loadCaseData, loadCases, loadFixture, type CaseData } from "../../evals/fixture";
 import { groundedQuote, isGrounded, normalizeForMatch, repairGluedQuote, validateDraft } from "@/lib/ai/validate";
+import type { PoolItem } from "@/lib/pool/types";
+import { wildPool } from "@/lib/pool/wild";
+import { FEATURE_KINDS, type FeatureKind } from "@/lib/sources/overpass-features";
 
 type RawItem = { itemId: string; sourceQuote: string; clue: string; lookWhere: string; difficulty: string; section?: string };
 type Run = { caseN: number; model: string; run: number; calls: { rawItems: RawItem[] | null }[] };
@@ -25,8 +28,22 @@ beforeAll(async () => {
   }
 });
 
+/**
+ * The pool as the model saw it in run 2026-10-05-2 (before audit R2-M5): every Park Find's source then
+ * ended with its kind's one fixed description (FEATURE_KINDS.describe), and every species with a summary
+ * was offered. R2-M5 rotates the Park Find facts and leaves out species with nothing to look for, so the
+ * old real quotes are checked against today's source PLUS that old description, and the full species list.
+ */
+function legacyPool(d: CaseData): PoolItem[] {
+  const park = d.pool
+    .filter((p) => p.section === "park")
+    .map((p) => ({ ...p, sourceText: `${p.sourceText} ${FEATURE_KINDS[p.id.slice(4).replace(/-/g, "_") as FeatureKind].describe}` }));
+  const wild = d.species ? wildPool(d.species, d.summaries, "2026-09-21", undefined, { describableOnly: false }).items : [];
+  return [...park, ...wild];
+}
+
 const source = (caseN: number, id: string) => {
-  const p = data.get(caseN)!.pool.find((i) => i.id === id);
+  const p = legacyPool(data.get(caseN)!).find((i) => i.id === id);
   if (!p) throw new Error(`no pool item ${id} in case ${caseN}`);
   return p.sourceText;
 };
@@ -78,10 +95,11 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
     const d = data.get(16)!;
     const r = results.runs.find((x) => x.caseN === 16 && x.run === 1 && x.model.startsWith("gemma"))!;
     for (const c of r.calls) {
-      const v = validateDraft({ items: c.rawItems ?? [] }, d.pool, d.mix!);
+      const v = validateDraft({ items: c.rawItems ?? [] }, legacyPool(d), d.mix!);
       expect(v.drops.not_grounded ?? 0).toBe(0);
       expect(v.quotesRepaired).toBe(8);
-      expect(v.items.length).toBeGreaterThanOrEqual(d.mix!.n - 2);
+      // R2-M5's stricter clue checks (generic clue, wrong count) may drop some of these old clues; none is ungrounded.
+      expect(v.items.length + (v.drops.generic_clue ?? 0) + (v.drops.wrong_count ?? 0) + (v.drops.copies_example ?? 0) + (v.drops.repeats_clue ?? 0)).toBeGreaterThanOrEqual(d.mix!.n - 2);
       for (const i of v.items) expect(normalizeForMatch(i.item.sourceText).includes(i.sourceQuote)).toBe(true);
     }
   });

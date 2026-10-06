@@ -37,7 +37,8 @@ function phenology() {
 function connemaraWild(ph: ReturnType<typeof phenology> | null = phenology()) {
   const list = parseSpeciesCounts(rec(`inat-species-${CON.slug}`).body);
   const summaries = parseTaxa(rec(`inat-taxa-${CON.slug}`).body);
-  return wildPool(list, summaries, "2026-09-21", { month: OCT, phenology: ph }).items;
+  // describableOnly: false keeps the sunflower (no looks-like words, R2-M5) for these season-logic tests.
+  return wildPool(list, summaries, "2026-09-21", { month: OCT, phenology: ph }, { describableOnly: false }).items;
 }
 
 const byAnswer = (pool: PoolItem[], re: RegExp) => pool.find((p) => re.test(p.answer))!;
@@ -101,22 +102,24 @@ describe("R1-M4 season check: iNaturalist 'Flowers and Fruits' annotations (live
   it("the Callery pear clue the judge found ('white flowers that have five petals') is dropped in October", () => {
     const pool = connemaraWild();
     const pear = byAnswer(pool, /^Callery pear/);
-    const sunflower = byAnswer(pool, /^Maximilian sunflower/);
+    // R2-M5: the in-bloom plant here is the white morning-glory (its source says "white"; the sunflower's says
+    // no colour, so a "yellow flower" clue for it is now dropped as generic).
+    const glory = byAnswer(pool, /^White Morning-glory/);
     const mix = computeMix({ park: 0, wild: 3, lucky: 0 }, "6-10")!;
     const out = validateDraft(
       {
         items: [
           draftItem(pear, "Find a tree with white flowers that have five petals.", "a deciduous tree"),
           draftItem(pear, "Look for a tree with glossy dark green oval leaves.", "glossy dark green above"),
-          draftItem(sunflower, "Find a tall plant with a yellow flower.", "species of sunflower"),
+          draftItem(glory, "Find a vine with white flowers.", "show it with flowers"),
         ],
       },
       pool,
       mix,
     );
-    // The flower clue goes; the pear's leaf clue and the sunflower's flower clue (in bloom in October) stay.
+    // The pear's flower clue goes; the pear's leaf clue and the morning-glory's flower clue (in bloom in October) stay.
     expect(out.drops).toEqual({ out_of_season: 1 });
-    expect(out.items.map((i) => i.clue)).toEqual(["Look for a tree with glossy dark green oval leaves.", "Find a tall plant with a yellow flower."]);
+    expect(out.items.map((i) => i.clue)).toEqual(["Look for a tree with glossy dark green oval leaves.", "Find a vine with white flowers."]);
   });
 
   it("when the lookup failed (null), no plant's flowers or fruit count: the sunflower clue is dropped too", () => {
@@ -286,7 +289,7 @@ describe("R1-m10 Park Finds that make a child look closely", () => {
   const mix = (band: "4-6" | "6-10" | "10-13") => computeMix({ park: pool.length, wild: 0, lucky: 0 }, band)!;
   it("asked for 6-10 and 10-13, not for 4-6 (read aloud), and only when the pass has Park Finds", () => {
     expect(systemPrompt("6-10", mix("6-10"))).toContain('"Find a place to sit."');
-    expect(systemPrompt("10-13", mix("10-13"))).toContain("a count to check or a detail to look for");
+    expect(systemPrompt("10-13", mix("10-13"))).toContain("a detail to find, or a count to check");
     expect(systemPrompt("4-6", mix("4-6"))).not.toContain("look closely");
     expect(systemPrompt("6-10", computeMix({ park: 0, wild: 8, lucky: 0 }, "6-10")!)).not.toContain("look closely");
   });

@@ -38,7 +38,8 @@ function connemaraWild(failed = false): PoolItem[] {
   const body = (v: string | null) => r.exchanges.find((e) => new URL(e.url).searchParams.get("term_value_id") === v)!.body;
   const ph = failed ? null : parsePhenology(r._recording.month, body(null), body("13"), body("14"));
   const list = parseSpeciesCounts(rec(`inat-species-${CON.slug}`).body);
-  return wildPool(list, parseTaxa(rec(`inat-taxa-${CON.slug}`).body), "2026-09-21", { month: OCT, phenology: ph }).items;
+  // describableOnly: false keeps the sunflower (no looks-like words, R2-M5) for these season-logic tests.
+  return wildPool(list, parseTaxa(rec(`inat-taxa-${CON.slug}`).body), "2026-09-21", { month: OCT, phenology: ph }, { describableOnly: false }).items;
 }
 const byAnswer = (pool: PoolItem[], re: RegExp) => pool.find((p) => re.test(p.answer))!;
 const item = (p: PoolItem, clue: string, sourceQuote: string, lookWhere = "") => ({ itemId: p.id, clue, lookWhere, sourceQuote, difficulty: "medium" });
@@ -58,7 +59,13 @@ describe("the season fact is a code-written sentence in the plant's SOURCE (Llam
     const pear = byAnswer(pool, /^Callery pear/);
     const mix = computeMix({ park: 0, wild: 3, lucky: 0 }, "6-10")!;
     expect(isGrounded("photos from this area show it with flowers", sun.sourceText)).toBe(true);
-    const ok = validateDraft({ items: [item(sun, "Find a tall plant with yellow petals.", "photos from this area show it with flowers")] }, pool, mix);
+    // R2-M5: a flower clue also needs a trait from the source. The sunflower's summary has none ("yellow" is
+    // not in it), so its clue is now generic; the white morning-glory's "white" is, so its clue is kept.
+    const generic = validateDraft({ items: [item(sun, "Find a tall plant with yellow petals.", "photos from this area show it with flowers")] }, pool, mix);
+    expect(generic.drops).toEqual({ generic_clue: 1 });
+    const glory = byAnswer(pool, /^White Morning-glory/);
+    expect(isGrounded("photos from this area show it with flowers", glory.sourceText)).toBe(true);
+    const ok = validateDraft({ items: [item(glory, "Find a vine with white flowers.", "photos from this area show it with flowers")] }, pool, mix);
     expect(ok.items).toHaveLength(1);
     const pearQuote = "do not show it with flowers or fruit";
     expect(isGrounded(pearQuote, pear.sourceText)).toBe(true);
@@ -128,11 +135,13 @@ describe("name-leak false positives found in run 4 (each a real eval-park OSM na
   });
 });
 
-describe("prompt: a count clue must not name the thing (run 4: 'Count the bridges.' x3)", () => {
-  it("says so with a good and a bad example, and gives plain lookWhere places", () => {
+describe("prompt: a count clue counts the whole thing without naming it (run 4: 'Count the bridges.' x3; R2-M5: no copyable good example)", () => {
+  it("says so with bad examples only, and gives plain lookWhere places", () => {
     const sys = systemPrompt("6-10", computeMix({ park: 6, wild: 6, lucky: 0 }, "6-10")!);
-    expect(sys).toContain("A count clue must NOT name the thing");
-    expect(sys).toContain('Bad: "Count the bridges."');
+    expect(sys).toContain("It counts the WHOLE thing the SOURCE counts, described without its name");
+    expect(sys).toContain('Bad: "Count the hoops. There are 4." (the SOURCE counts courts, not hoops)');
+    expect(sys).not.toContain("Good:");
+    expect(sys).not.toContain("ways over the water");
     expect(sys).toContain('lookWhere is a plain place in a park: "near the water"');
     expect(sys).toContain('"by the stream" for a creek');
   });

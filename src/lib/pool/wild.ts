@@ -151,7 +151,10 @@ export function wildPool(
   summaries: readonly TaxonSummary[],
   sinceDay: string,
   season?: WildSeasonInput,
+  /** R2-M5: leave out species whose summary says nothing about how they look (default). Tests of older runs turn it off. */
+  opts: { describableOnly?: boolean } = {},
 ): { items: PoolItem[]; state: SectionState; blocked: number } {
+  const describableOnly = opts.describableOnly ?? true;
   const { candidates, blocked: blockedFirst } = wildCandidates(list);
   const byId = new Map(summaries.map((s) => [s.id, s]));
   let blocked = blockedFirst;
@@ -167,7 +170,7 @@ export function wildPool(
     if (!sum?.summary || sum.summary.length < MIN_SUMMARY_CHARS) continue;
     // R2-M5: a summary with nothing a child can look for ("a species of flowering plant native to ...")
     // only makes generic clues, which the server drops. Such a species is not a find.
-    if (looksScore(leadSentences(sum.summary)) === 0) continue;
+    if (describableOnly && looksScore(leadSentences(sum.summary)) === 0) continue;
     const label = s.commonName ? `${cap(s.commonName)} (${s.name})` : s.name;
     const plantSeason =
       season && s.iconic === "Plantae" ? seasonFrom(season.phenology?.taxa[String(s.taxonId)], season.month, season.phenology !== null) : undefined;

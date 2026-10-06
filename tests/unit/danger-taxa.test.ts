@@ -93,7 +93,8 @@ describe("danger filter before the model (pool)", () => {
 describe("danger filter after the model (defence in depth)", () => {
   const list = parseSpeciesCounts(rec(`inat-species-${PARKS.connemara.slug}`).body);
   const summaries = parseTaxa(rec(`inat-taxa-${PARKS.connemara.slug}`).body);
-  const pool = wildPool(list, summaries, "2026-09-21").items;
+  // R2-M5 leaves undescribable species (the sunflower) out of the app's pool; this defence-in-depth test needs one.
+  const pool = wildPool(list, summaries, "2026-09-21", undefined, { describableOnly: false }).items;
   const mix = computeMix({ park: 0, wild: pool.length, lucky: 0 }, "6-10")!;
   const sunflower = pool.find((p) => p.answer.startsWith("Maximilian sunflower"))!;
 

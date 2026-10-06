@@ -42,10 +42,10 @@ export const MAX_PASS_ITEMS = 8;
 /**
  * Audit R2-M5: the request asks for up to this many items MORE than the pass prints, and code keeps the
  * first n that pass every check. The stricter clue checks (generic, wrong count, copies) drop more
- * items; asking for spares costs about 120 answer tokens, a second call costs a whole call (the smoke
+ * items; asking for one spare costs about 60 answer tokens, a second call costs a whole call (the smoke
  * run before this change needed a second call on 3 of 6 passes).
  */
-export const ASK_EXTRA = 2;
+export const ASK_EXTRA = 1;
 
 export const PassItemDraft = z.object({
   itemId: z.string().min(1).max(64), // must exist in the pool

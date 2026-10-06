@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
-import { buildMessages, computeMix, escapeSource, systemPrompt, userPrompt } from "@/lib/ai/prompt";
+import { askMix, buildMessages, computeMix, escapeSource, systemPrompt, userPrompt } from "@/lib/ai/prompt";
 import {
+  ASK_EXTRA,
   MAX_PASS_ITEMS,
   MIN_PASS_ITEMS,
   PassDraft,
@@ -68,7 +69,8 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     };
     expect(s.$schema).toBeUndefined();
     expect(s.additionalProperties).toBe(false);
-    expect(s.required).toEqual(["items", "parentNote"]);
+    // R2-M5: no parentNote in the request; code writes the grown-up's tip from the pass's real items.
+    expect(s.required).toEqual(["items"]);
     const item = s.properties.items.items;
     expect(item.additionalProperties).toBe(false);
     expect(item.required.sort()).toEqual(["clue", "difficulty", "itemId", "lookWhere", "sourceQuote"]);
@@ -83,7 +85,9 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
     expect(s.required).toContain("spot");
     expect(s.properties.spot.properties.targetId.enum).toEqual(["osm-shelter"]);
     expect(() => passJsonSchema({ ...opts, n: 0 })).toThrow();
-    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + 1 })).toThrow();
+    // R2-M5: the request may ask for ASK_EXTRA spare items beyond the printed maximum, never more.
+    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA })).not.toThrow();
+    expect(() => passJsonSchema({ ...opts, n: MAX_PASS_ITEMS + ASK_EXTRA + 1 })).toThrow();
   });
 
   it("the spec schemas: PassDraft takes 3-8 items; the request schema takes exactly n", () => {
@@ -101,9 +105,10 @@ describe("strict JSON schema from zod (SPEC 6.2)", () => {
   it("the schema the app builds today equals the one sent in the recorded live Gemma calls", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool, target } = poolFor(p);
-      const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
+      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
+      const ask = askMix(computeMix(counts, "6-10")!, counts);
       const schema = passJsonSchema({
-        n: mix.n,
+        n: ask.n,
         itemIds: pool.map((i) => i.id) as [string, ...string[]],
         spotTargetId: target?.id ?? null,
       });
@@ -152,8 +157,11 @@ describe("prompt (SPEC 6.1)", () => {
   it("the prompt the app builds today equals the recorded live request (both parks)", () => {
     for (const p of [PARKS.connemara, PARKS.celebration]) {
       const { pool, f, spot } = poolFor(p);
-      const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
-      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", mix, spot, { month: 10 }));
+      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
+      // R2-M5: the prompt states the asked-for mix (n + ASK_EXTRA spare).
+      const ask = askMix(computeMix(counts, "6-10")!, counts);
+      expect(ask.n).toBe(9);
+      expect(modelRec(p.slug).request.messages).toEqual(buildMessages(f.park.name, pool, "6-10", ask, spot, { month: 10 }));
     }
   });
 
@@ -196,35 +204,42 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded R1 follow-up, no section in the answer): 7/8 each, one invented count dropped", () => {
-    for (const p of [PARKS.connemara, PARKS.celebration]) {
+  it("the real recorded Gemma answers (re-recorded audit R2, 9 asked for 8 printed): Celebration 8 + 1 spare, Connemara 7", () => {
+    const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { pool, target } = poolFor(p);
-      const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
+      const counts = { park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 };
+      const mix = computeMix(counts, "6-10")!;
+      const ask = askMix(mix, counts);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
-      const out = validateDraft(draft, pool, mix, { hasMap: target !== null });
-      expect(out.returned).toBe(8);
       // S8c: the answer has no section field; code filled it from the pool for every item.
       expect((draft.items as Record<string, unknown>[]).every((i) => !("section" in i))).toBe(true);
-      // Each live answer wrote one count its SOURCE does not have, and code dropped it: Connemara's creek
-      // ("There is 1." - a creek is never counted, one creek is often mapped in pieces) and Celebration's
-      // soccer goals ("There are 2."). 7 of 8 is n-1, so no retry. The new count-clue rule held: no clue
-      // names its thing ("How many ways over the water can you find?" for the bridge).
-      expect(out.items).toHaveLength(7);
-      expect(out.drops).toEqual({ number_not_in_source: 1 });
-      // Both drops were Park Finds, so Park Finds ends below its minimum (Connemara: its only one, the creek;
-      // Celebration: all 8 must be Park Finds). Logged; the pass prints what is valid.
-      expect(out.belowMin).toEqual(["park"]);
-      expect(out.items.some((i) => i.item.id === (p === PARKS.connemara ? "osm-creek" : "osm-soccer"))).toBe(false);
+      const out = validateDraft(draft, pool, mix, { hasMap: target !== null, ask });
+      expect(out.returned).toBe(9);
       expect(out.quotesRepaired).toBe(0);
       for (const i of out.items) expect(i.sourceQuote.length).toBeLessThanOrEqual(QUOTE_WIRE_MAX);
-    }
+      return out;
+    });
+    const [conn, cel] = results;
+    // Celebration: all 9 pass every check (counts are whole fields and courts with the map's numbers);
+    // the 9th is a spare, not printed and not counted as removed.
+    expect(cel.items).toHaveLength(8);
+    expect(cel.drops).toEqual({});
+    expect(cel.spares).toBe(1);
+    expect(cel.items.find((i) => i.item.id === "osm-soccer")?.clue).toBe("Bet you can't find 25 big grass areas with goals at the ends!");
+    // Connemara: the Callery pear twice (duplicate) and a generic plant clue ("Do you see a plant with seeds or
+    // fruit?", proved only by the season sentence) are dropped: 7 of 8 is n-1, so no retry.
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put.");
+    expect(conn.items).toHaveLength(7);
+    expect(conn.drops).toEqual({ duplicate_id: 1, generic_clue: 1 });
+    expect(conn.items.length).toBe(retryThreshold(8));
+    expect(conn.parentNote).toBe(conn.parentNote.slice(0, 200));
     // S5: Celebration's live answer (re-recorded 2026-10-06 with the spot target) has a riddle for the X
     // at the picnic shelter, and it passes every riddle check; Connemara has no target and no spot.
     const c = poolFor(PARKS.celebration);
     expect(c.target?.osmId).toBe("way/536185861");
     expect(c.pool.some((i) => i.id === "osm-shelter")).toBe(false);
     const spot = (recordedDraft(PARKS.celebration.slug) as { spot: unknown }).spot;
-    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables for lunch." });
+    expect(validateSpot(spot, c.target!)).toEqual({ ok: true, riddle: "Find the place with a roof on posts and tables for lunch!" });
     expect(poolFor(PARKS.connemara).target).toBeNull();
     expect((recordedDraft(PARKS.connemara.slug) as { spot?: unknown }).spot).toBeUndefined();
   });
@@ -305,7 +320,8 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
       schema: 1,
       over_section_max: 1,
     });
-    expect(out.parentNote).toBe(""); // digits are not allowed in the parent note
+    // R2-M5: the model's note ("Bring 2 snacks!") is ignored; code writes a tip from the kept items.
+    expect(out.parentNote).toBe("Start with find 1: it's easy and it stays put.");
   });
 
   it("S8b: a name word only in lookWhere blanks the hint and keeps the item; in the clue it still drops", () => {
@@ -350,7 +366,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     );
     const merged = mergeResults(second, first, mix);
     expect(merged.items.map((i) => i.item.id)).toEqual(["osm-bench", "osm-playground"]);
-    expect(merged.parentNote).toBe("Enjoy the park.");
+    expect(merged.parentNote).toBe("Start with find 1: it's easy and it stays put."); // code-written (R2-M5)
     const capped = mergeResults(second, first, { ...mix, n: 1 });
     expect(capped.items).toHaveLength(2); // never removes what primary already has
     const tight = mergeResults(first, second, { ...mix, max: { park: 1, wild: 0, lucky: 0 } });
@@ -359,7 +375,9 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
 
   it("S8b: the model sees n + 4 spares per section and a smaller answer budget", () => {
     const { pool } = poolFor(PARKS.connemara);
-    expect(pool.filter((i) => i.section === "wild")).toHaveLength(8 + PROMPT_SPARES);
+    // R2-M5: Connemara has 11 species whose summary says how they look (n + 4 would be 12).
+    expect(pool.filter((i) => i.section === "wild").length).toBeLessThanOrEqual(8 + PROMPT_SPARES);
+    expect(pool.filter((i) => i.section === "wild")).toHaveLength(11);
     expect(passMaxTokens("gemma-4-31B-it")).toBe(1_200);
     expect(passMaxTokens("gpt-oss-120b")).toBe(2_000);
     const sys = systemPrompt("6-10", computeMix({ park: 3, wild: 8, lucky: 0 }, "6-10")!);
@@ -371,14 +389,14 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     const { pool } = poolFor(PARKS.connemara);
     const mix = computeMix({ park: pool.filter((i) => i.section === "park").length, wild: pool.filter((i) => i.section === "wild").length, lucky: 0 }, "6-10")!;
     const wild = pool.find((i) => i.section === "wild")!;
-    const base = { itemId: wild.id, clue: "Find a plant with small leaves.", lookWhere: "", sourceQuote: wild.sourceText.slice(-40), difficulty: "easy" };
+    const base = { itemId: wild.id, clue: "Find bright-orange bits with tiny spikes.", lookWhere: "", sourceQuote: wild.sourceText.slice(-40), difficulty: "easy" };
     const v = validateDraft({ items: [base, { ...base, itemId: "inat-does-not-exist" }] }, pool, mix);
     expect(v.items.map((i) => [i.item.id, i.item.section])).toEqual([[wild.id, "wild"]]);
     expect(v.drops).toEqual({ unknown_id: 1 });
     expect(validateDraft({ items: [{ ...base, section: "park" }] }, pool, mix).drops).toEqual({ section_mismatch: 1 });
     const sys = systemPrompt("6-10", mix);
     expect(sys).toContain("3 to 8 words, never more than 12");
-    expect(sys).toContain("parentNote is ONE line for the whole pass (not one per item)");
+    expect(sys).not.toContain("parentNote"); // R2-M5: code writes the grown-up's tip
   });
 
   it("retry when fewer than n-1 items survive (R1-m1: a 6 of 8 pass now gets its one retry)", () => {
@@ -388,3 +406,4 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(retryThreshold(1)).toBe(1);
   });
 });
+

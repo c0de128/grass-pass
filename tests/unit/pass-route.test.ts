@@ -118,17 +118,19 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     if (f.type !== "result") throw new Error(`expected result, got ${f.type}`);
     expect(f.cached).toBe(false);
     const p = f.pass;
-    // The live answer's "How many lines of moving water can you find? There is 1." is dropped (a creek is
-    // never counted in its source). 7 of 8 is n-1, so no retry (R1-m1).
+    // Audit R2 recording: 9 asked (8 + 1 spare). The Callery pear is used twice (the second is dropped as a
+    // duplicate) and "Do you see a plant with seeds or fruit?" is a generic clue (R2-M5): 7 of 8 is n-1, so no retry.
     expect(p.items).toHaveLength(7);
     expect(p.target).toBe(8);
-    expect(p.removed).toEqual({ notGrounded: 0, other: 1 });
+    expect(p.removed).toEqual({ notGrounded: 0, other: 2 });
     expect(p.model.answered).toBe("gemma-4-31B-it");
     expect(p.park).toMatchObject({ id: "way/306191453", name: "Connemara Meadow Preserve" });
     expect(p.sections.wild).toEqual({ status: "ok" });
     expect(p.sections.lucky).toEqual({ status: "off", message: PASS_COPY.luckyOff });
     expect(p.safetyFiltered).toBeGreaterThanOrEqual(4);
-    expect(p.items.map((i) => i.section)).toEqual(["wild", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    expect(p.items.map((i) => i.section)).toEqual(["park", "wild", "wild", "wild", "wild", "wild", "wild"]);
+    // R2-M5: the grown-up's line is code-written from these items (an easy find away from the creek first).
+    expect(p.parentNote).toMatch(/^Start with find [2-7]: it's easy and it stays put./);
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
 
@@ -234,10 +236,10 @@ describe("POST /api/pass: honest empties and failures", () => {
   it("Celebration: 7 of 8 Park Finds, and Wild Finds shows the exact SPEC 5.4 copy", async () => {
     const f = final(await lines(await route.POST(post(celebration))));
     if (f.type !== "result") throw new Error(f.type);
-    // The live answer's soccer clue ("There are 2." goals) is dropped: that number is not in its source.
-    // 7 of 8 survive, which is n-1, so no retry (R1-m1).
-    expect(f.pass.items).toHaveLength(7);
-    expect(f.pass.removed).toEqual({ notGrounded: 0, other: 1 });
+    // Audit R2 recording: 9 asked, all 9 pass every check (counts are whole courts and fields with the map's
+    // numbers), 8 are printed; the spare is not counted as removed.
+    expect(f.pass.items).toHaveLength(8);
+    expect(f.pass.removed).toEqual({ notGrounded: 0, other: 0 });
     expect(modelCalls(replay.calls)).toHaveLength(1);
     expect(f.pass.items.every((i) => i.section === "park")).toBe(true);
     expect(f.pass.sections.wild).toEqual({
@@ -295,7 +297,7 @@ describe("POST /api/pass: honest empties and failures", () => {
     expect(f.status).toBe(502);
     expect(f.error.message).toBe("Gemma couldn't write clues right now (the AI service had a problem answering). Your park data is below; try again in a minute.");
     expect(f.parkData?.parkName).toBe("Connemara Meadow Preserve");
-    expect(f.parkData?.items.length).toBe(17);
+    expect(f.parkData?.items.length).toBe(12); // 1 Park Find + 11 describable species (R2-M5)
     expect(f.parkData?.items[0]).toEqual({ section: "park", answer: "Creek or stream (Rowlett Creek)", evidence: "on the park map · OpenStreetMap" });
     expect(modelCalls(replay.calls)).toHaveLength(2);
     expect(await loadPass(passId(PARKS.connemara.id, "6-10", new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" }), 1))).toBeNull();

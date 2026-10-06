@@ -195,7 +195,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // R1-m10 + R2-M5: Park Finds the child looks closely at; a count must be the map's own count of the whole thing.
     ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
       ? [
-          `- Park Finds: make the child look closely at a fact in that SOURCE: a detail to spot, or a count to check. Bad: ${bad(2)}.`,
+          `- Park Finds: make the child look closely at a fact in that SOURCE: a detail to find, or a count to check. Bad: ${bad(2)}.`,
           `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
         ]
       : []),

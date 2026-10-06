@@ -511,13 +511,20 @@ export function ngrams(text: string, n: number): Set<string> {
 
 /** Share of `a`'s trigrams that are also in `b` (0..1); 0 when either has none. */
 export function trigramShare(a: string, b: string): number {
+  return sharedTrigrams(a, b).share;
+}
+
+function sharedTrigrams(a: string, b: string): { shared: number; share: number } {
   const ga = ngrams(a, 3);
   const gb = ngrams(b, 3);
-  if (ga.size === 0 || gb.size === 0) return 0;
+  if (ga.size === 0 || gb.size === 0) return { shared: 0, share: 0 };
   let shared = 0;
   for (const g of ga) if (gb.has(g)) shared++;
-  return shared / ga.size;
+  return { shared, share: shared / ga.size };
 }
+
+/** A copy shares at least this many trigrams too (a 3-word opener like "find a place" alone is not a copy). */
+export const COPY_MIN_SHARED = 3;
 
 /** The larger share of either text's trigrams found in the other (0..1): two clues that are near repeats. */
 export function trigramOverlap(a: string, b: string): number {
@@ -533,7 +540,10 @@ export const COPY_OVERLAP = 0.6;
  * opener with the bad example "Find a plant with flowers." but is not a copy of it.)
  */
 export function copiesPromptExample(clue: string, examples: readonly string[] = PROMPT_EXAMPLE_TEXTS): string | null {
-  for (const ex of examples) if (trigramShare(clue, ex) >= COPY_OVERLAP) return ex;
+  for (const ex of examples) {
+    const { shared, share } = sharedTrigrams(clue, ex);
+    if (share >= COPY_OVERLAP && shared >= COPY_MIN_SHARED) return ex;
+  }
   return null;
 }
 
@@ -705,9 +715,15 @@ const listOf = (nums: number[]) => (nums.length === 1 ? `${nums[0]}` : `${nums.s
 export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[]): string {
   const ordered = items.map((v, i) => ({ v, i })).sort((a, b) => PRINT_ORDER[a.v.item.section] - PRINT_ORDER[b.v.item.section] || a.i - b.i);
   const tips: string[] = [];
-  const easy = ordered.findIndex(({ v }) => v.difficulty === "easy" && v.item.stationary);
-  if (easy >= 0) tips.push(`Start with find ${easy + 1}: it's easy and it stays put.`);
-  const water = ordered.flatMap(({ v }, k) => (v.item.safety && /water/i.test(v.item.safety) ? [k + 1] : []));
+  const nearWater = (v: Pick<ValidItem, "item">) => Boolean(v.item.safety && /water/i.test(v.item.safety));
+  const startable = ({ v }: { v: Pick<ValidItem, "item" | "difficulty"> }) => v.difficulty === "easy" && v.item.stationary;
+  // An easy find away from water first; an easy one by the water only when there is no other.
+  let easy = ordered.findIndex((o) => startable(o) && !nearWater(o.v));
+  if (easy < 0) easy = ordered.findIndex(startable);
+  if (easy >= 0) {
+    tips.push(nearWater(ordered[easy].v) ? `Start with find ${easy + 1}: it's easy and it stays put, but it's near water, so stay close.` : `Start with find ${easy + 1}: it's easy and it stays put.`);
+  }
+  const water = ordered.flatMap(({ v }, k) => (nearWater(v) && k !== easy ? [k + 1] : []));
   const movers = ordered.flatMap(({ v }, k) => (!v.item.stationary ? [k + 1] : []));
   if (water.length > 0) tips.push(`${water.length === 1 ? "Find" : "Finds"} ${listOf(water)} ${water.length === 1 ? "is" : "are"} near water: stay close.`);
   else if (movers.length > 0) tips.push(`${movers.length === 1 ? "Find" : "Finds"} ${listOf(movers)} can move away, so tick ${movers.length === 1 ? "it" : "them"} off when you see ${movers.length === 1 ? "it" : "them"}.`);

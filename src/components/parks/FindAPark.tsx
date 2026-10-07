@@ -13,6 +13,7 @@ import { buttonClassName } from "@/components/ui/Button";
 import { distanceLabel, roundCoord } from "@/lib/geo";
 import { safeParkName } from "@/lib/safety/contact";
 import { LOCATION_DECIMALS, PlaceQueryLimits } from "@/lib/parks/constants";
+import { parkMetaLine } from "@/lib/parks/kind-label";
 import type { ExampleLink, Park, ParksResult } from "@/lib/parks/schema";
 
 /**
@@ -55,10 +56,6 @@ function formatChecked(iso: string): string {
   const d = new Date(iso);
   if (Number.isNaN(d.getTime())) return "";
   return new Intl.DateTimeFormat(undefined, { month: "short", day: "numeric", hour: "numeric", minute: "2-digit" }).format(d);
-}
-
-function kindLabel(kind: Park["kind"]): string {
-  return kind === "nature_reserve" ? "Nature preserve" : "Park";
 }
 
 function checkQuery(raw: string): string | null {
@@ -394,9 +391,7 @@ function ParkList({
                   className="flex min-h-11 w-full flex-col items-start rounded-2xl border-2 border-transparent bg-muted px-4 py-2.5 text-left text-foreground hover:border-line aria-pressed:border-ink aria-pressed:bg-sun aria-pressed:text-sun-foreground"
                 >
                   <span className="font-heading text-lg font-extrabold">{safeParkName(p.name).name}</span>
-                  <span className="text-sm">
-                    {kindLabel(p.kind)} · {distanceLabel(p.distanceM)} away
-                  </span>
+                  <span className="text-sm">{parkMetaLine(safeParkName(p.name).name, p.kind, distanceLabel(p.distanceM))}</span>
                 </button>
               </li>
             ))}

@@ -28,7 +28,7 @@ export const HOW_STEPS: readonly Step[] = [
   {
     icon: MapPinned,
     title: "Pick a park & age",
-    body: "Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10 or 10–13: it sets how many clues and how hard.",
+    body: "Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10, 10–13 or 13+ (teens and adults): it sets how many clues and how hard.",
   },
   {
     icon: PenLine,

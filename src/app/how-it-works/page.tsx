@@ -151,7 +151,7 @@ function Steps({ steps }: { steps: readonly Step[] }) {
 const bullets = "flex list-disc flex-col gap-1.5 pl-5";
 
 const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: MapPinned, title: "Pick a park & age", body: "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13." },
+  { icon: MapPinned, title: "Pick a park & age", body: "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13 (or 13+ for teens and adults)." },
   {
     icon: Database,
     title: "We read the park",
@@ -267,7 +267,9 @@ export default function HowItWorksPage() {
           <p>
             <strong>What the model is given:</strong> the park&apos;s name; each fact&apos;s id, section, kind and text; the age
             rules ({AGE_BAND_INFO["4-6"].items} finds for 4-6, {AGE_BAND_INFO["6-10"].items} for 6-10,{" "}
-            {AGE_BAND_INFO["10-13"].items} with {AGE_BAND_INFO["10-13"].hardMin} hard ones for 10-13, and a reading level); the
+            {AGE_BAND_INFO["10-13"].items} with {AGE_BAND_INFO["10-13"].hardMin} hard ones for 10-13,{" "}
+            {AGE_BAND_INFO["13+"].items} with {AGE_BAND_INFO["13+"].hardMin} hard ones for teens and adults (13+), and a reading
+            level); the
             month; and the Find This Spot place, if code picked one.
           </p>
           <p>

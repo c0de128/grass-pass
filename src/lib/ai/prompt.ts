@@ -4,7 +4,7 @@
  * (validate.ts). Untrusted text (OSM names, Wikipedia summaries) only appears inside escaped
  * <source> tags, and the system prompt says that text is data, not instructions.
  */
-import { AGE_BAND_INFO, type AgeBand } from "@/lib/pass/schema";
+import { AGE_BAND_INFO, isAdultBand, type AgeBand } from "@/lib/pass/schema";
 import { monthName } from "@/lib/pool/season";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { ASK_EXTRA, CLUE_MAX, LOOK_WHERE_MAX, MIN_PASS_ITEMS, QUOTE_WIRE_MAX, REFILL_SPARES, RIDDLE_MAX } from "./schema";
@@ -366,14 +366,14 @@ export type RefillNotes = {
 };
 
 /** The refill's extra rules: the copied phrases, quoted, and the generic-clue reminder (at most 6 phrases). */
-export function refillRules(notes: RefillNotes): string[] {
+export function refillRules(notes: RefillNotes, band?: AgeBand): string[] {
   const out: string[] = ["- This is a second try: some clues of the first try were removed by our checks."];
   if (notes.copied.length > 0) {
     out.push(`- The first try copied these words from a SOURCE. Never use them in a clue: ${notes.copied.slice(0, 6).map((c) => `"${c}"`).join(", ")}.`);
   }
   if (notes.jargon) {
     // r7 follow-ups (M8): shorter; the kid-words rule above says what field-guide words are.
-    out.push("- Some first-try clues used field-guide words or measurements: use a kid's words.");
+    out.push(band && isAdultBand(band) ? "- Some first-try clues used field-guide words or measurements: use plain words." : "- Some first-try clues used field-guide words or measurements: use a kid's words.");
   }
   if (notes.generic) out.push("- Some first-try clues were generic. Each Wild Find clue needs a colour, shape, size or part written in its SOURCE; if its SOURCE has none, choose another item.");
   const taken = [...new Set((notes.taken ?? []).filter(Boolean))];
@@ -384,7 +384,7 @@ export function refillRules(notes: RefillNotes): string[] {
 }
 
 /** Bands old enough for Park Finds that make the child look closely (R1-m10). */
-const LOOK_CLOSELY_BANDS: ReadonlySet<AgeBand> = new Set<AgeBand>(["6-10", "10-13"]);
+const LOOK_CLOSELY_BANDS: ReadonlySet<AgeBand> = new Set<AgeBand>(["6-10", "10-13", "13+"]);
 
 /**
  * Audit R2-M5: the model copied the prompt's GOOD example clues word for word onto every park ("How
@@ -440,18 +440,43 @@ export const OLDER_VOICES = [
 ] as const;
 
 /**
+ * Teens & adults (13+, Kevin 2026-10-07): a naturalist's voice for a grown reader. Like OLDER_VOICES (a detail and
+ * a reason), with field marks and behaviour, and no "child".
+ */
+export const ADULT_VOICES = [
+  "Voice for this park: a naturalist's field notes: the field mark first, then exactly where on it to confirm it.",
+  "Voice for this park: a park ranger's walk: one precise detail and what it is for.",
+  "Voice for this park: a birder's or botanist's tip: what you notice from a distance, then the closer mark that settles it.",
+  "Voice for this park: a field-guide challenge in plain words: the one detail that tells it apart, and where to look for it.",
+] as const;
+
+/**
  * The reading-level rule. 4-6 and 6-10 keep the original line (the recorded fixtures and eval runs use
  * it). R3: for 10-13 the old "short words, short sentences" wrote grade-2 clues (median FK 2.2 in the
  * 2026-10-06 smoke), so the older band is asked for fuller sentences with the SOURCE's exact describing
  * words; the length cap, grounding and every other check are unchanged.
  */
 export function readingRules(band: AgeBand, grade: string): string[] {
+  if (isAdultBand(band)) return adultReadingRules();
   if (band !== "10-13") return [`- Write at reading level grade ${grade}: short words, short sentences, fun and friendly.`];
   return [
     `- Write for a 10-13-year-old at reading level grade ${grade} to 6, never babyish: each clue is one or two complete sentences of 10 to 18 words in all.`,
     // Audit R5-C3: "use the SOURCE's exact describing words" wrote "stiffly erect, branching square stems" and
     // "a typical length of 16 cm and a mass of 24-39.5 g". Richer words, yes; a field guide's words, no.
     "- Use the SOURCE's facts (shapes, textures, colours, parts) in words a 12-year-old uses on a walk, and add a comparison or what the part is for when the SOURCE says it. No filler words: every word helps the child check the find.",
+  ];
+}
+
+/**
+ * Teens & adults (13+): adult reading level and real naturalist detail, but only what the item's own SOURCE says
+ * (the grounding, name-leak, danger-word and jargon checks are the same as for 10-13). The 120-character cap stays.
+ */
+export function adultReadingRules(): string[] {
+  return [
+    "- Write for a teen or adult who likes nature: plain adult sentences, one or two of 10 to 18 words in all. No baby talk or sound words (splish-splash), no \"Who am I?\" riddles, no exclamation marks, never \"kids\", \"friends\" or \"little\".",
+    "- Choose wildlife, plants and natural or built landmarks before play equipment (playgrounds, swings, slides).",
+    "- Give real detail a person can check by eye, from the SOURCE: a colour or pattern and the exact part it is on, a shape, a size, a behaviour, or where on the plant or in the park it sits or grows. Say it in everyday words, the way a ranger talks on a walk. No filler words: every word helps confirm the find.",
+    "- Hard finds are real naturalist challenges: the one visible mark that tells it apart from look-alikes, or a behaviour to wait for, stated in its SOURCE.",
   ];
 }
 
@@ -462,9 +487,9 @@ function hash32(s: string): number {
   return h >>> 0;
 }
 
-/** The writing voice for a park (R2-M5); the 10-13 band picks from OLDER_VOICES (R3). */
+/** The writing voice for a park (R2-M5); the 10-13 band picks from OLDER_VOICES (R3), teens & adults from ADULT_VOICES. */
 export function voiceFor(seed: string, band?: AgeBand): string {
-  const voices: readonly string[] = band === "10-13" ? OLDER_VOICES : CLUE_VOICES;
+  const voices: readonly string[] = band && isAdultBand(band) ? ADULT_VOICES : band === "10-13" ? OLDER_VOICES : CLUE_VOICES;
   return voices[hash32(seed) % voices.length];
 }
 
@@ -493,25 +518,34 @@ export const PROMPT_EXAMPLE_TEXTS: readonly string[] = [
  * per pass over $0.001. Same rules, fewer words: what to say, the five kinds of words never to use, the bare
  * colour, and two quoted BAD phrases. Code still drops every clue like them (jargon.ts).
  */
-export function kidWordsRule(): string {
+export function kidWordsRule(band?: AgeBand): string {
   const bad = JARGON_BAD_EXAMPLES.map((b) => `"${b.clue}"`).join(", ");
+  // Teens & adults: the same never-list (jargon.ts checks it the same way), said for a grown reader.
+  if (band && isAdultBand(band)) {
+    return `- Never a family, genus or species word, a Latin group name, a numbered body segment, a weight, a field-guide or diet word (operculum, pterostigma, arboreal, semiaquatic, herbivorous) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}, "blue on abdominal segments 8 and 9".`;
+  }
   return `- Use a kid's words: what it looks like (a colour plus the part it is on), its shape or what it does. Never a family, genus or species word, a Latin group name, a weight, a field-guide word (operculum, tarsomere, arboreal) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}.`;
 }
 
 export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null, ctx: PromptContext | null = null): string {
   const info = AGE_BAND_INFO[band];
+  // Teens & adults (13+, 2026-10-07): the same rules for an "explorer" instead of "the child"; kid prompts are unchanged.
+  const adult = isAdultBand(band);
+  const who = adult ? "explorer" : "child";
   const hard = mix.hardMin > 0 ? `; at least ${mix.hardMin} must be "hard"` : "";
   const month = ctx ? monthName(ctx.month) : null;
   const bad = (i: number) => `"${BAD_CLUE_EXAMPLES[i].clue}" (${BAD_CLUE_EXAMPLES[i].why})`;
   return [
-    `You build a park scavenger pass for a child aged ${band}. Choose items ONLY from POOL by id.`,
-    ...(month ? [`Today is in ${month}. The child goes outside today.`] : []),
+    adult
+      ? "You build a park scavenger pass for a teen or adult (13 and up) who likes nature. Choose items ONLY from POOL by id."
+      : `You build a park scavenger pass for a child aged ${band}. Choose items ONLY from POOL by id.`,
+    ...(month ? [`Today is in ${month}. The ${who} goes outside today.`] : []),
     "Rules:",
     `- Exactly ${mix.n} items, each id at most once: ${mixRules(mix)}. An item's section is the section of its source.`,
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
-    "- A good clue gives the child ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.",
+    `- A good clue gives the ${who} ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.`,
     // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches at Celebration
     // (the roof and pillars were the Find This Spot shelter's facts). Each clue's facts come from its own item only.
     // Short on purpose (prompt budget M8); the SPOT line below says its facts are for the riddle only.
@@ -525,21 +559,21 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Audit R3-C1: filler openers and sound clues for silent things.
     '- Never open with a filler word (Quick, Psst, Wow, Hmm, Ready): start with the clue itself.',
     // Round-6 judge C4: at most one listening clue a pass, and water is described by what the child sees.
-    "- Ask the child to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the child can see.",
-    '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
+    `- Ask the ${who} to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the ${who} can see.`,
+    `- Never write "a place with", "a place where" or "a spot where": say what the ${who} will see.`,
     // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
     // r7 follow-ups (M8): merged with the voice-switch rule below (one line, same two rules).
-    "- Write every clue to the child: a clue never switches to the thing talking (I, me, my) in a later sentence. At most ONE clue on the pass may be a riddle in which the thing talks as itself.",
+    `- Write every clue to the ${who}: a clue never switches to the thing talking (I, me, my) in a later sentence. At most ONE clue on the pass may be a riddle in which the thing talks as itself.`,
     // r7 follow-ups (M8): "How many" joins this line; the Park Finds count line no longer repeats it.
     '- A count clue is a task ("Count the ..."), never a "How many", "Which" or "What" question with the number in it, and never a question followed by "Count ...".',
     // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." on 4 parks.
     '- Put a count inside the clue\'s own sentence, with its number and what to count. Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".',
     // Quick win (run 2026-10-06-5): "Watch for a plant with white blooms. I am poisonous!" switched voice mid-clue (now in the "Write every clue to the child" line).
-    ...(ctx?.refill ? refillRules(ctx.refill) : []),
+    ...(ctx?.refill ? refillRules(ctx.refill, band) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.
     ...(mix.max.lucky > 0
-      ? ['- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the child might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.']
+      ? [`- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the ${who} might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.`]
       : []),
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
     ...(mix.max.wild > 0
@@ -556,7 +590,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // R1-m10 + R2-M5: Park Finds the child looks closely at; a count must be the map's own count of the whole thing.
     ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
       ? [
-          `- Park Finds: make the child look closely at a fact in that SOURCE: a detail to find, or a count to check. Bad: ${bad(2)}.`,
+          `- Park Finds: make the ${who} look closely at a fact in that SOURCE: a detail to find, or a count to check. Bad: ${bad(2)}.`,
           `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
         ]
       : []),
@@ -566,9 +600,9 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
     `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
     ...readingRules(band, info.grade),
-    kidWordsRule(),
+    kidWordsRule(band),
     `- Each clue is at most ${CLUE_MAX} characters; lookWhere at most ${LOOK_WHERE_MAX}.`,
-    "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
+    `- Never tell the ${who} to touch, pick, eat, catch or chase anything. Looking is the game.`,
     "- Do not write numbers unless that number is in the item's SOURCE. No links.",
     // S8c: short quotes (answer tokens are the latency) and nothing after the copied words (a glued "parentNote: ..." failed grounding).
     `- sourceQuote: copy the SHORTEST exact phrase from that item's SOURCE that proves the clue: 3 to 8 words, never more than 12 (at most ${QUOTE_WIRE_MAX} characters), word for word in one piece. Never skip words or write "...". The quote holds only the copied words. It must prove the trait in the clue and hold the trait word the clue uses (its colour, shape, size or part): never quote only the name. If the SOURCE has no trait for the clue you want, pick another item.`,

@@ -3,6 +3,8 @@ import { HIDDEN_PARK_NOTE, safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import type { Pass, SectionId } from "@/lib/pass/schema";
 import { hardShortNote } from "@/lib/pass/short-copy";
+import { ADULT_TEAR_TEXT, AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
+import type { AgeBand } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
@@ -10,7 +12,7 @@ const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
 /** Fixed, code-written line for the grown-up (ADR 0003: look-only, never eat or pick). */
 export const STUB_LOOK_ONLY = "Look only: don't pick, eat, catch or chase anything on this pass.";
 /** Shown when finds carry their own fixed safety line (printed on the kid's row, above). */
-export const STUB_EACH_LINE = "Read each find's safety line with your kid.";
+export const STUB_EACH_LINE = AUDIENCE_COPY.kid.stubEachLine;
 
 const shortDayFmt = new Intl.DateTimeFormat("en-US", { month: "short", day: "numeric", timeZone: "UTC" });
 
@@ -21,10 +23,11 @@ export function shortDay(day: string): string {
   return shortDayFmt.format(new Date(Date.UTC(y, m - 1, d)));
 }
 
-/** Dashed tear line with scissors between the kid pass and the stub (ADR 0004). */
-export function TearLine() {
+/** Dashed tear line with scissors between the kid pass and the stub (ADR 0004); its words follow the band (13+). */
+export function TearLine({ band }: { band?: AgeBand } = {}) {
+  const copy = copyFor(band);
   return (
-    <div className="gp-tear" role="separator" aria-label="Cut or tear here: the kid keeps the top, the grown-up keeps the bottom">
+    <div className="gp-tear" role="separator" aria-label={copy.tearAria}>
       <svg
         className="gp-scissors"
         viewBox="0 0 24 24"
@@ -41,7 +44,7 @@ export function TearLine() {
         <path d="M8.1 8.1L20 20M8.1 15.9L20 4M14.5 12h0" />
       </svg>
       <span className="gp-tear-line" aria-hidden="true" />
-      <span aria-hidden="true">cut here: top for kids, bottom for grown-ups</span>
+      <span aria-hidden="true">{copy === AUDIENCE_COPY.adult ? ADULT_TEAR_TEXT : "cut here: top for kids, bottom for grown-ups"}</span>
       <span className="gp-tear-line" aria-hidden="true" />
     </div>
   );
@@ -75,6 +78,7 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   });
   const { notGrounded, other } = pass.removed;
   const hardNote = hardShortNote(pass);
+  const copy = copyFor(pass.ageBand);
   const notes: string[] = [
     // R2-m3: the park name was hidden on this pass; say why.
     ...(safeParkName(pass.park.name).hidden ? [HIDDEN_PARK_NOTE] : []),
@@ -91,7 +95,7 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   return (
     <section className="gp-stub" aria-labelledby="stub-title">
       <div className="gp-stub-head">
-        <h2 id="stub-title">For the grown-up: answer key</h2>
+        <h2 id="stub-title">{copy.stubTitle}</h2>
         <p className="gp-small">Keep this part. {pass.parentNote}</p>
       </div>
 
@@ -115,7 +119,7 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
       <div className="gp-stub-safety">
         <h3>Safety</h3>
         <p className="gp-small">
-          {[STUB_LOOK_ONLY, ...(safety.length > 0 ? [STUB_EACH_LINE] : []), ...(pass.safetyFiltered > 0 ? [SAFETY_FOOTNOTE] : [])].join(" ")}
+          {[STUB_LOOK_ONLY, ...(safety.length > 0 ? [copy.stubEachLine] : []), ...(pass.safetyFiltered > 0 ? [SAFETY_FOOTNOTE] : [])].join(" ")}
         </p>
       </div>
 

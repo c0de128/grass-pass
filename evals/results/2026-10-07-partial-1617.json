@@ -1,0 +1,473 @@
+{
+ "meta": {
+  "startedAt": "2026-10-07T21:17:43.785Z",
+  "finishedAt": "2026-10-07T21:18:43.204Z",
+  "day": "2026-10-07",
+  "ageBand": "13+",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    2,
+    4,
+    13
+   ],
+   "budgetUsd": 0.05
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": null,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 2,
+   "slug": "celebration-park",
+   "name": "Celebration Park",
+   "parkId": "way/188145317",
+   "note": "",
+   "fixture": "tests/fixtures/evals/celebration-park.json",
+   "fetchedAt": "2026-10-05T23:44:55.234Z",
+   "pool": {
+    "park": 11,
+    "wild": 0
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 4,
+   "slug": "oak-point-park",
+   "name": "Oak Point Park and Nature Preserve",
+   "parkId": "way/556800335",
+   "note": "",
+   "fixture": "tests/fixtures/evals/oak-point-park.json",
+   "fetchedAt": "2026-10-05T23:47:37.812Z",
+   "pool": {
+    "park": 6,
+    "wild": 12
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  },
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 13
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 2,
+   "slug": "celebration-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":10037,"status":200,"error":null,"poolMatches":true,"promptTokens":2488,"completionTokens":486,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Count the 4 flat areas where a low net is strung across the center.","difficulty":"easy","itemId":"osm-tennis","lookWhere":"","sourceQuote":"4 tennis courts"},{"clue":"Spot a sandy area with a white base at every turn.","difficulty":"medium","itemId":"osm-baseball","lookWhere":"","sourceQuote":"sandy infield with a white base"},{"clue":"Point to a flat area that shines like a mirror on a calm day.","difficulty":"hard","itemId":"osm-water","lookWhere":"near the water","sourceQuote":"shines like a mirror"},{"clue":"Check for a path over a ditch with railings on the sides.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"near the water","sourceQuote":"railings on the sides"},{"clue":"Which 2 structures have water that glitters in the sun as it falls?","difficulty":"hard","itemId":"osm-fountain","lookWhere":"","sourceQuote":"2 fountains"},{"clue":"Hunt for a flat smooth area with a metal ring fixed to a square board.","difficulty":"hard","itemId":"osm-basketball","lookWhere":"","sourceQuote":"metal ring, usually with a net"},{"clue":"Somewhere you will see 25 grass areas with a painted box in front of every goal.","difficulty":"hard","itemId":"osm-soccer","lookWhere":"","sourceQuote":"25 soccer fields"},{"clue":"Peek at a long outdoor seat that can be made of metal, stone or wood.","difficulty":"easy","itemId":"osm-bench","lookWhere":"by the path","sourceQuote":"long seat outdoors"}]}
+   ],
+   "parkName": "Celebration Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist."},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Count the 4 flat areas where a low net is strung across the center.","lookWhere":"","answer":"Tennis courts","difficulty":"easy"},
+    {"section":"park","clue":"Spot a sandy area with a white base at every turn.","lookWhere":"","answer":"Baseball fields (Celebration Park Baseball Diamonds)","difficulty":"medium"},
+    {"section":"park","clue":"Point to a flat area that shines like a mirror on a calm day.","lookWhere":"","answer":"Ponds or lakes","difficulty":"hard"},
+    {"section":"park","clue":"Check for a path over a ditch with railings on the sides.","lookWhere":"near the water","answer":"Bridge","difficulty":"medium"},
+    {"section":"park","clue":"Hunt for a flat smooth area with a metal ring fixed to a square board.","lookWhere":"","answer":"Basketball courts","difficulty":"hard"},
+    {"section":"park","clue":"Notice 25 grass areas with a painted box in front of every goal.","lookWhere":"","answer":"Soccer fields (Celebration Park Soccer Fields)","difficulty":"hard"},
+    {"section":"park","clue":"Peek at a long outdoor seat that can be made of metal, stone or wood.","lookWhere":"by the path","answer":"Benches","difficulty":"easy"}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 10160
+  },
+  {
+   "caseN": 4,
+   "slug": "oak-point-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":12376,"status":200,"error":null,"poolMatches":true,"promptTokens":3687,"completionTokens":580,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Count the 8 structures that carry you across water or a dip.","difficulty":"easy","itemId":"osm-bridge","lookWhere":"","sourceQuote":"has 8 bridges"},{"clue":"Peek at the 2 stations where a curve of water bubbles up from a spout.","difficulty":"easy","itemId":"osm-drinking-water","lookWhere":"","sourceQuote":"has 2 drinking fountains"},{"clue":"Where the water is shallow, spot rocks and twigs sticking out.","difficulty":"medium","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"Rocks and twigs stick out"},{"clue":"Check for a tree with bumpy, yellow-green spherical fruit.","difficulty":"hard","itemId":"inat-58205","lookWhere":"on bushes","sourceQuote":"spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-绿色"},{"clue":"Point out a vine with large, intricate flowers.","difficulty":"hard","itemId":"inat-51453","lookWhere":"on a fence","sourceQuote":"large, intricate flowers"},{"clue":"Which winged insect is orange-red or olive green?","difficulty":"hard","itemId":"inat-70191","lookWhere":"near the water","sourceQuote":"Females are orange-red, olive green"},{"clue":"Watch for a lizard that is green.","difficulty":"medium","itemId":"inat-36514","lookWhere":"on tree trunks","sourceQuote":"American green anole"},{"clue":"Somewhere you will see a bug with red shoulders.","difficulty":"hard","itemId":"inat-127669","lookWhere":"on bushes","sourceQuote":"red-shouldered bug"},{"clue":"Who am I? I have a cover on poles and tables for sharing a meal.","difficulty":"medium","itemId":"osm-bench","lookWhere":"","sourceQuote":"cover on poles and tables underneath"}]},
+    {"latencyMs":9039,"status":200,"error":null,"poolMatches":true,"promptTokens":2924,"completionTokens":442,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Count the 3 bodies of water on the map.","difficulty":"easy","itemId":"osm-water","lookWhere":"near the water","sourceQuote":"3 ponds or lakes"},{"clue":"Who has a round shell and lives on land?","difficulty":"hard","itemId":"inat-126257","lookWhere":"on the ground","sourceQuote":"land snail with an operculum"},{"clue":"Watch for a winged insect with a blue hue.","difficulty":"medium","itemId":"inat-69940","lookWhere":"on bushes","sourceQuote":"Ceraunus blue"},{"clue":"Somewhere you will see a tree with pods or seeds.","difficulty":"easy","itemId":"inat-54797","lookWhere":"on tree trunks","sourceQuote":"show it with fruit or seeds"},{"clue":"Spot a creature with a black and yellow pattern.","difficulty":"medium","itemId":"inat-67707","lookWhere":"in tall grass","sourceQuote":"black and yellow garden spider"},{"clue":"Check for a tree that is deciduous.","difficulty":"easy","itemId":"inat-54808","lookWhere":"by the path","sourceQuote":"species of ash native to"},{"clue":"Peek at a plant known as valley redstem.","difficulty":"medium","itemId":"inat-60210","lookWhere":"on the ground","sourceQuote":"known by several common names, including valley redstem"}]},
+    {"latencyMs":5199,"status":200,"error":null,"poolMatches":true,"promptTokens":3017,"completionTokens":247,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Somewhere, count the 2 stations that give a sip of cold water when a knob is pressed.","difficulty":"easy","itemId":"osm-drinking-water","lookWhere":"","sourceQuote":"2 drinking fountains"},{"clue":"Check for a tree with bumpy, roughly spherical fruit that is a bright yellow-green.","difficulty":"medium","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"roughly spherical, bumpy, 8 to 15 centimetres"},{"clue":"Peek at the 8 paths over water or dips to see if any have a hump in the middle.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"","sourceQuote":"8 bridges"},{"clue":"Who is the tree with seeds in the moist soil of river valleys?","difficulty":"hard","itemId":"inat-54797","lookWhere":"near the water","sourceQuote":"moist soil of river valleys"}]}
+   ],
+   "parkName": "Oak Point Park and Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Where the water is shallow, spot rocks and twigs sticking out.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)","difficulty":"medium"},
+    {"section":"park","clue":"Peek at the 8 paths over water or dips to see if any have a hump in the middle.","lookWhere":"","answer":"Bridges (Rowlett Creek Trail, Oak Point Park & Nature Preserve, High Meadow Trail)","difficulty":"medium"},
+    {"section":"wild","clue":"Point out a vine with large, intricate flowers.","lookWhere":"on a fence","answer":"Purple passionflower (Passiflora incarnata)","difficulty":"hard","taxonId":51453},
+    {"section":"wild","clue":"Which winged insect is orange-red or olive green?","lookWhere":"near the water","answer":"Rambur's Forktail (Ischnura ramburii)","difficulty":"hard","taxonId":70191},
+    {"section":"wild","clue":"Who has a round shell and lives on land?","lookWhere":"on the ground","answer":"Globular Drop Snail (Helicina orbiculata)","difficulty":"hard","taxonId":126257},
+    {"section":"wild","clue":"Watch for a winged insect with a blue hue.","lookWhere":"on bushes","answer":"Ceraunus Blue (Hemiargus ceraunus)","difficulty":"medium","taxonId":69940},
+    {"section":"wild","clue":"Spot a creature with a black and yellow pattern.","lookWhere":"in tall grass","answer":"Yellow Garden Spider (Argiope aurantia)","difficulty":"medium","taxonId":67707},
+    {"section":"wild","clue":"Check for a tree with bumpy, roughly spherical fruit that is a bright yellow-green.","lookWhere":"on the ground","answer":"Osage-orange (Maclura pomifera)","difficulty":"medium","taxonId":58205}
+   ],
+   "removed": {
+    "notGrounded": 2,
+    "other": 10
+   },
+   "wallMs": 27753
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":10069,"status":200,"error":null,"poolMatches":true,"promptTokens":4091,"completionTokens":493,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Which metal cooker on a stand is dark from smoke and old fires?","difficulty":"easy","itemId":"osm-bbq","lookWhere":"","sourceQuote":"dark from smoke and old fires"},{"clue":"Where are the 3 fields with a small mound of dirt in the middle?","difficulty":"medium","itemId":"osm-baseball","lookWhere":"","sourceQuote":"3 baseball fields"},{"clue":"Notice the 8 play spots that often have a short fence or a border around them.","difficulty":"easy","itemId":"osm-playground","lookWhere":"","sourceQuote":"8 playgrounds"},{"clue":"Check the 2 water features that pour into a bowl.","difficulty":"medium","itemId":"osm-fountain","lookWhere":"","sourceQuote":"2 fountains"},{"clue":"Hunt for a dragonfly with a chunky white body and brownish-black bands on the wings.","difficulty":"hard","itemId":"inat-84549","lookWhere":"near the water","sourceQuote":"chunky white body"},{"clue":"Watch for a tiny flying insect that actively mimics a wasp.","difficulty":"hard","itemId":"inat-59776","lookWhere":"by the path","sourceQuote":"actively mimics a wasp"},{"clue":"Peek at the vine with flowers that are pale in October.","difficulty":"hard","itemId":"inat-135262","lookWhere":"on a fence","sourceQuote":"show it with flowers"},{"clue":"Somewhere is a large aquatic soaring bird.","difficulty":"hard","itemId":"inat-4334","lookWhere":"near the water","sourceQuote":"large aquatic soaring bird"}]},
+    {"latencyMs":7402,"status":200,"error":null,"poolMatches":true,"promptTokens":3537,"completionTokens":353,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Check the ground for a wire fence surrounding big boxes and short boxes painted in lines.","difficulty":"easy","itemId":"osm-tennis","lookWhere":"","sourceQuote":"Painted lines on its ground"},{"clue":"Watch for a large shorebird that is bigger than most others of its kind.","difficulty":"medium","itemId":"inat-3892","lookWhere":"near the water","sourceQuote":"is a large North American shorebird"},{"clue":"Peek at the metal bars or machines used for stretching and count the 2 of these stations.","difficulty":"medium","itemId":"osm-fitness","lookWhere":"","sourceQuote":"has 2 exercise stations"},{"clue":"Which tree has bark that is a dark shade of charcoal?","difficulty":"hard","itemId":"inat-54847","lookWhere":"by the path","sourceQuote":"Salix nigra, the black willow"},{"clue":"Where are the 17 structures with poles and covers that provide shade for tables?","difficulty":"medium","itemId":"osm-shelter","lookWhere":"","sourceQuote":"has 17 picnic shelters"}]}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Which metal cooker on a stand is dark from smoke and old fires?","lookWhere":"","answer":"Barbecue grills","difficulty":"easy"},
+    {"section":"park","clue":"Where are the 3 fields with a small mound of dirt in the middle?","lookWhere":"","answer":"Baseball fields","difficulty":"medium"},
+    {"section":"park","clue":"Notice the 8 play spots that often have a short fence or a border around them.","lookWhere":"","answer":"Playgrounds","difficulty":"easy"},
+    {"section":"park","clue":"Check the ground for a wire fence surrounding big boxes and short boxes painted in lines.","lookWhere":"","answer":"Tennis court","difficulty":"easy"},
+    {"section":"park","clue":"Peek at the metal bars or machines used for stretching and count the 2 of these stations.","lookWhere":"","answer":"Exercise stations","difficulty":"medium"},
+    {"section":"wild","clue":"Hunt for a dragonfly with a chunky white body and brownish-black bands on the wings.","lookWhere":"near the water","answer":"Common Whitetail (Plathemis lydia)","difficulty":"hard","taxonId":84549},
+    {"section":"wild","clue":"Somewhere is a large aquatic soaring bird.","lookWhere":"near the water","answer":"American White Pelican (Pelecanus erythrorhynchos)","difficulty":"hard","taxonId":4334},
+    {"section":"wild","clue":"Watch for a large shorebird that is bigger than most others of its kind.","lookWhere":"near the water","answer":"Greater Yellowlegs (Tringa melanoleuca)","difficulty":"medium","taxonId":3892}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 5
+   },
+   "wallMs": 18564
+  },
+  {
+   "caseN": 2,
+   "slug": "celebration-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-basketball","section":"park","clue":"Its ring is a metal ring, usually with a net hanging down, fixed to a square board.","lookWhere":"","sourceQuote":"Its ring is a metal ring, usually with a net hanging down, fixed to a square board.","difficulty":"medium"},{"itemId":"osm-tennis","section":"park","clue":"A high wire fence often goes all around it to keep the balls in.","lookWhere":"","sourceQuote":"A high wire fence often goes all around it to keep the balls in.","difficulty":"medium"},{"itemId":"osm-soccer","section":"park","clue":"Painted lines on its grass mark a big box in front of every goal.","lookWhere":"","sourceQuote":"Painted lines on its grass mark a big box in front of every goal.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Each one has a sandy infield with a white base at every turn.","lookWhere":"","sourceQuote":"Each one has a sandy infield with a white base at every turn.","difficulty":"medium"},{"itemId":"osm-sports-field","section":"park","clue":"Players and families use it for running games and practice.","lookWhere":"","sourceQuote":"Players and families use it for running games and practice.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","sourceQuote":"It usually has a low fence or a border round it.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"It gives cool shade from the sun and cover in the rain.","lookWhere":"","sourceQuote":"It gives cool shade from the sun and cover in the rain.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Each one is a long seat outdoors for resting.","lookWhere":"","sourceQuote":"Each one is a long seat outdoors for resting.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Celebration Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"empty","message":"No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist."}
+   },
+   "items": [
+    {"section":"park","clue":"Its ring is a metal ring, usually with a net hanging down, fixed to a square board.","lookWhere":"","answer":"Basketball courts","difficulty":"medium"},
+    {"section":"park","clue":"A high wire fence often goes all around it to keep the balls in.","lookWhere":"","answer":"Tennis courts","difficulty":"medium"},
+    {"section":"park","clue":"Painted lines on its grass mark a big box in front of every goal.","lookWhere":"","answer":"Soccer fields (Celebration Park Soccer Fields)","difficulty":"medium"},
+    {"section":"park","clue":"Each one has a sandy infield with a white base at every turn.","lookWhere":"","answer":"Baseball fields (Celebration Park Baseball Diamonds)","difficulty":"medium"},
+    {"section":"park","clue":"Players and families use it for running games and practice.","lookWhere":"","answer":"Sports fields","difficulty":"medium"},
+    {"section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","answer":"Playground","difficulty":"medium"},
+    {"section":"park","clue":"It gives cool shade from the sun and cover in the rain.","lookWhere":"","answer":"Picnic shelter","difficulty":"medium"},
+    {"section":"park","clue":"Each one is a long seat outdoors for resting.","lookWhere":"","answer":"Benches","difficulty":"medium"}
+   ]
+  },
+  {
+   "caseN": 4,
+   "slug": "oak-point-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-shelter","section":"park","clue":"It has a cover on poles and tables underneath where people share a meal.","lookWhere":"","sourceQuote":"It has a cover on poles and tables underneath where people share a meal.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Many face a trail or a nice view.","lookWhere":"","sourceQuote":"Many face a trail or a nice view.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____).","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii).","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (____) ____ and as ____ ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"A small curve of water bubbles up from its spout.","lookWhere":"","sourceQuote":"A small curve of water bubbles up from its spout.","difficulty":"medium"},{"itemId":"inat-36514","section":"wild","clue":"The ____ ____ (____) (US: /əˈnoʊ.li/ ( listen)) is an arboreal lizard found primarily in the southeastern United States","lookWhere":"","sourceQuote":"The Carolina anole (Anolis carolinensis) (US: /əˈnoʊ.li/ ( listen)) is an arboreal lizard found primarily in the southeastern United States and some Caribbean islands.","difficulty":"medium"},{"itemId":"osm-water","section":"park","clue":"On a calm day it glitters like a mirror.","lookWhere":"","sourceQuote":"On a calm day it glitters like a mirror.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Oak Point Park and Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It has a cover on poles and tables underneath where people share a meal.","lookWhere":"","answer":"Picnic shelter (Lakeside Pavilion)","difficulty":"medium"},
+    {"section":"park","clue":"Many face a trail or a nice view.","lookWhere":"","answer":"Bench","difficulty":"medium"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)","difficulty":"medium","taxonId":58205},
+    {"section":"park","clue":"A small curve of water bubbles up from its spout.","lookWhere":"","answer":"Drinking fountains","difficulty":"medium"},
+    {"section":"park","clue":"On a calm day it glitters like a mirror.","lookWhere":"","answer":"Ponds or lakes","difficulty":"medium"}
+   ]
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","sourceQuote":"Painted lines on its ground make big boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","sourceQuote":"Teams wait their turn on long benches in sunken dugouts beside it.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-84549","section":"wild","clue":"The ____ or ____ ____ (____) is a common dragonfly across much of North America, with a striking and unusual appearance.","lookWhere":"","sourceQuote":"The common whitetail or long-tailed skimmer (Plathemis lydia) is a common dragonfly across much of North America, with a striking and unusual appearance.","difficulty":"medium"},{"itemId":"inat-59776","section":"wild","clue":"The ____ (____) is a species of dragonfly.","lookWhere":"","sourceQuote":"The eastern amberwing (Perithemis tenera) is a species of dragonfly.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","sourceQuote":"Each one is a play spot with things to swing on, climb and slide down.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____).","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii).","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","sourceQuote":"Some seats are flat, and some are a big round nest you can lie in.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","answer":"Tennis court","difficulty":"medium"},
+    {"section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","answer":"Baseball fields","difficulty":"medium"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)","difficulty":"medium","taxonId":3892},
+    {"section":"wild","clue":"The ____ or ____ ____ (____) is a common dragonfly across much of North America, with a striking and unusual appearance.","lookWhere":"","answer":"Common Whitetail (Plathemis lydia)","difficulty":"medium","taxonId":84549},
+    {"section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","answer":"Playgrounds","difficulty":"medium"},
+    {"section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","answer":"Swing","difficulty":"medium"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 3,
+   "passes": 3,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 39,
+    "returned": 41,
+    "rate": 0.9512195121951219,
+    "pass": true
+   },
+   "m3": {
+    "complete": 3,
+    "dataRichRuns": 3,
+    "rate": 1,
+    "pass": true
+   },
+   "m4": {
+    "ok": 1,
+    "checked": 1,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.9250000000000007,
+    "clues": 23,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 1,
+    "clueLeaks": 1,
+    "returned": 41,
+    "rate": 0.024390243902439025,
+    "clueRate": 0.024390243902439025,
+    "pass": true
+   },
+   "m7": {
+    "calls": 6,
+    "p50Ms": 9538,
+    "p95Ms": 11799.25,
+    "passP50": true,
+    "passP95": true,
+    "perPassP50Ms": 17471
+   },
+   "m8": {
+    "costPerPass": 0.00161814,
+    "costPerPassHigh": 0.00161814,
+    "unansweredCalls": 0,
+    "totalUsd": 0.00485442,
+    "promptTokens": 19744,
+    "completionTokens": 2601,
+    "pass": false
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 23,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 6,
+    "rawWrong": 7,
+    "details": [],
+    "returned": 41,
+    "pass": true
+   },
+   "retries": 2,
+   "hard": {
+    "checked": 3,
+    "met": 2,
+    "hardMin": 3,
+    "rate": 0.6666666666666666
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 3,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   },
+   "drops": {
+    "all": {"wrong_count":6,"not_grounded":2,"generic_clue":5,"name_leak":2,"mentions_map":1,"unknown_id":1,"danger":1},
+    "incomplete": {},
+    "byRun": [{"caseN":2,"run":1,"kept":7,"n":8,"drops":{"wrong_count":1}},{"caseN":4,"run":1,"kept":8,"n":8,"drops":{"wrong_count":3,"not_grounded":2,"generic_clue":3,"name_leak":2,"mentions_map":1,"unknown_id":1}},{"caseN":13,"run":1,"kept":8,"n":8,"drops":{"wrong_count":2,"danger":1,"generic_clue":2}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 3,
+   "passes": 3,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 24,
+    "returned": 24,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 1,
+    "dataRichRuns": 3,
+    "rate": 0.3333333333333333,
+    "pass": false
+   },
+   "m4": {
+    "ok": 1,
+    "checked": 1,
+    "rate": 1,
+    "pass": true,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.355714285714285,
+    "clues": 19,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 24,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 3,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "costPerPassHigh": 0,
+    "unansweredCalls": 3,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 19,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 1,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 24,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 3,
+    "met": 0,
+    "hardMin": 3,
+    "rate": 0
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 3,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.00485442,
+  "modelCalls": 6,
+  "promptTokens": 19744,
+  "completionTokens": 2601
+ }
+}

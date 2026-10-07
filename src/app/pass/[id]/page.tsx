@@ -6,6 +6,8 @@ import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
+import { ADULT_PRINT_LINE } from "@/lib/pass/audience";
+import { isAdultBand } from "@/lib/pass/schema";
 import { loadPass } from "@/lib/pass/make";
 import { withClearMap } from "@/lib/spot/redraw";
 import { signInOptions } from "@/lib/accounts/config";
@@ -55,7 +57,9 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
         <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
           Print pass
         </Link>
-        <p className="text-base text-muted-foreground">One black-and-white page. Cut it in half: kids get the hunt, you get the answers.</p>
+        <p className="text-base text-muted-foreground">
+          {isAdultBand(pass.ageBand) ? ADULT_PRINT_LINE : "One black-and-white page. Cut it in half: kids get the hunt, you get the answers."}
+        </p>
       </div>
       <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">

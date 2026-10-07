@@ -38,6 +38,7 @@ import { peekFeatures } from "./park-data";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import type { FetchLike } from "@/lib/sources/common";
 import {
+  AGE_BAND_INFO,
   MAX_VARIANTS,
   PASS_COPY,
   PASS_ID_PATTERN,
@@ -137,13 +138,12 @@ export const PASS_BURST_PER_MIN = 20;
 const passCache = createJsonCache({ name: "pass", schema: PassSchema, ttlSec: PASS_TTL_SEC, maxEntries: 5_000 });
 const latestCache = createJsonCache({ name: "pass-latest", schema: z.number().int().min(1).max(MAX_VARIANTS), ttlSec: 2 * DAY, maxEntries: 5_000 });
 
-const BAND_SLUG: Record<AgeBand, string> = { "4-6": "4to6", "6-10": "6to10", "10-13": "10to13" };
 
 /** w306191453-6to10-20261005-1 */
 export function passId(parkId: string, band: AgeBand, day: string, variant: number): string {
   const ref = parseParkId(parkId);
   if (!ref) throw new RangeError("bad park id");
-  return `${ref.type[0]}${ref.id}-${BAND_SLUG[band]}-${day.replace(/-/g, "")}-${variant}`;
+  return `${ref.type[0]}${ref.id}-${AGE_BAND_INFO[band].slug}-${day.replace(/-/g, "")}-${variant}`;
 }
 
 /** The pass cache key (SPEC §7): park, age band and the Chicago calendar day. */

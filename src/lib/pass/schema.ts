@@ -10,17 +10,21 @@ import { SpotSchema } from "@/lib/spot/types";
 
 // ---------- age bands (SPEC F2) ----------
 // The plain constants live in ./constants (no zod, for the browser's first paint, UX-4-02); re-exported here.
-import { AGE_BANDS, MAX_VARIANTS, type AgeBand } from "./constants";
+import { AGE_BAND_SLUGS, AGE_BANDS, MAX_VARIANTS, type AgeBand } from "./constants";
 export {
   AGE_BAND_INFO,
+  AGE_BAND_SLUGS,
   AGE_BAND_STORAGE_KEY,
   AGE_BANDS,
+  isAdultBand,
   AUTO_RETRY_CODES,
   DEFAULT_AGE_BAND,
   isAgeBand,
   MAP_DATA_FAILURE_CODES,
   MAX_VARIANTS,
   type AgeBand,
+  type AgeBandInfo,
+  type Audience,
 } from "./constants";
 
 export const AgeBandSchema = z.enum(AGE_BANDS) satisfies z.ZodType<AgeBand>;
@@ -72,8 +76,8 @@ export const PassItemSchema = z.object({
 });
 export type PassItem = z.infer<typeof PassItemSchema>;
 
-/** Pass ids are readable and deterministic: w306191453-6to10-20261005-1. */
-export const PASS_ID_PATTERN = /^[nwr]\d{1,15}-(4to6|6to10|10to13)-\d{8}-[1-9]$/;
+/** Pass ids are readable and deterministic: w306191453-6to10-20261005-1 (band slugs from AGE_BAND_INFO). */
+export const PASS_ID_PATTERN = new RegExp(`^[nwr]\\d{1,15}-(${AGE_BAND_SLUGS.join("|")})-\\d{8}-[1-9]$`);
 
 export const PassSchema = z.object({
   id: z.string().regex(PASS_ID_PATTERN),

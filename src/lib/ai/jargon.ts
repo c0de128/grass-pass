@@ -128,13 +128,16 @@ export function measureCount(text: string): number {
   return [...norm(text).matchAll(MEASURE_RE)].length;
 }
 
+/** Ages 10-13 and teens & adults (13+) may read a few more words (species, the YOUNG_RE glossary words). */
+const olderBand = (band: AgeBand | undefined): boolean => band === "10-13" || band === "13+";
+
 /**
  * Jargon (drop reason `jargon`, always removed), or null. Every band: taxonomy, record trivia, the hard
  * glossary, weights, Wikipedia stat phrases and 2+ numbers with units. Ages 4-6: any measurement.
  */
 export function jargonProblem(clue: string, band: AgeBand | undefined, section: "park" | "wild" | "lucky" = "wild"): string | null {
   const t = norm(clue);
-  const rank = RANK_RE.exec(t) ?? FAMILY_RANK_RE.exec(t) ?? ORDER_RANK_RE.exec(t) ?? NUMBERED_SEGMENT_RE.exec(t) ?? (band === "10-13" ? null : SPECIES_RE.exec(t));
+  const rank = RANK_RE.exec(t) ?? FAMILY_RANK_RE.exec(t) ?? ORDER_RANK_RE.exec(t) ?? NUMBERED_SEGMENT_RE.exec(t) ?? (olderBand(band) ? null : SPECIES_RE.exec(t));
   if (rank) return rank[0];
   const latin = LATIN_GROUP_RE.exec(t);
   if (latin && !LATIN_GROUP_OK.has(latin[0].toLowerCase())) return latin[0];
@@ -197,7 +200,7 @@ export function triviaKind(clue: string, band: AgeBand | undefined): { kind: "no
   if (BARE_COLOUR_RE.test(t)) return { kind: "nothing_to_see", match: "a bare colour" };
   const trivia = TRIVIA_RE.exec(t);
   if (trivia) return { kind: "word", match: trivia[0] };
-  if (band !== "10-13") {
+  if (!olderBand(band)) {
     const young = YOUNG_RE.exec(t);
     if (young) return { kind: "word", match: young[0] };
   }

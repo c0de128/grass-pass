@@ -15,10 +15,11 @@
  * globals shared with render code). No zod or pass schema import, so the proxy bundle stays small. tests/unit/limits-r2.test.ts checks
  * that the constants agree with PASS_ID_PATTERN, MAX_VARIANTS and PASS_TTL_SEC.
  */
+import { AGE_BAND_SLUGS } from "@/lib/pass/constants";
 import { localDay } from "@/lib/time";
 
 /** Same as PASS_ID_PATTERN in src/lib/pass/schema.ts, with the parts captured. */
-const ID_RE = /^([nwr])([1-9]\d{0,14})-(4to6|6to10|10to13)-(\d{4})(\d{2})(\d{2})-([1-9])$/;
+const ID_RE = new RegExp(`^([nwr])([1-9]\\d{0,14})-(${AGE_BAND_SLUGS.join("|")})-(\\d{4})(\\d{2})(\\d{2})-([1-9])$`);
 /** MAX_VARIANTS (src/lib/pass/schema.ts). */
 export const PASS_MAX_VARIANT = 3;
 /** PASS_TTL_SEC (src/lib/pass/make.ts) in days. */

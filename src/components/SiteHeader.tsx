@@ -1,4 +1,3 @@
-import { ArrowRight } from "lucide-react";
 import Link from "next/link";
 import { AccountMenu } from "@/components/account/AccountMenu";
 import { Logo } from "@/components/site/Logo";
@@ -23,8 +22,7 @@ export const PAGE_LINKS = [
 
 /**
  * v3 site header (Kevin's v0 design): sticky, translucent meadow background, the ticket logo (home link,
- * never prefetched: SEC-3-01), the section links (from 1180 px; below that they wrapped to two lines each at ~1072 px), How it works and About (every width), the dark mode switch and the dark
- * "Make a pass" pill that jumps to the park search on the home page.
+ * never prefetched: SEC-3-01), the section links (from 1180 px; below that they wrapped to two lines each at ~1072 px), How it works and About (every width), sign-in and the dark mode switch (Kevin 2026-10-07: no "Make a pass" pill in the header).
  */
 export function SiteHeader() {
   return (
@@ -58,14 +56,6 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2 max-[359px]:gap-1 sm:ml-0 sm:gap-3">
           <AccountMenu />
-          <Link
-            href="/#find"
-            prefetch={false}
-            className="group hidden h-11 items-center gap-2 rounded-full bg-ink px-5 text-sm font-semibold whitespace-nowrap text-on-ink transition-transform motion-safe:hover:-translate-y-0.5 sm:inline-flex"
-          >
-            Make a pass
-            <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
-          </Link>
           <ThemeToggle />
         </div>
       </div>

@@ -174,7 +174,8 @@ describe("v3 logo, header and footer", () => {
     expect(out).toMatch(/<li><a [^>]*href="\/how-it-works"[^>]*>How it works<\/a><\/li>/);
     // Shown at every width: the page tabs' list items carry no "hidden" class.
     expect(out).not.toMatch(/<li class="hidden lg:block"><a [^>]*href="\/how-it-works"/);
-    expect(out).toContain(">Make a pass");
+    // Kevin 2026-10-07: no "Make a pass" pill in the header.
+    expect(out).not.toContain(">Make a pass");
   });
 
   it("SiteFooter keeps every credit and the real links", () => {

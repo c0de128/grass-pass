@@ -6,10 +6,10 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
-import { MAX_MODEL_TIMEOUT_MS, MODEL_TIMEOUT_MS } from "@/lib/model";
+import { MAX_MODEL_TIMEOUT_MS } from "@/lib/model";
 import { MILKWEED_RADIUS_KM, MONARCH_RADIUS_KM, OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { MIN_MENTIONS } from "@/lib/pool/lucky";
 import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
@@ -32,7 +32,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1661, files: 58, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1683, files: 59, day: "Oct 6, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 export const AUDIT_ROUNDS = { done: 5, day: "Oct 6, 2026" } as const;
 const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
@@ -242,7 +242,7 @@ export function aboutLimits(): Limit[] {
   return [
     {
       title: `Speed missed the goal this run: DigitalOcean was slow (${secs(g.p50s)} typical, ${secs(g.p95s)} slow).`,
-      detail: `Target ${t.p50s} s / ${t.p95s} s. The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second; at ${GEMMA_TOKENS_PER_S.before} in the run before, the typical call took ${secs(PREVIOUS_RUN.p50s)} and met the goal. ${f.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit; their retries saved ${f.rescued} passes. Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test runs ended at its 60 s limit, ${pct(l.completePct)} complete passes.`,
+      detail: `Target ${t.p50s} s / ${t.p95s} s. The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second; at ${GEMMA_TOKENS_PER_S.before} in the run before, the typical call took ${secs(PREVIOUS_RUN.p50s)} and met the goal. ${f.timeouts} first calls hit the ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s limit; their retries saved ${f.rescued} passes. Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test runs ended at its 60 s limit, ${pct(l.completePct)} complete passes.`,
     },
     {
       title: `Complete passes missed the goal: ${pct(g.completePct)} (${g.complete} of ${g.dataRichRuns}).`,
@@ -321,7 +321,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "Model speed depends on DigitalOcean.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s: missed this run; met in the run before, ${secs(PREVIOUS_RUN.p50s)} typical). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${MODEL_TIMEOUT_MS / 1000} s limit in ${g.runs} test runs (${GEMMA_RUN_COUNTS.passes} passes; ${GEMMA_RUN_COUNTS.noDataRuns} runs on the ${GEMMA_RUN_COUNTS.noDataParks} no-data parks made none; ${GEMMA_RUN_COUNTS.lostRuns} were lost when the retry failed too); the retries saved ${GEMMA_FAILED_FIRST_CALLS.rescued} passes.`,
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s: missed this run; met in the run before, ${secs(PREVIOUS_RUN.p50s)} typical). ${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls hit the ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s limit in ${g.runs} test runs (${GEMMA_RUN_COUNTS.passes} passes; ${GEMMA_RUN_COUNTS.noDataRuns} runs on the ${GEMMA_RUN_COUNTS.noDataParks} no-data parks made none; ${GEMMA_RUN_COUNTS.lostRuns} were lost when the retry failed too); the retries saved ${GEMMA_FAILED_FIRST_CALLS.rescued} passes.`,
     },
     {
       title: "Some passes come out short.",

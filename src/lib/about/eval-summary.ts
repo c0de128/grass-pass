@@ -75,6 +75,8 @@ export const PREVIOUS_RUN = { id: "2026-10-06-7", file: "evals/results/2026-10-0
  * failed too (`retryTimeouts` hit 30 s again, `retry403` got HTTP 403), so they printed nothing. `refillTimeouts`: refills
  * that hit their 20 s limit (the pass kept what it had). `http403`: first calls that got HTTP 403.
  */
+/** The fixed first-call limit this run ran with (before the slow-provider fix sized each call; src/lib/pass/budget.ts). */
+export const GEMMA_RUN_FIRST_CALL_LIMIT_S = 30;
 export const GEMMA_FAILED_FIRST_CALLS = { timeouts: 10, http403: 0, rescued: 5, lost: 4, retryTimeouts: 3, retry403: 1, refillTimeouts: 2 } as const;
 /**
  * RULES-5-03: Gemma's test runs vs passes. Of its runs, how many made a pass, and how many runs (on how many parks)

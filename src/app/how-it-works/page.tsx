@@ -34,7 +34,8 @@ import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
-import { configuredModelId, modelTimeoutMs } from "@/lib/model";
+import { configuredModelId, modelTimeoutCapMs } from "@/lib/model";
+import { FIRST_CALL_MAX_MS, PASS_DEADLINE_MS, REFILL_MAX_MS, REFILL_MIN_MS } from "@/lib/pass/budget";
 import { MILKWEED_RADIUS_KM, MONARCH_RADIUS_KM, OCTOBER_WINDOW_LABEL } from "@/lib/october";
 import { AGE_BAND_INFO, MAX_VARIANTS } from "@/lib/pass/schema";
 import { MIN_MENTIONS } from "@/lib/pool/lucky";
@@ -275,7 +276,7 @@ export default function HowItWorksPage() {
           <p>
             <strong>What it sends back:</strong> strict JSON whose schema only allows the real ids. For each find: the id, a
             clue, an optional &quot;look where&quot; hint, easy / medium / hard, and a proof quote from its facts. Plus the
-            riddle. It waits at most {modelTimeoutMs() / 1000} s.
+            riddle. Its time limit fits the answer it asks for: up to {Math.min(FIRST_CALL_MAX_MS, modelTimeoutCapMs() ?? FIRST_CALL_MAX_MS) / 1000} s for the first call.
           </p>
         </>
       ),
@@ -335,7 +336,7 @@ export default function HowItWorksPage() {
             </li>
             <li>If nothing was kept, it is the whole request again.</li>
             <li>
-              A first call that fails (timeout, network or server error, or an unusable answer) gets one whole retry. A pass still short after a refill gets one more refill. A whole retry needs 25 s of the 85 s budget left, a refill 20 s.
+              A first call that fails (timeout, network or server error, or an unusable answer) gets one whole retry, cut to the finds an answer can carry in the time left. A pass still short after a refill gets one more refill. Limits come from measured answer sizes and slow-evening speeds: a refill gets {REFILL_MIN_MS / 1000}-{REFILL_MAX_MS / 1000} s, the whole pass {PASS_DEADLINE_MS / 1000} s. A short &quot;403&quot; refusal is asked once more after 1 s.
             </li>
           </ul>
           <p>Nothing is padded with made-up finds.</p>

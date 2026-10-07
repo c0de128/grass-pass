@@ -190,7 +190,12 @@ slow provider evening:
   11.6 s park search on Oct 6, and passes took 58-67 s when the free map servers were slow (measured Oct 6). The page
   waits up to 95 s and the server keeps a pass it started, so "Try again" opens it.
 - **How a pass is made:** 1 to 3 model calls. A failed first call gets one whole retry, a refill asks for the missing
-  finds + 2 spares, and a pass still short gets one more refill.
+  finds + 2 spares, and a pass still short gets one more refill. **Time limits are sized from measured answer sizes**
+  (about 60 answer tokens a find) **and slow-evening speeds** ([`src/lib/pass/budget.ts`](src/lib/pass/budget.ts)): the
+  first call gets up to 40 s, the retry gets the time left and asks for only as many finds as can come back in it, a
+  refill gets 15-30 s, and the whole pass 85 s. A short HTTP 403 refusal from the provider is asked once more after 1 s.
+  Run `-8` ran with the old fixed limits (30 s a call, 20 s a refill); these limits are newer and not yet measured in a
+  full run.
 - **Answers that name themselves: Gemma 2.7% passes, Llama 4 Maverick 17.1% does not** (target 5%), counted before
   the checks. Code removes every such clue (and drops such a hint), so nothing is given away, but those clues are
   lost.

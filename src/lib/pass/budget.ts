@@ -14,10 +14,10 @@
  *   The slowest 5% of answered calls in run -8 ran at 17.6 (first calls) and 14.6 (refills) answer tokens/s, so a
  *   first call or a refill is budgeted at SLOW_TOKENS_PER_S (15 for Gemma; 10 for others such as Llama 4 Maverick,
  *   measured 10.7-17.5).
- * - A slow first call is more often a stuck call than a slow provider: of the 10 retries after a 30 s first-call
- *   timeout in runs -6 to -8, 7 answered (the same whole request) in 10-22 s at 22.5-52 answer tokens/s (3 timed
- *   out again). So the first call does not wait much longer than any answered one did (29.6 s at most, run -8), and
- *   the retry is budgeted at RETRY_TOKENS_PER_S (20 for Gemma, under the slowest of those 7).
+ * - A slow first call is more often a stuck call than a slow provider: of the 13 retries after a 30 s first-call
+ *   timeout in runs -6 to -8, 9 answered (the same whole request) in 10-22 s at 22.5-52 answer tokens/s (3 timed
+ *   out again, 1 got a 403). So the first call does not wait much longer than any answered one did (29.6 s at most, run -8), and
+ *   the retry is budgeted at RETRY_TOKENS_PER_S (20 for Gemma, under the slowest of those 9).
  * - callNeedMs = CALL_OVERHEAD_MS + answer tokens / speed: 8 items + riddle = 42.8 s at 15/s, 32.5 s at 20/s; a
  *   4-item refill 21.5 s.
  *

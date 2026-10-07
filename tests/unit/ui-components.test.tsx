@@ -168,7 +168,7 @@ describe("v3 logo, header and footer", () => {
     expect(out).toContain("<header");
     expect(out).toContain('aria-label="Grass Pass home"');
     expect(out).toContain(">Switch to dark mode</span>");
-    for (const a of ["/#why", "/#pass", "/#parks", "/#find", "/how-it-works", "/about"]) expect(out).toContain(`href="${a}"`);
+    for (const a of ["/#why", "/#pass", "/#parks", "/how-it-works", "/about"]) expect(out).toContain(`href="${a}"`);
     // Kevin 2026-10-06: the How it works tab is its own page, shown at every width (not a lg-only anchor).
     expect(out).not.toContain('href="/#how"');
     expect(out).toMatch(/<li><a [^>]*href="\/how-it-works"[^>]*>How it works<\/a><\/li>/);

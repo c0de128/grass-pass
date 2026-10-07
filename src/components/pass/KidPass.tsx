@@ -1,3 +1,4 @@
+import { AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
 import Image from "next/image";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icons";
@@ -40,8 +41,8 @@ const SECTION_ONE: Record<SectionId, string> = {
 /** S6: printed before a Lucky Find's clue, so the kid knows it may not be there today. */
 export const LUCKY_MAYBE = "Maybe!";
 
-/** Fixed kid safety line printed on every pass (ADR 0003). */
-export const KID_STAY_CLOSE = "Stay where your grown-up can see you.";
+/** Fixed kid safety line printed on every pass (ADR 0003); a 13+ pass prints its own line (src/lib/pass/audience.ts). */
+export const KID_STAY_CLOSE = AUDIENCE_COPY.kid.stayClose;
 
 /** Rough characters per printed line at full width: clue (12.5 pt bold) and hint (11 pt). */
 const CLUE_CHARS_PER_LINE = 62;
@@ -115,7 +116,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
             <span>
               {formatDay(pass.day)} · {AGE_BAND_INFO[pass.ageBand].label}
             </span>{" "}
-            <span className="gp-stay">{KID_STAY_CLOSE}</span>
+            <span className="gp-stay">{copyFor(pass.ageBand).stayClose}</span>
           </p>
         </div>
       </div>

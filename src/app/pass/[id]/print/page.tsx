@@ -13,6 +13,8 @@ import { buttonClassName } from "@/components/ui/Button";
 import { isOctoberDay } from "@/lib/october";
 import { safeParkName } from "@/lib/ai/validate";
 import { loadPass } from "@/lib/pass/make";
+import { ADULT_PRINT_LEAD_END } from "@/lib/pass/audience";
+import { isAdultBand } from "@/lib/pass/schema";
 import { withClearMap } from "@/lib/spot/redraw";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
@@ -62,10 +64,17 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
     <main id="main" tabIndex={-1} className="gp-print-page mx-auto w-full max-w-5xl flex-1 px-3 py-6 focus:outline-none sm:px-5">
       <PrintFit />
       <div className="gp-screen-only mx-auto flex w-full max-w-[8.5in] flex-col gap-3">
-        <p className="text-lg">
-          One black-and-white Letter page. In the print box, pick <strong>Scale: 100%</strong> or &quot;Default&quot;. Cut
-          on the dashed line: kid gets the hunt, you keep the answer key.
-        </p>
+        {/* Teens & adults (13+): the same lead with its own last sentence (no kid on a 13+ pass). */}
+        {isAdultBand(pass.ageBand) ? (
+          <p className="text-lg">
+            One black-and-white Letter page. In the print box, pick <strong>Scale: 100%</strong> or &quot;Default&quot;. {ADULT_PRINT_LEAD_END}
+          </p>
+        ) : (
+          <p className="text-lg">
+            One black-and-white Letter page. In the print box, pick <strong>Scale: 100%</strong> or &quot;Default&quot;. Cut
+            on the dashed line: kid gets the hunt, you keep the answer key.
+          </p>
+        )}
         <div className="flex flex-wrap gap-3">
           <PrintButton auto={sp.print === "1"} />
           <Link href={`/pass/${pass.id}`} prefetch={false} className={buttonClassName("secondary", "self-start")}>
@@ -80,7 +89,7 @@ export default async function PrintPage(props: PageProps<"/pass/[id]/print">) {
           spot={spot ? <SpotMap spot={spot} parkName={safeParkName(pass.park.name).name} variant="print" headingLevel={2} /> : undefined}
           october={isOctoberDay(pass.day) ? <OctoberBox pass={pass} variant="print" headingLevel={2} /> : undefined}
         />
-        <TearLine />
+        <TearLine band={pass.ageBand} />
         <ParentStub
           pass={pass}
           passUrl={await passUrl(pass.id)}

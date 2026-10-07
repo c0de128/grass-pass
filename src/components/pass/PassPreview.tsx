@@ -10,7 +10,8 @@ import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatDay, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
-import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
+import { copyFor } from "@/lib/pass/audience";
+import { AGE_BAND_INFO, isAdultBand, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
 
@@ -66,7 +67,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
               "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes."
             ) : (
               <>
-                Grown-ups: back from the park?{" "}
+                {isAdultBand(pass.ageBand) ? "Back from the park?" : "Grown-ups: back from the park?"}{" "}
                 <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-link underline underline-offset-4">
                   Sign in
                 </Link>{" "}
@@ -157,10 +158,10 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
   const removed = pass.removed.notGrounded;
   return (
     <div className="flex flex-col gap-3">
-      <h2 className="text-xl font-extrabold text-ink">For the grown-up</h2>
+      <h2 className="text-xl font-extrabold text-ink">{copyFor(pass.ageBand).previewStubTitle}</h2>
       {pass.parentNote ? <p>{pass.parentNote}</p> : null}
       <details>
-        <summary className="cursor-pointer font-semibold">Answer key (don&apos;t peek, kids!)</summary>
+        <summary className="cursor-pointer font-semibold">{copyFor(pass.ageBand).answerKeySummary}</summary>
         <ol className="mt-2 flex flex-col gap-1">
           {pass.items.map((it) => (
             <li key={numbered.get(it)}>

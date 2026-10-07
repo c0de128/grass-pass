@@ -7,6 +7,7 @@
  * for charging (`onUpstream`, `reserveAiCall`) and pinning (`pin`) so the paid call is never
  * aborted once started (pattern: charge-started-paid-calls).
  */
+import { safetyForBand } from "@/lib/pass/audience";
 import "server-only";
 import "@/lib/zod-config";
 import { createJsonCache, type Store } from "@/lib/cache";
@@ -690,7 +691,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const printed = soundNotFirst(
     [...best.items].sort((a, b) => SECTION_ORDER[a.item.section] - SECTION_ORDER[b.item.section]).map((v) => capDifficulty(v, band)),
   );
-  const parentNote = parentNoteFor(printed);
+  const parentNote = parentNoteFor(printed, band);
   const items: PassItem[] = printed
     .map((v) => ({
       section: v.item.section,
@@ -701,7 +702,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       difficulty: v.difficulty,
       evidence: v.item.evidence,
       answer: v.item.answer,
-      safety: v.item.safety,
+      // Teens & adults (13+): the grown-up water line reads "Stay on the path near water." (src/lib/pass/audience.ts).
+      safety: safetyForBand(v.item.safety, band),
       source: v.item.source,
       ...(v.item.section === "park" && v.item.id.startsWith("osm-") ? { feature: v.item.id.slice(4).replace(/-/g, "_") } : {}),
       ref: v.item.id,

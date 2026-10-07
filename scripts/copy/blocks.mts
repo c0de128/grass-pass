@@ -19,7 +19,7 @@ import type { CopyBlock } from "./check.mts";
 const GEMMA = "The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US.";
 const CHECKS = "Code checks every clue against its source and removes any that fail; the model never decides what is safe.";
 const WAIT = "A new pass usually takes 10-30 seconds (PASS_WAIT_COPY), up to about a minute and a half when the free map websites are slow.";
-const AGES = "Age bands are exactly 4-6, 6-10 and 10-13 (AGE_BAND_INFO).";
+const AGES = "Age bands are exactly 4-6, 6-10, 10-13 and 13+ (teens and adults; added 2026-10-07) (AGE_BAND_INFO).";
 const SIGNIN = "Browsing, examples, shared links and printing need no sign-in. A NEW pass needs a grown-up signed in: 2 new passes a day each (ACCOUNT_PASSES_PER_DAY), reset at midnight Dallas time.";
 const NODATA = 'Missing data is never faked: the site says "No data available" and why.';
 

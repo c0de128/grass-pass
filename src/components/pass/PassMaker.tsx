@@ -151,15 +151,11 @@ function storeBand(b: AgeBand) {
 const noSubscribe = () => () => {};
 const serverBand = (): AgeBand => DEFAULT_AGE_BAND;
 
-/** Short, fun hints in Kevin's home-copy voice, kept true to AGE_BAND_INFO (6 or 8 finds; 10-13 has 2 hard ones). */
-export const AGE_HINTS: Record<AgeBand, string> = {
-  "4-6": "6 finds, you read aloud",
-  "6-10": "8 finds, the sweet spot",
-  "10-13": "8 finds, 2 brain-benders",
-};
+/** Short, fun hints in Kevin's home-copy voice: read from the one band list (AGE_BAND_INFO[b].pickerHint). */
+export const AGE_HINTS: Record<AgeBand, string> = Object.fromEntries(AGE_BANDS.map((b) => [b, AGE_BAND_INFO[b].pickerHint])) as Record<AgeBand, string>;
 
 /**
- * "Explorer age" (v3 search card): three big radio tiles, the chosen one sunflower yellow with an ink border.
+ * "Explorer age" (v3 search card): one big radio tile per band in AGE_BANDS (four since 2026-10-07), the chosen one sunflower yellow with an ink border.
  * Real radios (visually hidden) inside labels, so arrow keys and screen readers work as usual.
  */
 export function AgePicker({ band, onChange, legendId }: { band: AgeBand; onChange: (b: AgeBand) => void; legendId: string }) {
@@ -168,7 +164,7 @@ export function AgePicker({ band, onChange, legendId }: { band: AgeBand; onChang
       <legend id={legendId} className="mb-2.5 text-xs font-bold tracking-widest text-muted-foreground uppercase">
         Explorer age
       </legend>
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-2 gap-2 sm:grid-cols-4">
         {AGE_BANDS.map((b) => (
           <label
             key={b}
@@ -179,7 +175,7 @@ export function AgePicker({ band, onChange, legendId }: { band: AgeBand; onChang
             <input type="radio" name="ageBand" value={b} checked={band === b} onChange={() => onChange(b)} className="sr-only" />
             <span className="font-heading text-lg leading-none font-extrabold">
               <span className="sr-only">Ages </span>
-              {b.replace("-", "–")}
+              {AGE_BAND_INFO[b].short}
               {b === DEFAULT_AGE_BAND ? <span className="sr-only"> (most kids)</span> : null}
             </span>
             <span className="hidden text-[11px] leading-tight sm:block">{AGE_HINTS[b]}</span>

@@ -255,9 +255,9 @@ describe("home copy checked against the app", () => {
     expect(band).not.toContain("AI illustration");
   });
 
-  it("Explorer age picker: three real radios, 6-10 named 'most kids', the hint text is true to the age band", () => {
+  it("Explorer age picker: one real radio per band (4 since 13+), 6-10 named 'most kids', the hint text is true to the age band", () => {
     const html = renderToStaticMarkup(<AgePicker band="6-10" onChange={() => {}} legendId="t" />);
-    expect(html.match(/type="radio"/g)).toHaveLength(3);
+    expect(html.match(/type="radio"/g)).toHaveLength(4);
     expect(html).toContain("Explorer age</legend>");
     expect(html).toContain("(most kids)");
     expect(html).toContain("6 finds, you read aloud");

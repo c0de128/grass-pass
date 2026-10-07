@@ -23,7 +23,7 @@
 import { seasonProblem } from "@/lib/pool/season";
 import { hasUrlOrMarkup } from "@/lib/safety/contact";
 import { blockedBy, blockedWordIn, dangerClueWord, SAFETY_LINES } from "@/lib/safety/danger-taxa";
-import type { AgeBand } from "@/lib/pass/constants";
+import { isAdultBand, type AgeBand } from "@/lib/pass/constants";
 import { otherFeatureWord } from "./feature-words";
 import { jargonProblem, triviaKind, wrongKindWord } from "./jargon";
 import type { PoolItem, Section } from "@/lib/pool/types";
@@ -1543,11 +1543,12 @@ export const COMMON_FEATURE_COUNT = 10;
 /**
  * Judge R7 ("Where is the seat with elbow rests at both ends? Hard · 234 on the park map" on a 4-6 pass): a very
  * common Park Find is never "hard" for the younger bands: easy for ages 4-6, medium for 6-10. Ages 10-13 keep the
- * model's label (that band promises 2 hard finds, and a riddle can make a common thing hard to pin down).
+ * model's label (that band promises 2 hard finds, and a riddle can make a common thing hard to pin down); so do teens &
+ * adults (13+, 3 hard finds).
  */
 export function capDifficulty<T extends Pick<ValidItem, "item" | "difficulty">>(v: T, band: AgeBand): T {
   const n = v.item.section === "park" ? (v.item.count?.n ?? 0) : 0;
-  if (band === "10-13" || n < COMMON_FEATURE_COUNT || v.difficulty !== "hard") return v;
+  if (band === "10-13" || band === "13+" || n < COMMON_FEATURE_COUNT || v.difficulty !== "hard") return v;
   return { ...v, difficulty: band === "4-6" ? "easy" : "medium" };
 }
 
@@ -1564,7 +1565,12 @@ export function soundNotFirst<T extends Pick<ValidItem, "item" | "clue">>(items:
   return out;
 }
 
-export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[]): string {
+/**
+ * The code-written tip. Teens & adults (13+): "stay on the path" instead of "stay close" (there is no grown-up to
+ * stay close to); kid passes (no band) read exactly as before.
+ */
+export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[], band?: AgeBand): string {
+  const stay = band && isAdultBand(band) ? "stay on the path" : "stay close";
   const ordered = items.map((v, i) => ({ v, i })).sort((a, b) => PRINT_ORDER[a.v.item.section] - PRINT_ORDER[b.v.item.section] || a.i - b.i);
   const tips: string[] = [];
   const nearWater = (v: Pick<ValidItem, "item">) => Boolean(v.item.safety && /water/i.test(v.item.safety));
@@ -1573,11 +1579,11 @@ export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficul
   let easy = ordered.findIndex((o) => startable(o) && !nearWater(o.v));
   if (easy < 0) easy = ordered.findIndex(startable);
   if (easy >= 0) {
-    tips.push(nearWater(ordered[easy].v) ? `Start with find ${easy + 1}: it's easy and it stays put, but it's near water, so stay close.` : `Start with find ${easy + 1}: it's easy and it stays put.`);
+    tips.push(nearWater(ordered[easy].v) ? `Start with find ${easy + 1}: it's easy and it stays put, but it's near water, so ${stay}.` : `Start with find ${easy + 1}: it's easy and it stays put.`);
   }
   const water = ordered.flatMap(({ v }, k) => (nearWater(v) && k !== easy ? [k + 1] : []));
   const movers = ordered.flatMap(({ v }, k) => (!v.item.stationary ? [k + 1] : []));
-  if (water.length > 0) tips.push(`${water.length === 1 ? "Find" : "Finds"} ${listOf(water)} ${water.length === 1 ? "is" : "are"} near water: stay close.`);
+  if (water.length > 0) tips.push(`${water.length === 1 ? "Find" : "Finds"} ${listOf(water)} ${water.length === 1 ? "is" : "are"} near water: ${stay}.`);
   else if (movers.length > 0) tips.push(`${movers.length === 1 ? "Find" : "Finds"} ${listOf(movers)} can move away, so tick ${movers.length === 1 ? "it" : "them"} off when you see ${movers.length === 1 ? "it" : "them"}.`);
   return tips.join(" ").slice(0, PARENT_NOTE_MAX);
 }

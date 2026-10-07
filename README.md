@@ -9,7 +9,7 @@ TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with
 
 Grass Pass turns your local park into a one-page treasure hunt, usually in 10-30 seconds (up to about a minute and a
 half for a big park or a slow model; measured, see [Limitations](#limitations)). Pick a park and your kid's age
-(4-6, 6-10 or 10-13). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
+(4-6, 6-10 or 10-13; or 13+ for teens and adults). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
 DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass).
 Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety
 line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the
@@ -272,6 +272,15 @@ parks as the checks before it, capped at 8 model calls, not re-run): **3 of 3 co
 their 2 hard finds**, grade 3.6 (aim 5-6), 12.2 s / 18.5 s per call (the typical time is **over** the 10 s target),
 5.4% name leaks before the checks (**over** the 5% target; code removed them all), and $0.00145 per pass, **over** the
 $0.001 mark. Only 6 model calls, so a small sample.
+
+Teens & adults (13+, added 2026-10-07), a partial check ([`2026-10-07-partial-1617.md`](evals/results/2026-10-07-partial-1617.md),
+the same 3 parks, capped at 6 model calls; notes: [`2026-10-07-13plus-notes.md`](evals/results/2026-10-07-13plus-notes.md)):
+**3 of 3 complete by the M3 rule** (at most one find short), **2 of 3 printed all 8** (Oak Point 8/8, White Rock 8/8,
+Celebration 7/8 after 1 call),
+**2 of 3 kept their 3 hard finds** (White Rock printed 2 and its stub says so), 2.4% name leaks before the checks
+(code removed them), 9.5 s / 11.8 s per call, and $0.00162 per pass, **over** the $0.001 mark. The reading-level target
+(grade 3.5 or less) is the kid target and does not apply to 13+. 6 model calls, so a small sample. `pnpm eval:check`
+replays this run and every recorded park for 13+ too.
 
 What changed since the previous run and why, earlier runs, and every tuning change:
 [`docs/EVALS.md`](docs/EVALS.md). The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`,

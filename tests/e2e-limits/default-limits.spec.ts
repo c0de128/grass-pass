@@ -120,7 +120,10 @@ test("UX-5-02: a page over the limit is a styled page with the wait and a way ho
   expect(last!.headers()["content-type"]).toMatch(/text\/html/);
   const html = await last!.text();
   expect(html).toContain("Whoa, lots of visits!");
-  expect(html).toMatch(/Please wait about \d+ (seconds|minutes)/);
+  // UX-6-01: "about 1 second" is singular.
+  expect(html).toMatch(/Please wait about (1 second|\d+ seconds|\d+ minutes),/);
+  // UX-6-03: the ticket logo is on the page.
+  expect(html).toContain('<svg class="ticket"');
   // The same page in a browser: readable, with its links (and no script needed).
   await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
   await page.goto("/pass/not-a-pass-x");
@@ -143,6 +146,6 @@ test("RULES-5-04: 'Try as a judge' over the limit lands on /signin with the wait
   expect(refused, "the store-cost limit never refused").toBe(true);
   await judge.click();
   await expect(page).toHaveURL(/\/signin\?error=rate_limited&wait=\d+/);
-  await expect(page.locator('[data-error-code="rate_limited"]')).toContainText(/Please wait about \d+ (seconds|minutes), then press the button again\./);
+  await expect(page.locator('[data-error-code="rate_limited"]')).toContainText(/Please wait about \d+ (seconds?|minutes), then press the button again\./);
   await expect(page.getByText("This page couldn't load")).toHaveCount(0);
 });

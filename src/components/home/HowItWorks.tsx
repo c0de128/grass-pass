@@ -265,7 +265,7 @@ function Card({ step, index, children }: { step: DiagramStep; index: number; chi
 
 export function HowItWorks() {
   return (
-    <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 sm:scroll-mt-16">
+    <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32 xl:gap-12">
         <div className="flex max-w-3xl flex-col gap-4">
           {/* Kevin 2026-10-07: same font and size as the hero's "Family time is back!" (HomeHero h1 sizes x 1.25). */}

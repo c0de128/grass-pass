@@ -12,7 +12,6 @@ import { SpotAnswer, SpotMap } from "@/components/pass/SpotMap";
 import { buttonClassName } from "@/components/ui/Button";
 import { isOctoberDay } from "@/lib/october";
 import { safeParkName } from "@/lib/ai/validate";
-import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
@@ -22,7 +21,8 @@ import "@/styles/print.css";
  * dashed tear line, parent stub below. Read from the pass cache only (never calls upstream), once per
  * request (metadata and page share the read, SEC-1-02).
  */
-const getPass = cache((id: string) => (plausiblePassId(id, Date.now()) ? loadPass(id) : Promise.resolve(null)));
+// loadPass turns away ids that cannot exist (no store read) and opens pinned example passes (src/lib/pinned.ts).
+const getPass = cache((id: string) => loadPass(id));
 
 export async function generateMetadata(props: PageProps<"/pass/[id]/print">): Promise<Metadata> {
   const { id } = await props.params;

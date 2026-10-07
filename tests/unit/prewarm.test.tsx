@@ -268,7 +268,8 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const down = async () => new Response("bad gateway", { status: 502 }); // built failure: every upstream down
     const before = await searchParks({ kind: "text", q: "Allen TX" }, { ip: "203.0.113.77", store: new MemoryStore(), fetchImpl: down, env: {} });
     expect(before).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE" } });
-    expect(!before.ok && before.error.example).toBeUndefined();
+    // Nothing saved yet: the pinned real example pass (src/lib/pinned.ts) is offered.
+    expect(!before.ok && before.error.example).toEqual({ name: "Oak Point Park and Nature Preserve", href: "/pass/w556800335-6to10-20261006-1?example=1" });
     const now = Date.now();
     // The search offers a park from EXAMPLE_PARKS (Celebration; Connemara is no longer one).
     await warmExamples({ examples: EXAMPLES.slice(1), now: () => now });

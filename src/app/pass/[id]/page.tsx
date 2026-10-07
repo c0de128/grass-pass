@@ -6,7 +6,6 @@ import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
-import { plausiblePassId } from "@/lib/limits/pass-read";
 import { loadPass } from "@/lib/pass/make";
 import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
@@ -20,7 +19,8 @@ import { currentSession } from "@/lib/accounts/current";
  * Accounts: for a signed-in grown-up the report buttons show, with the item report counts (one more read
  * per park per 5 min per instance, src/lib/reports/stats.ts; the proxy charges it as COSTS.passStats).
  */
-const getPass = cache((id: string) => (plausiblePassId(id, Date.now()) ? loadPass(id) : Promise.resolve(null)));
+// loadPass turns away ids that cannot exist (no store read) and opens pinned example passes (src/lib/pinned.ts).
+const getPass = cache((id: string) => loadPass(id));
 
 export async function generateMetadata(props: PageProps<"/pass/[id]">): Promise<Metadata> {
   const { id } = await props.params;

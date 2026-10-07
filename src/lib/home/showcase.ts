@@ -9,6 +9,7 @@ import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/p
 import { isCompletePass } from "@/lib/pass/complete";
 import { nothingToSee } from "@/lib/ai/validate";
 import type { ExamplePark, ExampleStatus } from "@/lib/prewarm";
+import { heroPinned } from "@/lib/pinned";
 
 /**
  * Judge R6 (top-5 #4): the hero card leads with a concrete counted find ("Count the 4 roofed areas…" on White Rock),
@@ -69,7 +70,18 @@ export function heroFinds(pass: Pass): PassItem[] {
  * The hero pass card: a real saved example pass (HERO_EXAMPLE_ORDER, one with a counted Park Find first), with
  * heroFinds() and their real evidence lines. With no ready pass, the first example's own "No data available yet" reason.
  */
-export function heroCard(statuses: readonly ExampleStatus[], order: readonly string[] = HERO_EXAMPLE_ORDER): HeroCard | null {
+export function heroCard(
+  statuses: readonly ExampleStatus[],
+  order: readonly string[] = HERO_EXAMPLE_ORDER,
+  fixed: { slug: string; pass: Pass } | null = heroPinned(),
+): HeroCard | null {
+  // Kevin 2026-10-07: a FIXED hero pass, the same on every load: the pinned pass of HERO_PINNED_SLUG (src/lib/pinned.ts),
+  // a real complete pass shown with its real date. Only without one does the card pick from the saved passes below.
+  const fixedEx = fixed ? statuses.find((s) => s.example.slug === fixed.slug)?.example : undefined;
+  if (fixed && fixedEx && isCompletePass(fixed.pass)) {
+    const ex: ReadyExample = { example: fixedEx, pass: fixed.pass, href: `/pass/${fixed.pass.id}?example=1`, madeAt: formatTime(fixed.pass.generatedAt) };
+    return { kind: "ready", ex, finds: heroFinds(fixed.pass) };
+  }
   const rank = (s: ExampleStatus) => {
     const i = order.indexOf(s.example.slug);
     return i < 0 ? order.length : i;

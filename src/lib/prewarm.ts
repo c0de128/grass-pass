@@ -49,6 +49,7 @@ import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
 import type { ExampleLink } from "@/lib/parks/schema";
 import { DEFAULT_AGE_BAND, type AgeBand, type Pass } from "@/lib/pass/schema";
 import { completeness, isCompletePass, type Completeness } from "@/lib/pass/complete";
+import { pinnedPass } from "@/lib/pinned";
 
 export type ExamplePark = {
   slug: string;
@@ -425,8 +426,16 @@ async function inspect(ex: ExamplePark, today: string, nowMs: number): Promise<I
   const short = isToday && latestC && !latestC.complete ? { items: latestC.items, target: latestC.target, riddle: latestC.riddle } : null;
   let need: Need = "none";
   if (!isToday || !latestPass || (await rebuildDue(ex, latestPass, nowMs))) need = "refresh";
-  // The second try: today's pass is short and there is no complete pass to show instead (once a day per example).
+  // The second try: today's pass is short and the store has no complete pass to show instead (once a day per example).
   else if (short && shown === null && !holder().retried.has(`${ex.slug}:${today}`)) need = "retry";
+  // Last fallback (Kevin 2026-10-07): the example's pinned real pass from the repo (src/lib/pinned.ts), with its real date.
+  if (shown === null) {
+    const pin = pinnedPass(ex.slug);
+    if (pin) {
+      shown = { passId: pin.id, day: pin.day, generatedAt: pin.generatedAt };
+      shownPass = pin;
+    }
+  }
   return { latest, latestC, shown, shownPass, short, need };
 }
 
@@ -495,8 +504,8 @@ export async function readyExample(deps: Pick<WarmDeps, "now" | "examples"> = {}
 
 async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promise<ExampleLink | null> {
   const now = deps.now ?? (() => Date.now());
-  // Judge R7 T1: a complete example pass first, else any saved one (an error page may still offer a short real pass).
-  // One GET per example, as before.
+  // Judge R7 T1: a complete example pass first, then a pinned one (src/lib/pinned.ts), else any saved one (an error
+  // page may still offer a short real pass). One GET per example, as before.
   const latest: { ex: ExamplePark; id: string }[] = [];
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
@@ -504,6 +513,10 @@ async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promi
     const complete = hit.value.complete;
     if (complete && (await loadPass(complete.passId, now()))) return { name: ex.name, href: `/pass/${complete.passId}?example=1` };
     latest.push({ ex, id: hit.value.passId });
+  }
+  for (const ex of deps.examples ?? EXAMPLE_PARKS) {
+    const pin = pinnedPass(ex.slug);
+    if (pin) return { name: ex.name, href: `/pass/${pin.id}?example=1` };
   }
   for (const { ex, id } of latest) if (await loadPass(id, now())) return { name: ex.name, href: `/pass/${id}?example=1` };
   return null;

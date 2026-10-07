@@ -83,10 +83,11 @@ describe("home showcase (v0 slots filled with real data)", () => {
       "Ready to find a metal box on a post used for cooking?",
       "What about a vine with large, intricate flowers?",
     ]);
-    // Judge R7 T1: that recorded pass has 7 of 8 finds, so it is never the hero card; a complete one is.
-    expect(heroCard([readyStatus("arbor-hills", pass)])?.kind).toBe("missing");
+    // Judge R7 T1: that recorded pass has 7 of 8 finds, so it is never the hero card; a complete one is. (These tests
+    // check the choice made WITHOUT a pinned hero pass: `null`; the pinned one is tested in pinned-examples.test.tsx.)
+    expect(heroCard([readyStatus("arbor-hills", pass)], HERO_EXAMPLE_ORDER, null)?.kind).toBe("missing");
     const full = completePass();
-    const card = heroCard([missingStatus("white-rock", "No data available yet: x."), readyStatus("arbor-hills", pass), readyStatus("oak-point", full)]);
+    const card = heroCard([missingStatus("white-rock", "No data available yet: x."), readyStatus("arbor-hills", pass), readyStatus("oak-point", full)], HERO_EXAMPLE_ORDER, null);
     expect(card?.kind).toBe("ready");
     if (card?.kind !== "ready") throw new Error("not ready");
     expect(card.ex.example.slug).toBe("oak-point");
@@ -122,12 +123,12 @@ describe("home showcase (v0 slots filled with real data)", () => {
       [readyStatus("white-rock", counted), readyStatus("celebration", full)],
       [readyStatus("celebration", full), readyStatus("white-rock", counted)],
     ]) {
-      const c = heroCard(order);
+      const c = heroCard(order, HERO_EXAMPLE_ORDER, null);
       expect(c?.kind === "ready" && c.ex.example.slug).toBe("celebration");
     }
     // Two complete ones: the first in HERO_EXAMPLE_ORDER (White Rock first), whatever the input order.
     expect(HERO_EXAMPLE_ORDER[0]).toBe("white-rock");
-    const plain = heroCard([readyStatus("oak-point", full), readyStatus("white-rock", full)]);
+    const plain = heroCard([readyStatus("oak-point", full), readyStatus("white-rock", full)], HERO_EXAMPLE_ORDER, null);
     expect(plain?.kind === "ready" && plain.ex.example.slug).toBe("white-rock");
     // A counted lead must name a thing to see ("Spot 2 spots" does not).
     expect(isCountedParkFind({ ...shelter, clue: "Spot 2 spots with metal bars for stretching." })).toBe(false);
@@ -135,9 +136,9 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("hero card: falls back to another ready example, else says why (no link, no clues)", () => {
     const pass = completePass();
-    const other = heroCard([readyStatus("white-rock", pass), missingStatus("oak-point", "No data available yet: it is being made right now (about 15-30 seconds).", true)]);
+    const other = heroCard([readyStatus("white-rock", pass), missingStatus("oak-point", "No data available yet: it is being made right now (about 15-30 seconds).", true)], HERO_EXAMPLE_ORDER, null);
     expect(other?.kind === "ready" && other.ex.example.slug).toBe("white-rock");
-    const none = heroCard([missingStatus("oak-point", "No data available yet: the last try didn't work because OpenStreetMap was busy.")]);
+    const none = heroCard([missingStatus("oak-point", "No data available yet: the last try didn't work because OpenStreetMap was busy.")], HERO_EXAMPLE_ORDER, null);
     expect(none).toEqual({ kind: "missing", name: byslug("oak-point").name, place: "Plano, TX", reason: "the last try didn't work because OpenStreetMap was busy." });
     const html = renderToStaticMarkup(<HeroPassCard card={none} />);
     expect(html).toContain("Example pass not ready yet: the last try didn&#x27;t work because OpenStreetMap was busy.");

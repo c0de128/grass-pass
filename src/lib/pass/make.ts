@@ -19,6 +19,7 @@ import { createInflight, createJsonCache, getStore, StoreError, WaiterAbortedErr
 import { aiCapFor, hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type QuotaTicket } from "@/lib/limits";
 import { dailyPaceState, restingError } from "@/lib/limits/budget";
 import { forgetPassRead, memoPassRead, plausiblePassId, resetPassReads } from "@/lib/limits/pass-read";
+import { pinnedPassById } from "@/lib/pinned";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
@@ -156,13 +157,16 @@ export function passKey(parkId: string, band: AgeBand, nowMs: number): string {
  * in process (src/lib/limits/pass-read.ts; a normal pass for 30 min, a degraded one or a miss for 15 s).
  */
 export async function loadPass(id: string, now: number = Date.now()): Promise<Pass | null> {
-  if (!PASS_ID_PATTERN.test(id) || !plausiblePassId(id, now)) return null;
-  return memoPassRead(
+  if (!PASS_ID_PATTERN.test(id)) return null;
+  // Pinned example passes (src/lib/pinned.ts) open from the repo when the store doesn't have them (or no longer can).
+  if (!plausiblePassId(id, now)) return pinnedPassById(id);
+  const stored = await memoPassRead(
     id,
     now,
     async () => (await passCache.get(id, now))?.value ?? null,
     (p) => !isDegraded(p),
   );
+  return stored ?? pinnedPassById(id);
 }
 
 export type MakeDeps = {

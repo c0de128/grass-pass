@@ -97,6 +97,18 @@
   background-position: center;
 }
 
+/* The "How it works" diagram's tear-line track drifts along the data flow (decorative; only when motion is OK). */
+@keyframes gp-how-flow {
+  to {
+    stroke-dashoffset: -28;
+  }
+}
+@utility gp-how-flow {
+  @media (prefers-reduced-motion: no-preference) {
+    animation: gp-how-flow 1.6s linear infinite;
+  }
+}
+
 /* v0's entrance animations (tw-animate-css "animate-in fade-in slide-in-from-bottom"), only when motion is OK. */
 @keyframes gp-rise {
   from {

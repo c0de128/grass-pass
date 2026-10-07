@@ -13,7 +13,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Drops 'grown-ups' (who the page is for) and the voice; the current line is better.",
-      "shipped": "The full story for curious grown-ups: the data, the AI and every check"
+      "shipped": "The full story for curious grown-ups: the data, the AI and every check",
+      "removedAfterRun": "Kevin removed this link from the home How it works section on 2026-10-07; the decision is kept as history."
     },
     {
       "id": "home.how.s1.title",

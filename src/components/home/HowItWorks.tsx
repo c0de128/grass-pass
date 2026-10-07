@@ -1,5 +1,4 @@
 import {
-  ArrowRight,
   Binoculars,
   ListChecks,
   Map as MapIcon,
@@ -11,7 +10,6 @@ import {
   Sprout,
   type LucideIcon,
 } from "lucide-react";
-import Link from "next/link";
 import type { CSSProperties, ReactNode } from "react";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
@@ -270,24 +268,7 @@ export function HowItWorks() {
     <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32 xl:gap-12">
         <div className="flex max-w-3xl flex-col gap-4">
-          <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
-          <h2 id="how-title" className="flex flex-col gap-2 text-4xl leading-[1.05] font-extrabold tracking-tight text-ink sm:text-5xl lg:text-6xl">
-            <span className="text-primary">Real park data in.</span>{" "}
-            <span>
-              Advanced{" "}
-              <span className="relative isolate inline-block text-sun-foreground">
-                <span aria-hidden="true" className="absolute inset-x-[-0.14em] top-[0.12em] bottom-[-0.02em] -z-10 -skew-x-6 rounded-md bg-sun" />
-                AI processing.
-              </span>
-            </span>{" "}
-            <span>Screen-free adventure out.</span>
-          </h2>
-          <p>
-            <Link href="/how-it-works" className="group inline-flex min-h-11 items-center gap-2 font-semibold text-link underline underline-offset-4">
-              The full story for curious grown-ups: the data, the AI and every check
-              <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
-            </Link>
-          </p>
+          <h2 id="how-title" className="text-xs font-bold tracking-widest text-primary uppercase">How it works</h2>
         </div>
 
         <div data-testid="how-diagram" className="relative xl:aspect-[1216/780]">

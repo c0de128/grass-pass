@@ -84,7 +84,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.link`: rejected
 
-`src/components/home/HowItWorks.tsx:55` · link under the How it works headline, to the long explainer page; 12 words or fewer · max 80 characters
+`src/components/home/HowItWorks.tsx` · link under the How it works headline, to the long explainer page; 12 words or fewer · max 80 characters
 
 - **Old:** The full story for curious grown-ups: the data, the AI and every check
 - **Gemma:** For the curious: how the data, AI and checks work.
@@ -95,7 +95,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s1.title`: rejected
 
-`src/components/home/HowItWorks.tsx:13` · step 1 card title, 5 words or fewer · max 30 characters
+`src/components/home/HowItWorks.tsx:30` · step 1 card title, 5 words or fewer · max 30 characters
 
 - **Old:** Pick a park & age
 - **Gemma:** Pick a park and age
@@ -106,7 +106,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s1.body`: rejected
 
-`src/components/home/HowItWorks.tsx:14` · step 1 card body, 2 short sentences · max 170 characters
+`src/components/home/HowItWorks.tsx:31` · step 1 card body, 2 short sentences · max 170 characters
 
 - **Old:** Type a town, ZIP or park name, or tap Use my location. Then pick 4–6, 6–10 or 10–13: it sets how many clues and how hard.
 - **Gemma:** Search by town, ZIP, park name, or tap Use my location. Pick 4–6, 6–10 or 10–13 to set the clue count and difficulty.
@@ -117,7 +117,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s2.title`: unchanged
 
-`src/components/home/HowItWorks.tsx:18` · step 2 card title, 5 words or fewer; must say AI · max 30 characters
+`src/components/home/HowItWorks.tsx:35` · step 2 card title, 5 words or fewer; must say AI · max 30 characters
 
 - **Old:** AI builds the hunt
 - **Gemma:** AI builds the hunt
@@ -128,7 +128,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s2.body`: rejected
 
-`src/components/home/HowItWorks.tsx:19` · step 2 card body, 3-4 short sentences · max 260 characters
+`src/components/home/HowItWorks.tsx:36` · step 2 card body, 3-4 short sentences · max 260 characters
 
 - **Old:** Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.
 - **Gemma:** Gemma 4 uses real maps and sightings from the last 14 days to write the clues. Code checks every find against its source. It usually takes 10–30 seconds.
@@ -139,7 +139,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s3.title`: rejected
 
-`src/components/home/HowItWorks.tsx:24` · step 3 card title, 5 words or fewer · max 30 characters
+`src/components/home/HowItWorks.tsx:41` · step 3 card title, 5 words or fewer · max 30 characters
 
 - **Old:** Print the page
 - **Gemma:** Print your page
@@ -150,7 +150,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s3.body`: rejected
 
-`src/components/home/HowItWorks.tsx:25` · step 3 card body, 1-2 short sentences · max 170 characters
+`src/components/home/HowItWorks.tsx:42` · step 3 card body, 1-2 short sentences · max 170 characters
 
 - **Old:** One black-and-white Letter page: the kid’s pass on top, a tear line, and a grown-up stub with the answers and sources.
 - **Gemma:** You get one black-and-white Letter page. The kid's pass is on top, with a tear line and a grown-up answer stub at the bottom.
@@ -161,7 +161,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s4.title`: rejected
 
-`src/components/home/HowItWorks.tsx:29` · step 4 card title, 5 words or fewer · max 30 characters
+`src/components/home/HowItWorks.tsx:46` · step 4 card title, 5 words or fewer · max 30 characters
 
 - **Old:** Hide the phone
 - **Gemma:** Ditch the phone
@@ -172,7 +172,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.how.s4.body`: edited
 
-`src/components/home/HowItWorks.tsx:30` · step 4 card body, 1-2 short sentences, light humor welcome · max 150 characters
+`src/components/home/HowItWorks.tsx:47` · step 4 card body, 1-2 short sentences, light humor welcome · max 150 characters
 
 - **Old:** Phone away. Your kid ticks off finds with a pencil; you keep the stub, in case anyone needs a hint.
 - **Gemma:** Phone stays home. Kids use a pencil to tick off finds while you keep the stub for hints (and sanity).
@@ -304,7 +304,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.chips.lead`: rejected
 
-`src/components/home/ExampleChips.tsx:18` · phone-only lead-in before a row of example-park buttons, ends with a colon, 7 words or fewer · max 40 characters
+`src/components/home/ExampleChips.tsx:21` · phone-only lead-in before a row of example-park buttons, ends with a colon, 7 words or fewer · max 40 characters
 
 - **Old:** Just looking? Open a real pass:
 - **Gemma:** Want a sneak peek:
@@ -359,7 +359,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.parks.connemara.big`: accepted
 
-`src/components/home/TwoParks.tsx:13` · label under the big number 70, 12 words or fewer · max 75 characters
+`src/components/home/TwoParks.tsx:16` · label under the big number 70, 12 words or fewer · max 75 characters
 
 - **Old:** kinds of plants and animals spotted in and around it in 2 weeks
 - **Gemma:** species spotted nearby in 2 weeks
@@ -370,7 +370,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.parks.connemara.small`: unchanged
 
-`src/components/home/TwoParks.tsx:14` · label under the small number 0, 6 words or fewer · max 40 characters
+`src/components/home/TwoParks.tsx:17` · label under the small number 0, 6 words or fewer · max 40 characters
 
 - **Old:** playgrounds, courts or shelters
 - **Gemma:** playgrounds, courts or shelters
@@ -381,7 +381,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.parks.celebration.big`: accepted
 
-`src/components/home/TwoParks.tsx:20` · label under the big number 25, 8 words or fewer · max 50 characters
+`src/components/home/TwoParks.tsx:26` · label under the big number 25, 8 words or fewer · max 50 characters
 
 - **Old:** soccer fields mapped here, plus 6 courts
 - **Gemma:** soccer fields, plus 6 courts
@@ -392,7 +392,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.parks.celebration.small`: unchanged
 
-`src/components/home/TwoParks.tsx:21` · label under the small number 0, 5 words or fewer · max 35 characters
+`src/components/home/TwoParks.tsx:27` · label under the small number 0, 5 words or fewer · max 35 characters
 
 - **Old:** recent wildlife sightings
 - **Gemma:** recent wildlife sightings

@@ -10,10 +10,9 @@ import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
 describe("home: How it works diagram", () => {
   const html = renderToStaticMarkup(<HowItWorks />);
 
-  it("keeps Kevin's three-line headline and the link to /how-it-works", () => {
-    for (const line of ["Real park data in.", "AI processing.", "Screen-free adventure out."]) expect(html).toContain(line);
-    expect(html).toMatch(/Advanced\s*(<!-- -->)?\s*<span/);
-    expect(html).toContain('href="/how-it-works"');
+  it("has only the small \"How it works\" heading (Kevin 2026-10-07 removed the three-line headline and the link)", () => {
+    expect(html).toMatch(/<h2 id="how-title"[^>]*>How it works<\/h2>/);
+    for (const line of ["Real park data in.", "Advanced", "Screen-free adventure out.", "The full story for curious grown-ups"]) expect(html).not.toContain(line);
   });
 
   it("is one ordered list of 8 steps, each an h3 with its step number for screen readers", () => {

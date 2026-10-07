@@ -180,7 +180,9 @@ export function SpotMap({ spot, parkName, variant = "print", headingLevel = 2 }:
             <span>Find This Spot</span>
           </H>
           <p className="gp-spot-riddle">{spot.riddle}</p>
-          <p className="gp-small gp-spot-legend">{keys}</p>
+          <p className="gp-small gp-spot-legend" data-print-drop="3">
+            {keys}
+          </p>
         </div>
         <figure className="gp-spot-figure">
           <div className="gp-spot-frame">
@@ -224,10 +226,13 @@ export function SpotAnswer({ spot }: { spot: SpotOk }) {
     <p className="gp-spot-answer" data-testid="spot-answer">
       <span className="gp-answer-what">Find This Spot: {t.answer}.</span>{" "}
       <span className="gp-small">
-        OpenStreetMap {t.osmId}
-        {t.name ? ` ("${t.name}")` : ""}
-        {spot.start ? `; START: ${spot.start.label}, OpenStreetMap ${spot.start.osmId}` : "; no mapped entrance or parking for a START"}
-        {spot.walk ? `; about ${spot.walk.meters} m ${spot.walk.direction} of START` : ""}. Map data checked {formatTime(spot.checkedAt)}.
+        <span data-print-drop="1">
+          OpenStreetMap {t.osmId}
+          {t.name ? ` ("${t.name}")` : ""}
+          {spot.start ? `; START: ${spot.start.label}, OpenStreetMap ${spot.start.osmId}; ` : "; no mapped entrance or parking for a START; "}
+        </span>
+        {spot.walk ? `About ${spot.walk.meters} m ${spot.walk.direction} of START. ` : ""}
+        <span data-print-drop="1">Map data checked {formatTime(spot.checkedAt)}.</span>
         {spot.riddleBy === "code" ? " The open model's riddle didn't pass our checks, so the pass uses a fixed one." : ""}
       </span>
     </p>

@@ -529,6 +529,20 @@
   pointer-events: none;
 }
 
+/*
+ * UX-7-01: optional print lines left out, lowest value first, only when the sheet would not fit one page at the
+ * 0.91 floor (PrintFit MAX_COMPACT). Screen preview and paper match.
+ */
+.gp-sheet[data-compact="1"] [data-print-drop="1"],
+.gp-sheet[data-compact="2"] [data-print-drop="1"],
+.gp-sheet[data-compact="2"] [data-print-drop="2"],
+.gp-sheet[data-compact="3"] [data-print-drop="1"],
+.gp-sheet[data-compact="3"] [data-print-drop="2"],
+.gp-sheet[data-compact="3"] [data-print-drop="3"],
+.gp-sheet[data-compact="4"] [data-print-drop] {
+  display: none;
+}
+
 /* ---------- print ---------- */
 
 @media print {

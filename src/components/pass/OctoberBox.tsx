@@ -45,6 +45,7 @@ export function OctoberBox({ pass, variant = "screen", headingLevel = 2 }: Octob
       data-testid="october-box"
       data-variant={variant}
       data-status={box.status}
+      {...(print ? { "data-print-drop": "4" } : {})}
       className={
         print
           ? "october-box flex flex-col gap-1 border-2 border-dashed border-black p-3 text-black"
@@ -67,7 +68,7 @@ export function OctoberBox({ pass, variant = "screen", headingLevel = 2 }: Octob
         // and milkweed line move to the parent stub (OctoberStubLine).
         <>
           <p className="font-bold">{octoberHeadline(box)}</p>
-          <p>{OCTOBER_TIP}</p>
+          <p data-print-drop="1">{OCTOBER_TIP}</p>
         </>
       ) : box.status === "ok" ? (
         <>

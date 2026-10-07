@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 
 /** Printable height of US Letter with 0.4 in margins, in CSS px (10.2 in x 96), minus a rounding margin. */
 export const PRINT_HEIGHT_PX = 10.2 * 96 - 8;
@@ -42,7 +42,7 @@ export function fitFor(heightPx: number, pageHeightPx: number = PRINT_HEIGHT_PX)
 }
 
 /** Lays out an invisible off-screen copy of the sheet at the printed width (7.7 in) for measuring. */
-function measuringCopy(sheet: HTMLElement): { height: (zoom: number) => number | null; done: () => void } {
+function measuringCopy(sheet: HTMLElement): { height: (zoom: number, compact?: number) => number | null; done: () => void } {
   const copy = sheet.cloneNode(true) as HTMLElement;
   copy.classList.add("gp-measure");
   copy.setAttribute("aria-hidden", "true");
@@ -54,8 +54,11 @@ function measuringCopy(sheet: HTMLElement): { height: (zoom: number) => number |
   const stub = copy.querySelector(".gp-stub");
   const kidZoom = kidZoomOf(copy);
   return {
-    height: (zoom) => {
+    height: (zoom, compact = 0) => {
       if (!kid || !stub) return null;
+      // UX-7-01: the optional print lines this compaction level leaves out (print.css [data-print-drop]).
+      if (compact > 0) copy.dataset.compact = String(compact);
+      else delete copy.dataset.compact;
       // In print the sheet is 100% of the page, so zoom leaves it the full width and the text reflows
       // into the extra room. Model that: the zoomed copy must still render exactly 7.7 in wide.
       copy.style.zoom = String(zoom);
@@ -95,12 +98,46 @@ export function bestFit(height: (zoom: number) => number | null, pageHeightPx: n
 }
 
 /**
+ * UX-7-01 (round 7: the White Rock example printed on 2 pages at the 0.91 floor): optional print lines, left out in
+ * this order only when the sheet would not fit one page even at MIN_FIT. Every one of them is still on the screen
+ * pass page; nothing a kid needs to play, no safety line and no source credit is ever dropped.
+ *   1: the kid's October tip line and the OpenStreetMap ids in the stub's Find This Spot answer;
+ *   2: the October details paragraph on the stub (the kid's box keeps the counts);
+ *   3: the Find This Spot map legend;
+ *   4: the kid's October box.
+ */
+export const MAX_COMPACT = 4;
+
+export type PrintPlan = { fit: number; compact: number; overflow: boolean };
+
+/**
+ * The print plan: the largest scale >= MIN_FIT with as few optional lines left out as possible. `overflow` is true
+ * only when even MAX_COMPACT at MIN_FIT is taller than one page (the page then says it prints on 2 pages).
+ */
+export function bestPlan(height: (zoom: number, compact: number) => number | null, pageHeightPx: number = PRINT_HEIGHT_PX): PrintPlan | null {
+  let last: PrintPlan | null = null;
+  for (let compact = 0; compact <= MAX_COMPACT; compact++) {
+    const fit = bestFit((z) => height(z, compact), pageHeightPx);
+    if (fit === null) return null;
+    const h = height(fit, compact);
+    if (h !== null && h <= pageHeightPx) return { fit, compact, overflow: false };
+    last = { fit, compact, overflow: true };
+  }
+  return last;
+}
+
+/** Shown on screen above the sheet when even the compact sheet runs onto a second page (never on paper). */
+export const PRINT_TWO_PAGES = "This pass is long: it prints on 2 pages. The second page holds the end of the grown-up's answer key.";
+
+/**
  * Safety net for the one-page rule (SPEC F6). Measures an off-screen copy of the sheet at the
  * printed width (7.7 in), on any screen size, and sets `--gp-fit`, which print.css applies as a
- * print-only `zoom` when the sheet would spill onto a second page. Renders nothing. Without
- * JavaScript the server-picked density (KidPass `data-density`) still applies.
+ * print-only `zoom` when the sheet would spill onto a second page; below the floor it leaves out optional print
+ * lines (`data-compact`, see MAX_COMPACT). Renders nothing unless the sheet still needs 2 pages, then one honest
+ * screen-only line. Without JavaScript the server-picked density (KidPass `data-density`) still applies.
  */
 export function PrintFit() {
+  const [overflow, setOverflow] = useState(false);
   useEffect(() => {
     const sheet = document.querySelector<HTMLElement>(".gp-sheet:not(.gp-measure)");
     if (!sheet) return;
@@ -108,21 +145,29 @@ export function PrintFit() {
     const measure = () => {
       if (cancelled) return;
       const copy = measuringCopy(sheet);
-      let fit: number | null;
+      let plan: PrintPlan | null;
       try {
-        fit = bestFit(copy.height);
+        plan = bestPlan(copy.height);
       } finally {
         copy.done();
       }
-      if (fit === null) return;
-      sheet.dataset.fit = String(fit);
-      sheet.style.setProperty("--gp-fit", String(fit));
-      sheet.style.setProperty("--gp-map-col", `${mapColumnFor(fit, kidZoomOf(sheet))}in`);
+      if (plan === null) return;
+      if (plan.compact > 0) sheet.dataset.compact = String(plan.compact);
+      else delete sheet.dataset.compact;
+      sheet.dataset.pages = plan.overflow ? "2" : "1";
+      sheet.dataset.fit = String(plan.fit);
+      sheet.style.setProperty("--gp-fit", String(plan.fit));
+      sheet.style.setProperty("--gp-map-col", `${mapColumnFor(plan.fit, kidZoomOf(sheet))}in`);
+      setOverflow(plan.overflow);
     };
     void document.fonts?.ready.then(measure);
     return () => {
       cancelled = true;
     };
   }, []);
-  return null;
+  return overflow ? (
+    <p className="gp-screen-only mx-auto w-full max-w-[8.5in] text-lg font-semibold" role="status" data-testid="print-two-pages">
+      {PRINT_TWO_PAGES}
+    </p>
+  ) : null;
 }

@@ -6,7 +6,7 @@ import { OctoberBox } from "@/components/pass/OctoberBox";
 import { isOctoberDay } from "@/lib/october";
 import { KID_STAY_CLOSE, KidPass, PRINT_LOGO_SRC, SNUG_LINE_BUDGET, TIGHT_LINE_BUDGET, estimatedLines, passDensity, rowIcon } from "@/components/pass/KidPass";
 import { HoopIcon, MagnifierIcon, PinIcon } from "@/components/art/icons";
-import { MAP_COL_IN, MAP_MIN_PRINTED_IN, MIN_FIT, PRINT_HEIGHT_PX, bestFit, fitFor, mapColumnFor } from "@/components/pass/PrintFit";
+import { MAP_COL_IN, MAP_MIN_PRINTED_IN, MAX_COMPACT, MIN_FIT, PRINT_HEIGHT_PX, PRINT_TWO_PAGES, bestFit, bestPlan, fitFor, mapColumnFor } from "@/components/pass/PrintFit";
 import { ParentStub, STUB_EACH_LINE, STUB_LOOK_ONLY, TearLine, shortDay } from "@/components/pass/ParentStub";
 import { resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
@@ -216,7 +216,7 @@ describe("ParentStub (bottom of the printed sheet)", () => {
       <ParentStub pass={pass} passUrl={URL_TEXT} spotAnswer={<p>spot answer slot</p>} october={<span>october source slot</span>} />,
     );
     expect(withSlots).toContain('<div data-slot="spot-answer"><p>spot answer slot</p></div>');
-    expect(withSlots).toContain('<p class="gp-small gp-stub-october" data-slot="october-source"><span>october source slot</span></p>');
+    expect(withSlots).toContain('<p class="gp-small gp-stub-october" data-slot="october-source" data-print-drop="2"><span>october source slot</span></p>');
   });
 
   it("R1-m11: credits Wikipedia (CC BY-SA) on paper only when the pass has a Wild Find", async () => {
@@ -289,6 +289,26 @@ describe("print.css (ADR 0004 rules)", () => {
   it("hides the site header and the screen toolbar when printing the print route", () => {
     expect(css).toContain("body:has(.gp-print-page) > :not(.gp-print-page)");
     expect(css).toMatch(/\.gp-screen-only\s*\{\s*display:\s*none !important;/);
+  });
+});
+
+describe("UX-7-01: optional print lines go before a second page", () => {
+  // The sheet's height as a function of zoom and compaction level, as PrintFit measures it in the browser.
+  const sheet = (base: number, savedPerLevel: number[]) => (zoom: number, compact: number) =>
+    (base - savedPerLevel.slice(0, compact).reduce((a, b) => a + b, 0)) * zoom;
+  it("keeps everything when the 0.91 floor is enough, and drops the lowest-value lines first when it isn't", () => {
+    expect(bestPlan(sheet(1000, [20, 30, 20, 60]))).toEqual({ fit: 0.97, compact: 0, overflow: false });
+    // The White Rock case: too tall at 0.91 with everything (1100 x 0.91 = 1001 > 971), fits once level 1 is out.
+    expect(bestPlan(sheet(1100, [40, 30, 20, 60]))).toEqual({ fit: 0.91, compact: 1, overflow: false });
+    expect(bestPlan(sheet(1130, [20, 30, 20, 60]))?.compact).toBe(3);
+    // Even the compact sheet doesn't fit: the page says it prints on 2 pages (never shrinks below the floor).
+    expect(bestPlan(sheet(1400, [20, 30, 20, 60]))).toEqual({ fit: MIN_FIT, compact: MAX_COMPACT, overflow: true });
+    expect(PRINT_TWO_PAGES).toMatch(/prints on 2 pages/);
+  });
+  it("print.css hides each level's lines only at that level or higher", () => {
+    const css = readFileSync(new URL("../../src/styles/print.css", import.meta.url), "utf8");
+    for (let level = 1; level <= MAX_COMPACT; level++) expect(css).toContain(`.gp-sheet[data-compact="${level}"]`);
+    expect(css).not.toContain('.gp-sheet[data-compact="1"] [data-print-drop="2"]');
   });
 });
 

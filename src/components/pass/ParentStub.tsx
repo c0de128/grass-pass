@@ -106,7 +106,7 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
       {spotAnswer ? <div data-slot="spot-answer">{spotAnswer}</div> : null}
       {/* Full width: in a narrow column the October details stacked ~9 lines and pushed the sheet to 2 pages. */}
       {october ? (
-        <p className="gp-small gp-stub-october" data-slot="october-source">
+        <p className="gp-small gp-stub-october" data-slot="october-source" data-print-drop="2">
           {october}
         </p>
       ) : null}

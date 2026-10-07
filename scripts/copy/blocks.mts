@@ -152,7 +152,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     maxChars: 170,
     text: "Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”",
     facts: [
-      "{blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length: 63 since the evening of 2026-10-06; 17 when this copy was drafted), filled in by code.",
+      "{blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length: 71 since the evening of 2026-10-06, round 7; 17 when this copy was drafted), filled in by code.",
       "Blocked: venomous snakes, poison ivy, stinging bugs and more. They are never printed.",
       'Every Wild Find carries the line "look, don\'t touch."',
     ],
@@ -560,7 +560,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "step summary, 1-2 sentences",
     maxChars: 170,
     text: "Code removes {blocked} blocked groups of risky species (think fire ants and poison ivy) before the model sees the list, and checks again after.",
-    facts: ["{blocked} is filled in by code (63 groups since the evening of 2026-10-06; 17 when this copy was drafted).", "Examples: fire ants, poison ivy.", "Removed before the model sees the list, and checked again after."],
+    facts: ["{blocked} is filled in by code (71 groups since the evening of 2026-10-06, round 7; 17 when this copy was drafted).", "Examples: fire ants, poison ivy.", "Removed before the model sees the list, and checked again after."],
     keep: ["before", "after"],
   },
   {
@@ -1130,7 +1130,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "bullet, 1 sentence",
     maxChars: 90,
     text: "{blocked} risky groups are never printed, checked before and after the model.",
-    facts: ["{blocked} is filled in by code (63 groups since the evening of 2026-10-06; 17 when this copy was drafted).", "Blocked groups are never printed; checked before and after the model."],
+    facts: ["{blocked} is filled in by code (71 groups since the evening of 2026-10-06, round 7; 17 when this copy was drafted).", "Blocked groups are never printed; checked before and after the model."],
     keep: ["never printed", "before and after"],
   },
   {

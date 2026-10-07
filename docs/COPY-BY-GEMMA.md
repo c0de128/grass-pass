@@ -29,7 +29,7 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 4. **An AI coding agent (Claude Code)** read every draft that passed (no person has reviewed them yet): untrue, garbled, off-tone or weaker drafts are rejected; tiny fixes are allowed and marked. Decisions go in `docs/copy-by-gemma/review.json`; accepted and edited texts are applied by hand in the files named below.
 5. `pnpm copy:render` writes this file.
 
-**Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) was 17 then, and is 63 since the safety work of the evening of 2026-10-06. The sheet below shows both. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.
+**Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) was 17 then, and is 71 since the safety work of the evening of 2026-10-06 (63 before the round-7 additions). The sheet below shows both. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.
 
 **Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (`MAX_MODEL_CALLS = 3`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old "one retry" facts. 4 blocks were fixed by hand for that (marked "Fact fix after the rebase" below): two accepted Gemma drafts became "edited", and two kept old lines were corrected. Their FACTS sheets below show the new rule.
 
@@ -212,7 +212,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”
 - **Why:** UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; the agent review caught it.
-- **FACTS:** {blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length: 63 since the evening of 2026-10-06; 17 when this copy was drafted), filled in by code. / Blocked: venomous snakes, poison ivy, stinging bugs and more. They are never printed. / Every Wild Find carries the line "look, don't touch." · KEEP: "never printed", "look, don't touch"
+- **FACTS:** {blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length: 71 since the evening of 2026-10-06, round 7; 17 when this copy was drafted), filled in by code. / Blocked: venomous snakes, poison ivy, stinging bugs and more. They are never printed. / Every Wild Find carries the line "look, don't touch." · KEEP: "never printed", "look, don't touch"
 
 #### `home.pass.park.body`: accepted
 
@@ -680,7 +680,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Code removes {blocked} groups of risky species, like fire ants and poison ivy, before the model sees the list and checks again after.
 - **Why:** True, on tone, at least as clear as before.
-- **FACTS:** {blocked} is filled in by code (63 groups since the evening of 2026-10-06; 17 when this copy was drafted). / Examples: fire ants, poison ivy. / Removed before the model sees the list, and checked again after. · KEEP: "before", "after"
+- **FACTS:** {blocked} is filled in by code (71 groups since the evening of 2026-10-06, round 7; 17 when this copy was drafted). / Examples: fire ants, poison ivy. / Removed before the model sees the list, and checked again after. · KEEP: "before", "after"
 
 #### `how.step.model.title`: accepted
 
@@ -1331,7 +1331,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** {blocked} risky groups are never printed, checked before and after the model.
 - **Why:** Drops 'risky' (what the groups are).
-- **FACTS:** {blocked} is filled in by code (63 groups since the evening of 2026-10-06; 17 when this copy was drafted). / Blocked groups are never printed; checked before and after the model. · KEEP: "never printed", "before and after"
+- **FACTS:** {blocked} is filled in by code (71 groups since the evening of 2026-10-06, round 7; 17 when this copy was drafted). / Blocked groups are never printed; checked before and after the model. · KEEP: "never printed", "before and after"
 
 #### `about.safety.2`: accepted
 

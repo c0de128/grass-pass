@@ -72,7 +72,7 @@ test("render docs/COPY-BY-GEMMA.md (pnpm copy:render)", () => {
   out.push("5. `pnpm copy:render` writes this file.");
   out.push("");
   out.push(
-    "**Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) was 17 then, and is 63 since the safety work of the evening of 2026-10-06. The sheet below shows both. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.",
+    "**Correction after the run:** the FACTS sheet sent to Gemma said there were 18 blocked species groups; the real count (`BLOCKED_TAXA.length`) was 17 then, and is 71 since the safety work of the evening of 2026-10-06 (63 before the round-7 additions). The sheet below shows both. No shipped text was affected: every block that mentions the count uses the `{blocked}` placeholder, which code fills in.",
   );
   out.push("");
   out.push(

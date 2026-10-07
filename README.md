@@ -7,7 +7,8 @@ sign-in; to make your own, press **Try as a judge** (one click, no sign-up).
 
 TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with its date).
 
-Grass Pass turns your local park into a one-page treasure hunt in about 30 seconds. Pick a park and your kid's age
+Grass Pass turns your local park into a one-page treasure hunt, usually in 10-30 seconds (up to about a minute and a
+half for a big park or a slow model; measured, see [Limitations](#limitations)). Pick a park and your kid's age
 (4-6, 6-10 or 10-13). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
 DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass).
 Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety
@@ -120,11 +121,16 @@ quota, the optional firewall rule, accounts and report moderation: [`docs/OPERAT
 ### Run it yourself (self-hosted Gemma, measured)
 The app talks to any OpenAI-compatible server. Measured on Oct 6, 2026 with the smallest Gemma 4 on a laptop with
 **no GPU** (Intel Core Ultra 7 155H, 32 GB RAM, Ollama 0.32.15), 5 test parks, $0:
-- **With the app's own limits (70 s per model call), it is too slow on this CPU:** 3 of 5 passes ran out of time and
-  the other 2 came out short (6 of 8 finds).
+- **With the app's normal limits (70 s per model call, as on the hosted site), it is too slow on this CPU:** 0 of 5
+  passes complete: 3 ran out of time and the other 2 came out short (6 of 8 finds).
 - **Given more time (an eval-only setting), it works:** 4 of 5 passes complete, 96.7% of clues quoted their source,
   reading grade 2.9, 0 risky species printed, 59.3 s a typical model call (hosted Gemma 4 31B: 9.4 s), about 1-3
-  minutes a pass, about 5.2 GB of RAM. It writes about 18 answer tokens a second here.
+  minutes a pass, about 5-6 GB of RAM (5.2 GB working set, 5.8 GB at most). It writes about 18 answer tokens a second
+  here.
+- **In the app, with the longer local clock (`LOCAL_MODEL_TIMEOUT_MS=270000`), it works, slowly:** one browser
+  click-through (Celebration Park, ages 6-10) made a pass with 7 of 8 finds and its Find This Spot map in **96 s**
+  (2 model calls: 62.8 s and 30.7 s), while the page said "A model on this computer can take a few minutes". One run,
+  not a benchmark: [`2026-10-06-selfhost-browser-1959.md`](evals/results/2026-10-06-selfhost-browser-1959.md).
 
 Every number, the hardware and the caveats: [`evals/results/2026-10-06-selfhost-notes.md`](evals/results/2026-10-06-selfhost-notes.md).
 A computer with a GPU should be much faster (not measured).
@@ -138,15 +144,18 @@ ollama create gemma4-e2b-8k -f evals/selfhost/Modelfile
 #    MODEL_BASE_URL=http://localhost:11434/v1
 #    MODEL_ID=gemma4-e2b-8k
 #    MODEL_REASONING_EFFORT=none     # Gemma 4 "thinking" off; Ollama turns it on by default
-#    MODEL_TIMEOUT_MS=70000          # the app's maximum
+#    LOCAL_MODEL_TIMEOUT_MS=270000   # longer clock for a model on THIS computer (off by default, never on Vercel):
+#                                    # 4.5 min a call, 10 min a pass; the page waits and says why
 #    AUTH_SECRET=...                 # npx auth secret (a new pass needs a sign-in; "Try as a judge" works)
 pnpm dev
+#    Then open http://localhost:3000, press "Try as a judge", pick a park and "Make my pass" (96 s in our one try)
 # 4. Or measure it yourself, free, on the recorded parks (about 6 + 10 minutes on the laptop above)
 EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 pnpm eval                        # the app's limits
 EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 EVAL_LOCAL_PATIENT=1 pnpm eval   # eval-only longer clock
 ```
 
-The eval runs the app's own pass builder and checks; the browser flow with these settings was not clicked through.
+The eval runs the app's own pass builder and checks. The browser flow was clicked through once with
+`LOCAL_MODEL_TIMEOUT_MS=270000` (above). The eval's "app clock" row is the normal clock, without that setting.
 
 ## Limitations
 The same list as the app's `/about` page, from eval run [`2026-10-06-7.md`](evals/results/2026-10-06-7.md):
@@ -166,6 +175,11 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-7.md`](eval
   again. 1 first call hit the 30 s limit; it was retried and its pass finished. Llama 4 Maverick is too slow to be the
   default: 1 of its 20 test runs ended at its 60 s limit and 11 of its refills hit the 20 s refill limit; 47.1%
   complete passes.
+- **A whole new pass usually takes 10-30 seconds, and up to about a minute and a half** for a big park or a slow
+  model. The model part is short (run `-7`: 11.2 s per pass, median, on recorded park data), but a new pass also reads
+  the live map and sightings: a judge's own pass for Prospect Park (Brooklyn, a big park) took about 57 s plus an
+  11.6 s park search on Oct 6, and passes took 58-67 s when the free map servers were slow (measured Oct 6). The page
+  waits up to 95 s and the server keeps a pass it started, so "Try again" opens it.
 - **Short passes: 2 of 51.** Complete passes meet the goal (Gemma 96.1%, 49 of 51; target 90%; 94.1% in the run
   before). A pass makes 1 to 3 model calls: a failed first call gets one whole retry (1 pass saved), a refill asks for
   the missing finds + 2 spares, and a pass still short gets one more refill. Both short passes were Connemara Meadow,
@@ -187,8 +201,10 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-7.md`](eval
   "Maybe!". A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
   least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed.
 - **Self-hosting is slow on a laptop CPU.** Measured with Gemma 4 E2B on Ollama, no GPU, 5 parks, $0: with the app's
-  70 s model limit, 3 of 5 passes ran out of time and 2 came out short; given more time (eval only), 4 of 5 were
-  complete at about 1-3 minutes a pass. See [Run it yourself](#run-it-yourself-self-hosted-gemma-measured).
+  normal 70 s model limit, 0 of 5 passes were complete (3 ran out of time and 2 came out short); given more time (eval
+  only), 4 of 5 were complete at about 1-3 minutes a pass. With the app's longer local clock (`LOCAL_MODEL_TIMEOUT_MS`,
+  off by default), one browser try made a 7-of-8 pass in 96 s. See
+  [Run it yourself](#run-it-yourself-self-hosted-gemma-measured).
 - **Find This Spot and Lucky Finds are not in the eval.** No map geometry or SerpApi answers were recorded for the 20
   test parks, and SerpApi was off for the run (`SERPAPI_DAILY_CAP=0`, no key) to save the free searches for the live
   site.
@@ -231,8 +247,9 @@ text ("Players and families use it for running games"); not fixed yet.
 
 Ages 10-13, a partial check ([`2026-10-06-partial-1853.md`](evals/results/2026-10-06-partial-1853.md), the same 3
 parks as the checks before it, not re-run): **3 of 3 complete** in 4 model calls, **all 3 kept their 2 hard finds**,
-grade 3.8 (aim 5-6), 16.2 s / 21.4 s per call, 7.1% name leaks before the checks (removed), and $0.00117 per pass,
-over the $0.001 mark.
+grade 3.8 (aim 5-6), 16.2 s / 21.4 s per call (**over** the 10 s / 20 s targets), 7.1% name leaks before the checks
+(**over** the 5% target; code removed them all), and $0.00117 per pass, **over** the $0.001 mark. Only 4 model calls,
+so a small sample.
 
 What got worse since the previous run and why, earlier runs, and every tuning change:
 [`docs/EVALS.md`](docs/EVALS.md). The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`,
@@ -249,8 +266,9 @@ checked against the results JSON by a unit test).
   (`MODEL_ID`), and Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible
   server, such as Ollama. **Measured** on a laptop with no GPU (Gemma 4 E2B, 5 parks, $0): the checks hold (0 risky
-  species printed, 96.7% of clues grounded), but at about 1-3 minutes a pass it is too slow for the app's 70 s limit
-  ([details](#run-it-yourself-self-hosted-gemma-measured)).
+  species printed, 96.7% of clues grounded), but it is too slow for the app's normal 70 s limit (0 of 5 complete). With
+  the longer local clock (`LOCAL_MODEL_TIMEOUT_MS`), one browser try made a 7-of-8 pass in 96 s; the eval gave 1-3
+  minutes a pass ([details](#run-it-yourself-self-hosted-gemma-measured)).
 
 ## Accounts and reports
 Anyone can search, open the example passes and any shared link, and print. **A NEW pass needs a grown-up to sign in**

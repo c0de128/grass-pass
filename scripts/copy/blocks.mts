@@ -844,14 +844,17 @@ export const BLOCKS: readonly CopyBlock[] = [
     page: HOW,
     file: "src/app/how-it-works/page.tsx",
     role: "card body, 2 short sentences; must give the measured self-host result",
-    maxChars: 110,
+    // RULES-6-02 (Builder AA): room for both results (the app's normal limits, and more time).
+    maxChars: 150,
     text: "Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.",
     // Fact fix after the self-host measurement (Builder W, 2026-10-06, evals/results/2026-10-06-selfhost-notes.md).
     facts: [
       "Any OpenAI-compatible server works, for example Ollama on your own computer.",
       "Measured: Gemma 4 E2B on a laptop CPU costs $0 but takes 1-3 minutes a pass, too slow for the app's 70 s limit.",
+      // RULES-6-02: the 1-3 minutes need more time than the app's normal limits give.
+      "With the app's normal time limits, 0 of 5 passes finished complete; given more time (the eval's longer clock), a pass takes 1-3 minutes.",
     ],
-    keep: ["OpenAI-compatible", "Ollama", "$0"],
+    keep: ["OpenAI-compatible", "Ollama", "$0", "0 of 5"],
   },
   {
     id: "how.open.3.title",
@@ -1801,6 +1804,8 @@ export const BLOCKS: readonly CopyBlock[] = [
       GEMMA,
       AGES,
       "A pass usually takes 10-30 seconds (about 30 seconds).",
+      // Fact fix (judge round 6, Builder AA): the slow cases, measured (README Limitations).
+      "Up to about a minute and a half for a big park or a slow model (a judge's big-park pass took about 57 s plus an 11.6 s search).",
       "Usually one model call; at most 3 (one whole retry if the first call fails, refills if too few clues pass).",
       CHECKS,
       "Code writes every number, date and safety line.",

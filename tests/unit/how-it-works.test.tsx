@@ -66,6 +66,11 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(t).toContain("2026-10-06-partial-1853");
     expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
     expect(t).toContain(`${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete in ${SMOKE_10_13.calls} model calls`);
+    // RULES-6-03: the smoke's speed and name-leak misses are labelled, like its cost.
+    expect(SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s && SMOKE_10_13.nameLeakPct > EVAL_THRESHOLDS.nameLeakPct).toBe(true);
+    // (`t` puts a space at each tag edge, so "(<strong>over" reads "( over" here.)
+    expect(t).toMatch(new RegExp(`${SMOKE_10_13.p50s} s typical and ${SMOKE_10_13.p95s} s slow \\( ?over the ${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s targets\\)`));
+    expect(t).toMatch(new RegExp(`${SMOKE_10_13.nameLeakPct}% of its clues named their answer \\( ?over the ${EVAL_THRESHOLDS.nameLeakPct}% target\\)`));
     // Run 2026-10-06-7: cost missed; speed, repetition and complete passes met; the table must say so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
     expect(rows).toContainEqual(["Model time per call, typical / slow", "Met"]);

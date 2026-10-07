@@ -537,7 +537,7 @@ export default function HowItWorksPage() {
             {
               icon: Hammer,
               title: "It can be self-hosted.",
-              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 1-3 minutes a pass.",
+              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes finished in the app's normal time; given more, 1-3 minutes a pass.",
             },
             {
               icon: ShieldCheck,
@@ -619,10 +619,12 @@ export default function HowItWorksPage() {
             </a>
             ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls, all{" "}
             {SMOKE_10_13.hardKept} with their 2 hard finds, grade{" "}
-            {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow. A finished 10-13 pass cost
-            about {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target
-            (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer; code removed
-            them all.
+            {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow (<strong>over</strong> the{" "}
+            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s targets). A finished 10-13 pass cost about{" "}
+            {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target (a
+            10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer (
+            <strong>over</strong> the {EVAL_THRESHOLDS.nameLeakPct}% target); code removed them all. Only {SMOKE_10_13.calls} model
+            calls, so a small sample.
           </p>
         </Disclosure>
       </Band>

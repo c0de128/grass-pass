@@ -26,10 +26,10 @@ import type { ReactNode } from "react";
 import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
-import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
+import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_COST_RANGE, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -410,7 +410,7 @@ export default function HowItWorksPage() {
   ];
 
   const measured: [string, string, string, boolean][] = [
-    ["Cost per pass (DigitalOcean list prices)", `${usd(gemma.costPerPass)} (up to ${usd(GEMMA_COST_RANGE.high)} if ${GEMMA_COST_RANGE.timedOutCalls} timed-out calls were billed)`, `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
+    ["Cost per pass (DigitalOcean list prices)", `${usd(gemma.costPerPass)} (${costHighNote()})`, `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
     ["Model time per call, typical / slow", `${secs(gemma.p50s)} / ${secs(gemma.p95s)}`, `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`, speedMet],
     ["Complete passes (at most 1 find missing)", `${pct(gemma.completePct)} (${gemma.complete}/${gemma.dataRichRuns})`, `${EVAL_THRESHOLDS.completePct}% or more`, gemma.completePct >= EVAL_THRESHOLDS.completePct],
     ["Reading level (grade, median)", gemma.fkGrade.toFixed(1), `${EVAL_THRESHOLDS.fkGrade} or lower`, gemma.fkGrade <= EVAL_THRESHOLDS.fkGrade],
@@ -607,9 +607,9 @@ export default function HowItWorksPage() {
             </table>
           </div>
           <p>
-            Speed is missed: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s, with
-            DigitalOcean answering at {GEMMA_TOKENS_PER_S.now} answer tokens a second ({GEMMA_TOKENS_PER_S.before} the run before).
-            Lucky Finds and Find This Spot are not in this test.
+            Speed is {speedMet ? "met" : "missed"}: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone{" "}
+            {GEMMA_FIRST_CALL_P50_S} s, with DigitalOcean answering at {GEMMA_TOKENS_PER_S.now} answer tokens a second (
+            {GEMMA_TOKENS_PER_S.before} the run before, when speed was missed). Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
             Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
@@ -617,7 +617,8 @@ export default function HowItWorksPage() {
             <a className={bandLink} href={smokeUrl}>
               results
             </a>
-            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls, grade{" "}
+            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls, all{" "}
+            {SMOKE_10_13.hardKept} with their 2 hard finds, grade{" "}
             {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow. A finished 10-13 pass cost
             about {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target
             (a 10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer; code removed

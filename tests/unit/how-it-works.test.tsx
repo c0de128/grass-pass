@@ -62,24 +62,28 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-6");
-    expect(t).toContain("2026-10-06-partial-1621");
+    expect(t).toContain("2026-10-06-7");
+    expect(t).toContain("2026-10-06-partial-1853");
     expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
     expect(t).toContain(`${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete in ${SMOKE_10_13.calls} model calls`);
-    // Run 2026-10-06-6: speed and repetition missed, complete passes met; the table must say so.
+    // Run 2026-10-06-7: cost missed; speed, repetition and complete passes met; the table must say so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
-    expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
+    expect(rows).toContainEqual(["Model time per call, typical / slow", "Met"]);
+    expect(rows).toContainEqual(["Cost per pass (DigitalOcean list prices)", "Missed"]);
+    expect(t).toContain("$0.00103 (up to $0.00105 if 1 timed-out call was billed in full)");
     expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Met"]);
-    expect(t).toContain("Speed is missed: the typical call took 12.04 s, first calls alone 13.2 s, with DigitalOcean answering at 36.8 answer tokens a second");
-    expect(rows).toContainEqual(["Clues repeated across parks", "Missed"]);
+    expect(t).toContain("Speed is met: the typical call took 9.37 s, first calls alone 10.2 s, with DigitalOcean answering at 47.3 answer tokens a second (36.8 the run before, when speed was missed)");
+    expect(rows).toContainEqual(["Clues repeated across parks", "Met"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
-    expect(g.repeatPct).toBeGreaterThan(EVAL_THRESHOLDS.repeatPct);
+    expect(g.repeatPct).toBeLessThanOrEqual(EVAL_THRESHOLDS.repeatPct);
+    expect(g.costPerPass).toBeGreaterThan(EVAL_THRESHOLDS.costPerPass);
+    expect(t).toContain(`all ${SMOKE_10_13.hardKept} with their 2 hard finds`);
   });
 
   it("the 10-13 smoke numbers match the committed results JSON", () => {
     const j = JSON.parse(readFileSync(join(ROOT, SMOKE_10_13.file), "utf8")) as {
       meta: { day: string; ageBand: string; partial: boolean; settings: { cases: number[] } };
-      scores: { model: string; errors: Record<string, number>; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { p50Ms: number; p95Ms: number }; m8: { costPerPass: number } }[];
+      scores: { model: string; errors: Record<string, number>; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { p50Ms: number; p95Ms: number }; m8: { costPerPass: number }; hard: { checked: number; met: number; hardMin: number | null } }[];
       runs: { model: string; kind: string; calls?: unknown[] }[];
       spend: { usd: number };
     };
@@ -93,6 +97,8 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(Math.round(s.m7.p50Ms / 100) / 10).toBe(SMOKE_10_13.p50s);
     expect(Math.round(s.m7.p95Ms / 100) / 10).toBe(SMOKE_10_13.p95s);
     expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_10_13.costPerPass);
+    // Q-5-05: "all 3 with their 2 hard finds"
+    expect(s.hard).toMatchObject({ checked: SMOKE_10_13.parks, met: SMOKE_10_13.hardKept, hardMin: 2 });
     const finished = j.runs.filter((r) => r.model === "gemma-4-31B-it" && r.kind === "pass").length;
     expect(finished).toBe(3);
     expect(j.runs.filter((r) => r.model === "gemma-4-31B-it").reduce((a, r) => a + (r.calls ?? []).length, 0)).toBe(SMOKE_10_13.calls);

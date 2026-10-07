@@ -54,7 +54,7 @@ export function footerColumns(): Array<{ id: string; title: string; links: Foote
 }
 
 const link =
-  "group/fl inline-flex min-h-9 items-start gap-2 rounded-sm py-1.5 text-[15px] leading-snug font-medium text-footer-foreground/90 transition-colors hover:text-footer-foreground";
+  "group/fl inline-flex min-h-9 items-start justify-center gap-2 rounded-sm py-1.5 text-[15px] leading-snug font-medium text-footer-foreground/90 transition-colors hover:text-footer-foreground";
 const underline =
   "box-decoration-clone bg-[linear-gradient(var(--gp-footer-heading),var(--gp-footer-heading))] bg-[length:0%_2px] bg-left-bottom bg-no-repeat pb-0.5 transition-[background-size] duration-300 group-hover/fl:bg-[length:100%_2px] group-focus-visible/fl:bg-[length:100%_2px]";
 const credit = "underline underline-offset-2 hover:text-footer-foreground";
@@ -97,6 +97,7 @@ function FooterItem({ l }: { l: FooterLink }) {
  * Site footer (Kevin, 2026-10-07, "make the footer pop", after his landscape reference): a hand-drawn ridge with a family
  * and a big oak fading into a deep forest-green band, Kevin's three link columns (LEARN / EXPLORE / RESOURCES), his
  * closing line with the logo, and every data, model, font and picture credit (licence obligations, unchanged).
+ * Everything under the picture is centred (Kevin 2026-10-07).
  * Never printed (the printed pass carries its own sources on the parent stub).
  */
 export function SiteFooter() {
@@ -115,14 +116,14 @@ export function SiteFooter() {
                   key={col.id}
                   className={
                     i === 0
-                      ? "sm:pr-8 lg:pr-12"
-                      : "border-t border-footer-foreground/15 pt-8 sm:border-t-0 sm:border-l sm:px-8 sm:pt-0 lg:px-12"
+                      ? "text-center sm:px-8 lg:px-12"
+                      : "border-t border-footer-foreground/15 pt-8 text-center sm:border-t-0 sm:border-l sm:px-8 sm:pt-0 lg:px-12"
                   }
                 >
                   <h2 id={`footer-${col.id}`} className="font-heading text-base font-extrabold tracking-[0.16em] text-footer-heading uppercase">
                     {col.title}
                   </h2>
-                  <ul aria-labelledby={`footer-${col.id}`} className={`mt-3 grid gap-x-4 gap-y-0.5 sm:mt-4 ${col.id === "learn" ? "grid-cols-2 sm:grid-cols-1" : ""}`}>
+                  <ul aria-labelledby={`footer-${col.id}`} className={`mt-3 grid justify-items-center gap-x-4 gap-y-0.5 sm:mt-4 ${col.id === "learn" ? "grid-cols-2 sm:grid-cols-1" : ""}`}>
                     {col.links.map((l) => (
                       <li key={l.href}>
                         <FooterItem l={l} />
@@ -134,11 +135,11 @@ export function SiteFooter() {
             </div>
           </nav>
 
-          <div className="mt-12 flex flex-col gap-5 border-t-2 border-dashed border-footer-foreground/20 pt-9 lg:flex-row lg:items-start lg:gap-12">
+          <div className="mt-12 flex flex-col items-center gap-5 border-t-2 border-dashed border-footer-foreground/20 pt-9 text-center">
             {/* Not a link: the header's logo is the one "Grass Pass home" link on every page. */}
-            <Logo inverted notchClassName="bg-footer" className="shrink-0 lg:mt-0.5" />
+            <Logo inverted notchClassName="bg-footer" className="shrink-0" />
             {/* Kevin's closing line, word for word; his last two sentences set large as the sign-off. */}
-            <p className="flex flex-col gap-2 text-base leading-relaxed text-footer-foreground/90 sm:text-lg" data-testid="footer-closing">
+            <p className="flex flex-col items-center gap-2 text-base leading-relaxed text-footer-foreground/90 sm:text-lg" data-testid="footer-closing">
               <span>© 2026 Grass Pass. An AI-powered service dedicated to real-world family exploration.</span>{" "}
               <span className="font-heading text-[1.75rem] leading-[1.05] font-extrabold tracking-tight text-balance sm:text-4xl lg:text-[2.75rem]">
                 <span className="text-footer-heading">Pocket the pencil.</span> <span className="text-footer-foreground">Leave the phone.</span>
@@ -146,7 +147,7 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <p className="mt-8 max-w-6xl text-xs leading-relaxed text-footer-muted">
+          <p className="mx-auto mt-8 max-w-5xl text-center text-xs leading-relaxed text-footer-muted">
             Map data ©{" "}
             <a className={credit} href="https://www.openstreetmap.org/copyright">
               OpenStreetMap

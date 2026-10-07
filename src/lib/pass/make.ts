@@ -158,15 +158,20 @@ export function passKey(parkId: string, band: AgeBand, nowMs: number): string {
  */
 export async function loadPass(id: string, now: number = Date.now()): Promise<Pass | null> {
   if (!PASS_ID_PATTERN.test(id)) return null;
-  // Pinned example passes (src/lib/pinned.ts) open from the repo when the store doesn't have them (or no longer can).
-  if (!plausiblePassId(id, now)) return pinnedPassById(id);
+  // Pinned example passes (src/lib/pinned.ts) always open from the repo, before any store read. A pass id is only
+  // "park + band + day + that store's variant counter", so a pass pinned from a local run can share its id with a
+  // DIFFERENT pass that the deployed store made the same day (pin-examples 2026-10-07: the preview's store already had
+  // White Rock / Celebration passes for Oct 7). The link on a pinned card must open the pass the card describes.
+  const pinned = pinnedPassById(id);
+  if (pinned) return pinned;
+  if (!plausiblePassId(id, now)) return null;
   const stored = await memoPassRead(
     id,
     now,
     async () => (await passCache.get(id, now))?.value ?? null,
     (p) => !isDegraded(p),
   );
-  return stored ?? pinnedPassById(id);
+  return stored;
 }
 
 export type MakeDeps = {

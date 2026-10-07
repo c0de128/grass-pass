@@ -161,8 +161,9 @@ describe("failures show the exact §5.4 copy and are charged honestly", () => {
     });
     const r = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl));
     expect(r).toMatchObject({ ok: false, status: 503, error: { code: "OSM_UNAVAILABLE", message: PARKS_COPY.overpassDown } });
-    // No example pass is saved in this test, so the link is the pinned real example pass (src/lib/pinned.ts), never a made-up one.
-    expect(!r.ok && r.error.example).toEqual({ name: "Oak Point Park and Nature Preserve", href: "/pass/w556800335-6to10-20261006-1?example=1" });
+    // No example pass is saved in this test, so the link is the first pinned real example pass in EXAMPLE_PARKS order
+    // (src/lib/pinned.ts; White Rock, since Arbor Hills has none pinned), never a made-up one.
+    expect(!r.ok && r.error.example).toEqual({ name: "White Rock Lake Park", href: "/pass/w460905359-6to10-20261007-1?example=1" });
     expect(calls.map((c) => new URL(c.url).host)).toEqual([
       "nominatim.openstreetmap.org",
       ...OVERPASS_DEFAULT_URLS.map((u) => new URL(u).host),

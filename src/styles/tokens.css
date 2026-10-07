@@ -48,6 +48,10 @@
   --gp-band: #10291a; /* the dark "Why generic hunts fail" band and the footer */
   --gp-band-foreground: #eef3e2;
   --gp-band-muted: #b7c1b0; /* 8.3:1 on the band */
+  /* The home "The problem" section (Kevin, 2026-10-07): the logo's grass green as a big ticket panel. */
+  --gp-why: #137838; /* = --gp-primary, the logo ticket */
+  --gp-why-foreground: #ffffff; /* 5.57:1 on the panel */
+  --gp-why-muted: #e3f0dc; /* 4.71:1 on the panel */
   --gp-destructive: #b42318;
   --gp-border: rgb(16 41 26 / 0.12); /* soft card ring (decorative; cards are also set apart by fill and shadow) */
   --gp-line: #78867c; /* input outlines and control borders: 3.7:1 on white, 3.3:1 on the background */
@@ -77,6 +81,9 @@
     --gp-band: #050d07;
     --gp-band-foreground: #e6eedb;
     --gp-band-muted: #aeb6a6;
+    --gp-why: #137838; /* the same logo green as light mode (the brand colour, not the lighter dark-mode button green) */
+    --gp-why-foreground: #ffffff;
+    --gp-why-muted: #e3f0dc;
     --gp-destructive: #ff8a7a;
     --gp-border: rgb(230 238 219 / 0.14);
     --gp-line: #7f907c; /* 4.4:1 on the card */
@@ -105,6 +112,9 @@
   --gp-band: #050d07;
   --gp-band-foreground: #e6eedb;
   --gp-band-muted: #aeb6a6;
+  --gp-why: #137838;
+  --gp-why-foreground: #ffffff;
+  --gp-why-muted: #e3f0dc;
   --gp-destructive: #ff8a7a;
   --gp-border: rgb(230 238 219 / 0.14);
   --gp-line: #7f907c;

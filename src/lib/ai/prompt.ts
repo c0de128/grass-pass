@@ -444,9 +444,10 @@ export const OLDER_VOICES = [
  * a reason), with field marks and behaviour, and no "child".
  */
 export const ADULT_VOICES = [
-  "Voice for this park: a naturalist's field notes: the field mark first, then exactly where on it to confirm it.",
+  // Round 8 (SEC-8-01): "confirm it" and "the closer mark that settles it" could read as "handle it"; the reader only looks.
+  "Voice for this park: a naturalist's field notes: the field mark first, then exactly where on it to see it.",
   "Voice for this park: a park ranger's walk: one precise detail and what it is for.",
-  "Voice for this park: a birder's or botanist's tip: what you notice from a distance, then the closer mark that settles it.",
+  "Voice for this park: a birder's or botanist's tip: what you notice from a distance, then the closer look (still hands off) that settles it.",
   "Voice for this park: a field-guide challenge in plain words: the one detail that tells it apart, and where to look for it.",
 ] as const;
 
@@ -473,7 +474,9 @@ export function readingRules(band: AgeBand, grade: string): string[] {
  */
 export function adultReadingRules(): string[] {
   return [
-    "- Write for a teen or adult who likes nature: plain adult sentences, one or two of 10 to 18 words in all. No baby talk or sound words (splish-splash), no \"Who am I?\" riddles, no exclamation marks, never \"kids\", \"friends\" or \"little\".",
+    "- Write for a teen or adult who likes nature: plain adult sentences, one or two of 10 to 18 words in all. No baby talk or sound words (splish-splash), no \"Who am I?\" or \"Who has ...?\" riddles, no exclamation marks, never \"kids\", \"friends\" or \"little\".",
+    // Round 8 judge C1: three water clues with "glitters like a mirror" on one example pass.
+    "- At most two clues about water on the pass, and never the same picture twice (glitters, sparkles, like a mirror).",
     "- Choose wildlife, plants and natural or built landmarks before play equipment (playgrounds, swings, slides).",
     "- Give real detail a person can check by eye, from the SOURCE: a colour or pattern and the exact part it is on, a shape, a size, a behaviour, or where on the plant or in the park it sits or grows. Say it in everyday words, the way a ranger talks on a walk. No filler words: every word helps confirm the find.",
     "- Hard finds are real naturalist challenges: the one visible mark that tells it apart from look-alikes, or a behaviour to wait for, stated in its SOURCE.",
@@ -545,7 +548,8 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Mix easy, medium and hard${hard}.`,
     "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
-    `- A good clue gives the ${who} ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.`,
+    // Round 8 (Q-8-04): a 13+ clue is checked by eye ("What rushing sound does the running water make?" was printed).
+    `- A good clue gives the ${who} ONE thing to check with their ${adult ? "eyes" : "eyes or ears"} that is special to that item and written in its SOURCE: a colour, shape, mark, size, ${adult ? "" : "sound, "}what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.`,
     // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches at Celebration
     // (the roof and pillars were the Find This Spot shelter's facts). Each clue's facts come from its own item only.
     // Short on purpose (prompt budget M8); the SPOT line below says its facts are for the riddle only.
@@ -559,7 +563,9 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Audit R3-C1: filler openers and sound clues for silent things.
     '- Never open with a filler word (Quick, Psst, Wow, Hmm, Ready): start with the clue itself.',
     // Round-6 judge C4: at most one listening clue a pass, and water is described by what the child sees.
-    `- Ask the ${who} to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the ${who} can see.`,
+    adult
+      ? "- Never ask the explorer to listen or describe a sound: every clue is something to see. For water, say what the explorer can see."
+      : `- Ask the ${who} to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the ${who} can see.`,
     `- Never write "a place with", "a place where" or "a spot where": say what the ${who} will see.`,
     // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
     // r7 follow-ups (M8): merged with the voice-switch rule below (one line, same two rules).
@@ -573,7 +579,12 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.
     ...(mix.max.lucky > 0
-      ? [`- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the ${who} might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.`]
+      ? [
+          adult
+            ? // Round 8 (Q-8-04): "Point to a ride with two wheels, pedals and handlebars" read like a kid's riddle on a 13+ pass.
+              `- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the explorer might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!". Describe the person or animal in plain adult words from its SOURCE (a rider in a helmet passing on the trail, a pet on a leash), never as a riddle about its parts ("a ride with two wheels").`
+            : `- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the ${who} might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.`,
+        ]
       : []),
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
     ...(mix.max.wild > 0

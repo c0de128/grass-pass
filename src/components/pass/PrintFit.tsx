@@ -8,6 +8,19 @@ export const PRINT_HEIGHT_PX = 10.2 * 96 - 8;
 export const PRINT_WIDTH_PX = 7.7 * 96;
 /** Never shrink below this (SPEC §8.4: an 11 pt clue prints >= 10 pt): a second page is more honest than unreadable text. */
 export const MIN_FIT = 0.91;
+/**
+ * Round 8 (Q-8-01): the floor for a teens & adults (13+) sheet. A 13+ sheet is the tallest by design (the 13+ prompt asks
+ * for 10-18 words a clue), and the first real full-feature one (Arbor Hills: model riddle, 2 Lucky Finds, the October
+ * box) did not fit at 0.91 even with every optional line left out. A 13+ sheet is never "tight" (KidPass passDensity), so
+ * its clue is 11.5 pt (snug) or 12.5 pt (roomy): at 0.87 it still prints >= 10 pt (SPEC §8.4), the checkbox stays >= 7 mm
+ * (8.3 mm x 0.87 = 7.2 mm) and the map column still widens so the map prints >= 3.1 in (mapColumnFor).
+ */
+export const ADULT_MIN_FIT = 0.87;
+
+/** The print floor for a sheet: kid passes keep MIN_FIT; a 13+ sheet (`data-audience="adult"` on .gp-kid) gets ADULT_MIN_FIT. */
+export function minFitFor(audience: string | undefined): number {
+  return audience === "adult" ? ADULT_MIN_FIT : MIN_FIT;
+}
 
 /** The map column at 100% (print.css default), in inches. */
 export const MAP_COL_IN = 3.27;
@@ -36,9 +49,9 @@ function kidZoomOf(root: ParentNode): number {
  * Scale factor so content `heightPx` tall fits one printed page: 1 when it already fits, else the
  * ratio rounded DOWN to 2 decimals, never below MIN_FIT.
  */
-export function fitFor(heightPx: number, pageHeightPx: number = PRINT_HEIGHT_PX): number {
+export function fitFor(heightPx: number, pageHeightPx: number = PRINT_HEIGHT_PX, minFit: number = MIN_FIT): number {
   if (!(heightPx > 0) || heightPx <= pageHeightPx) return 1;
-  return Math.max(MIN_FIT, Math.floor((pageHeightPx / heightPx) * 100) / 100);
+  return Math.max(minFit, Math.floor((pageHeightPx / heightPx) * 100) / 100);
 }
 
 /** Lays out an invisible off-screen copy of the sheet at the printed width (7.7 in) for measuring. */
@@ -77,17 +90,17 @@ function measuringCopy(sheet: HTMLElement): { height: (zoom: number, compact?: n
  * each line more room (fewer wraps), so the plain ratio is only a starting point; we step up from it
  * while the zoomed copy still fits.
  */
-export function bestFit(height: (zoom: number) => number | null, pageHeightPx: number = PRINT_HEIGHT_PX): number | null {
+export function bestFit(height: (zoom: number) => number | null, pageHeightPx: number = PRINT_HEIGHT_PX, minFit: number = MIN_FIT): number | null {
   const full = height(1);
   if (full === null) return null;
-  let fit = fitFor(full, pageHeightPx);
+  let fit = fitFor(full, pageHeightPx, minFit);
   if (fit === 1) return 1;
   // The plain ratio can be a little too big when a smaller scale also makes something taller (the
   // wider map column): step down until the copy really fits, never below the floor.
-  while (fit > MIN_FIT) {
+  while (fit > minFit) {
     const h = height(fit);
     if (h === null || h <= pageHeightPx) break;
-    fit = Math.max(MIN_FIT, Math.round((fit - 0.01) * 100) / 100);
+    fit = Math.max(minFit, Math.round((fit - 0.01) * 100) / 100);
   }
   for (let next = Math.round((fit + 0.01) * 100) / 100; next < 1; next = Math.round((next + 0.01) * 100) / 100) {
     const h = height(next);
@@ -114,10 +127,14 @@ export type PrintPlan = { fit: number; compact: number; overflow: boolean };
  * The print plan: the largest scale >= MIN_FIT with as few optional lines left out as possible. `overflow` is true
  * only when even MAX_COMPACT at MIN_FIT is taller than one page (the page then says it prints on 2 pages).
  */
-export function bestPlan(height: (zoom: number, compact: number) => number | null, pageHeightPx: number = PRINT_HEIGHT_PX): PrintPlan | null {
+export function bestPlan(
+  height: (zoom: number, compact: number) => number | null,
+  pageHeightPx: number = PRINT_HEIGHT_PX,
+  minFit: number = MIN_FIT,
+): PrintPlan | null {
   let last: PrintPlan | null = null;
   for (let compact = 0; compact <= MAX_COMPACT; compact++) {
-    const fit = bestFit((z) => height(z, compact), pageHeightPx);
+    const fit = bestFit((z) => height(z, compact), pageHeightPx, minFit);
     if (fit === null) return null;
     const h = height(fit, compact);
     if (h !== null && h <= pageHeightPx) return { fit, compact, overflow: false };
@@ -128,6 +145,13 @@ export function bestPlan(height: (zoom: number, compact: number) => number | nul
 
 /** Shown on screen above the sheet when even the compact sheet runs onto a second page (never on paper). */
 export const PRINT_TWO_PAGES = "This pass is long: it prints on 2 pages. The second page holds the end of the grown-up's answer key.";
+/** Q-8-05: the same line for a teens & adults (13+) sheet, which has no grown-up (its stub is the "Answer stub"). */
+export const PRINT_TWO_PAGES_ADULT = "This pass is long: it prints on 2 pages. The second page holds the end of the answer stub.";
+
+/** The 2-page line for a sheet's audience (kid wording unless the sheet says it is a 13+ sheet). */
+export function printTwoPagesText(audience: string | undefined): string {
+  return audience === "adult" ? PRINT_TWO_PAGES_ADULT : PRINT_TWO_PAGES;
+}
 
 /**
  * Safety net for the one-page rule (SPEC F6). Measures an off-screen copy of the sheet at the
@@ -137,17 +161,18 @@ export const PRINT_TWO_PAGES = "This pass is long: it prints on 2 pages. The sec
  * screen-only line. Without JavaScript the server-picked density (KidPass `data-density`) still applies.
  */
 export function PrintFit() {
-  const [overflow, setOverflow] = useState(false);
+  const [overflow, setOverflow] = useState<string | null>(null);
   useEffect(() => {
     const sheet = document.querySelector<HTMLElement>(".gp-sheet:not(.gp-measure)");
     if (!sheet) return;
     let cancelled = false;
     const measure = () => {
       if (cancelled) return;
+      const audience = sheet.querySelector<HTMLElement>(".gp-kid")?.dataset.audience;
       const copy = measuringCopy(sheet);
       let plan: PrintPlan | null;
       try {
-        plan = bestPlan(copy.height);
+        plan = bestPlan(copy.height, PRINT_HEIGHT_PX, minFitFor(audience));
       } finally {
         copy.done();
       }
@@ -158,7 +183,7 @@ export function PrintFit() {
       sheet.dataset.fit = String(plan.fit);
       sheet.style.setProperty("--gp-fit", String(plan.fit));
       sheet.style.setProperty("--gp-map-col", `${mapColumnFor(plan.fit, kidZoomOf(sheet))}in`);
-      setOverflow(plan.overflow);
+      setOverflow(plan.overflow ? printTwoPagesText(audience) : null);
     };
     void document.fonts?.ready.then(measure);
     return () => {
@@ -167,7 +192,7 @@ export function PrintFit() {
   }, []);
   return overflow ? (
     <p className="gp-screen-only mx-auto w-full max-w-[8.5in] text-lg font-semibold" role="status" data-testid="print-two-pages">
-      {PRINT_TWO_PAGES}
+      {overflow}
     </p>
   ) : null;
 }

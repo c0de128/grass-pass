@@ -23,6 +23,10 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   duplicate_id: { kind: "always", plain: "It uses the same find twice." },
   section_mismatch: { kind: "always", plain: "It puts a find in the wrong section." },
   danger: { kind: "always", plain: "It is about, or names, a blocked species (\"poison ivy\"), or says poisonous, toxic, venomous or stings." },
+  handling: {
+    kind: "always",
+    plain: "It tells the reader to touch, pick, crush, catch, chase, pet, hold, eat or collect something (\"Crush a leaf and smell it\"). A hint that says so is left out; a riddle that says so is replaced by our fixed line.",
+  },
   not_grounded: { kind: "always", plain: "Its proof quote isn't in that find's facts, word for word." },
   other_feature: { kind: "always", plain: "A Park Find clue describes a different thing (a roof and pillars for a bench): its facts never say that." },
   name_leak: {
@@ -39,6 +43,7 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
     plain: "A \"how many\" that gives its answer away or has nothing to count, or a question mixed with a count.",
   },
   silent_sound: { kind: "always", plain: "It asks the child to listen for something silent, or whose facts name no sound." },
+  listening: { kind: "preference", plain: "On a teens & adults (13+) pass: it asks the reader to listen. That pass is about what you can see." },
   filler_only: { kind: "always", plain: "Nothing real was left once the filler opener (\"Quick!\") was cut." },
   odd_wording: { kind: "always", plain: "It opens with words people don't say (\"Explore for a bug\")." },
   riddle_frame: { kind: "always", plain: "A second clue where the thing talks as itself (\"I am ...\")." },
@@ -57,7 +62,7 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   wrong_kind: { kind: "always", plain: "It calls the find the wrong kind of thing (\"a bug\" for a spider, \"a pet\" for a wild fish, \"a fungus\" for a lichen)." },
   copies_example: { kind: "always", plain: "It copies an example sentence from our instructions." },
   copies_source: { kind: "preference", plain: "It copies 4+ words in a row from its facts instead of using kid words." },
-  repeats_clue: { kind: "low-data", plain: "It nearly repeats another clue on the pass or its sentence pattern, or is a second \"listen for\" clue." },
+  repeats_clue: { kind: "low-data", plain: "It nearly repeats another clue on the pass or its sentence pattern, or is a second \"listen for\" clue. A third pond, creek or fountain find, or a second \"glitters like a mirror\" picture, only goes first when a spare exists." },
   repeats_opening: {
     kind: "always",
     plain: "It starts with the same first word as another clue (a stock start like \"Can you find\" only goes first when a spare exists).",
@@ -65,6 +70,10 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   stock_frame: {
     kind: "preference",
     plain: "It starts with a worn-out frame we tell the model not to use (\"Somewhere you will see a\"). If no spare replaces it, code swaps the frame for a plain word (\"Spot a ...\").",
+  },
+  kid_wording: {
+    kind: "preference",
+    plain: "On a teens & adults (13+) pass: kid-style wording, such as \"a ride with two wheels\" for a bike, a \"Who has ...?\" question, an exclamation mark, or \"little\" or \"friends\".",
   },
   over_section_max: { kind: "always", plain: "Its section already has as many finds as the mix allows." },
 };

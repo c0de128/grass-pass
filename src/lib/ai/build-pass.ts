@@ -70,7 +70,7 @@ import {
 import { SPOT_COPY } from "@/lib/spot/types";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
-import { fixLichenWho } from "./jargon";
+import { fixPlantWho } from "./jargon";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
 import { capDifficulty, mergeResults, parentNoteFor, retryThreshold, rewriteStockFrame, soundNotFirst, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
@@ -697,7 +697,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       section: v.item.section,
       // Round-6 Q-6-03: "Who has bright-orange parts ...?" for a lichen reads as an animal: the printed clue says "What".
       // Done here, on the finished pass, so the refill prompts still list the first words the model really wrote.
-      clue: v.item.section === "wild" ? fixLichenWho(clueOf(v), v.item.taxon) : clueOf(v),
+      // Round 8 (Q-8-04): every plant and fungus, not only lichens ("Who has large, intricate flowers" for a passionflower).
+      clue: v.item.section === "wild" ? fixPlantWho(clueOf(v), v.item) : clueOf(v),
       lookWhere: v.lookWhere,
       difficulty: v.difficulty,
       evidence: v.item.evidence,

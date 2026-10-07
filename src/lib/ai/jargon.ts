@@ -172,6 +172,14 @@ const RANGE_RE = new RegExp(
   "i",
 );
 
+/**
+ * Round 8 (Q-8-04): "Peek for a bird of prey that breeds from Alaska to Panama." The PLACE list can never name every
+ * place, so a range is also "from <Capitalised place> to/through <Capitalised place>" (case-sensitive: a place name is
+ * capitalised; "from the path to the pond" is not a range). START and X are the Find This Spot map's own words.
+ */
+const FROM_TO_RE =
+  /\b[Ff]rom\s+(?:the\s+)?(?!START\b|X\b)\p{Lu}[\p{L}.'-]*(?:\s+\p{Lu}[\p{L}.'-]*){0,2}\s+(?:to|through|into|and)\s+(?:the\s+)?(?!START\b|X\b)\p{Lu}[\p{L}.'-]*/u;
+
 const COLOURS = "(?:white|black|brown|grey|gray|red|orange|yellow|green|blue|purple|pink|tan|gold|golden|silver|dark|pale|bright)";
 /**
  * "Watch for a bird that is black." The whole trait is one or two colour words: fits half the park.
@@ -195,7 +203,7 @@ export function triviaProblem(clue: string, band: AgeBand | undefined): string |
  */
 export function triviaKind(clue: string, band: AgeBand | undefined): { kind: "nothing_to_see" | "word"; match: string } | null {
   const t = norm(clue).trim();
-  const range = RANGE_RE.exec(t);
+  const range = RANGE_RE.exec(t) ?? FROM_TO_RE.exec(t);
   if (range) return { kind: "nothing_to_see", match: range[0].trim() };
   if (BARE_COLOUR_RE.test(t)) return { kind: "nothing_to_see", match: "a bare colour" };
   const trivia = TRIVIA_RE.exec(t);
@@ -223,8 +231,11 @@ export const KIND_TAXA = {
 
 /** Round-6 Q-6-03: to a child a lichen is not a mushroom or a fungus; the clue says "lichen" (or what it looks like). */
 const FUNGUS_WORDS = new Set(["fungus", "fungi", "funguses", "mushroom", "mushrooms", "toadstool", "toadstools"]);
-/** Round-6 Q-6-03: "Who has bright-orange rims ...?" for a lichen: "who" is for animals. */
-const WHO_RE = /^(\s*(?:guess\s+)?)who\b/i;
+/**
+ * Round-6 Q-6-03: "Who has bright-orange rims ...?" for a lichen: "who" is for animals. Round 8: "Who can find ...?" is a
+ * challenge to the reader, not the thing, so it is never swapped ("What can find" would be nonsense).
+ */
+const WHO_RE = /^(\s*(?:guess\s+)?)who\b(?!\s+(?:can|could|will|would|might|may|spots?|finds?|sees?|gets?)\b)/i;
 
 const isLichen = (taxon: { taxonId: number; ancestorIds: readonly number[] } | undefined) =>
   !!taxon && [KIND_TAXA.lichens, KIND_TAXA.lichinomycetes].some((id) => taxon.taxonId === id || taxon.ancestorIds.includes(id));
@@ -237,6 +248,42 @@ const isLichen = (taxon: { taxonId: number; ancestorIds: readonly number[] } | u
 export function fixLichenWho(clue: string, taxon: { taxonId: number; ancestorIds: readonly number[] } | undefined): string {
   if (!isLichen(taxon)) return clue;
   return clue.replace(WHO_RE, (_m, pre: string) => `${pre}${pre ? "what" : "What"}`);
+}
+
+/** iNaturalist kingdoms that are never a "who" (the same ids as validate.ts SILENT_TAXA). */
+const PLANTAE = 47126;
+const FUNGI = 47170;
+/** Pool kinds (wild.ts) that are never a "who", for an item with no ancestor list. */
+const NOT_A_WHO_KINDS: ReadonlySet<string> = new Set(["plant", "fungus or lichen"]);
+
+/**
+ * Round 8 (Q-8-04): "Who has large, intricate flowers with prominent styles and stamens?" (purple passionflower, the
+ * first live 13+ pass). The lichen swap (fixLichenWho) for every plant and fungus, every band: the printed clue says
+ * "What". Code changes only that first word; every other clue comes back unchanged.
+ */
+export function fixPlantWho(clue: string, item: { taxon?: { taxonId: number; ancestorIds: readonly number[] }; kind?: string }): string {
+  const t = item.taxon;
+  const inKingdom = !!t && ([PLANTAE, FUNGI].some((id) => t.taxonId === id || t.ancestorIds.includes(id)) || isLichen(t));
+  const byKind = (!t || t.ancestorIds.length === 0) && NOT_A_WHO_KINDS.has(item.kind ?? "");
+  if (!inKingdom && !byKind) return clue;
+  return clue.replace(WHO_RE, (_m, pre: string) => `${pre}${pre ? "what" : "What"}`);
+}
+
+/**
+ * Round 8 (Q-8-04): kid-style wording on a teens & adults (13+) pass, or null. The 13+ prompt asks for "plain adult
+ * sentences ... no baby talk, no Who am I? riddles, no exclamation marks, never kids, friends or little"; this is the
+ * code side of that list (drop reason `kid_wording`, a preference: the first to go when a spare can replace it).
+ * "Point to a ride with two wheels, pedals and handlebars" (a cyclist) and "Who has ...?" read like a kid's riddle.
+ */
+const KID_WORDS_RE =
+  /\b(?:kids?|kiddos?|friends?|buddy|buddies|little|tiny|teeny|itty|doggy|doggie|puppy|kitty|birdie|bunny|tummy|critters?|cute|yummy|a\s+ride\s+with)\b/i;
+export function kidWordingProblem(clue: string): string | null {
+  const t = norm(clue);
+  const word = KID_WORDS_RE.exec(t);
+  if (word) return word[0];
+  if (t.includes("!")) return "!";
+  if (/^\s*who\b(?!\s+(?:can|could|will)\b)/i.test(t)) return "a Who question";
+  return null;
 }
 
 /** Kind words a clue calls its find by. */

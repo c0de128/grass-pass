@@ -22,7 +22,18 @@ type State =
   | { kind: "done"; report: ReportKind; message: string }
   | { kind: "failed"; message: string };
 
-export function ItemReport({ passId, itemRef, findNumber }: { passId: string; itemRef: string; findNumber: number }) {
+export function ItemReport({
+  passId,
+  itemRef,
+  findNumber,
+  confirmNote,
+}: {
+  passId: string;
+  itemRef: string;
+  findNumber: number;
+  /** Q-8-05: the words after "Report find N as not safe?" for this pass's audience (AUDIENCE_COPY.unsafeConfirmNote). */
+  confirmNote: string;
+}) {
   const [state, setState] = useState<State>({ kind: "idle" });
   const busy = state.kind === "sending";
   const done = state.kind === "done";
@@ -71,7 +82,7 @@ export function ItemReport({ passId, itemRef, findNumber }: { passId: string; it
     <div className="mt-1 flex flex-col gap-1 print:hidden" role="group" aria-label={`Report find ${findNumber}`}>
       {state.kind === "confirm-unsafe" ? (
         <div className="flex flex-wrap items-center gap-2">
-          <p className="text-sm font-semibold">Report find {findNumber} as not safe? Grown-ups only, please.</p>
+          <p className="text-sm font-semibold">Report find {findNumber} as not safe?{confirmNote}</p>
           <button
             type="button"
             onClick={() => void send("unsafe")}

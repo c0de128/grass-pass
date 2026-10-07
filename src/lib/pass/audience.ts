@@ -23,6 +23,10 @@ export type AudienceCopy = {
   waterLine: string;
   /** How the code-written tip says "be careful by the water" ("stay close" for a kid with a grown-up). */
   nearWaterTip: string;
+  /** Q-8-05 / UX-8-05: who a find report helps, in the "Back from the park?" line on the pass page. */
+  reportHelps: string;
+  /** Q-8-05: added after "Report find N as not safe?" (a kid pass asks for a grown-up; a 13+ pass has none). */
+  unsafeConfirmNote: string;
   /**
    * The printed tear-line words and the print hints on /pass/[id] and its print page are in those files (the Gemma
    * copy check, tests/unit/copy-check.test.ts, finds the kid wording there); the 13+ wording is here.
@@ -39,6 +43,8 @@ export const AUDIENCE_COPY: Record<Audience, AudienceCopy> = {
     answerKeySummary: "Answer key (don't peek, kids!)",
     waterLine: SAFETY_LINES.water,
     nearWaterTip: "stay close",
+    reportHelps: "It helps the next family",
+    unsafeConfirmNote: " Grown-ups only, please.",
   },
   adult: {
     stayClose: "Stay on the paths. Tell someone where you will be.",
@@ -49,6 +55,8 @@ export const AUDIENCE_COPY: Record<Audience, AudienceCopy> = {
     answerKeySummary: "Answer key (no peeking until you're done)",
     waterLine: "Stay on the path near water.",
     nearWaterTip: "stay on the path",
+    reportHelps: "It helps the next explorer",
+    unsafeConfirmNote: "",
   },
 };
 

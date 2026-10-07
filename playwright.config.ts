@@ -33,6 +33,8 @@ export default defineConfig({
       // Keyless CI: no example warm-up (it would only end in "no AI key"); the home page then says the
       // examples are switched off, and examples-about.spec.ts checks that copy and skips.
       PREWARM_EXAMPLES: process.env.PREWARM_EXAMPLES ?? (process.env.CI ? "0" : "1"),
+      // Round 8 (Q-8-01): the print tests open recorded real passes from tests/fixtures (src/lib/pass/e2e-fixtures.ts).
+      GP_E2E_FIXTURE_PASSES: "1",
       // Every test browser shares one IP; the in-process pre-limiter (default 40 burst, 4/s) would trip on
       // parallel page loads. A big burst with a slow refill: round1.spec.ts floods it with its own
       // forwarded address and must see 429s even though page renders take a while.

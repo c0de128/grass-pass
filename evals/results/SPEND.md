@@ -126,3 +126,9 @@ Builder AD (eval r9, 2026-10-06 CDT, branch `eval-r9` on main `43ceae0`): speed 
 Builder (age-13plus, 2026-10-07 CDT, branch `age-13plus` on main `2f696f1`): two 13+ checks on Celebration, Oak Point and
 White Rock, `partial-1615` (first 13+ prompt, 6 calls, EVAL_MAX_CALLS=10) and `partial-1617` (the 13+ prompt with the
 anti-jargon and no-baby-talk lines, 6 calls, EVAL_MAX_CALLS=6) = **12 calls, about $0.0098**. SerpApi: 0 searches.
+
+Builder B (round 8, 2026-10-07 ~6:32 PM CDT, branch `r8-content`): live check of the round-8 content changes on two 13+
+passes through `makePass` (scratch Vitest harness, call cap 6): Arbor Hills 2 calls (7 of 8 finds, model riddle) and White
+Rock 3 calls (8 of 8, code riddle) = **5 calls**, 11.0 + 5.8 + 10.2 + 9.2 + 6.4 s. Token counts were not captured; at the
+13+ run's average (about $0.0008 a call) that is **about $0.004**. SerpApi: 0 searches (key blanked, requests refused).
+Both passes are stored in tests/fixtures (`pass-*-13plus-r8-live.json`).

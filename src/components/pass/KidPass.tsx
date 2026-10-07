@@ -5,7 +5,7 @@ import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icon
 import { SECTION_LABELS } from "@/components/ui/Chip";
 import { safeParkName } from "@/lib/ai/validate";
 import { formatDay } from "@/lib/pass/format";
-import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
+import { AGE_BAND_INFO, type Audience, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 /**
  * The 1-colour black logo for print (ADR 0004). Referenced by path, never inlined: the brand
@@ -69,10 +69,14 @@ export const TIGHT_LINE_BUDGET = 26;
 
 export type Density = "roomy" | "snug" | "tight";
 
-/** How tightly the kid pass is set, from the text length and whether the side slots are used. */
-export function passDensity(items: readonly PassItem[], hasExtras: boolean): Density {
+/**
+ * How tightly the kid pass is set, from the text length and whether the side slots are used.
+ * Round 8 (Q-8-01): a teens & adults (13+) sheet is never "tight" (the 0.86 zoom): it is "snug" instead and may scale
+ * down to PrintFit's ADULT_MIN_FIT, so its 11.5 pt clue still prints >= 10 pt (SPEC §8.4). Kid passes are unchanged.
+ */
+export function passDensity(items: readonly PassItem[], hasExtras: boolean, audience: Audience = "kid"): Density {
   const lines = estimatedLines(items);
-  if (lines > TIGHT_LINE_BUDGET) return "tight";
+  if (lines > TIGHT_LINE_BUDGET) return audience === "adult" ? "snug" : "tight";
   return hasExtras || lines > SNUG_LINE_BUDGET ? "snug" : "roomy";
 }
 
@@ -91,12 +95,13 @@ export type KidPassProps = {
  */
 export function KidPass({ pass, spot, october }: KidPassProps) {
   const hasExtras = Boolean(spot) || Boolean(october);
-  const density = passDensity(pass.items, hasExtras);
+  const audience = AGE_BAND_INFO[pass.ageBand].audience;
+  const density = passDensity(pass.items, hasExtras, audience);
   const logoHeight = 48;
   const n = pass.items.length;
 
   return (
-    <section className="gp-kid" aria-labelledby="kid-pass-title" data-density={density}>
+    <section className="gp-kid" aria-labelledby="kid-pass-title" data-density={density} data-audience={audience}>
       <div className="gp-kid-head">
         <Image
           src={PRINT_LOGO_SRC}

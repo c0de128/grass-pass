@@ -279,7 +279,8 @@ export function SpotMap({ spot, parkName, variant = "print", headingLevel = 2 }:
         <Chip kind="spot" />
       </H>
       <p className="text-lg font-semibold">{spot.riddle}</p>
-      <p className="text-base">{spot.map.start ? "Start at START and follow the map to the X." : "Follow the map to the X."}</p>
+      {/* UX-8-05: the fixed code riddle already says "Follow the map ... to the X", so the second line would repeat it. */}
+      {spot.riddleBy === "code" ? null : <p className="text-base">{spot.map.start ? "Start at START and follow the map to the X." : "Follow the map to the X."}</p>}
       <figure className="flex max-w-xl flex-col gap-2">
         <div className="gp-spot-screen overflow-hidden rounded-control border-2 border-line bg-white">
           <SpotMapSvg drawing={drawing} title={mapDescription(parkName, spot)} />

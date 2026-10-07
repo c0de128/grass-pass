@@ -20,6 +20,7 @@ import { aiCapFor, hitRateLimit, limitsConfig, quotaUsage, reserveQuota, type Qu
 import { dailyPaceState, restingError } from "@/lib/limits/budget";
 import { forgetPassRead, memoPassRead, plausiblePassId, resetPassReads } from "@/lib/limits/pass-read";
 import { pinnedPassById } from "@/lib/pinned";
+import { e2eFixturePass } from "./e2e-fixtures";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
@@ -164,6 +165,9 @@ export async function loadPass(id: string, now: number = Date.now()): Promise<Pa
   // White Rock / Celebration passes for Oct 7). The link on a pinned card must open the pass the card describes.
   const pinned = pinnedPassById(id);
   if (pinned) return pinned;
+  // Round 8 (Q-8-01): print tests only (GP_E2E_FIXTURE_PASSES=1, never in production): recorded real passes.
+  const fixture = e2eFixturePass(id);
+  if (fixture) return fixture;
   if (!plausiblePassId(id, now)) return null;
   const stored = await memoPassRead(
     id,

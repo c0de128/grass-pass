@@ -10,7 +10,7 @@ import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatDay, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
-import { copyFor } from "@/lib/pass/audience";
+import { AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
 import { AGE_BAND_INFO, isAdultBand, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
@@ -64,14 +64,17 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
         {reports && pass.items.some((it) => it.ref) ? (
           <p className="rounded-control bg-muted px-3 py-2 text-sm print:hidden" data-testid="report-intro">
             {reports.signedIn ? (
-              "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes."
+              // Q-8-05 / UX-8-05: a 13+ pass has no family (the kid line is the Gemma-reviewed copy, kept word for word).
+              isAdultBand(pass.ageBand)
+                ? `Back from the park? Tap what you found. ${AUDIENCE_COPY.adult.reportHelps}, and a find nobody can spot (or that isn't safe) gets left off new passes.`
+                : "Back from the park? Tap what you found. It helps the next family, and a find nobody can spot (or that isn't safe) gets left off new passes."
             ) : (
               <>
                 {isAdultBand(pass.ageBand) ? "Back from the park?" : "Grown-ups: back from the park?"}{" "}
                 <Link href={`/signin?from=${encodeURIComponent(`/pass/${pass.id}`)}`} prefetch={false} className="font-semibold text-link underline underline-offset-4">
                   Sign in
                 </Link>{" "}
-                to tell us what you found. It helps the next family, and a find nobody can spot (or that isn&apos;t safe) gets left off new passes.
+                to tell us what you found. {copyFor(pass.ageBand).reportHelps}, and a find nobody can spot (or that isn&apos;t safe) gets left off new passes.
               </>
             )}
           </p>
@@ -110,7 +113,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
                             {reportStatsLine(reports.stats[it.ref])}
                           </p>
                         ) : null}
-                        {reports?.signedIn && it.ref ? <ItemReport passId={pass.id} itemRef={it.ref} findNumber={numbered.get(it) ?? 0} /> : null}
+                        {reports?.signedIn && it.ref ? <ItemReport passId={pass.id} itemRef={it.ref} findNumber={numbered.get(it) ?? 0} confirmNote={copyFor(pass.ageBand).unsafeConfirmNote} /> : null}
                       </div>
                     </li>
                   ))}

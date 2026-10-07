@@ -25,7 +25,8 @@ import { hasUrlOrMarkup } from "@/lib/safety/contact";
 import { blockedBy, blockedWordIn, dangerClueWord, SAFETY_LINES } from "@/lib/safety/danger-taxa";
 import { isAdultBand, type AgeBand } from "@/lib/pass/constants";
 import { otherFeatureWord } from "./feature-words";
-import { jargonProblem, triviaKind, wrongKindWord } from "./jargon";
+import { fixPlantWho, jargonProblem, kidWordingProblem, triviaKind, wrongKindWord } from "./jargon";
+import { handlingInstruction } from "@/lib/safety/handling";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
 import { PROMPT_EXAMPLE_TEXTS, STOCK_FRAMES, STOCK_OPENINGS, STOCK_PHRASES, type Mix } from "./prompt";
@@ -43,6 +44,7 @@ export const DROP_REASONS = [
   "duplicate_id",
   "section_mismatch",
   "danger",
+  "handling",
   "not_grounded",
   "other_feature",
   "name_leak",
@@ -53,6 +55,7 @@ export const DROP_REASONS = [
   "wrong_count",
   "broken_count",
   "silent_sound",
+  "listening",
   "filler_only",
   "odd_wording",
   "riddle_frame",
@@ -65,6 +68,7 @@ export const DROP_REASONS = [
   "repeats_clue",
   "repeats_opening",
   "stock_frame",
+  "kid_wording",
   "over_section_max",
 ] as const;
 
@@ -86,13 +90,15 @@ const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
   "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "jargon", "copies_example", "repeats_clue",
   // r7 follow-ups: a wrong kind word ("a big bug" for a tarantula) and nothing-to-see trivia dropped on a pool with spares.
   "wrong_kind", "trivia",
+  // Round 8 (SEC-8-01): a touch/pick/catch instruction.
+  "handling",
 ]);
 
 /**
  * Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening and
  * name_trait on every pass).
  */
-export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait" | "trivia" | "stock_frame">;
+export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait" | "trivia" | "stock_frame" | "kid_wording" | "listening">;
 
 export type ValidationResult = {
   items: ValidItem[];
@@ -345,7 +351,7 @@ export type ValidateOptions = {
    */
   allowRepeatedOpenings?: boolean;
   /** Clues already kept by an earlier call of this pass (the refill): repeats are checked against them too. */
-  prior?: readonly Pick<ValidItem, "clue">[];
+  prior?: readonly (Pick<ValidItem, "clue"> & { item?: Pick<PoolItem, "id"> })[];
   /** Audit R5-C3: the pass's age band (the jargon and trivia checks allow a few more words for 10-13). */
   band?: AgeBand;
   /** Eval tooling (evals/replay.ts): told every drop with the item id and the clue (no effect on the result). */
@@ -439,6 +445,12 @@ export function validateDraft(
       drop("danger");
       continue;
     }
+    // Round 8 (SEC-8-01): "Crush a leaf and smell it", "Run your fingers along the bark", "Catch this frog": a contact
+    // instruction is removed in code, every band (the prompt rule alone was the only guard).
+    if (handlingInstruction(d.clue) !== null) {
+      drop("handling");
+      continue;
+    }
     const normSource = normalizeForMatch(item.sourceText);
     let sourceQuote = d.sourceQuote;
     if (!exactMatch(sourceQuote, normSource)) {
@@ -485,6 +497,11 @@ export function validateDraft(
     // leave the hint out (S8b). lookWhere is optional on the pass; the answer is never printed for the kid.
     // A name trait word in the hint ("by the white flowers") is left out too.
     let lookWhere = d.lookWhere;
+    // Round 8 (SEC-8-01): a hint that says to touch or pick something is left out (the clue is kept).
+    if (lookWhere && handlingInstruction(lookWhere) !== null) {
+      lookWhere = "";
+      lookWhereCleared++;
+    }
     if (nameLeak(lookWhere, item.nameWords) || (traits.length > 0 && nameLeak(lookWhere, traits)) || traitPartLeak(lookWhere, item.nameTraitParts ?? []) !== null) {
       lookWhere = "";
       lookWhereCleared++;
@@ -538,6 +555,10 @@ export function validateDraft(
       drop("silent_sound");
       continue;
     }
+    // Round 8 (Q-8-04): "What rushing sound does the running water make?" on the first live 13+ pass. The 13+ brief is
+    // "detail a person can check by eye, no sound words": on a 13+ pass a listening clue is the first to go when a spare
+    // can replace it (a hard drop would print 7 of 8 finds: 7 is above the refill threshold). Kids keep at most one.
+    const listening = opts.band !== undefined && isAdultBand(opts.band) && isSoundClue(d.clue);
     // R2-M5: "Look for a tree with seeds or fruit." fits hundreds of species; "white flowers" proved by
     // "show it with flowers" was never checked.
     // Content tuning: on a low-data pool, a clue whose describing word is in its own quote, and that
@@ -628,6 +649,13 @@ export function validateDraft(
       }
       style ??= "repeats_clue";
     }
+    // Round 8 judge C1: "Count the 2 cold water spots…", "…paths that carry you across water", "Check the water that
+    // glitters like a mirror" (3 of 3 hero lines). At most MAX_WATER_CLUES clues about water a pass, and the shine
+    // imagery ("glitters", "like a mirror", "sparkles") once. A preference: the first to go when a spare can replace it.
+    // As a hard drop it cut run -8's Celebration r1 (pond "like a mirror", fountain "glitters") from 8 to 7 finds, and 7
+    // of 8 is above the refill threshold, so nothing would replace it.
+    if (waterRepeat({ clue: d.clue, item }, earlier) !== null) style ??= "repeats_clue";
+    if (listening) style ??= "listening";
     // Audit R4-C2: "Point to me; I am a board ...", "Scan for me; I am a metal cooker ..." on 6 of 8 clues.
     // One clue in which the thing talks as "I" is a riddle; a second one on the same pass is a tic.
     if (isRiddleFrame(d.clue) && earlier.some((k) => isRiddleFrame(k.clue))) {
@@ -639,6 +667,11 @@ export function validateDraft(
     // still printed gets a plain first word on the finished pass (build-pass.ts, `rewriteStockFrame`). A hard drop was
     // tried first: on run -8's answers it made 8 more passes short, each needing a refill call (M3, M8).
     if (stockFrame(d.clue) !== null) style ??= "stock_frame";
+    // Round 8 (Q-8-04): kid wording on a 13+ pass ("a ride with two wheels", "Who has …?", "!"): the first to go when a
+    // spare can replace it. A plant's "Who" is checked as printed ("What", build-pass.ts fixPlantWho), so it is fine.
+    if (opts.band && isAdultBand(opts.band) && kidWordingProblem(item.section === "wild" ? fixPlantWho(d.clue, item) : d.clue) !== null) {
+      style ??= "kid_wording";
+    }
     // A stock opening ("Can you find ..."): only a preference.
     if (style === undefined && stockOpening(d.clue) !== null) {
       style = "repeats_opening";
@@ -771,7 +804,7 @@ export function retryThreshold(n: number): number {
 /** What the riddle is checked against: the code-picked target and its code-written fact sheet. */
 export type SpotCheckTarget = { id: string; sourceText: string; nameWords: readonly string[] };
 
-export type SpotReason = "missing" | "schema" | "wrong_target" | "url_or_markup" | "danger" | "not_grounded" | "name_leak" | "number_not_in_source";
+export type SpotReason = "missing" | "schema" | "wrong_target" | "url_or_markup" | "danger" | "handling" | "not_grounded" | "name_leak" | "number_not_in_source";
 
 /**
  * The model's riddle for the X, with the same checks as a clue (SPEC 6.2): spec zod schema, the one
@@ -789,6 +822,8 @@ export function validateSpot(raw: unknown, target: SpotCheckTarget): { ok: true;
   if (d.targetId !== target.id) return { ok: false, reason: "wrong_target" };
   if (hasUrlOrMarkup(d.riddle)) return { ok: false, reason: "url_or_markup" };
   if (blockedWordIn(d.riddle) || dangerClueWord(d.riddle) !== null) return { ok: false, reason: "danger" };
+  // Round 8 (SEC-8-01): the riddle never says to touch, pick or hold anything either (the fixed code line is printed).
+  if (handlingInstruction(d.riddle) !== null) return { ok: false, reason: "handling" };
   if (!isGrounded(d.sourceQuote, target.sourceText)) return { ok: false, reason: "not_grounded" };
   if (nameLeak(d.riddle, target.nameWords)) return { ok: false, reason: "name_leak" };
   if (numbersNotIn(d.riddle, target.sourceText).length > 0) return { ok: false, reason: "number_not_in_source" };
@@ -1521,6 +1556,26 @@ export function hintContradicts(clue: string, lookWhere: string): boolean {
 
 /** Words that put a find by the water ("Look: near the water", "a walkway that goes high over water"). */
 const WATER_WORD_RE = /\b(?:water|waters|pond|ponds|lake|lakes|creek|creeks|stream|streams|river|rivers|shore|shoreline|marsh|swamp)\b/i;
+
+/** Round 8 judge C1: at most this many water-feature finds on one pass (a lake park still gets two). */
+export const MAX_WATER_CLUES = 2;
+/** Park Finds whose own nature is water (pool/park.ts WATER_KINDS): a bridge "over water" is not one of them. */
+const WATER_FEATURE_IDS: ReadonlySet<string> = new Set(["osm-water", "osm-creek", "osm-fountain", "osm-pool"]);
+/** Round 8 judge C1: the shine imagery that repeated on the example passes ("glitters like a mirror", "shines like a mirror"). */
+const SHINE_RE = /\b(?:mirrors?|glitter\w*|sparkl\w*|shimmer\w*|glisten\w*|gleam\w*|shines?|shiny|shining)\b/i;
+
+/**
+ * Round 8 judge C1: why this find repeats the pass's water picture, or null: a third water-feature find (pond, creek,
+ * fountain, pool), or shine imagery ("glitters", "like a mirror") when an earlier clue on the pass already has some.
+ */
+export function waterRepeat(
+  v: { clue: string; item: Pick<PoolItem, "id"> },
+  earlier: readonly (Pick<ValidItem, "clue"> & { item?: Pick<PoolItem, "id"> })[],
+): string | null {
+  if (WATER_FEATURE_IDS.has(v.item.id) && earlier.filter((k) => k.item && WATER_FEATURE_IDS.has(k.item.id)).length >= MAX_WATER_CLUES) return "a third water feature";
+  if (SHINE_RE.test(v.clue) && earlier.some((k) => SHINE_RE.test(k.clue))) return "shine imagery twice";
+  return null;
+}
 
 /**
  * Round-6 quality Q-6-02: the water line came only from water and creek Park Finds, so a bridge "high over water",

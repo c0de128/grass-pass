@@ -99,3 +99,10 @@ Builder W (self-host row, 2026-10-06 CDT): the two rows above ran `gemma4-e2b-8k
 | 2026-10-06T23:53:10.837Z | 2026-10-06-partial-1853.md | 4 | 14692 | 1753 | $0.0035 |
 
 Builder Y (eval r7, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 48.9 answer tokens/s) + full run `2026-10-06-7` 111 calls $0.0894 + 10-13 smoke `partial-1853` 4 calls $0.0035 = **116 calls, about $0.0930**. SerpApi: 0 searches.
+
+| Started (UTC) | Results | Model calls | Prompt tokens | Completion tokens | USD |
+|---|---|---|---|---|---|
+| 2026-10-07T01:49:04.090Z | 2026-10-06-8.md | 126 | 261682 | 38984 | $0.0897 |
+| 2026-10-07T02:21:23.253Z | 2026-10-06-partial-2121.md | 6 | 18224 | 2224 | $0.0044 |
+
+Builder AB (eval r8, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 45.7 answer tokens/s) + full run `2026-10-06-8` 126 calls $0.0897 + 10-13 smoke `partial-2121` 6 calls $0.0044 + re-making the 4 example passes on a local server (not an eval; 6 Gemma calls, 17,265 prompt + 2,443 completion tokens, about $0.0043) = **139 calls, about $0.0985**. SerpApi: 0 searches.

@@ -43,6 +43,7 @@ function load(): ReadonlyMap<string, Pass> {
 
 /** A recorded test pass by id, only when GP_E2E_FIXTURE_PASSES=1; null otherwise. */
 export function e2eFixturePass(id: string, env: Record<string, string | undefined> = process.env): Pass | null {
-  if (env[E2E_FIXTURE_ENV] !== "1") return null;
+  // Belt and braces: never on a Vercel production deployment, whatever the env says.
+  if (env[E2E_FIXTURE_ENV] !== "1" || env.VERCEL_ENV === "production") return null;
   return (cache ??= load()).get(id) ?? null;
 }

@@ -528,6 +528,7 @@ async function buildCounted(ctx: {
           return r.ticket;
         },
         startedAt: ctx.startedAt,
+        warmup: ctx.deps.internal === true,
         modelLogger: ctx.deps.modelLogger,
         onPoolsReady: startOctober,
         featuresPlan,

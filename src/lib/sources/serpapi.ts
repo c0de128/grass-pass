@@ -116,6 +116,8 @@ export type SerpapiDeps = {
   now?: () => number;
   /** Called right before a request is sent (charges the caller's per-IP daily share). */
   onStart?: () => void;
+  /** The server's example warm-up: also limited to its share of the daily cap (src/lib/limits/serpapi.ts). */
+  warmup?: boolean;
 };
 
 /** "No results" answers come back as HTTP 200 with this error text (SerpApi docs); they mean an honest zero. */
@@ -130,7 +132,7 @@ export async function serpapiGet(params: SearchParams, what: "maps" | "reviews",
   const key = serpapiKey(deps.env);
   if (!key) throw new SerpapiError("auth", { started: false });
   const now = deps.now ?? (() => Date.now());
-  const slot = await reserveSearch(deps.store, { env: deps.env, now: now() });
+  const slot = await reserveSearch(deps.store, { env: deps.env, now: now(), warmup: deps.warmup });
   if (!slot.ok) throw new SerpapiError(slot.reason, { started: false });
   if (deps.signal?.aborted) {
     await slot.ticket.release();

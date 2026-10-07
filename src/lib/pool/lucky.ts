@@ -127,6 +127,8 @@ const listWords = (w: readonly string[]) => (w.length <= 1 ? (w[0] ?? "") : `${w
 export const LUCKY_COPY = {
   notConnected: "Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews.",
   dailyCap: "Lucky Finds: off for today. We hit the free SerpApi search limit for visitor reviews. It resets at midnight Dallas time.",
+  warmupShare:
+    "Lucky Finds: not on this example pass. Grass Pass keeps at least half of each day's free visitor-review searches (SerpApi) for passes people make, and the example passes used their share today.",
   monthlyCap: "Lucky Finds: off until the free monthly searches reset. Grass Pass used its monthly search limit for visitor reviews (SerpApi).",
   storePace: "Lucky Finds: off for today. Grass Pass reached its daily share of its free storage service, so it skipped new visitor-review lookups; they come back tomorrow.",
   paused: "Lucky Finds: paused. The visitor-review service (SerpApi) asked us to wait, so we stopped asking for now.",
@@ -142,6 +144,8 @@ function failureState(kind: SerpapiFailure): SectionState {
   switch (kind) {
     case "daily_cap":
       return { status: "off", message: LUCKY_COPY.dailyCap };
+    case "warmup_share":
+      return { status: "off", message: LUCKY_COPY.warmupShare };
     case "monthly_cap":
       return { status: "off", message: LUCKY_COPY.monthlyCap };
     case "breaker":
@@ -227,6 +231,8 @@ export type LuckyDeps = {
   signal?: AbortSignal;
   /** Called right before a search is sent (charges the per-IP daily share). */
   onUpstream?: () => void;
+  /** The server's example warm-up (at most half of the daily SerpApi cap, src/lib/limits/serpapi.ts). */
+  warmup?: boolean;
 };
 
 export type LuckyResult = {
@@ -273,6 +279,7 @@ export async function loadLucky(park: Park, features: Pick<ParkFeatures, "featur
     fetchImpl: deps.fetchImpl,
     signal: deps.signal,
     now: deps.now,
+    warmup: deps.warmup,
     onStart: () => {
       searches++;
       deps.onUpstream?.();

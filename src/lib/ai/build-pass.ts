@@ -162,6 +162,8 @@ export type BuildDeps = {
   onUpstream: () => void;
   /** Reserve one model call against AI_DAILY_CAP; null when the cap is reached. */
   reserveAiCall: () => Promise<QuotaTicket | null>;
+  /** The server's example warm-up: its SerpApi searches stay inside the warm-up share (src/lib/limits/serpapi.ts). */
+  warmup?: boolean;
   /** When the request started (deadline). */
   startedAt: number;
   modelLogger?: ModelLogger;
@@ -440,6 +442,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     fetchImpl: data.fetchImpl,
     signal: luckyDeadline.signal,
     onUpstream: data.onUpstream,
+    warmup: data.warmup,
   })
     .catch((err: unknown): LuckyResult => {
       log("lucky_failed", { park: f.park.id, kind: err instanceof Error ? err.name : "unknown" }, "error");

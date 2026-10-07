@@ -42,3 +42,47 @@ for (const pin of PINNED) {
     expect(pdfPages(a4), `${pin.file}: A4 pages`).toBe(1);
   });
 }
+
+// map-clear (2026-10-07): the Find This Spot map on every pinned pass, keyless. Labels readable on a 360 px phone, the
+// printed map black and white only with START and the X on it, and the legend inside its column.
+for (const pin of PINNED) {
+  test(`pinned ${pin.file}: the Find This Spot map is readable on a phone and black and white in print`, async ({ page }) => {
+    await page.setViewportSize({ width: 360, height: 800 });
+    await page.goto(`/pass/${pin.id}`);
+    const map = page.locator('[data-testid="spot-box"][data-variant="screen"] [data-testid="spot-map"]');
+    await expect(map).toBeVisible();
+    await expect(map.locator('[data-marker="x"]')).toHaveCount(1);
+    await expect(map.locator('[data-label="start"]')).toHaveCount(1);
+    const px = await map.evaluate((svg) => {
+      const s = svg as SVGSVGElement;
+      const scale = s.getBoundingClientRect().width / s.viewBox.baseVal.width;
+      return [...s.querySelectorAll("text")].map((t) => parseFloat(getComputedStyle(t).fontSize) * scale);
+    });
+    for (const p of px) expect(p).toBeGreaterThanOrEqual(10.95);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(360);
+
+    await page.setViewportSize({ width: 1000, height: 1200 });
+    await page.goto(`/pass/${pin.id}/print`);
+    await expect(page.locator(".gp-sheet[data-fit]")).toHaveCount(1);
+    await page.emulateMedia({ media: "print", colorScheme: "light" });
+    const kid = page.locator(".gp-kid");
+    const legend = kid.locator(".gp-spot-legend");
+    if (await legend.isVisible()) expect(await legend.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    const png = await kid.getByTestId("spot-map").screenshot();
+    const coloured = await page.evaluate(async (b64) => {
+      const img = new Image();
+      img.src = `data:image/png;base64,${b64}`;
+      await img.decode();
+      const c = document.createElement("canvas");
+      c.width = img.naturalWidth;
+      c.height = img.naturalHeight;
+      const ctx = c.getContext("2d")!;
+      ctx.drawImage(img, 0, 0);
+      const d = ctx.getImageData(0, 0, c.width, c.height).data;
+      let n = 0;
+      for (let i = 0; i < d.length; i += 4) if (Math.max(d[i], d[i + 1], d[i + 2]) - Math.min(d[i], d[i + 1], d[i + 2]) > 12) n++;
+      return n;
+    }, png.toString("base64"));
+    expect(coloured).toBe(0);
+  });
+}

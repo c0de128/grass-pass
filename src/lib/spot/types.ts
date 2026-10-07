@@ -8,7 +8,7 @@
 import "@/lib/zod-config";
 import { z } from "zod";
 
-/** Map box in map units. Printed about 4.2 in wide, so 1 unit is about 0.7 pt. */
+/** Map box in map units. Printed about 3.1-3.3 in wide, so 1 unit is about 0.55 pt. */
 export const MAP_W = 420;
 export const MAP_H = 260;
 
@@ -49,6 +49,13 @@ export const SpotMapSchema = z.object({
   start: PointSchema.nullable(),
   /** Scale bar: its length in map units and its label ("100 m (330 ft)"). */
   scale: z.object({ units: z.number().positive().max(MAP_W), label: z.string().max(40) }),
+  /**
+   * "spot": framed on START and the X (map-clear, 2026-10-07). Absent on older passes, whose map shows the whole park;
+   * the drawing re-frames those on START and the X itself (render-map.ts).
+   */
+  frame: z.literal("spot").optional(),
+  /** Map units per metre (framed maps). Older maps carry it only inside the scale label. */
+  unitsPerM: z.number().positive().max(100).optional(),
 });
 export type SpotMap = z.infer<typeof SpotMapSchema>;
 

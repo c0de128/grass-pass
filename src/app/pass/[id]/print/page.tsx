@@ -13,6 +13,7 @@ import { buttonClassName } from "@/components/ui/Button";
 import { isOctoberDay } from "@/lib/october";
 import { safeParkName } from "@/lib/ai/validate";
 import { loadPass } from "@/lib/pass/make";
+import { withClearMap } from "@/lib/spot/redraw";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
 
@@ -22,7 +23,12 @@ import "@/styles/print.css";
  * request (metadata and page share the read, SEC-1-02).
  */
 // loadPass turns away ids that cannot exist (no store read) and opens pinned example passes (src/lib/pinned.ts).
-const getPass = cache((id: string) => loadPass(id));
+// withClearMap: an older pass's Find This Spot map is redrawn framed on START and the X when the exact OSM answer it was
+// drawn from is saved in the repo (src/lib/spot/redraw.ts; no extra store read, the stored pass is unchanged).
+const getPass = cache(async (id: string) => {
+  const pass = await loadPass(id);
+  return pass ? withClearMap(pass) : null;
+});
 
 export async function generateMetadata(props: PageProps<"/pass/[id]/print">): Promise<Metadata> {
   const { id } = await props.params;

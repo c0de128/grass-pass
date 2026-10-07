@@ -14,6 +14,7 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { parkQueryHead, runOverpass, type OverpassDeps } from "@/lib/sources/overpass";
 import { cleanOsmText, parkIdOf, parkSelector, type ParkRef } from "@/lib/sources/overpass-features";
+import { clipPolyline, clipRing, fitTwoPoints, MIN_SPAN_M, scaleBar, simplify, type Box } from "./shapes";
 import { MAP_H, MAP_W, MAX_MAP_POINTS, type Line, type Point, type SpotMap } from "./types";
 
 // ---------- query ----------
@@ -266,139 +267,8 @@ export function centerOf(lines: readonly LatLng[][]): LatLng {
 
 // ---------- drawing geometry ----------
 
-/** Douglas-Peucker simplification of a polyline of [x, y] points. */
-export function simplify(points: readonly [number, number][], tolerance: number): [number, number][] {
-  if (points.length <= 2) return [...points];
-  const keep = new Uint8Array(points.length);
-  keep[0] = 1;
-  keep[points.length - 1] = 1;
-  const stack: [number, number][] = [[0, points.length - 1]];
-  while (stack.length > 0) {
-    const [s, e] = stack.pop()!;
-    const [ax, ay] = points[s];
-    const [bx, by] = points[e];
-    const dx = bx - ax;
-    const dy = by - ay;
-    const len = Math.hypot(dx, dy);
-    let maxD = -1;
-    let idx = -1;
-    for (let i = s + 1; i < e; i++) {
-      const [px, py] = points[i];
-      const d = len === 0 ? Math.hypot(px - ax, py - ay) : Math.abs(dy * px - dx * py + bx * ay - by * ax) / len;
-      if (d > maxD) {
-        maxD = d;
-        idx = i;
-      }
-    }
-    if (maxD > tolerance && idx > 0) {
-      keep[idx] = 1;
-      stack.push([s, idx], [idx, e]);
-    }
-  }
-  return points.filter((_, i) => keep[i] === 1);
-}
-
-type Box = { x0: number; y0: number; x1: number; y1: number };
-
-/** Liang-Barsky: the part of segment p-q inside the box, or null. */
-function clipSegment(p: [number, number], q: [number, number], b: Box): [[number, number], [number, number]] | null {
-  let t0 = 0;
-  let t1 = 1;
-  const dx = q[0] - p[0];
-  const dy = q[1] - p[1];
-  const checks: [number, number][] = [
-    [-dx, p[0] - b.x0],
-    [dx, b.x1 - p[0]],
-    [-dy, p[1] - b.y0],
-    [dy, b.y1 - p[1]],
-  ];
-  for (const [pp, qq] of checks) {
-    if (pp === 0) {
-      if (qq < 0) return null;
-      continue;
-    }
-    const r = qq / pp;
-    if (pp < 0) {
-      if (r > t1) return null;
-      if (r > t0) t0 = r;
-    } else {
-      if (r < t0) return null;
-      if (r < t1) t1 = r;
-    }
-  }
-  return [
-    [p[0] + t0 * dx, p[1] + t0 * dy],
-    [p[0] + t1 * dx, p[1] + t1 * dy],
-  ];
-}
-
-/** Clip a polyline to a box; a line that leaves and re-enters becomes several pieces. */
-export function clipPolyline(points: readonly [number, number][], box: Box): [number, number][][] {
-  const out: [number, number][][] = [];
-  let cur: [number, number][] = [];
-  for (let i = 0; i < points.length - 1; i++) {
-    const seg = clipSegment(points[i], points[i + 1], box);
-    if (!seg) {
-      if (cur.length > 1) out.push(cur);
-      cur = [];
-      continue;
-    }
-    const [a, b] = seg;
-    const last = cur.at(-1);
-    if (!last || Math.abs(last[0] - a[0]) > 1e-6 || Math.abs(last[1] - a[1]) > 1e-6) {
-      if (cur.length > 1) out.push(cur);
-      cur = [a];
-    }
-    cur.push(b);
-    // The segment was cut at its end: the line leaves the box here.
-    if (Math.abs(b[0] - points[i + 1][0]) > 1e-6 || Math.abs(b[1] - points[i + 1][1]) > 1e-6) {
-      if (cur.length > 1) out.push(cur);
-      cur = [];
-    }
-  }
-  if (cur.length > 1) out.push(cur);
-  return out;
-}
-
-/** Sutherland-Hodgman: a closed ring clipped to a box (still a closed ring), or [] when it is outside. */
-export function clipRing(points: readonly [number, number][], box: Box): [number, number][] {
-  type P = [number, number];
-  const edges: { inside: (p: P) => boolean; cut: (a: P, b: P) => P }[] = [
-    { inside: (p) => p[0] >= box.x0, cut: (a, b) => [box.x0, a[1] + ((b[1] - a[1]) * (box.x0 - a[0])) / (b[0] - a[0])] },
-    { inside: (p) => p[0] <= box.x1, cut: (a, b) => [box.x1, a[1] + ((b[1] - a[1]) * (box.x1 - a[0])) / (b[0] - a[0])] },
-    { inside: (p) => p[1] >= box.y0, cut: (a, b) => [a[0] + ((b[0] - a[0]) * (box.y0 - a[1])) / (b[1] - a[1]), box.y0] },
-    { inside: (p) => p[1] <= box.y1, cut: (a, b) => [a[0] + ((b[0] - a[0]) * (box.y1 - a[1])) / (b[1] - a[1]), box.y1] },
-  ];
-  let poly: P[] = points.slice(0, points.length > 1 && points[0][0] === points.at(-1)![0] && points[0][1] === points.at(-1)![1] ? -1 : undefined) as P[];
-  for (const e of edges) {
-    if (poly.length === 0) break;
-    const next: P[] = [];
-    for (let i = 0; i < poly.length; i++) {
-      const cur = poly[i];
-      const prev = poly[(i + poly.length - 1) % poly.length];
-      if (e.inside(cur)) {
-        if (!e.inside(prev)) next.push(e.cut(prev, cur));
-        next.push(cur);
-      } else if (e.inside(prev)) next.push(e.cut(prev, cur));
-    }
-    poly = next;
-  }
-  if (poly.length < 3) return [];
-  return [...poly, poly[0]];
-}
-
-/** Nice scale-bar lengths in metres. */
-const NICE_M = [10, 20, 25, 50, 100, 200, 250, 500, 1_000, 2_000, 5_000];
-
-/** The longest nice length that fits in `maxUnits` at `unitsPerM`, and its label ("100 m (330 ft)"). */
-export function scaleBar(unitsPerM: number, maxUnits: number): { units: number; label: string } {
-  let m = NICE_M[0];
-  for (const n of NICE_M) if (n * unitsPerM <= maxUnits) m = n;
-  const ft = Math.round((m * 3.28084) / 10) * 10;
-  const metres = m >= 1_000 ? `${m / 1_000} km` : `${m} m`;
-  const feet = ft >= 5_280 ? `${Math.round((ft / 5_280) * 10) / 10} mi` : `${ft.toLocaleString("en-US")} ft`;
-  return { units: Math.round(m * unitsPerM * 10) / 10, label: `${metres} (${feet})` };
-}
+// Simplify, clip and the scale bar live in ./shapes (client-safe: the drawing re-frames older maps with them).
+export { clipPolyline, clipRing, scaleBar, simplify } from "./shapes";
 
 export type MapKind = "road" | "path" | "waterway" | "water" | "pitch" | "parking";
 
@@ -413,32 +283,44 @@ export function layerOf(tags: Record<string, string>): MapKind | null {
   return null;
 }
 
-/** Margin inside the map box, in map units (room for the north arrow and the scale bar). */
+/** Margin inside the map box for a whole-park view, in map units (room for the north arrow and the scale bar). */
 const PAD = 14;
+/** With no START, a park wider than this is not drawn whole: the view is NO_START_SPAN_M across, centred on the X. */
+export const NO_START_MAX_SPAN_M = 900;
+export const NO_START_SPAN_M = 500;
 
 /**
- * Project the park into the MAP_W x MAP_H box (north up, same scale on both axes), clip everything to
- * the box, simplify, and return the stored map. `target` and `start` are drawn on top.
+ * The stored map (map-clear, 2026-10-07): north up, the same scale on both axes, FRAMED ON START AND THE X
+ * (not the whole park), so a child can follow it. Both markers sit inside the inner box (shapes.ts
+ * FRAME_MARGIN_X/_Y) and the view is never narrower than MIN_SPAN_M. With no START, the whole park is shown when it
+ * is small, else a NO_START_SPAN_M view around the X. Everything is clipped to the box and simplified at the
+ * drawing scale (Douglas-Peucker, 0.6 map units ~ 0.3 pt printed).
  * Point budget: the simplification tolerance grows until the map holds at most MAX_MAP_POINTS.
  */
 export function buildMap(g: ParkGeometry, target: LatLng, start: LatLng | null): SpotMap {
-  const ring = g.outline.flat();
-  const lats = [...ring.map((p) => p[0]), target[0], ...(start ? [start[0]] : [])];
-  const lngs = [...ring.map((p) => p[1]), target[1], ...(start ? [start[1]] : [])];
-  const origin: LatLng = [(Math.min(...lats) + Math.max(...lats)) / 2, (Math.min(...lngs) + Math.max(...lngs)) / 2];
+  const origin: LatLng = start ? [(start[0] + target[0]) / 2, (start[1] + target[1]) / 2] : target;
   const proj = projector(origin);
-  const xs: number[] = [];
-  const ys: number[] = [];
-  for (const p of [...ring, target, ...(start ? [start] : [])]) {
-    const [x, y] = proj(p);
-    xs.push(x);
-    ys.push(y);
+  let unitsPerM: number;
+  let cx: number;
+  let cy: number;
+  if (start) {
+    const fit = fitTwoPoints(proj(start), proj(target), MAP_W, MAP_H, MAP_W / MIN_SPAN_M);
+    unitsPerM = fit.scale;
+    [cx, cy] = fit.center;
+  } else {
+    const pts = [...g.outline.flat(), target].map(proj);
+    const xs = pts.map((p) => p[0]);
+    const ys = pts.map((p) => p[1]);
+    const spanX = Math.max(1, Math.max(...xs) - Math.min(...xs));
+    const spanY = Math.max(1, Math.max(...ys) - Math.min(...ys));
+    unitsPerM = Math.min((MAP_W - 2 * PAD) / spanX, (MAP_H - 2 * PAD) / spanY, MAP_W / MIN_SPAN_M);
+    cx = (Math.max(...xs) + Math.min(...xs)) / 2;
+    cy = (Math.max(...ys) + Math.min(...ys)) / 2;
+    if (MAP_W / unitsPerM > NO_START_MAX_SPAN_M) {
+      unitsPerM = MAP_W / NO_START_SPAN_M;
+      [cx, cy] = proj(target);
+    }
   }
-  const spanX = Math.max(1, Math.max(...xs) - Math.min(...xs));
-  const spanY = Math.max(1, Math.max(...ys) - Math.min(...ys));
-  const unitsPerM = Math.min((MAP_W - 2 * PAD) / spanX, (MAP_H - 2 * PAD) / spanY);
-  const cx = (Math.max(...xs) + Math.min(...xs)) / 2;
-  const cy = (Math.max(...ys) + Math.min(...ys)) / 2;
   const toMap = (p: LatLng): [number, number] => {
     const [x, y] = proj(p);
     return [MAP_W / 2 + (x - cx) * unitsPerM, MAP_H / 2 - (y - cy) * unitsPerM];
@@ -504,5 +386,7 @@ export function buildMap(g: ParkGeometry, target: LatLng, start: LatLng | null):
     target: round(toMap(target)),
     start: start ? round(toMap(start)) : null,
     scale: scaleBar(unitsPerM, MAP_W * 0.3),
+    frame: "spot",
+    unitsPerM: Math.round(unitsPerM * 1e4) / 1e4,
   };
 }

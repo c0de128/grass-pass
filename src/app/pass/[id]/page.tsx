@@ -7,6 +7,7 @@ import { PassPreview } from "@/components/pass/PassPreview";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
 import { loadPass } from "@/lib/pass/make";
+import { withClearMap } from "@/lib/spot/redraw";
 import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
 import { currentSession } from "@/lib/accounts/current";
@@ -20,7 +21,12 @@ import { currentSession } from "@/lib/accounts/current";
  * per park per 5 min per instance, src/lib/reports/stats.ts; the proxy charges it as COSTS.passStats).
  */
 // loadPass turns away ids that cannot exist (no store read) and opens pinned example passes (src/lib/pinned.ts).
-const getPass = cache((id: string) => loadPass(id));
+// withClearMap: an older pass's Find This Spot map is redrawn framed on START and the X when the exact OSM answer it was
+// drawn from is saved in the repo (src/lib/spot/redraw.ts; no extra store read, the stored pass is unchanged).
+const getPass = cache(async (id: string) => {
+  const pass = await loadPass(id);
+  return pass ? withClearMap(pass) : null;
+});
 
 export async function generateMetadata(props: PageProps<"/pass/[id]">): Promise<Metadata> {
   const { id } = await props.params;

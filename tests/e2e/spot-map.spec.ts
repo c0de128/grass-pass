@@ -73,7 +73,7 @@ test("360 px wide: no horizontal scroll with the map, on the pass page and the p
   }
 });
 
-test("UX-6-02: at 360 px the on-screen map labels are at least 11 px; the print styles keep 12-13 units", async ({ page }) => {
+test("UX-6-02: at 360 px the on-screen map labels are at least 11 px; print uses the same 17-18 units (map-clear)", async ({ page }) => {
   needMap();
   await page.setViewportSize({ width: 360, height: 800 });
   await page.goto(`/pass/${pass.id}`);
@@ -88,7 +88,7 @@ test("UX-6-02: at 360 px the on-screen map labels are at least 11 px; the print 
   for (const px of rendered) expect(px).toBeGreaterThanOrEqual(10.95);
   await page.emulateMedia({ media: "print" });
   const printUnits = await map.evaluate((svg) => [...svg.querySelectorAll("text")].map((t) => parseFloat(getComputedStyle(t).fontSize)));
-  for (const u of printUnits) expect([12, 13]).toContain(u);
+  for (const u of printUnits) expect([17, 18]).toContain(u);
 });
 
 test("print: map + riddle on the kid pass, answer on the stub, ONE page (Letter and A4), scale >= 0.91 (SPEC §8.4), black and white", async ({ page }) => {

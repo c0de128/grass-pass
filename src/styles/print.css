@@ -251,10 +251,21 @@
   height: auto;
 }
 
+/* map-clear: the legend is a tidy grid whose rows fill evenly (SpotMap.tsx legendColumns), so no key sits alone on a line. */
 .gp-spot-legend {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.01in 0.1in;
+  display: grid;
+  grid-template-columns: repeat(var(--gp-legend-cols, 3), max-content);
+  gap: 0.01in 0.16in;
+}
+
+.gp-spot-legend[data-cols="1"] {
+  --gp-legend-cols: 1;
+}
+.gp-spot-legend[data-cols="2"] {
+  --gp-legend-cols: 2;
+}
+.gp-spot-legend[data-cols="4"] {
+  --gp-legend-cols: 4;
 }
 
 .gp-spot-key {

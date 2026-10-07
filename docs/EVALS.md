@@ -2,18 +2,107 @@
 
 Moved from the README on 2026-10-06 (no numbers changed). The README keeps the summary table.
 
-Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026; 5 taxa and 15 season
-counts were appended on Oct 6 when the bigger blocklist moved the species line), age band 6-10, with the real pass
-builder. Current numbers: [`evals/results/2026-10-06-7.md`](../evals/results/2026-10-06-7.md) (what changed and why:
-[`2026-10-06-7-notes.md`](../evals/results/2026-10-06-7-notes.md)), one full run on Oct 6 after the round-5 safety and
-clue-quality work (app commit `b0657b7`), not re-run. The earlier runs ([`2026-10-05.md`](../evals/results/2026-10-05.md),
+Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026; taxa and season counts
+were appended on Oct 6 when the blocklist grew), age band 6-10, with the real pass builder. Current numbers:
+[`evals/results/2026-10-06-8.md`](../evals/results/2026-10-06-8.md) (what changed and why:
+[`2026-10-06-8-notes.md`](../evals/results/2026-10-06-8-notes.md)), one full run on Oct 6 after the r7 follow-ups (app
+commit `ef59055`), not re-run. The earlier runs ([`2026-10-05.md`](../evals/results/2026-10-05.md),
 [`-2`](../evals/results/2026-10-05-2.md), [`-3`](../evals/results/2026-10-05-3.md), [`-4`](../evals/results/2026-10-05-4.md),
-[`2026-10-06.md`](../evals/results/2026-10-06.md), [`2026-10-06-2.md`](../evals/results/2026-10-06-2.md),
-[`2026-10-06-3.md`](../evals/results/2026-10-06-3.md), [`2026-10-06-4.md`](../evals/results/2026-10-06-4.md),
-[`2026-10-06-5.md`](../evals/results/2026-10-06-5.md) and [`2026-10-06-6.md`](../evals/results/2026-10-06-6.md)) are kept
-for comparison. No closed model was run (open models only; the closed models on our DigitalOcean tier answered 403 on
-Oct 5). Find This Spot and Lucky Finds are not in the eval (no map or SerpApi recordings for the test parks; SerpApi
-was switched off for the run).
+[`2026-10-06.md`](../evals/results/2026-10-06.md) and [`2026-10-06-2.md`](../evals/results/2026-10-06-2.md) to
+[`2026-10-06-7.md`](../evals/results/2026-10-06-7.md)) are kept for comparison. No closed model was run (open models
+only; the closed models on our DigitalOcean tier answered 403 on Oct 5). Find This Spot and Lucky Finds are not in the
+eval (no map or SerpApi recordings for the test parks; SerpApi was switched off for the run).
+
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-7`) | Gemma, first run |
+|---|---|---|---|---|---|
+| M1 Blocked taxa printed (target 0; judged by taxon id and ancestors, 63 groups) | 0 | 0 | 0 | 0 (9 when re-scored with today's list) | 0 |
+| M2 Clues quoting their source word for word, before the filter (target 85%) | 99.0% | 93.8% | 100% (by construction) | 97.2% | 99.2% |
+| M3 Passes with >= n-1 items (target 90%) | **82.4% (42/51), FAIL** | 52.9% (FAIL) | 17.6% (FAIL) | 96.1% | 64.7% |
+| M4 Honest empty sections (target 100%) | 100% | 100% | 100% | 100% | 100% |
+| M5 Reading level, FK grade median (target <= 3.5) | 2.5 | 2.5 | 2.8 | 2.5 | 2.3 |
+| M6 Name leaks in clue or hint, before the filter (target <= 5%) | 2.7% (clue only 2.7%) | 17.1% (FAIL) | 1.4% | 2.8% | 17.5% |
+| M7 Model call p50 / p95 (target 10 s / 20 s) | **15.3 s / 30.0 s, FAIL** (p50 15.35 s; first calls alone 16.4 s) | 25.8 s / 60.0 s (FAIL) | none | 9.4 s / 13.8 s | 13.8 s / 24.3 s |
+| Median answer tokens/s (provider speed) | 28.1 | 16.1 | none | 47.3 | not measured |
+| M8 Cost per pass (target $0.001) | **$0.00111 to $0.00127, FAIL** (15 timed-out calls; $0.00097 if they were free) | $0.00166 to $0.00236 (FAIL) | $0 | $0.00103 to $0.00105 | $0.00086 |
+| Mean prompt tokens, answered first calls | 2,872 | | | 3,084 | |
+| M10 Printed clues repeated across parks (target <= 5%) | **9.7% (34/352), FAIL** | 0% (0/88) | 20.4% (FAIL) | 2.8% | not measured |
+| M11 Printed clues with a wrong count (target 0) | 0 of 71 (10 removed by the check) | 0 of 7 (9 removed) | 0 of 3 | 0 of 86 (4 removed) | not measured |
+| Printed Wild Finds flagged jargon or trivia by today's checks | 8 of 112 (0 jargon) | 2 of 28 | n/a | 22 of 133 (run -7's own checks: 6) | not measured |
+| Printed clues with a danger word | 0 | 0 | 0 | 0 | not measured |
+| Passes with a water-by-ear clue (judge C4) | 11 of 50 (6 parks; 0 with 2+ sound clues) | | | 31 of 54 (13 parks; 4 with 2+) | not measured |
+
+**A slow provider evening.** Just before the run, one speed probe took 3.7 s at 45.7 answer tokens/s. Inside the run
+DigitalOcean answered at 28.1 tokens/s (47.3 in run `-7`), and 15 Gemma calls hit their time limit: 10 first calls
+(30 s), 3 of their whole retries (30 s) and 2 refills (20 s); 1 retry got HTTP 403. The retries saved 5 passes.
+
+What changed since run `-7`, and why (details in the notes):
+- **M3 96.1% -> 82.4% (now FAIL), mostly the provider:** 4 runs made no pass (the first call and its retry both failed),
+  2 passes were short because a refill timed out, and 3 were short on content (Connemara Meadow r1 and r2, Klyde Warren
+  r2: all 3 calls made, the refills kept nothing). **No `trivia` drop happened in any short pass**, so the pre-agreed
+  lever (make range and bare-colour trivia a preference again) was not applied: the free replay gives 42/51 with or
+  without it. A 4th call was not added either (the content-short refills kept nothing; it would cost more). No safety
+  check was loosened.
+- **M8 $0.00103 -> $0.00111-0.00127 (still FAIL), because of the timeouts:** the shorter prompt worked (answered first
+  calls 3,084 -> 2,872 prompt tokens). The 15 timed-out calls are priced at their prompt size (low end) or billed in
+  full (high end); priced at $0 the run is $0.00097 a pass, under the goal.
+- **M7 9.4 s / 13.8 s -> 15.3 s / 30.0 s (now FAIL):** DigitalOcean's speed, not a code change (answers were a little
+  shorter).
+- **M10 2.8% -> 9.7% (now FAIL):** "Somewhere you will see a" on 5 parks (a named stock start, only a preference), the
+  new bridge fact "paths that go over water" on 4, and Osage-orange's "a tree with bumpy yellow-green fruit" on 3 parks
+  (the same species). Fewer printed clues (352 vs 390) also raise the rate. Not tuned.
+- **Clue quality (r7 follow-ups):** printed Wild Finds flagged by today's checks fell from 22 of 133 to 8 of 112, with 0
+  jargon, 0 danger words and 0 wrong kind words printed. Listening-for-water clues fell from 31 of 54 passes (13 parks)
+  to 11 of 50 (6 parks), and no pass had two sound clues. Still missed by the checks: "What has a shell and lives in
+  fresh water?" (a mussel) and "Check for a bird that is small and white." (an egret).
+- **M1:** 0, now judged by each printed Wild Find's iNaturalist taxon id and ancestors with the 63-group list. Run `-7`'s
+  printed passes, re-scored the same way, had 9 (tarantula x3, snow-on-the-prairie x3, mud-dauber x3).
+
+Ages 10-13, a small partial check ([`2026-10-06-partial-2121.md`](../evals/results/2026-10-06-partial-2121.md), Gemma,
+Arbor Hills, White Rock Lake and Cedar Ridge, one run each, the same parks as `partial-1439`, `partial-1621` and
+`partial-1853`, not re-run; on the eval-r8 tree, which adds the round-6 Q-6-03 lichen and name-root checks): **3 of 3
+passes complete** (Arbor Hills 7/8, White Rock 8/8, Cedar Ridge 7/8, 2 calls each), 6 calls, **hard finds kept on 2 of 3
+passes** (Cedar Ridge printed 1; the band promises 2; `partial-1853`: 3 of 3), reading grade 3.8 (aim 5-6), 11.1 s /
+14.1 s per call (the typical time is over 10 s), 5.3% name leaks before the checks (removed; over 5%), **$0.00146 per
+pass, over the $0.001 mark** ($0.00117 before; 2 calls a pass this time). Jargon or trivia printed: 1 of 6 Wild Finds.
+
+## Self-hosted Gemma 4 E2B on a laptop CPU (2026-10-06, two partial runs, $0)
+
+"Run it yourself", measured (judge item G1). Gemma 4 E2B (`gemma4:e2b-it-qat`, Apache-2.0, 4.3 GB, served as
+`gemma4-e2b-8k` with an 8,192-token context) on Ollama 0.32.15, on a Windows laptop with **no GPU** (Intel Core Ultra 7
+155H, 32 GB RAM), thinking off. Same pass builder, same fixtures, same scorer; 5 parks (Connemara Meadow, Celebration,
+Arbor Hills, White Rock Lake, Cedar Ridge), one run each, ages 6-10. Notes, hardware and how to repeat:
+[`2026-10-06-selfhost-notes.md`](../evals/results/2026-10-06-selfhost-notes.md).
+
+| | App clock: [`selfhost-1656`](../evals/results/2026-10-06-selfhost-1656.md) (70 s per call, 85 s per pass) | Patient clock, eval only: [`selfhost-patient-1704`](../evals/results/2026-10-06-selfhost-patient-1704.md) | Hosted Gemma 4 31B, 20 parks (`-8`) |
+|---|---|---|---|
+| Passes made | **2 of 5** (3 ran out of time) | 5 of 5 | 50 of 54 runs (4 lost to the provider) |
+| M3 Complete passes | **0 of 5** (both 6/8) | 4 of 5 (80%, FAIL) | 82.4% (FAIL) |
+| M1 Blocked taxa printed | 0 | 0 | 0 |
+| M2 Grounded, before the filter | 100% (16/16) | 96.7% (59/61) | 99.0% |
+| M6 Name leaks, before the filter | 0% | 4.9% (3/61, all removed) | 2.7% |
+| M11 Wrong counts printed | 0 (no count clues) | 0 of 1 (1 removed) | 0 of 71 |
+| M5 Reading grade (median) | 2.5 | 2.9 | 2.5 |
+| M7 Model call p50 / p95 | 68.0 s / 70.0 s | **59.3 s / 84.8 s** | 15.3 s / 30.0 s (a slow provider evening) |
+| Model time per pass (p50) | 70.0 s | 104.1 s | 23.9 s |
+| Speed | | 17.9 answer tokens/s writing, 99.6 tokens/s reading the prompt (measured once, Arbor Hills); end to end 8.7 tok/s median | 28.1 answer tokens/s |
+| RAM | | about 5-6 GB: model runner 4.9-5.2 GB working set, 5.8 GB private at most; free system RAM 11.4 -> 5.2 GB at the lowest | hosted |
+| Cost | $0 | $0 | $0.00111 to $0.00127 a pass |
+
+**What it means:** the open weights really run on a laptop with no GPU, for $0, and the code-side safety and grounding
+checks hold. With the app's own time limits (set for the hosted route's 90 s cap) this CPU is too slow: 3 of 5 first
+calls hit 70 s. Given time, the 2B-class model writes usable passes (4 of 5 complete, grade 2.9) at 1-3 minutes a pass.
+M10 is 0% in both runs but is not comparable: 5 parks x 1 run, not 20 x 3. The patient clock (`EVAL_LOCAL_PATIENT=1`)
+is an eval setting only. These runs used the app code before the round-5 safety and jargon checks (`637dd7b`). The CPU
+was shared with other programs during the runs, so the timing is a real-laptop figure, not a clean benchmark.
+
+**Update (judge G2, same evening):** the app now has a longer clock for a model on your own computer,
+`LOCAL_MODEL_TIMEOUT_MS` (localhost `MODEL_BASE_URL` only, off by default, never on Vercel). One browser click-through
+with `LOCAL_MODEL_TIMEOUT_MS=270000` made a Celebration Park pass with 7 of 8 finds and its map in 96 s (2 model calls):
+[`2026-10-06-selfhost-browser-1959.md`](../evals/results/2026-10-06-selfhost-browser-1959.md). One run, not a benchmark.
+
+## Run `2026-10-06-7` (previous, kept for history)
+
+One full run on Oct 6 after the round-5 safety and clue-quality work (app commit `b0657b7`): [`2026-10-06-7.md`](../evals/results/2026-10-06-7.md), notes [`2026-10-06-7-notes.md`](../evals/results/2026-10-06-7-notes.md). Its jargon/trivia row counts with the checks of that day (today's checks count 22 of its 133).
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-6`) | Gemma, first run |
 |---|---|---|---|---|---|
@@ -71,42 +160,7 @@ not re-run): **3 of 3 passes complete** (Arbor Hills 7/8 and Cedar Ridge 7/8 in 
 21.4 s per call, 7.1% name leaks before the checks (removed), **$0.00117 per pass, over the $0.001 mark** ($0.00107
 before). Jargon or trivia printed: 1 of 9 Wild Finds (3 of 9 in `partial-1621`).
 
-## Self-hosted Gemma 4 E2B on a laptop CPU (2026-10-06, two partial runs, $0)
-
-"Run it yourself", measured (judge item G1). Gemma 4 E2B (`gemma4:e2b-it-qat`, Apache-2.0, 4.3 GB, served as
-`gemma4-e2b-8k` with an 8,192-token context) on Ollama 0.32.15, on a Windows laptop with **no GPU** (Intel Core Ultra 7
-155H, 32 GB RAM), thinking off. Same pass builder, same fixtures, same scorer; 5 parks (Connemara Meadow, Celebration,
-Arbor Hills, White Rock Lake, Cedar Ridge), one run each, ages 6-10. Notes, hardware and how to repeat:
-[`2026-10-06-selfhost-notes.md`](../evals/results/2026-10-06-selfhost-notes.md).
-
-| | App clock: [`selfhost-1656`](../evals/results/2026-10-06-selfhost-1656.md) (70 s per call, 85 s per pass) | Patient clock, eval only: [`selfhost-patient-1704`](../evals/results/2026-10-06-selfhost-patient-1704.md) | Hosted Gemma 4 31B, 20 parks (`-7`) |
-|---|---|---|---|
-| Passes made | **2 of 5** (3 ran out of time) | 5 of 5 | no pass lost |
-| M3 Complete passes | **0 of 5** (both 6/8) | 4 of 5 (80%, FAIL) | 96.1% |
-| M1 Blocked taxa printed | 0 | 0 | 0 |
-| M2 Grounded, before the filter | 100% (16/16) | 96.7% (59/61) | 97.2% |
-| M6 Name leaks, before the filter | 0% | 4.9% (3/61, all removed) | 2.8% |
-| M11 Wrong counts printed | 0 (no count clues) | 0 of 1 (1 removed) | 0 of 86 |
-| M5 Reading grade (median) | 2.5 | 2.9 | 2.5 |
-| M7 Model call p50 / p95 | 68.0 s / 70.0 s | **59.3 s / 84.8 s** | 9.4 s / 13.8 s |
-| Model time per pass (p50) | 70.0 s | 104.1 s | 11.2 s |
-| Speed | | 17.9 answer tokens/s writing, 99.6 tokens/s reading the prompt (measured once, Arbor Hills); end to end 8.7 tok/s median | 47.3 answer tokens/s |
-| RAM | | about 5-6 GB: model runner 4.9-5.2 GB working set, 5.8 GB private at most; free system RAM 11.4 -> 5.2 GB at the lowest | hosted |
-| Cost | $0 | $0 | $0.00103 to $0.00105 a pass |
-
-**What it means:** the open weights really run on a laptop with no GPU, for $0, and the code-side safety and grounding
-checks hold. With the app's own time limits (set for the hosted route's 90 s cap) this CPU is too slow: 3 of 5 first
-calls hit 70 s. Given time, the 2B-class model writes usable passes (4 of 5 complete, grade 2.9) at 1-3 minutes a pass.
-M10 is 0% in both runs but is not comparable: 5 parks x 1 run, not 20 x 3. The patient clock (`EVAL_LOCAL_PATIENT=1`)
-is an eval setting only. These runs used the app code before the round-5 safety and jargon checks (`637dd7b`). The CPU
-was shared with other programs during the runs, so the timing is a real-laptop figure, not a clean benchmark.
-
-**Update (judge G2, same evening):** the app now has a longer clock for a model on your own computer,
-`LOCAL_MODEL_TIMEOUT_MS` (localhost `MODEL_BASE_URL` only, off by default, never on Vercel). One browser click-through
-with `LOCAL_MODEL_TIMEOUT_MS=270000` made a Celebration Park pass with 7 of 8 finds and its map in 96 s (2 model calls):
-[`2026-10-06-selfhost-browser-1959.md`](../evals/results/2026-10-06-selfhost-browser-1959.md). One run, not a benchmark.
-
-## Run `2026-10-06-6` (previous, kept for history)
+## Run `2026-10-06-6` (kept for history)
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-5`) | Gemma, first run |
 |---|---|---|---|---|---|

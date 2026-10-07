@@ -29,7 +29,7 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -171,6 +171,9 @@ export default function HowItWorksPage() {
   const always = DROP_REASONS.filter((r) => DROP_REASON_INFO[r].kind === "always");
   const softer = DROP_REASONS.filter((r) => DROP_REASON_INFO[r].kind !== "always");
   const speedMet = (gemma.p50s ?? Infinity) <= EVAL_THRESHOLDS.p50s && (gemma.p95s ?? Infinity) <= EVAL_THRESHOLDS.p95s;
+  const speedMetBefore = PREVIOUS_RUN.p50s <= EVAL_THRESHOLDS.p50s && PREVIOUS_RUN.p95s <= EVAL_THRESHOLDS.p95s;
+  const smokeP50Over = SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s;
+  const smokeP95Over = SMOKE_10_13.p95s > EVAL_THRESHOLDS.p95s;
 
   const steps: Step[] = [
     {
@@ -609,7 +612,7 @@ export default function HowItWorksPage() {
           <p>
             Speed is {speedMet ? "met" : "missed"}: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone{" "}
             {GEMMA_FIRST_CALL_P50_S} s, with DigitalOcean answering at {GEMMA_TOKENS_PER_S.now} answer tokens a second (
-            {GEMMA_TOKENS_PER_S.before} the run before, when speed was missed). Lucky Finds and Find This Spot are not in this test.
+            {GEMMA_TOKENS_PER_S.before} the run before, when speed was {speedMetBefore ? "met" : "missed"}). Lucky Finds and Find This Spot are not in this test.
           </p>
           <p>
             Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
@@ -617,10 +620,20 @@ export default function HowItWorksPage() {
             <a className={bandLink} href={smokeUrl}>
               results
             </a>
-            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls, all{" "}
-            {SMOKE_10_13.hardKept} with their 2 hard finds, grade{" "}
-            {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical and {SMOKE_10_13.p95s} s slow (<strong>over</strong> the{" "}
-            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s targets). A finished 10-13 pass cost about{" "}
+            ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls,{" "}
+            {(SMOKE_10_13.hardKept as number) === SMOKE_10_13.parks ? `all ${SMOKE_10_13.hardKept}` : `${SMOKE_10_13.hardKept} of ${SMOKE_10_13.parks}`} with their 2 hard
+            finds, grade {SMOKE_10_13.fkGrade}, {SMOKE_10_13.p50s} s typical{" "}
+            {smokeP50Over && !smokeP95Over ? (
+              <>
+                (<strong>over</strong> the {EVAL_THRESHOLDS.p50s} s target) and {SMOKE_10_13.p95s} s slow (under {EVAL_THRESHOLDS.p95s} s)
+              </>
+            ) : (
+              <>
+                and {SMOKE_10_13.p95s} s slow ({smokeP50Over ? <strong>over</strong> : "within"} the {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s
+                targets)
+              </>
+            )}
+            . A finished 10-13 pass cost about{" "}
             {usd(SMOKE_10_13.costPerFinishedPass)}, which is <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target (a
             10-13 pass is longer). Before the checks, {SMOKE_10_13.nameLeakPct}% of its clues named their answer (
             <strong>over</strong> the {EVAL_THRESHOLDS.nameLeakPct}% target); code removed them all. Only {SMOKE_10_13.calls} model

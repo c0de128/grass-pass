@@ -4,6 +4,7 @@ import { describe, expect, it } from "vitest";
 import { BLOCKS } from "../../scripts/copy/blocks.mts";
 import { batchJsonSchema, checkDraft, numbersIn, properNouns, textIsInSource, type CopyBlock } from "../../scripts/copy/check.mts";
 import { GEMMA_COPY } from "@/lib/about/content";
+import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 
 const ROOT = path.resolve(__dirname, "../..");
 
@@ -119,5 +120,14 @@ describe("RULES-5-01: the copy credit names the real reviewer (an AI coding agen
 
   it.each(["README.md", "src/app/about/page.tsx", "docs/COPY-BY-GEMMA.md", "scripts/copy/gemma-render.mts"])("%s says an AI coding agent (Claude Code) reviewed", (f) => {
     expect(flat(f)).toMatch(/AI coding agent \(Claude ?Code\)/);
+  });
+});
+
+describe("docs/COPY-BY-GEMMA.md quotes today's blocklist size next to the one Gemma was told (eval r8 sync)", () => {
+  it("every FACTS line about the {blocked} count names BLOCKED_TAXA.length", () => {
+    const facts = BLOCKS.flatMap((b) => b.facts).filter((f) => f.startsWith("{blocked} is"));
+    expect(facts.length).toBeGreaterThan(0);
+    for (const f of facts) expect(f, f).toContain(`${BLOCKED_TAXA.length} since the evening of 2026-10-06`.replace(" since", f.includes("groups since") ? " groups since" : " since"));
+    expect(readFileSync(path.join(ROOT, "docs/COPY-BY-GEMMA.md"), "utf8")).toContain(`is ${BLOCKED_TAXA.length} since the safety work`);
   });
 });

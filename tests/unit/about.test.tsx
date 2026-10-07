@@ -6,11 +6,12 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, GEMMA_VAGUE_CLUES_TODAY, PREVIOUS_RUN } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { jargonProblem, triviaProblem } from "@/lib/ai/jargon";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { PASS_MAX_TOKENS } from "@/lib/ai/build-pass";
 import { REPO_URL } from "@/lib/site-url";
+import { soundThemes, type RunRecord } from "../../evals/score";
 
 const ROOT = resolve(__dirname, "../..");
 const text = (html: string) =>
@@ -53,22 +54,22 @@ const percentile = (values: number[], p: number) => {
 describe("about page numbers come from the committed eval run", () => {
   it("the hand-written figures on the page come from the results files too", () => {
     const gemma = results.scores.find((x) => x.model === "gemma-4-31B-it")!;
-    expect(Math.round(gemma.m7.p50Ms! / 10) / 100).toBe(GEMMA_P50_EXACT_S); // "the typical call took 9.37 s"
+    expect(Math.round(gemma.m7.p50Ms! / 10) / 100).toBe(GEMMA_P50_EXACT_S); // "the typical call took 15.35 s"
     const firstCalls = results.runs
       .filter((r) => r.model === "gemma-4-31B-it")
       .flatMap((r) => (r.calls ?? []).slice(0, 1))
       .filter((c) => c.status === 200)
       .map((c) => c.latencyMs);
-    expect(Math.round(percentile(firstCalls, 50) / 100) / 10).toBe(GEMMA_FIRST_CALL_P50_S); // "first calls alone took 10.2 s"
+    expect(Math.round(percentile(firstCalls, 50) / 100) / 10).toBe(GEMMA_FIRST_CALL_P50_S); // "first calls alone took 16.4 s"
     const before = JSON.parse(readFileSync(join(ROOT, PREVIOUS_RUN.file), "utf8")) as Results;
     expect(before.meta.partial).toBe(false);
     const beforeGemma = before.scores.find((x) => x.model === "gemma-4-31B-it")!;
-    expect(r1(beforeGemma.m10.rate!)).toBe(PREVIOUS_RUN.repeatPct); // run -6: 5.1%
-    expect(r1(beforeGemma.m3.rate)).toBe(PREVIOUS_RUN.completePct); // "94.1% in the run before"
-    expect(Math.round(beforeGemma.m7.p50Ms! / 100) / 10).toBe(PREVIOUS_RUN.p50s); // "the typical call took 12.0 s and missed"
+    expect(r1(beforeGemma.m10.rate!)).toBe(PREVIOUS_RUN.repeatPct); // run -7: 2.8%
+    expect(r1(beforeGemma.m3.rate)).toBe(PREVIOUS_RUN.completePct); // "96.1% in the run before"
+    expect(Math.round(beforeGemma.m7.p50Ms! / 100) / 10).toBe(PREVIOUS_RUN.p50s); // "9.4 s typical in the run before, when speed was met"
     expect(Math.round(beforeGemma.m7.p95Ms! / 100) / 10).toBe(PREVIOUS_RUN.p95s);
-    expect(Math.round(beforeGemma.m8.costPerPass * 1e5) / 1e5).toBe(PREVIOUS_RUN.costPerPass); // "up from $0.00097"
-    // Q-5-02: "$0.00103 a pass ... up to $0.00105 if 1 timed-out call was billed in full ... $0.00102 if it was free".
+    expect(Math.round(beforeGemma.m8.costPerPass * 1e5) / 1e5).toBe(PREVIOUS_RUN.costPerPass); // "$0.00103 in the run before"
+    // Q-5-02: "$0.00111 a pass ... up to $0.00127 if 15 timed-out calls were billed in full ... $0.00097 if they were free".
     // Since run -7 the scorer's costPerPass prices a timed-out call at its prompt size; the high end adds max_tokens.
     {
       const price = { in: 0.18, out: 0.5 };
@@ -100,7 +101,7 @@ describe("about page numbers come from the committed eval run", () => {
       expect(r5(gemma.m8.costPerPassHigh!)).toBe(GEMMA_COST_RANGE.high);
       expect(GEMMA_COST_RANGE.maxTokens).toBe(PASS_MAX_TOKENS);
     }
-    // "the prompt grew about 9%": mean prompt tokens of answered first calls, this run and the run before.
+    // "first calls averaged 2,872 prompt tokens (3,084 the run before)": answered first calls, this run and the run before.
     {
       const meanFirstPrompt = (rr: RunRow[]) => {
         const p = rr
@@ -113,42 +114,57 @@ describe("about page numbers come from the committed eval run", () => {
       expect(meanFirstPrompt(results.runs)).toBe(GEMMA_FIRST_PROMPT_TOKENS.now);
       expect(meanFirstPrompt(before.runs)).toBe(GEMMA_FIRST_PROMPT_TOKENS.before);
     }
-    // "Some clues are still vague: 6 of 133 Wild Finds ... down from 27 of 126": our own checks on the printed clues.
+    // "Some clues are still vague: 8 of 112 Wild Finds ... 22 of 133 in the run before": today's checks on both runs.
     {
       const vague = (rr: RunRow[], band: "6-10") => {
         const wild = rr.filter((r) => r.model === "gemma-4-31B-it").flatMap((r) => r.items).filter((i) => i.section === "wild");
         return { flagged: wild.filter((i) => jargonProblem(i.clue, band) !== null || triviaProblem(i.clue, band) !== null).length, wild: wild.length };
       };
       expect(results.meta.ageBand).toBe("6-10");
-      // r7 follow-ups: the page quotes what the checks of run -7 counted (6 and 27). Today's stricter checks (range and
-      // habitat facts, two-word bare colours, plurals, numbered segments) count more on the same printed clues; both
-      // are kept so the page number can be synced honestly at the next paid run (GEMMA_VAGUE_CLUES_TODAY).
-      expect(vague(results.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES_TODAY.flagged, wild: GEMMA_VAGUE_CLUES.wildPrinted });
-      expect(vague(before.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES_TODAY.before, wild: GEMMA_VAGUE_CLUES.beforeWildPrinted });
-      expect(GEMMA_VAGUE_CLUES.flagged).toBeLessThanOrEqual(GEMMA_VAGUE_CLUES_TODAY.flagged);
-      expect(GEMMA_VAGUE_CLUES.before).toBeLessThanOrEqual(GEMMA_VAGUE_CLUES_TODAY.before);
+      // Eval r8 sync: both runs are counted with today's checks (run -7's own, older checks counted 6 of its 133).
+      expect(vague(results.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES.flagged, wild: GEMMA_VAGUE_CLUES.wildPrinted });
+      expect(vague(before.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES.before, wild: GEMMA_VAGUE_CLUES.beforeWildPrinted });
     }
-    // RULES-5-03: "60 test runs (54 passes; 6 runs on the 2 no-data parks made none)"
+    // Round-6 judge C4: "water-by-ear on 11 of 50 passes (6 parks), 31 of 54 (13 parks) in the run before".
+    {
+      const water = (rr: RunRow[]) => soundThemes(rr.filter((r) => r.model === "gemma-4-31B-it") as unknown as RunRecord[]);
+      expect(water(results.runs)).toMatchObject({ waterSound: GEMMA_WATER_BY_EAR.passes, passes: GEMMA_WATER_BY_EAR.of, waterSoundParks: GEMMA_WATER_BY_EAR.parks });
+      expect(water(before.runs)).toMatchObject({ waterSound: GEMMA_WATER_BY_EAR.before, passes: GEMMA_WATER_BY_EAR.beforeOf, waterSoundParks: GEMMA_WATER_BY_EAR.beforeParks });
+    }
+    // RULES-5-03: "60 test runs (50 passes; 6 runs on the 2 no-data parks made none; 4 runs lost to the provider)"
     const gRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");
     expect(gRuns.filter((r) => r.kind === "pass")).toHaveLength(GEMMA_RUN_COUNTS.passes);
-    const none = gRuns.filter((r) => r.kind !== "pass");
+    const none = gRuns.filter((r) => r.kind !== "pass" && !r.dataRich);
     expect(none).toHaveLength(GEMMA_RUN_COUNTS.noDataRuns);
-    expect(none.every((r) => !r.dataRich)).toBe(true);
     expect(new Set(none.map((r) => r.slug)).size).toBe(GEMMA_RUN_COUNTS.noDataParks);
-    // "2 of 51 test passes came out short ... on one park with a small pool of finds"
-    const gemmaRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");
+    const lost = gRuns.filter((r) => r.kind !== "pass" && r.dataRich);
+    expect(lost).toHaveLength(GEMMA_RUN_COUNTS.lostRuns);
+    expect(lost.every((r) => r.kind === "error")).toBe(true);
+    // "9 of 51 did not make a complete pass: 4 were lost to the provider, 5 printed short on 3 parks"
+    const gemmaRuns = gRuns;
     const short = gemmaRuns.filter((r) => r.dataRich && !(r.kind === "pass" && r.items.length >= (r.n ?? 0) - 1));
     expect(short).toHaveLength(GEMMA_SHORT_PASSES.passes);
     expect(new Set(short.map((r) => r.slug)).size).toBe(GEMMA_SHORT_PASSES.parks);
-    // "1 first call hit the 30 s limit and was retried ... 1 pass saved": no pass was lost
-    expect(gemma.errors).toEqual({});
+    const printedShort = short.filter((r) => r.kind === "pass");
+    expect(printedShort).toHaveLength(GEMMA_SHORT_PASSES.printedShort);
+    expect(new Set(printedShort.map((r) => r.slug)).size).toBe(GEMMA_SHORT_PASSES.printedShortParks);
+    // "10 first calls hit the 30 s limit; their retries saved 5 passes; 4 passes were lost (3 retries timed out, 1 got
+    // HTTP 403); 2 refills hit their 20 s limit"
+    expect(gemma.errors).toEqual({ MODEL_TIMEOUT: GEMMA_FAILED_FIRST_CALLS.retryTimeouts, MODEL_PROVIDER: GEMMA_FAILED_FIRST_CALLS.retry403 });
     const failed = gemmaRuns.flatMap((r) => (r.calls ?? []).map((c, i) => ({ i, c, r }))).filter(({ c }) => c.status !== 200);
-    expect(failed.every(({ i }) => i === 0)).toBe(true);
-    expect(failed.filter(({ c }) => c.status === null)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.timeouts);
-    expect(failed.filter(({ c }) => c.status === 403)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.http403);
-    const saved = failed.filter(({ r }) => r.kind === "pass" && r.items.length >= (r.n ?? 0) - 1 && (r.calls ?? []).length >= 2);
+    const first = failed.filter(({ i }) => i === 0);
+    expect(first.filter(({ c }) => c.status === null)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.timeouts);
+    expect(first.filter(({ c }) => c.status === 403)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.http403);
+    const retries = failed.filter(({ i, r }) => i === 1 && (r.calls ?? [])[0]?.status !== 200);
+    expect(retries.filter(({ c }) => c.status === null)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.retryTimeouts);
+    expect(retries.filter(({ c }) => c.status === 403)).toHaveLength(GEMMA_FAILED_FIRST_CALLS.retry403);
+    expect(failed.length - first.length - retries.length).toBe(GEMMA_FAILED_FIRST_CALLS.refillTimeouts);
+    expect(failed.filter(({ i, c }) => i > 0 && !retries.some((x) => x.c === c)).every(({ c }) => c.status === null)).toBe(true);
+    expect(retries.map(({ r }) => r)).toEqual(lost);
+    expect(lost).toHaveLength(GEMMA_FAILED_FIRST_CALLS.lost);
+    const saved = first.filter(({ r }) => r.kind === "pass" && r.items.length >= (r.n ?? 0) - 1 && (r.calls ?? []).length >= 2);
     expect(saved).toHaveLength(GEMMA_FAILED_FIRST_CALLS.rescued);
-    // "DigitalOcean answered at 47.3 answer tokens a second; at 36.8 in the run before ..."
+    // "DigitalOcean answered at 28.1 answer tokens a second; at 47.3 in the run before ..."
     const tps = (rr: RunRow[]) =>
       Math.round(
         percentile(
@@ -239,18 +255,20 @@ describe("/about", () => {
   it("v3: the stat tiles are the committed eval numbers, and the misses say Missed", () => {
     const tiles = aboutStatTiles();
     const g = EVAL_COLUMNS.find((c) => c.model === "gemma-4-31B-it")!;
-    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["97.2%", "0", "$0.00103", "Grade 2.5", "96.1%", "9.4 s", "2.8%", String(UNIT_TESTS.passed)]));
-    expect(tiles.find((x) => x.value === "9.4 s")?.met).toBe(true); // run 2026-10-06-7: p50 9.4 s, p95 13.8 s
-    expect(tiles.find((x) => x.value === "96.1%")?.met).toBe(true);
-    expect(tiles.find((x) => x.value === "$0.00103")?.met).toBe(false); // over $0.001 (longer prompts)
-    expect(tiles.find((x) => x.value === "$0.00103")?.label).toBe("per pass (list price; up to $0.00105 if 1 timed-out call was billed in full)");
-    expect(tiles.filter((x) => x.met === false)).toHaveLength(1);
-    expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(true);
+    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["99%", "0", "$0.00111", "Grade 2.5", "82.4%", "15.3 s", "9.7%", String(UNIT_TESTS.passed)]));
+    // Run 2026-10-06-8 (a slow provider evening): speed, complete passes, cost and repeats are Missed.
+    expect(tiles.find((x) => x.value === "15.3 s")?.met).toBe(false); // p50 15.3 s, p95 30.0 s
+    expect(tiles.find((x) => x.value === "82.4%")?.met).toBe(false);
+    expect(tiles.find((x) => x.value === "$0.00111")?.met).toBe(false); // 15 timed-out calls priced at their prompt size
+    expect(tiles.find((x) => x.value === "$0.00111")?.label).toBe("per pass (list price; up to $0.00127 if 15 timed-out calls were billed in full)");
+    expect(tiles.filter((x) => x.met === false)).toHaveLength(4);
+    expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(false);
+    expect(tiles.find((x) => x.value === "99%")?.met).toBe(true);
     expect(tiles.find((x) => x.value === "0")?.met).toBe(true);
     const list = html.match(/<ul aria-label="Measured results"[\s\S]*?<\/ul>/)?.[0] ?? "";
     expect((list.match(/<li /g) ?? []).length).toBe(tiles.length);
     expect((text(list).match(/Missed/g) ?? []).length).toBe(tiles.filter((x) => x.met === false).length);
-    expect(t).toContain("run 2026-10-06-7 (2026-10-06)");
+    expect(t).toContain("run 2026-10-06-8 (2026-10-06)");
   });
 
   it("v3: the unit-test tile is dated, and its file count matches tests/unit (re-count when tests are added)", () => {
@@ -289,35 +307,38 @@ describe("/about", () => {
 
   it("quotes the measured numbers, failures included", () => {
     for (const s of [
-      "97.2% (518/533)",
-      "96.1% (49/51)",
-      "2.8% (clue only 2.6%)",
-      "9.4 s / 13.8 s",
-      "$0.00103",
+      "99% (512/517)",
+      "82.4% (42/51)",
+      "2.7% (clue only 2.7%)",
+      "15.3 s / 30.0 s",
+      "$0.00111",
       "2.5",
-      "3.2",
-      "47.1% complete passes",
-      "1 of its 20 test runs ended at its 60 s limit",
-      "Gemma passes (2.8% of its clues",
-      "Llama 4 Maverick does not (14.6%)",
-      "Short passes: 2 of 51 still came out short.",
-      "Complete passes meet the goal (Gemma 96.1%, 49 of 51; target 90% or more; 94.1% in the run before).",
-      "1 pass saved",
-      "The short ones were on one park with a small pool of finds",
-      "Cost is just over the goal: Gemma $0.00103 a pass.",
-      "up from $0.00097 in the run before (2026-10-06-6), because the prompt grew about 9%",
-      "1 call timed out with no answer; it is priced at its prompt size, up to $0.00105 if 1 timed-out call was billed in full, and $0.00102 if it was free.",
-      "A 10-13 pass in the small 10-13 check cost $0.00117.",
-      "Some clues are still vague: 6 of 133 Wild Finds.",
-      "down from 27 of 126 in the run before",
-      "Peek at a bird that is yellow.",
-      "a bird that is resident in the central United States",
-      "2.8% (11/390)",
-      "0 of 86 count clues (4 removed)",
-      "Speed met the goal this run, thanks to a fast provider (9.4 s typical, 13.8 s slow).",
-      "The typical call took 9.37 s; first calls alone took 10.2 s",
-      "47.3 answer tokens a second; at 36.8 in the run before, the typical call took 12.0 s and missed",
-      "1 first call hit the 30 s limit and was retried",
+      "2.8",
+      "52.9% complete passes",
+      "3 of its 20 test runs ended at its 60 s limit",
+      "Gemma passes (2.7% of its clues",
+      "Llama 4 Maverick does not (17.1%)",
+      "Complete passes missed the goal: 82.4% (42 of 51).",
+      "Target 90% or more; 96.1% in the run before. 4 test runs made no pass: the first call and its retry both failed (3 timed out again, 1 got an HTTP 403 error).",
+      "5 passes came out short, on 3 parks with a small pool of finds",
+      "2 refills ran out of time",
+      "Cost missed the goal: Gemma $0.00111 a pass.",
+      "$0.00103 in the run before (2026-10-06-7). The prompt is shorter now (2,872 prompt tokens on a first call, 3,084 before), but 15 calls timed out with no answer.",
+      "Each is priced at its prompt size, up to $0.00127 if 15 timed-out calls were billed in full, and $0.00097 if they were free.",
+      "A 10-13 pass in the small 10-13 check cost $0.00146.",
+      "Some clues are still vague: 8 of 112 Wild Finds.",
+      "22 of 133 in the run before, counted with the same checks",
+      "Watch for a small bird that is yellow.",
+      "What has a shell and lives in fresh water?",
+      "Some clues repeat across parks: 9.7%.",
+      "34 of 352 printed clues share 5 words",
+      "11 of 50 passes (31 of 54 before)",
+      "9.7% (34/352)",
+      "0 of 71 count clues (10 removed)",
+      "Speed missed the goal this run: DigitalOcean was slow (15.3 s typical, 30.0 s slow).",
+      "The typical call took 15.35 s; first calls alone took 16.4 s",
+      "28.1 answer tokens a second; at 47.3 in the run before, the typical call took 9.4 s and met the goal",
+      "10 first calls hit the 30 s limit; their retries saved 5 passes",
       "One to three calls per pass.",
       "and Lucky Finds (the test parks have no recorded Google Maps review counts",
     ]) {

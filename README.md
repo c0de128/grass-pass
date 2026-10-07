@@ -110,7 +110,7 @@ at DigitalOcean list prices; the $10 prepaid credit is the hard ceiling.
 | `pnpm build` / `pnpm start` | production build / server |
 | `pnpm e2e` | Playwright against `pnpm start` (port 3123, or `E2E_BASE_URL`); live tests skip honestly, with the server's error code, when an upstream or a limit says no |
 | `pnpm osm:snapshot` | re-records the saved OpenStreetMap data (the 4 example parks and the Dallas-area fallback park list, `src/data/osm/`) |
-| `pnpm eval` | the evals: 20 recorded real parks, live open models on DigitalOcean (about $0.07-0.09; last full run $0.089; capped at $1), plus a no-AI baseline. See [`evals/README.md`](evals/README.md) |
+| `pnpm eval` | the evals: 20 recorded real parks, live open models on DigitalOcean (about $0.07-0.09; last full run $0.090; capped at $1), plus a no-AI baseline. See [`evals/README.md`](evals/README.md) |
 | `pnpm eval:check` | free dry run of every recorded park through the real pass builder, model off |
 | `pnpm eval:record` | re-records the 20 eval parks live from OpenStreetMap and iNaturalist |
 | `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` and `scripts/brand/v3.mjs` |
@@ -124,7 +124,7 @@ The app talks to any OpenAI-compatible server. Measured on Oct 6, 2026 with the 
 - **With the app's normal limits (70 s per model call, as on the hosted site), it is too slow on this CPU:** 0 of 5
   passes complete: 3 ran out of time and the other 2 came out short (6 of 8 finds).
 - **Given more time (an eval-only setting), it works:** 4 of 5 passes complete, 96.7% of clues quoted their source,
-  reading grade 2.9, 0 risky species printed, 59.3 s a typical model call (hosted Gemma 4 31B: 9.4 s), about 1-3
+  reading grade 2.9, 0 risky species printed, 59.3 s a typical model call (hosted Gemma 4 31B: 15.3 s), about 1-3
   minutes a pass, about 5-6 GB of RAM (5.2 GB working set, 5.8 GB at most). It writes about 18 answer tokens a second
   here.
 - **In the app, with the longer local clock (`LOCAL_MODEL_TIMEOUT_MS=270000`), it works, slowly:** one browser
@@ -158,37 +158,40 @@ The eval runs the app's own pass builder and checks. The browser flow was clicke
 `LOCAL_MODEL_TIMEOUT_MS=270000` (above). The eval's "app clock" row is the normal clock, without that setting.
 
 ## Limitations
-The same list as the app's `/about` page, from eval run [`2026-10-06-7.md`](evals/results/2026-10-06-7.md):
-- **Cost is just over the goal: Gemma $0.00103 a pass (target $0.001; up to $0.00105 if the 1 timed-out call was
-  billed in full; $0.00102 if it was free),** up from $0.00097 in the run before (`2026-10-06-6`) because the prompt
-  grew about 9% (3,084 vs 2,836 tokens on a first call: the new rule for plain kid words with 3 bad examples). Answers
-  were the same length. A finished 10-13 pass cost $0.00117 in the small check below.
-- **Some clues are still vague: 6 of 133 printed Wild Finds** are flagged by our own checks (down from 27 of 126). The
-  `trivia` check (range facts, field-guide words, a bare colour) is a preference: such a clue goes first when a spare can
-  replace it, and prints when none can ("Peek at a bird that is yellow.", "Watch for a large semiaquatic rodent.").
-  The checks also miss some: "Watch for a bird that is resident in the central United States." and "Who is a water pet
-  that can grow to about 24 cm long?" (a wild sunfish). Wikipedia jargon (`jargon`, always dropped) printed 0 times
-  (8 before), and 0 clues printed a danger word (1 before).
-- **Speed met the goal this run, thanks to a fast provider: 9.4 s typical, 13.8 s slow (target 10 s / 20 s).** First
-  calls alone took 10.2 s typical. The median Gemma call ran at 47.3 answer tokens a second; at 36.8 in the run
-  before, the typical call took 12.0 s and missed (with answers of the same length). Speed depends on DigitalOcean's load, so the next run can miss
-  again. 1 first call hit the 30 s limit; it was retried and its pass finished. Llama 4 Maverick is too slow to be the
-  default: 1 of its 20 test runs ended at its 60 s limit and 11 of its refills hit the 20 s refill limit; 47.1%
-  complete passes.
+The same list as the app's `/about` page, from eval run [`2026-10-06-8.md`](evals/results/2026-10-06-8.md), made on a
+slow provider evening:
+- **Speed missed the goal this run: 15.3 s typical, 30.0 s slow (target 10 s / 20 s).** First calls alone took 16.4 s
+  typical. DigitalOcean answered at 28.1 answer tokens a second (a probe just before the run: 45.7); at 47.3 in the run
+  before (`2026-10-06-7`), the typical call took 9.4 s and met the goal. 15 Gemma calls hit their time limit (10 first
+  calls, 3 of their retries, 2 refills) and 1 retry got HTTP 403; the retries saved 5 passes. Llama 4 Maverick is too
+  slow to be the default: 3 of its 20 test runs ended at its 60 s limit; 52.9% complete passes.
+- **Complete passes missed the goal: 82.4% (42 of 51; target 90%; 96.1% in the run before).** 4 test runs made no pass
+  (the first call and its retry both failed), 2 passes were short because a refill ran out of time, and 3 were short
+  on content: Connemara Meadow twice and Klyde Warren once, where all 3 model calls were made and the refills kept
+  nothing. No clue-quality drop (`trivia`) touched a short pass, so we did not relax that check (a free replay of the
+  run gives 42 of 51 either way). A short pass says how many finds are missing.
+- **Cost missed the goal: Gemma $0.00111 a pass (target $0.001; up to $0.00127 if the 15 timed-out calls were billed in
+  full; $0.00097 if they were free).** The shorter prompt worked (2,872 prompt tokens on an answered first call, 3,084
+  in the run before); the miss comes from the timed-out calls, each priced at its prompt size. A finished 10-13 pass
+  cost $0.00146 in the small check below.
+- **Some clues are still vague: 8 of 112 printed Wild Finds** are flagged by our own checks (22 of 133 in the run
+  before, counted with the same checks). A range fact or a bare colour is dropped when a spare can replace it and
+  prints when none can ("Watch for a small bird that is yellow."); a field-guide word goes first ("Watch for a butterfly
+  with iridescent-blue hindwings."). The checks still miss some: "What has a shell and lives in fresh water?" (a
+  mussel) and "Check for a bird that is small and white." (an egret). Wikipedia jargon printed 0 times, and 0 clues
+  printed a danger word or a wrong kind word ("a bug" for a spider).
+- **Some clues repeat across parks: 9.7% (34 of 352; target 5%; 2.8% in the run before).** The top repeats are
+  Gemma's "Somewhere you will see a" (5 parks), our bridge fact "paths that go over water" (4 parks) and the same
+  species, Osage-orange, at 3 parks. A clue that listens for water is now rarer: 11 of 50 passes on 6 parks (31 of 54
+  on 13 parks before), never two on one pass. Counts pass: 0 of 71 printed count clues wrong (code removed 10 first).
 - **A whole new pass usually takes 10-30 seconds, and up to about a minute and a half** for a big park or a slow
-  model. The model part is short (run `-7`: 11.2 s per pass, median, on recorded park data), but a new pass also reads
+  model. The model part is short (run `-8`: 23.9 s per pass, median, on recorded park data, on a slow evening), but a new pass also reads
   the live map and sightings: a judge's own pass for Prospect Park (Brooklyn, a big park) took about 57 s plus an
   11.6 s park search on Oct 6, and passes took 58-67 s when the free map servers were slow (measured Oct 6). The page
   waits up to 95 s and the server keeps a pass it started, so "Try again" opens it.
-- **Short passes: 2 of 51.** Complete passes meet the goal (Gemma 96.1%, 49 of 51; target 90%; 94.1% in the run
-  before). A pass makes 1 to 3 model calls: a failed first call gets one whole retry (1 pass saved), a refill asks for
-  the missing finds + 2 spares, and a pass still short gets one more refill. Both short passes were Connemara Meadow,
-  the park with the smallest pool of describable finds. A short pass says how many finds are missing.
-- **Clues repeat across parks: met.** Gemma 2.8% (11 of 390) of printed clues share 5 words in a row with clues on at
-  least 2 other parks (target 5%; 5.1% before). The top repeats are one Park Finds description ("a small thread of
-  running water", 3 parks) and Gemma's "Somewhere you will see a" (3 parks). Counts pass: 0 of 86 printed count clues
-  wrong (code removed 4 first).
-- **Answers that name themselves: Gemma 2.8% passes, Llama 4 Maverick 14.6% does not** (target 5%), counted before
+- **How a pass is made:** 1 to 3 model calls. A failed first call gets one whole retry, a refill asks for the missing
+  finds + 2 spares, and a pass still short gets one more refill.
+- **Answers that name themselves: Gemma 2.7% passes, Llama 4 Maverick 17.1% does not** (target 5%), counted before
   the checks. Code removes every such clue (and drops such a hint), so nothing is given away, but those clues are
   lost.
 - **Kid check not done yet.** A grown-up reading 10 printed clues as a 7-year-old would
@@ -221,47 +224,48 @@ The same list as the app's `/about` page, from eval run [`2026-10-06-7.md`](eval
 ## Evals
 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026; 5 taxa and 15 season counts added on
 Oct 6 after the blocklist grew), ages 6-10, run through the real pass builder. Current run:
-[`2026-10-06-7.md`](evals/results/2026-10-06-7.md) (notes: [`2026-10-06-7-notes.md`](evals/results/2026-10-06-7-notes.md)),
-one full run on Oct 6 after the round-5 safety and clue-quality work (app commit `b0657b7`), not re-run. Open models
-only: the closed models on our DigitalOcean tier answered 403 on Oct 5.
+[`2026-10-06-8.md`](evals/results/2026-10-06-8.md) (notes: [`2026-10-06-8-notes.md`](evals/results/2026-10-06-8-notes.md)),
+one full run on Oct 6 after the r7 follow-ups (app commit `ef59055`), not re-run, on a slow provider evening. Open
+models only: the closed models on our DigitalOcean tier answered 403 on Oct 5.
 
-| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`-6`) |
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`-7`) |
 |---|---|---|---|---|
-| M1 Blocked taxa printed (target 0) | 0 | 0 | 0 | 0 |
-| M2 Clues quoting their source word for word, before the filter (target 85%) | 97.2% | 96.2% | 100% (by construction) | 99.6% |
-| M3 Passes with >= n-1 items (target 90%) | **96.1% (49/51), PASS** | 47.1% (FAIL) | 17.6% (FAIL) | 94.1% |
+| M1 Blocked taxa printed, by taxon id (target 0) | 0 | 0 | 0 | 0 (9 when re-scored with today's 63 groups) |
+| M2 Clues quoting their source word for word, before the filter (target 85%) | 99.0% | 93.8% | 100% (by construction) | 97.2% |
+| M3 Passes with >= n-1 items (target 90%) | **82.4% (42/51), FAIL** (4 runs lost to the provider) | 52.9% (FAIL) | 17.6% (FAIL) | 96.1% |
 | M4 Honest empty sections (target 100%) | 100% | 100% | 100% | 100% |
-| M5 Reading level, FK grade median (target <= 3.5) | 2.5 | 2.3 | 3.2 | 2.5 |
-| M6 Name leaks in clue or hint, before the filter (target <= 5%) | 2.8% (clue only 2.6%) | 14.6% (FAIL) | 1.4% | 2.6% |
-| M7 Model call p50 / p95 (target 10 s / 20 s) | **9.4 s / 13.8 s, PASS** (first calls alone 10.2 s) | 26.1 s / 52.6 s (FAIL, 1 pass timed out) | none | 12.0 s / 22.7 s (FAIL) |
-| M8 Cost per pass (target $0.001) | **$0.00103 to $0.00105, FAIL** (1 timed-out call: prompt only, or billed in full) | $0.00186 to $0.00256 (FAIL) | $0 | $0.00097 |
-| M10 Printed clues repeated across parks (target <= 5%) | **2.8% (11/390), PASS** | 0% (0/98) | 18.8% (FAIL) | 5.1% (FAIL) |
-| M11 Printed clues with a wrong count (target 0) | 0 of 86 (4 removed by the check) | 0 of 7 (9 removed) | 0 of 3 | 0 of 96 (12 removed) |
+| M5 Reading level, FK grade median (target <= 3.5) | 2.5 | 2.5 | 2.8 | 2.5 |
+| M6 Name leaks in clue or hint, before the filter (target <= 5%) | 2.7% (clue only 2.7%) | 17.1% (FAIL) | 1.4% | 2.8% |
+| M7 Model call p50 / p95 (target 10 s / 20 s) | **15.3 s / 30.0 s, FAIL** (first calls alone 16.4 s; 28.1 answer tokens/s) | 25.8 s / 60.0 s (FAIL, 3 passes timed out) | none | 9.4 s / 13.8 s |
+| M8 Cost per pass (target $0.001) | **$0.00111 to $0.00127, FAIL** (15 timed-out calls: prompt only, or billed in full; $0.00097 at $0) | $0.00166 to $0.00236 (FAIL) | $0 | $0.00103 to $0.00105 |
+| M10 Printed clues repeated across parks (target <= 5%) | **9.7% (34/352), FAIL** | 0% (0/88) | 20.4% (FAIL) | 2.8% |
+| M11 Printed clues with a wrong count (target 0) | 0 of 71 (10 removed by the check) | 0 of 7 (9 removed) | 0 of 3 | 0 of 86 (4 removed) |
 
-Gemma calls: 77 for 60 test runs (54 passes: 36 used 1 call, 13 used 2, 5 used 3; 6 runs on the 2 no-data parks made
-none). Printed Wild Finds that our own checks call jargon or trivia: 6 of 133 (4.5%; run `-6`: 27 of 126, 21.4%).
-The no-AI template fell from 76.5% to 17.6% complete passes: its clue is a species' first Wikipedia sentence with the
-name masked ("____ is a species of flowering plant in the aster family"), which is what the new `jargon` check drops
-(23 of its items). One of the 23 is a false positive: the rank-word rule also matches "families" in our own Park Finds
-text ("Players and families use it for running games"); not fixed yet.
+Gemma calls: 94 for 60 test runs (50 passes: 25 used 1 call, 14 used 2, 11 used 3; 6 runs on the 2 no-data parks made
+none; 4 runs were lost when the first call and its retry both failed). Printed Wild Finds that our own checks call
+jargon or trivia: 8 of 112 (7.1%; run `-7` with the same checks: 22 of 133). Passes with a clue that listens for water:
+11 of 50 on 6 parks (run `-7`: 31 of 54 on 13 parks). The no-AI template stays at 17.6% complete passes: its clue is a
+species' first Wikipedia sentence with the name masked ("____ is a species of flowering plant in the aster family"),
+which is what the `jargon` check drops.
 
-Ages 10-13, a partial check ([`2026-10-06-partial-1853.md`](evals/results/2026-10-06-partial-1853.md), the same 3
-parks as the checks before it, not re-run): **3 of 3 complete** in 4 model calls, **all 3 kept their 2 hard finds**,
-grade 3.8 (aim 5-6), 16.2 s / 21.4 s per call (**over** the 10 s / 20 s targets), 7.1% name leaks before the checks
-(**over** the 5% target; code removed them all), and $0.00117 per pass, **over** the $0.001 mark. Only 4 model calls,
-so a small sample.
+Ages 10-13, a partial check ([`2026-10-06-partial-2121.md`](evals/results/2026-10-06-partial-2121.md), the same 3
+parks as the checks before it, not re-run): **3 of 3 complete** in 6 model calls, **2 of 3 kept their 2 hard finds**
+(Cedar Ridge printed 1), grade 3.8 (aim 5-6), 11.1 s / 14.1 s per call (the typical time is **over** the 10 s target),
+5.3% name leaks before the checks (**over** the 5% target; code removed them all), and $0.00146 per pass, **over** the
+$0.001 mark. Only 6 model calls, so a small sample.
 
 What got worse since the previous run and why, earlier runs, and every tuning change:
 [`docs/EVALS.md`](docs/EVALS.md). The app's `/about` page shows the same numbers (`src/lib/about/eval-summary.ts`,
 checked against the results JSON by a unit test).
 
 ### Why open
-- **Kid-sized words:** Gemma's clues read at FK grade 2.5 (median), and only 6 of its 133 printed Wild Finds read like a
-  field guide; the no-AI template on the same data (Wikipedia's own first sentences) completes 17.6% of passes.
-- **Sticks to the facts:** 97.2% of its clues quoted their source word for word before any filter (code drops the
+- **Kid-sized words:** Gemma's clues read at FK grade 2.5 (median), and only 8 of its 112 printed Wild Finds were
+  flagged by our checks; the no-AI template on the same data (Wikipedia's own first sentences) completes 17.6% of
+  passes.
+- **Sticks to the facts:** 99.0% of its clues quoted their source word for word before any filter (code drops the
   rest); 0 blocked species printed in 60 runs.
-- **Cheap enough for a classroom:** about $0.00103 to $0.00105 per pass at DigitalOcean list prices (just over our
-  $0.001 goal).
+- **Cheap enough for a classroom:** about $0.00111 to $0.00127 per pass at DigitalOcean list prices on a slow evening
+  with 15 timed-out calls ($0.00097 if those were free; our goal is $0.001).
 - **Safety rules live in our code, not a vendor's:** the same checks run on any model, switching is one setting
   (`MODEL_ID`), and Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible

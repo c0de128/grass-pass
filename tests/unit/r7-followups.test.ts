@@ -367,6 +367,9 @@ describe("Q-6-02: every find by the water gets the water line and is in the grow
     expect(withWaterSafety(v(bridge, "Where is the walkway that goes high over water?", "near the water")).item.safety).toBe(SAFETY_LINES.water);
     expect(withWaterSafety(v(frog, "Watch for a big green frog with a loud call.", "near the water")).item.safety).toBe(`${SAFETY_LINES.wildlife} ${SAFETY_LINES.water}`);
     expect(withWaterSafety(v(bench, "Spot 4 seats by the path.")).item.safety).toBeNull();
+    // Live check 2026-10-06 (Trinity): a drinking fountain's clue says water, but it is no water hazard.
+    const drink = parkItem("osm-drinking-water", "drinking fountain", "It gives you a sip of water.");
+    expect(withWaterSafety(v(drink, "What gives you a swallow of cool water when you push a button?")).item.safety).toBeNull();
   });
   it("the tip lists them", () => {
     const items = [v(bench, "Spot 4 seats by the path.", "", "easy"), v(bridge, "Where is the walkway that goes high over water?"), v(frog, "Watch for a big green frog.", "near the water")].map(withWaterSafety);

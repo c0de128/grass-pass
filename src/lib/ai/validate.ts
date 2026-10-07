@@ -1380,6 +1380,8 @@ const WATER_WORD_RE = /\b(?:water|waters|pond|ponds|lake|lakes|creek|creeks|stre
  * Any printed find whose clue or hint names water now carries the line after its own (at most 120 characters).
  */
 export function withWaterSafety<T extends Pick<ValidItem, "item" | "clue" | "lookWhere">>(v: T): T {
+  // A drinking fountain's clue says water ("a swallow of cool water", live Trinity check 2026-10-06): not a water hazard.
+  if (v.item.id === "osm-drinking-water") return v;
   if (!WATER_WORD_RE.test(`${v.clue} ${v.lookWhere}`)) return v;
   const own = v.item.safety;
   if (own && /water/i.test(own)) return v;

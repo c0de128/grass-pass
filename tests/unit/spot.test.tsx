@@ -243,10 +243,11 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
   it("is valid for storage: integer units inside the box, under the point budget, X and START inside", () => {
     expect(SpotMapSchema.safeParse(map).success).toBe(true);
     const pts = [map.outline, map.roads, map.paths, map.waterways, map.water, map.pitches, map.parking].flat().reduce((n, l) => n + l.length / 2, 0);
-    expect(pts).toBeGreaterThan(200);
+    expect(pts).toBeGreaterThan(50);
     expect(pts).toBeLessThanOrEqual(MAX_MAP_POINTS);
     for (const l of [map.outline, map.roads, map.paths, map.water, map.pitches, map.parking].flat())
       for (let i = 0; i < l.length; i += 2) {
+        expect(Number.isInteger(l[i]) && Number.isInteger(l[i + 1])).toBe(true);
         expect(l[i]).toBeGreaterThanOrEqual(-2);
         expect(l[i]).toBeLessThanOrEqual(MAP_W + 2);
         expect(l[i + 1]).toBeGreaterThanOrEqual(-2);
@@ -261,17 +262,21 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
     // North is up: the START (parking lot, north-west of the shelter) is above and left of the X.
     expect(map.start![1]).toBeLessThan(map.target[1]);
     expect(map.start![0]).toBeLessThan(map.target[0]);
-    expect(map.scale.label).toBe("250 m (820 ft)");
+    // map-clear: framed on START and the X (not the whole park), with a round-number scale.
+    expect(map.frame).toBe("spot");
+    expect(map.scale.label).toMatch(/^(25|50|100) m \(/);
     expect(JSON.stringify(map).length).toBeLessThan(20_000);
   });
 
-  it("draws only what exists, areas first and the park edge last; every line >= 1 pt when printed", () => {
-    const d = drawMap(map);
-    expect(d.layers.map((l) => l.style)).toEqual(["water", "pitch", "parking", "road", "path", "outline"]);
-    expect(d.legend).toEqual(["water", "pitch", "parking", "road", "path"]);
-    expect(d.x.d).toMatch(/^M\d+ \d+L\d+ \d+M\d+ \d+L\d+ \d+$/);
-    expect(d.start?.label.anchor).toBe("start");
-    expect(d.parkingLabels.length).toBeGreaterThan(0);
+  it("draws only what is visible, areas first, then the edge, creeks, roads and paths; every line >= 1 pt when printed", () => {
+    const d = drawMap(map, t.walk);
+    const order = d.layers.map((l) => l.style);
+    expect(order.length).toBeGreaterThan(0);
+    const rank = ["water", "pitch", "parking", "outline", "waterway", "road", "path"];
+    expect([...order].sort((a, b) => rank.indexOf(a) - rank.indexOf(b))).toEqual(order);
+    expect(d.legend).toEqual(order);
+    expect(d.x.d).toMatch(/^M[\d.]+ [\d.]+L[\d.]+ [\d.]+M[\d.]+ [\d.]+L[\d.]+ [\d.]+$/);
+    expect(d.start?.label.text).toBe("START");
     // Printed 3.2 in wide (230.4 pt over MAP_W units, print.css); PrintFit never goes below MIN_FIT (0.91).
     const ptPerUnit = 230.4 / MAP_W;
     for (const st of Object.values(LAYER_STYLE)) expect(st.width).toBeGreaterThanOrEqual(STROKE_MIN);
@@ -279,14 +284,14 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
   });
 
   it("the SVG is black and white only, has a title for screen readers, the X, START, north arrow and scale bar", () => {
-    const html = renderToStaticMarkup(<SpotMapSvg map={map} title="Map of Celebration Park" />);
+    const html = renderToStaticMarkup(<SpotMapSvg drawing={drawMap(map, t.walk)} title="Map of Celebration Park" />);
     const colours = [...html.matchAll(/(?:fill|stroke)="([^"]+)"/g)].map((m) => m[1]);
-    for (const c of colours) expect(["#000", "#fff", "none"].includes(c) || /^url\(#spot-(hatch|clip)-/.test(c)).toBe(true);
+    for (const c of colours) expect(["#000", "#fff", "none"].includes(c) || /^url\(#spot-(hatch|dots|clip)-/.test(c)).toBe(true);
     expect(html).toMatch(/<svg[^>]*role="img"[^>]*aria-labelledby="spot-title-[^"]+"/);
     expect(html).toContain(">Map of Celebration Park</title>");
     for (const m of ["x", "start", "north", "scale"]) expect(html).toContain(`data-marker="${m}"`);
     expect(text(html)).toContain("START");
-    expect(text(html)).toContain("250 m (820 ft)");
+    expect(text(html)).toContain(map.scale.label);
     expect(html).not.toMatch(/opacity/);
   });
 });
@@ -472,7 +477,9 @@ describe("Find This Spot on paper and on screen", () => {
     expect(t).toContain("Find This Spot");
     expect(t).toContain(spot.riddle);
     expect(t).toContain("Map: © OpenStreetMap contributors");
-    for (const k of ["the spot", "START (begin here)", "water", "sports field", "parking (P)", "road or drive", "path"]) expect(t).toContain(k);
+    // map-clear: the frame is START to the X (140 m), so the pond is out of view and not in the legend.
+    for (const k of ["the spot", "START (begin here)", "this way (straight line)", "sports field", "parking (P)", "road", "path or trail"]) expect(t).toContain(k);
+    expect(t).not.toContain("water");
     expect(t).not.toContain("picnic shelter");
     expect(mapDescription("Celebration Park", spot)).toBe(
       "Map of Celebration Park drawn from OpenStreetMap, north is up. START is at a parking lot; the X is about 140 m south-east of it.",

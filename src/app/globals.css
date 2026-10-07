@@ -130,18 +130,22 @@
 }
 
 /*
- * UX-4-07 (R4), UX-6-02 (R6): Find This Spot labels (START, N, P, the scale) on phones. The 420-unit map shrinks to
- * about 276 px at a 360 px screen (scale ~0.66), so the 12-13 unit labels were ~8 px. On phones they are 1.4x
- * (13 -> 18.2, 12 -> 16.8 map units: ~12 px and ~11 px at 360). Screen only; the printed map (print.css) is unchanged.
+ * UX-4-07 (R4), UX-6-02 (R6), map-clear: Find This Spot labels are 17-18 map units on screen and paper alike (>= 11 px on a
+ * 360 px phone, ~9 pt printed). No phone override: the label placement (render-map.ts) relies on the drawn size.
  */
-@media screen and (max-width: 639px) {
-  .gp-spot-screen .gp-spot-svg .gp-map-label-lg {
-    font-size: 18.2px;
+/* map-clear: the on-screen legend fills its rows evenly from 640 px up (SpotMap.tsx legendColumns); 2 columns on phones. */
+@media (min-width: 640px) {
+  .gp-spot-keys[data-cols="1"] {
+    grid-template-columns: repeat(1, max-content);
   }
-  .gp-spot-screen .gp-spot-svg .gp-map-label-sm {
-    font-size: 16.8px;
+  .gp-spot-keys[data-cols="3"] {
+    grid-template-columns: repeat(3, max-content);
+  }
+  .gp-spot-keys[data-cols="4"] {
+    grid-template-columns: repeat(4, max-content);
   }
 }
+
 
 /*
  * UX-4-02 (R4): three heavy home page sections below the hero skip layout and paint until they come near the screen, so a

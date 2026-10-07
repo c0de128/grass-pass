@@ -20,6 +20,7 @@ import { HERO_PINNED_SLUG, heroPinned, PINNED_FILES, pinnedPass, pinnedPassById 
 import { EXAMPLE_PARKS, exampleStatuses, prewarmIdle, readyExample, resetPrewarm } from "@/lib/prewarm";
 
 const PIN_ID = "w556800335-6to10-20261006-1";
+const WR_PIN_ID = "w460905359-6to10-20261007-1";
 const DAY_MS = 24 * 3600 * 1000;
 
 beforeEach(() => {
@@ -36,7 +37,9 @@ afterEach(async () => {
 
 describe("pinned files are real, complete and unedited", () => {
   it("every pinned pass is byte-for-byte its recorded source, complete, valid, and belongs to its example park", () => {
-    expect(Object.keys(PINNED_FILES).length).toBeGreaterThan(0);
+    // Pinned on 2026-10-07: Oak Point (Oct 6 recording) and White Rock (Oct 7, the warm-up's first try). Arbor Hills and
+    // Celebration have no pinnable pass (reports/pin-examples-2026-10-07.md in the factory repo).
+    expect(Object.keys(PINNED_FILES).sort()).toEqual(["oak-point", "white-rock"]);
     for (const [slug, raw] of Object.entries(PINNED_FILES)) {
       const file = z.object({ _source: z.object({ pinnedFrom: z.string(), recording: z.object({ live: z.literal(true) }).passthrough() }).passthrough(), pass: z.unknown() }).parse(raw);
       const source = JSON.parse(readFileSync(new URL(`../../${file._source.pinnedFrom}`, import.meta.url), "utf8")) as { pass: unknown };
@@ -50,7 +53,8 @@ describe("pinned files are real, complete and unedited", () => {
       expect(pinnedPass(slug)?.id).toBe(pass.id);
       expect(pinnedPassById(pass.id)?.id).toBe(pass.id);
     }
-    expect(pinnedPass("white-rock")).toBeNull(); // nothing complete on disk for it yet
+    expect(pinnedPass("arbor-hills")).toBeNull(); // nothing complete and sound on disk for it yet
+    expect(pinnedPass("celebration")).toBeNull();
     expect(pinnedPassById("w1-6to10-20261006-1")).toBeNull();
   });
 });
@@ -91,8 +95,16 @@ describe("example cards: today's complete -> the store's last complete -> pinned
     expect(html).toContain("from that day&#x27;s data.");
     expect(html).not.toContain("No data available yet");
     expect(html).not.toContain("not ready");
+    // White Rock's pinned pass shows the same way, with its own real date.
+    const wr = statuses.find((s) => s.example.slug === "white-rock")!;
+    const wrPin = pinnedPass("white-rock")!;
+    expect(wr.pass).toEqual({ passId: WR_PIN_ID, day: "2026-10-07", generatedAt: wrPin.generatedAt });
+    expect(wr.missing).toBeNull();
+    expect(renderToStaticMarkup(<SampleParks statuses={[wr]} enabled />)).toContain(`href="/pass/${WR_PIN_ID}?example=1"`);
     // The other examples have nothing pinned: they still say why (honestly), with no link.
-    expect(statuses.filter((s) => s.example.slug !== "oak-point").every((s) => s.pass === null && s.missing !== null)).toBe(true);
+    const unpinned = statuses.filter((s) => !(s.example.slug in PINNED_FILES));
+    expect(unpinned.map((s) => s.example.slug).sort()).toEqual(["arbor-hills", "celebration"]);
+    expect(unpinned.every((s) => s.pass === null && s.missing !== null)).toBe(true);
   });
 
   it("a complete pass saved in the store wins over the pinned one", async () => {
@@ -109,7 +121,9 @@ describe("example cards: today's complete -> the store's last complete -> pinned
   });
 
   it("the park-search fallback offers the pinned pass when nothing is saved", async () => {
-    expect(await readyExample({ now: () => Date.now(), examples: EXAMPLE_PARKS })).toEqual({ name: "Oak Point Park and Nature Preserve", href: `/pass/${PIN_ID}?example=1` });
+    // The first pinned example in EXAMPLE_PARKS order (Arbor Hills has none, so White Rock).
+    expect(await readyExample({ now: () => Date.now(), examples: EXAMPLE_PARKS })).toEqual({ name: "White Rock Lake Park", href: `/pass/${WR_PIN_ID}?example=1` });
+    expect(await readyExample({ now: () => Date.now(), examples: EXAMPLE_PARKS.filter((e) => e.slug === "oak-point") })).toEqual({ name: "Oak Point Park and Nature Preserve", href: `/pass/${PIN_ID}?example=1` });
   });
 });
 
@@ -119,5 +133,17 @@ describe("the pass page opens a pinned pass", () => {
     expect((await loadPass(PIN_ID, Date.parse("2026-10-06T15:00:00Z") + 90 * DAY_MS))?.id).toBe(PIN_ID);
     expect(await loadPass("w556800335-6to10-20261006-2", Date.parse("2026-10-08T15:00:00Z"))).toBeNull();
     expect(await loadPass("not-an-id", Date.now())).toBeNull();
+  });
+
+  it("a pinned id opens the pinned pass even when the store holds a different pass with the same id", async () => {
+    // Ids are park + band + day + the store's variant counter: the deployed store can make its own -1 on the same day.
+    const pin = pinnedPass("white-rock")!;
+    const t = Date.parse(pin.generatedAt) + 60_000;
+    const other = { ...PassSchema.parse(pin), generatedAt: new Date(t - 30_000).toISOString(), items: pin.items.slice().reverse() };
+    const passes = createJsonCache({ name: "pass", schema: PassSchema, ttlSec: 30 * 24 * 3600, maxEntries: 10 });
+    await passes.set(WR_PIN_ID, other, { now: t });
+    const opened = await loadPass(WR_PIN_ID, t);
+    expect(opened?.generatedAt).toBe(pin.generatedAt);
+    expect(opened?.items[0]?.clue).toBe(pin.items[0]?.clue);
   });
 });

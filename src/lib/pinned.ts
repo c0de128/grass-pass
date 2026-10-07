@@ -12,15 +12,21 @@
  *   The hero card always uses HERO_PINNED_SLUG's pinned pass when it exists (a fixed choice, the same on every load).
  * - The pass page /pass/<id> (and its print page) opens a pinned pass from this file when the store doesn't have it.
  *
- * Pinned today: Oak Point Park and Nature Preserve (made Oct 6, 2026, 11:41 PM CDT: 8 of 8 finds, a counted first
- * Park Find, and a Find This Spot riddle written by gemma-4-31B-it). Arbor Hills, White Rock and Celebration Park
- * have no complete full pass on disk yet (their recordings are 7 of 8), so nothing is pinned for them.
+ * Pinned today:
+ * - Oak Point Park and Nature Preserve (made Oct 6, 2026, 11:41 PM CDT: 8 of 8 finds, a counted first Park Find, and a
+ *   Find This Spot riddle written by gemma-4-31B-it).
+ * - White Rock Lake Park (made Oct 7, 2026, 10:11 AM CDT by the app's own example warm-up, its first try that day:
+ *   8 of 8 finds and a Find This Spot riddle by gemma-4-31B-it).
+ * Arbor Hills and Celebration Park have nothing pinned: on Oct 7 every Arbor Hills try came out 7 of 8, and the
+ * complete Celebration tries had a clue that didn't match its answer (a roof-and-pillars clue for "Benches"), so
+ * they were not pinned (factory repo: projects/grass-pass/reports/pin-examples-2026-10-07.md).
  */
 import "@/lib/zod-config";
 import { z } from "zod";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
 import { isCompletePass } from "@/lib/pass/complete";
 import oakPoint from "@/data/pinned-examples/oak-point.json";
+import whiteRock from "@/data/pinned-examples/white-rock.json";
 
 const FileSchema = z.object({
   _source: z.object({ pinnedFrom: z.string(), pinnedOn: z.string(), rule: z.string(), recording: z.unknown() }),
@@ -31,7 +37,7 @@ const FileSchema = z.object({
 export const HERO_PINNED_SLUG = "oak-point";
 
 /** Example slug -> the raw pinned file (exported for the tests that prove each file is real, complete and unedited). */
-export const PINNED_FILES: Readonly<Record<string, unknown>> = { "oak-point": oakPoint };
+export const PINNED_FILES: Readonly<Record<string, unknown>> = { "oak-point": oakPoint, "white-rock": whiteRock };
 
 function load(): ReadonlyMap<string, Pass> {
   const out = new Map<string, Pass>();

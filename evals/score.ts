@@ -4,7 +4,7 @@
  * each case really had, so they are unit-tested without any network.
  */
 import { planRequest, refillPlan, type RequestPlan } from "@/lib/ai/prompt";
-import { countProblem, isGrounded, nameLeak, ngrams, validateDraft, type DropReason, type ValidItem } from "@/lib/ai/validate";
+import { countProblem, isGrounded, isSoundClue, nameLeak, ngrams, validateDraft, type DropReason, type ValidItem } from "@/lib/ai/validate";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { blockedBy, blockedWordIn } from "@/lib/safety/danger-taxa";
 import { LUCKY_EVIDENCE_RE, LUCKY_KEYWORDS, LUCKY_SOURCE, MIN_MENTIONS } from "@/lib/pool/lucky";
@@ -95,6 +95,8 @@ export type PrintedItem = {
   clue: string;
   lookWhere: string;
   answer: string;
+  /** r7 follow-ups: the iNaturalist taxon id of a printed Wild Find (absent in runs before r7 follow-ups; M1 then finds it by its answer). */
+  taxonId?: number;
   /** Q-5-05: the model's difficulty for the printed find (absent in runs before 2026-10-06-7). */
   difficulty?: "easy" | "medium" | "hard";
 };
@@ -133,6 +135,8 @@ export type CaseContext = {
   wildEmpty: boolean;
   /** Lower-case labels/names of every hard-blocked species in the raw iNaturalist answer. */
   blockedNames: string[];
+  /** r7 follow-ups (M1 by taxon id): every species of the raw iNaturalist answer, by its lower-case answer label and names. */
+  taxonByAnswer?: Map<string, { taxonId: number; ancestorIds: number[] }>;
   /** The request the app makes for this pool (prompt pool, mix, asked-for mix), for replaying its checks. */
   plan: RequestPlan | null;
 };
@@ -142,8 +146,11 @@ const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 export function caseContext(caseN: number, d: CaseData): CaseContext {
   const byId = new Map(d.summaries.map((s) => [s.id, s]));
   const blockedNames: string[] = [];
+  const taxonByAnswer = new Map<string, { taxonId: number; ancestorIds: number[] }>();
   for (const s of d.species?.species ?? []) {
     const ancestors = [...new Set([...s.ancestorIds, ...(byId.get(s.taxonId)?.ancestorIds ?? [])])];
+    const taxon = { taxonId: s.taxonId, ancestorIds: ancestors };
+    for (const k of [s.name, s.commonName ? `${cap(s.commonName)} (${s.name})` : null, s.commonName]) if (k) taxonByAnswer.set(k.toLowerCase(), taxon);
     if (!blockedBy({ taxonId: s.taxonId, ancestorIds: ancestors })) continue;
     blockedNames.push(s.name.toLowerCase());
     if (s.commonName) blockedNames.push(`${cap(s.commonName)} (${s.name})`.toLowerCase(), s.commonName.toLowerCase());
@@ -158,6 +165,7 @@ export function caseContext(caseN: number, d: CaseData): CaseContext {
     parkEmpty: d.park !== null && d.park.items.length === 0,
     wildEmpty: d.wild !== null && d.wild.items.length === 0,
     blockedNames: [...new Set(blockedNames)],
+    taxonByAnswer,
     plan: planRequest(d.pool, d.band, d.parkName ?? ""),
   };
 }
@@ -177,17 +185,59 @@ export function expectedWildEmpty(totalObservations: number): string {
 
 // ---------- per-run checks ----------
 
-/** M1: printed items that are a hard-blocked species or carry a blocked word. */
+/**
+ * M1: printed items that are a hard-blocked species or carry a blocked word. r7 follow-ups: a printed Wild Find is
+ * judged by its iNaturalist taxon id and ancestors (`blockedBy`, today's list), from the recorded `taxonId` or, for
+ * older runs, from its answer label in the case's species list; the name match stays as a second check.
+ */
 export function safetyViolations(run: RunRecord, ctx: CaseContext): string[] {
   const out: string[] = [];
   for (const it of run.items) {
     const answer = it.answer.toLowerCase();
+    const taxon = it.section === "wild" ? (taxonOfPrinted(it, ctx) ?? undefined) : undefined;
+    const group = taxon ? blockedBy(taxon) : null;
     const hit = ctx.blockedNames.find((b) => answer === b || answer.includes(`(${b})`) || answer.startsWith(`${b} (`));
-    if (hit) out.push(`${it.answer}: blocked taxon`);
+    if (group) out.push(`${it.answer}: blocked taxon ${taxon?.taxonId} (in ${group.name} ${group.id})`);
+    else if (hit) out.push(`${it.answer}: blocked taxon`);
     const word = blockedWordIn(it.clue) ?? blockedWordIn(it.lookWhere);
     if (word) out.push(`${it.answer}: blocked word "${word}"`);
   }
   return out;
+}
+
+/** The iNaturalist taxon of a printed Wild Find: its recorded id, else its answer label in the case's species list. */
+export function taxonOfPrinted(it: PrintedItem, ctx: CaseContext): { taxonId: number; ancestorIds: number[] } | null {
+  const byLabel = ctx.taxonByAnswer?.get(it.answer.toLowerCase()) ?? null;
+  if (typeof it.taxonId === "number") {
+    const known = [...(ctx.taxonByAnswer?.values() ?? [])].find((t) => t.taxonId === it.taxonId);
+    return known ?? { taxonId: it.taxonId, ancestorIds: [] };
+  }
+  return byLabel;
+}
+
+/**
+ * Round-6 judge C4: one clue SHAPE across passes, which M10 (exact 5-word runs) cannot see: "listen for the water"
+ * on every example pass. Counts passes with a sound clue, passes with a water-by-ear clue (a sound clue that names
+ * water, a creek, a fountain...), the parks those are on, and passes with 2 or more sound clues.
+ */
+export type SoundThemes = { passes: number; withSound: number; waterSound: number; waterSoundParks: number; twoOrMore: number };
+const WATER_CLUE_RE = /\b(?:water|pond|lake|creek|stream|river|fountain|splash\w*)\b/i;
+export function soundThemes(runs: readonly RunRecord[]): SoundThemes {
+  const passes = runs.filter((r) => r.kind === "pass" && r.items.length > 0);
+  const parks = new Set<number>();
+  let withSound = 0;
+  let waterSound = 0;
+  let twoOrMore = 0;
+  for (const r of passes) {
+    const sound = r.items.filter((i) => isSoundClue(i.clue));
+    if (sound.length > 0) withSound++;
+    if (sound.length >= 2) twoOrMore++;
+    if (sound.some((i) => WATER_CLUE_RE.test(`${i.clue} ${i.lookWhere}`))) {
+      waterSound++;
+      parks.add(r.caseN);
+    }
+  }
+  return { passes: passes.length, withSound, waterSound, waterSoundParks: parks.size, twoOrMore };
 }
 
 export type RawChecks = { returned: number; grounded: number; nameLeaks: number; clueLeaks: number };
@@ -456,6 +506,8 @@ export type ModelScore = {
   hard?: { checked: number; met: number; hardMin: number | null; rate: number | null };
   /** S6: printed Lucky Finds and any that are not backed by >= MIN_MENTIONS counted reviews of their keyword (must be none). */
   lucky: { printed: number; problems: string[]; pass: boolean };
+  /** Round-6 judge C4: listening clues across passes (informational, no threshold). */
+  sound?: SoundThemes;
   /** Why the checks dropped model items (replayed with the app's validateDraft): all runs, and the data-rich runs that ended incomplete (M3 misses). */
   drops?: { all: DropCounts; incomplete: DropCounts; byRun: { caseN: number; run: number; kept: number; n: number | null; drops: DropCounts }[] };
 };
@@ -561,6 +613,7 @@ export function scoreModel(model: string, runs: readonly RunRecord[], contexts: 
     retries: done.filter((r) => r.calls.length > 1).length,
     hard: hardFinds(done, contexts),
     lucky: { ...lucky, pass: lucky.problems.length === 0 },
+    sound: soundThemes(done),
     ...(usesModel ? { drops } : {}),
   };
 }

@@ -6,7 +6,7 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter } from "@/components/SiteFooter";
 import { SiteHeader } from "@/components/SiteHeader";
 import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, PREVIOUS_RUN } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_VAGUE_CLUES, GEMMA_VAGUE_CLUES_TODAY, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { jargonProblem, triviaProblem } from "@/lib/ai/jargon";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { PASS_MAX_TOKENS } from "@/lib/ai/build-pass";
@@ -120,8 +120,13 @@ describe("about page numbers come from the committed eval run", () => {
         return { flagged: wild.filter((i) => jargonProblem(i.clue, band) !== null || triviaProblem(i.clue, band) !== null).length, wild: wild.length };
       };
       expect(results.meta.ageBand).toBe("6-10");
-      expect(vague(results.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES.flagged, wild: GEMMA_VAGUE_CLUES.wildPrinted });
-      expect(vague(before.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES.before, wild: GEMMA_VAGUE_CLUES.beforeWildPrinted });
+      // r7 follow-ups: the page quotes what the checks of run -7 counted (6 and 27). Today's stricter checks (range and
+      // habitat facts, two-word bare colours, plurals, numbered segments) count more on the same printed clues; both
+      // are kept so the page number can be synced honestly at the next paid run (GEMMA_VAGUE_CLUES_TODAY).
+      expect(vague(results.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES_TODAY.flagged, wild: GEMMA_VAGUE_CLUES.wildPrinted });
+      expect(vague(before.runs, "6-10")).toEqual({ flagged: GEMMA_VAGUE_CLUES_TODAY.before, wild: GEMMA_VAGUE_CLUES.beforeWildPrinted });
+      expect(GEMMA_VAGUE_CLUES.flagged).toBeLessThanOrEqual(GEMMA_VAGUE_CLUES_TODAY.flagged);
+      expect(GEMMA_VAGUE_CLUES.before).toBeLessThanOrEqual(GEMMA_VAGUE_CLUES_TODAY.before);
     }
     // RULES-5-03: "60 test runs (54 passes; 6 runs on the 2 no-data parks made none)"
     const gRuns = results.runs.filter((r) => r.model === "gemma-4-31B-it");

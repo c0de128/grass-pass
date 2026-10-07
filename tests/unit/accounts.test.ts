@@ -195,8 +195,14 @@ describe("which sign-in buttons exist", () => {
   it("SEC-5-02: JUDGE_DEMO_DAILY_CAP=0 means no new judge passes (not the default), with an honest paused message", () => {
     expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: "0" })).toBe(0);
     expect(judgeDailyCap({ JUDGE_DEMO_DAILY_CAP: " 0 " })).toBe(0);
-    expect(judgeLimitMessage("global", { JUDGE_DEMO_DAILY_CAP: "0" })).toMatch(/^The judge demo is paused today/);
+    // Round-6 SEC-6-04: a cap of 0 lasts until the operator changes it, so no "after midnight" promise.
+    const paused = judgeLimitMessage("global", { JUDGE_DEMO_DAILY_CAP: "0" });
+    expect(paused).toMatch(/^The judge demo is paused for now/);
+    expect(paused).not.toMatch(/midnight|today/i);
+    expect(judgeLeftCopy({ cap: 0, perConnection: 3, left: 0, leftForYou: 0 })).toBe("The judge demo is paused for now. Saved passes and the examples still work.");
+    expect(judgeLeftCopy({ cap: 60, perConnection: 3, left: 0, leftForYou: 0 })).toMatch(/after midnight/);
     expect(judgeLimitMessage("global", {})).toMatch(/^0 of 60 judge passes left today/);
+    expect(judgeLimitMessage("global", {})).toMatch(/after midnight/);
   });
 
   it("session cookies: JWT strategy, Auth.js defaults are httpOnly + SameSite=Lax (+ Secure on https)", () => {

@@ -364,7 +364,11 @@ export async function runModelCase(
       parkName: p.park.name,
       kind: "pass",
       sections: p.sections,
-      items: p.items.map((i) => ({ section: i.section, clue: i.clue, lookWhere: i.lookWhere, answer: i.answer, difficulty: i.difficulty })),
+      items: p.items.map((i) => {
+        // r7 follow-ups: the taxon id of a printed Wild Find, so M1 judges it by id (from the pool item with this answer).
+        const taxonId = i.section === "wild" ? data.pool.find((x) => x.section === "wild" && x.answer === i.answer)?.taxon?.taxonId : undefined;
+        return { section: i.section, clue: i.clue, lookWhere: i.lookWhere, answer: i.answer, difficulty: i.difficulty, ...(taxonId ? { taxonId } : {}) };
+      }),
       removed: p.removed,
       wallMs,
     };
@@ -416,7 +420,7 @@ export function runTemplateCase(c: EvalCase, data: CaseData): RunRecord {
         poolMatches: true,
       },
     ],
-    items: result.items.map((v) => ({ section: v.item.section, clue: v.clue, lookWhere: v.lookWhere, answer: v.item.answer, difficulty: v.difficulty })),
+    items: result.items.map((v) => ({ section: v.item.section, clue: v.clue, lookWhere: v.lookWhere, answer: v.item.answer, difficulty: v.difficulty, ...(v.item.taxon ? { taxonId: v.item.taxon.taxonId } : {}) })),
   };
 }
 

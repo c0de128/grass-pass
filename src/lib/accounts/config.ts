@@ -118,8 +118,10 @@ export function judgeShareCopy(env: Env = process.env): string {
 export function judgeLimitMessage(scope: "global" | "key", env: Env = process.env): string {
   // RULES-4-02: name only the providers set up on this server.
   const names = oauthProviderNames(env);
-  const after = `Saved passes and the examples still work${names ? `, or sign in with ${names}` : ""}. New demo passes again after midnight (Dallas time).`;
-  if (scope === "global" && judgeDailyCap(env) === 0) return `The judge demo is paused today: it makes no new passes right now. ${after}`;
+  const still = `Saved passes and the examples still work${names ? `, or sign in with ${names}` : ""}.`;
+  const after = `${still} New demo passes again after midnight (Dallas time).`;
+  // Round-6 SEC-6-04: a cap of 0 is the operator's stop and lasts until the setting changes, not until midnight.
+  if (scope === "global" && judgeDailyCap(env) === 0) return `The judge demo is paused for now: it makes no new passes. ${still}`;
   if (scope === "global") return `0 of ${judgeDailyCap(env)} judge passes left today: the judge demo account has made all its new passes (shared by every judge). ${after}`;
   return `0 judge passes left today for your connection: it has made its ${JUDGE_PASSES_PER_IP_PER_DAY} judge demo passes (other judges have their own). ${after}`;
 }
@@ -128,6 +130,8 @@ export function judgeLimitMessage(scope: "global" | "key", env: Env = process.en
 export type JudgePassesLeft = { cap: number; perConnection: number; left: number; leftForYou: number };
 
 export function judgeLeftCopy(j: JudgePassesLeft): string {
+  // Round-6 SEC-6-04: cap 0 = paused by the operator, with no promise about midnight.
+  if (j.cap === 0) return "The judge demo is paused for now. Saved passes and the examples still work.";
   if (j.left <= 0) return `0 of ${j.cap} judge passes left today. New ones after midnight (Dallas time); saved passes and the examples still work.`;
   if (j.leftForYou <= 0) return `0 judge passes left today for your connection (${j.left} of ${j.cap} left for other judges).`;
   const you = Math.min(j.left, j.leftForYou);

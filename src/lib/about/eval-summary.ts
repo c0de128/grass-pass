@@ -102,6 +102,12 @@ export const GEMMA_FIRST_PROMPT_TOKENS = { now: 3084, before: 2836 } as const;
  * JSON files with jargonProblem / triviaProblem by tests/unit/about.test.tsx.
  */
 export const GEMMA_VAGUE_CLUES = { flagged: 6, wildPrinted: 133, before: 27, beforeWildPrinted: 126 } as const;
+/**
+ * r7 follow-ups: the same printed Wild Finds of runs -7 and -6 counted with today's stricter jargon/trivia checks
+ * (range and habitat facts, two-word bare colours, plurals, numbered segments). Not shown on the page; the next
+ * paid run's numbers replace both (unit test: about.test.tsx).
+ */
+export const GEMMA_VAGUE_CLUES_TODAY = { flagged: 22, before: 30 } as const;
 
 export const EVAL_PARKS = 20;
 export const EVAL_AGE_BAND = "6-10";

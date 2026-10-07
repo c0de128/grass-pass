@@ -36,7 +36,27 @@ export const REPLAY_TIMEOUT_MS = 5_000;
 
 export type UnrecordedCall = { caseN: number; run: number; callIndex: number; asked: number | null; poolIds: number | null };
 
-export type ReplayRun = RunRecord & { unrecorded: UnrecordedCall[]; dropLog: { reason: DropReason; itemId: string | null; clue: string | null; call: number }[] };
+/** Characters of the prompt today's code sends on one call (system and user message), to estimate prompt tokens offline. */
+export type PromptSize = { call: number; systemChars: number; userChars: number };
+
+export type ReplayRun = RunRecord & {
+  unrecorded: UnrecordedCall[];
+  dropLog: { reason: DropReason; itemId: string | null; clue: string | null; call: number }[];
+  /** r7 follow-ups (M8): the size of every prompt today's code built, so a prompt change can be priced before a paid run. */
+  promptSizes?: PromptSize[];
+};
+
+/** System and user message lengths of a chat-completions request body (0 when it is not one). */
+export function promptSizeOf(body: unknown, call: number): PromptSize {
+  if (typeof body !== "string") return { call, systemChars: 0, userChars: 0 };
+  try {
+    const j = JSON.parse(body) as { messages?: { role?: string; content?: unknown }[] };
+    const len = (role: string) => (j.messages ?? []).filter((m) => m.role === role).reduce((a, m) => a + (typeof m.content === "string" ? m.content.length : 0), 0);
+    return { call, systemChars: len("system"), userChars: len("user") };
+  } catch {
+    return { call, systemChars: 0, userChars: 0 };
+  }
+}
 
 const isTimeoutRecord = (c: CallRecord) => c.status === null && (c.error === "TimeoutError" || c.error === "AbortError");
 
@@ -70,9 +90,11 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
   const calls: CallRecord[] = [];
   const unrecorded: UnrecordedCall[] = [];
   const dropLog: ReplayRun["dropLog"] = [];
+  const promptSizes: PromptSize[] = [];
   let k = 0;
   const modelFetch: FetchLike = async (_url, init) => {
     const i = k++;
+    promptSizes.push(promptSizeOf(init?.body, i));
     if (i === 0) virtual += dataMs;
     const saved = rec.calls[i];
     if (!saved) {
@@ -121,7 +143,7 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
   };
   const base = { caseN: rec.caseN, slug: rec.slug, model: rec.model, run: rec.run, n: rec.n, dataRich: rec.dataRich, wallMs: 0 };
   const out = await buildPass({ ref, band, day, variant: rec.run, id: passIdFor(fx._recording.parkId, band, day, rec.run) }, deps);
-  const extra = { calls, unrecorded, dropLog };
+  const extra = { calls, unrecorded, dropLog, promptSizes };
   if (replay.misses.length > 0) return { ...base, ...extra, parkName: rec.parkName, kind: "error", errorCode: "FIXTURE_MISS", sections: {}, items: [] };
   if (out.kind === "pass") {
     const p = out.pass;
@@ -149,7 +171,10 @@ export type ReplaySummary = {
 };
 
 /** Replay every run of `models` in a saved results file (cases without a fixture are skipped and listed). */
-export async function replayResults(results: EvalResults, models: readonly string[]): Promise<{ summaries: ReplaySummary[]; skipped: string[] }> {
+export async function replayResults(
+  results: EvalResults,
+  models: readonly string[],
+): Promise<{ summaries: ReplaySummary[]; skipped: string[]; contexts: ReadonlyMap<number, CaseContext> }> {
   const band = results.meta.ageBand;
   const casesFile = loadCases();
   const fixtures = new Map<number, EvalFixture>();
@@ -191,5 +216,5 @@ export async function replayResults(results: EvalResults, models: readonly strin
     const optimisticComplete = runs.filter((r) => r.dataRich && (isComplete(r) || r.unrecorded.length > 0)).length;
     summaries.push({ model, score: scoreModel(model, runs, contexts, true), runs, unrecorded, optimisticComplete });
   }
-  return { summaries, skipped };
+  return { summaries, skipped, contexts };
 }

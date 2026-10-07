@@ -5,7 +5,9 @@ import { setLogSink } from "@/lib/log";
 import { prettyJson } from "../json";
 import { replayResults } from "../replay";
 import { RESULTS_DIR, type EvalResults } from "../run";
-import { isComplete } from "../score";
+import { isComplete, taxonOfPrinted } from "../score";
+import { jargonProblem, triviaProblem, wrongKindWord } from "@/lib/ai/jargon";
+import { dangerClueWord } from "@/lib/safety/danger-taxa";
 
 /**
  * `pnpm eval:replay` (free: no model, no network). EVAL_FROM=<results JSON name> (required),
@@ -20,7 +22,7 @@ test("replay a saved eval run through today's checks (pnpm eval:replay)", async 
   const models = (process.env.EVAL_REPLAY_MODELS?.trim() || "gemma-4-31B-it").split(",").map((s) => s.trim()).filter(Boolean);
   const restore = setLogSink(() => undefined);
   try {
-    const { summaries, skipped } = await replayResults(results, models);
+    const { summaries, skipped, contexts } = await replayResults(results, models);
     const say = (s: string) => process.stdout.write(`${s}\n`);
     for (const s of skipped) say(`skipped ${s}`);
     for (const { model, score, runs, unrecorded, optimisticComplete } of summaries) {
@@ -31,10 +33,34 @@ test("replay a saved eval run through today's checks (pnpm eval:replay)", async 
       say(`M5 FK median: ${score.m5.medianGrade?.toFixed(1) ?? "n/a"} (${score.m5.clues} clues)`);
       say(`M6 name leaks before filter: ${score.m6.leaks}/${score.m6.returned} = ${pct(score.m6.rate)}`);
       say(`M11 printed wrong counts: ${score.m11.printedWrong} of ${score.m11.printedCountClues}`);
+      // r7 follow-ups: what is printed, by today's checks (jargon, trivia, danger words, wrong kind words, M1 by taxon id).
+      const band = results.meta.ageBand;
+      const printed = runs.flatMap((r) => r.items.map((i) => ({ r, i })));
+      const wild = printed.filter(({ i }) => i.section === "wild");
+      const jargon = wild.filter(({ i }) => jargonProblem(i.clue, band, "wild") !== null);
+      const trivia = wild.filter(({ i }) => triviaProblem(i.clue, band) !== null);
+      const danger = printed.filter(({ i }) => dangerClueWord(`${i.clue} ${i.lookWhere}`) !== null);
+      const kind = wild.filter(({ r, i }) => {
+        const ctx = contexts.get(r.caseN);
+        return ctx ? wrongKindWord(i.clue, taxonOfPrinted(i, ctx) ?? undefined) !== null : false;
+      });
+      say(`M1 blocked printed: ${score.m1.violations}${score.m1.details.length ? ` (${score.m1.details.join("; ")})` : ""}`);
+      say(`printed Wild Finds ${wild.length}: jargon ${jargon.length}, trivia ${trivia.length}, wrong kind ${kind.length}; danger words printed (any section) ${danger.length}`);
+      for (const { r, i } of [...jargon, ...trivia, ...kind, ...danger]) say(`  weak: case ${r.caseN} r${r.run}: "${i.clue}" (${i.answer})`);
+      const s = score.sound;
+      if (s) say(`sound clues: ${s.withSound}/${s.passes} passes have one; water-by-ear ${s.waterSound}/${s.passes} passes on ${s.waterSoundParks} parks; passes with 2+ sound clues ${s.twoOrMore}`);
       say(`unrecorded calls today's code would make: ${unrecorded.length} (${unrecorded.map((u) => `case ${u.caseN} r${u.run} call ${u.callIndex + 1} asks ${u.asked}`).join("; ")})`);
       const drops: Record<string, number> = {};
       for (const r of runs) for (const d of r.dropLog) drops[d.reason] = (drops[d.reason] ?? 0) + 1;
       say(`drops (today's code, replayed calls): ${Object.entries(drops).sort((a, b) => b[1] - a[1]).map(([k, v]) => `${k} ${v}`).join(", ")}`);
+      // r7 follow-ups (M8): prompt size of today's code on first calls the saved run had answered.
+      const firsts = runs.flatMap((r) => {
+        const size = r.promptSizes?.find((p) => p.call === 0);
+        const rec = r.calls[0];
+        return size && rec?.status === 200 && typeof rec.promptTokens === "number" ? [{ chars: size.systemChars + size.userChars, system: size.systemChars, tokens: rec.promptTokens }] : [];
+      });
+      const med = (xs: number[]) => (xs.length === 0 ? null : [...xs].sort((a, b) => a - b)[Math.floor((xs.length - 1) / 2)]);
+      say(`answered first calls: ${firsts.length}; today's prompt median ${med(firsts.map((f) => f.chars)) ?? "n/a"} chars (system ${med(firsts.map((f) => f.system)) ?? "n/a"}); recorded median ${med(firsts.map((f) => f.tokens)) ?? "n/a"} tokens`);
       for (const r of runs.filter((x) => x.dataRich && !isComplete(x))) {
         say(`  short: case ${r.caseN} ${r.slug} r${r.run}: ${r.kind}${r.errorCode ? ` ${r.errorCode}` : ""} ${r.items.length}/${r.n} calls ${r.calls.length}`);
       }

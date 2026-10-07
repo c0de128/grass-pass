@@ -17,15 +17,15 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
     <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-28 sm:scroll-mt-16 overflow-hidden">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-12 pb-20 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-28">
-        <div className="flex min-w-0 flex-col gap-8 lg:col-span-6">
+        <div className="flex min-w-0 flex-col gap-8 lg:col-span-7">
           <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
             <PhoneOff className="size-3.5" aria-hidden="true" />
             Screen-free &amp; re-wilded
           </p>
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
-            <span className="lg:whitespace-nowrap">Family time is back!</span>{" "}
-            <span className="relative mt-2 inline-block self-end text-[0.667em] text-primary lg:whitespace-nowrap">
+            <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}
+            <span className="relative mt-2 inline-block self-end text-[0.533em] text-primary lg:whitespace-nowrap">
               powered by AI.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
                 <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
@@ -50,7 +50,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </div>
         </div>
 
-        <div className="relative lg:sticky lg:top-24 lg:col-span-6">
+        <div className="relative lg:sticky lg:top-24 lg:col-span-5">
           <div className="relative mx-auto max-w-md lg:mr-0 lg:ml-auto lg:max-w-none lg:pl-16">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-2xl shadow-shadow">
               <Image

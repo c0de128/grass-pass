@@ -13,7 +13,7 @@
 import { describe, expect, it } from "vitest";
 import { computeMix, kidWordsRule, openersFor, STOCK_FRAMES_PROMPT, systemPrompt, voiceFor } from "@/lib/ai/prompt";
 import { jargonProblem, KIND_TAXA, subjectWords, triviaKind, triviaProblem, wrongKindWord } from "@/lib/ai/jargon";
-import { hintContradicts, isSoundClue, parentNoteFor, stockOpening, validateDraft, withWaterSafety, type ValidItem } from "@/lib/ai/validate";
+import { capDifficulty, hintContradicts, isSoundClue, parentNoteFor, soundNotFirst, stockOpening, validateDraft, withWaterSafety, type ValidItem } from "@/lib/ai/validate";
 import { chooseWords, KIND_FACTS } from "@/lib/pool/park";
 import type { PoolItem } from "@/lib/pool/types";
 import { wildPool } from "@/lib/pool/wild";
@@ -429,5 +429,39 @@ describe("eval M1 judges printed Wild Finds by taxon id (r7 follow-ups)", () => 
   it("soundThemes counts passes with listening clues across parks", () => {
     const s = soundThemes([run([{ section: "park", clue: "Where is the water that makes a gentle rushing sound?", lookWhere: "", answer: "Creek" }]), { ...run([{ section: "park", clue: "Spot 4 seats.", lookWhere: "", answer: "Benches" }]), caseN: 4 }]);
     expect(s).toEqual({ passes: 2, withSound: 1, waterSound: 1, waterSoundParks: 1, twoOrMore: 0 });
+  });
+});
+
+describe("judge R7 + round-7 quality: difficulty, order, wrong-kind probes, viewpoint facts", () => {
+  const parkItem = (n: number | null) =>
+    ({ id: "osm-bench", section: "park", kind: "bench", sourceText: "", answer: "Benches", evidence: "", source: "OpenStreetMap", nameWords: [], safety: null, stationary: true, count: { of: ["seat"], n } }) as unknown as PoolItem;
+  it("a very common Park Find (the judge's 'Hard · 234 on the park map' bench) is never hard for ages 4-10", () => {
+    const v = { item: parkItem(234), difficulty: "hard" as const };
+    expect(capDifficulty(v, "4-6").difficulty).toBe("easy");
+    expect(capDifficulty(v, "6-10").difficulty).toBe("medium");
+    expect(capDifficulty(v, "10-13").difficulty).toBe("hard"); // that band promises 2 hard finds
+    expect(capDifficulty({ item: parkItem(3), difficulty: "hard" as const }, "4-6").difficulty).toBe("hard");
+    expect(capDifficulty({ ...v, difficulty: "medium" as const }, "4-6").difficulty).toBe("medium");
+  });
+  it("a listening clue is never Find 1 (Boston Common's 'What can you hear pattering as you get close?')", () => {
+    const mk = (clue: string, section: "park" | "wild" = "park") => ({ item: { ...parkItem(2), section } as PoolItem, clue });
+    const out = soundNotFirst([mk("What can you hear pattering as you get close?"), mk("Count the 4 roofs held up by poles."), mk("Spot a duck.", "wild")]);
+    expect(out.map((v) => v.clue)).toEqual(["Count the 4 roofs held up by poles.", "What can you hear pattering as you get close?", "Spot a duck."]);
+    const quiet = [mk("Count the 4 roofs."), mk("Listen for water.")];
+    expect(soundNotFirst(quiet)).toEqual(quiet);
+  });
+  it("Q-7-05: a bird later in a plant clue is not its subject", () => {
+    const plant = raw.find((t) => t.iconic_taxon_name === "Plantae")!;
+    const taxon = { taxonId: plant.id, ancestorIds: plant.ancestor_ids };
+    expect(wrongKindWord("Find the berries a bird would eat.", taxon)).toBeNull();
+    expect(wrongKindWord("Look at the tree where a bird builds nests.", taxon)).toBeNull();
+    expect(wrongKindWord("Spot the plant birds love.", taxon)).toBeNull();
+    expect(wrongKindWord("Watch for a bird with red wings.", taxon)).toBe("bird"); // still caught as the subject
+    expect(subjectWords("Spot the plant birds love.")).toEqual(["plant"]);
+  });
+  it("judge R7 T1: the viewpoint facts name things to see (no 'a great distance')", () => {
+    const all = KIND_FACTS.viewpoint.join(" ");
+    expect(all).not.toMatch(/great distance|far away|a long way/);
+    expect(all).toMatch(/treetops|water/);
   });
 });

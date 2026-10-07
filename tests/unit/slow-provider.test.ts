@@ -29,7 +29,7 @@ import {
 import { callMaxTokens, PASS_MAX_TOKENS } from "@/lib/ai/build-pass";
 import { callModel, errorIdOf, FORBIDDEN_BACKOFF_MS, ModelError, modelTimeoutCapMs, type ModelLogLine, type ModelRequest } from "@/lib/model";
 import { planRequest, shortRetryPlan } from "@/lib/ai/prompt";
-import { FRAME_VERBS, rewriteStockFrame, stockFrame } from "@/lib/ai/validate";
+import { FRAME_VERBS, nothingToSee, rewriteStockFrame, stockFrame } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { factsFor, KIND_FACTS } from "@/lib/pool/park";
 import { setLogSink } from "@/lib/log";
@@ -314,12 +314,45 @@ describe("M10: banned frames get a plain first word; the bridge fact rotates", (
       "Notice a vine with large, purple blooms.",
     );
     expect(rewriteStockFrame("Somewhere there is a bug with blue on its tail end?", none, "Rambur's Forktail")).toBe("Spot a bug with blue on its tail end.");
-    expect(rewriteStockFrame("Where can you see a spray of water bob up from a spout?", none, "Drinking fountains")).toBe("Spot a spray of water bob up from a spout.");
+    // Round-7 quality Q-7-01: a clause after the frame ("a spray of water bob up") gets "Watch", never "Spot".
+    expect(rewriteStockFrame("Where can you see a spray of water bob up from a spout?", none, "Drinking fountains")).toBe("Watch a spray of water bob up from a spout.");
     expect(rewriteStockFrame("Somewhere there is a thing that sprays water into a bowl. Can you hear it splashing?", none, "Fountains")).toBe(
       "Spot a thing that sprays water into a bowl. Can you hear it splashing?",
     );
     // Run -5 (Celebration): a frame that hears becomes "Listen for".
     expect(rewriteStockFrame("Somewhere you can hear water splashing as you get near.", none, "Fountains")).toBe("Listen for water splashing as you get near.");
+  });
+
+  it("round-7 quality Q-7-01: the rewrite never writes a clue with nothing to find (the 9 strings from the audit)", () => {
+    // The two printed on the example passes, from their likely originals:
+    expect(rewriteStockFrame("Where can you see a great distance?", none, "Viewpoint")).toBe("Where can you see a great distance?");
+    expect(rewriteStockFrame("Where can you find 2 spots with metal bars for stretching?", none, "Exercise stations")).toBe(
+      "Notice 2 spots with metal bars for stretching.",
+    );
+    // Run -8's broken or awkward outputs and the auditor's edge probes: the clue stays as the model wrote it, or gets "Watch".
+    expect(rewriteStockFrame("Somewhere you can see far away from a place higher than the land.", none, "Viewpoint")).toBe(
+      "Somewhere you can see far away from a place higher than the land.",
+    );
+    expect(rewriteStockFrame("Where can you see a thin spurt of water leap up from a spout?", none, "Drinking fountains")).toBe(
+      "Watch a thin spurt of water leap up from a spout.",
+    );
+    expect(rewriteStockFrame("Where can you see the ducks swim? Count them.", none, "Ponds or lakes")).toBe("Watch the ducks swim. Count them.");
+    expect(rewriteStockFrame("Where can you find me? I am a long seat.", none, "Benches")).toBe("Where can you find me? I am a long seat.");
+    expect(rewriteStockFrame("Where can you see how high you are?", none, "Viewpoint")).toBe("Where can you see how high you are?");
+    // The great-distance clue is dropped before printing anyway (nothingToSee -> generic_clue).
+    expect(nothingToSee("Where can you see a great distance?")).toBe(true);
+    expect(nothingToSee("Spot a great distance.")).toBe(true);
+    expect(nothingToSee("Spot 2 spots with metal bars for stretching.")).toBe(true);
+    expect(nothingToSee("Spot a low dirt hill in the center.")).toBe(false);
+    // Q-7-02: "Where can you count" becomes "Count"; any other "Somewhere ..." start is a stock frame (a preference) but never rewritten.
+    expect(rewriteStockFrame("Where can you count the 2 flat smooth courts?", none, "Basketball courts")).toBe("Count the 2 flat smooth courts.");
+    expect(rewriteStockFrame("Somewhere there are 4 roofs held up by poles.", none, "Picnic shelters")).toBe("Spot 4 roofs held up by poles.");
+    expect(stockFrame("Somewhere a metal cooker on a stand stays dark from smoke.")).toBe("somewhere");
+    expect(rewriteStockFrame("Somewhere a metal cooker on a stand stays dark from smoke.", none, "Barbecue grills")).toBe(
+      "Somewhere a metal cooker on a stand stays dark from smoke.",
+    );
+    expect(stockFrame("Somewhere you see water that glitters in the sun as it falls.")).toBe("somewhere you see");
+    expect(stockFrame("Hunt for 4 roofs.")).toBeNull();
   });
 
   it("leaves other clues alone, skips a verb that starts like the answer, and keeps the clue when every word is taken", () => {

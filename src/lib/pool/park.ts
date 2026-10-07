@@ -226,7 +226,10 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   viewpoint: [
     "It is a {spot|perch} with a {good|wide} view across the park.",
     "It is often higher up than the land {around|round} it.",
-    "From there you can see {far away|a long way|a great distance}.",
+    // Judge R7 T1: "From there you can see a great distance" became the clue "Spot a great distance." (nothing to look
+    // for). The fact now names things you can see from it.
+    "From there you can look out over {treetops, grass or water|water, grass or treetops|grass, water or treetops}.",
+    "Some have a rail, a bench or a sign {next to|beside} {the view|the lookout spot}.",
   ],
   water: [
     "It is still water where you may see {ducks, turtles or fish|turtles, fish or ducks|fish, ducks or turtles}.",

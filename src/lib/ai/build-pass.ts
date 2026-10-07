@@ -71,7 +71,7 @@ import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { fixLichenWho } from "./jargon";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { mergeResults, retryThreshold, rewriteStockFrame, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
+import { capDifficulty, mergeResults, parentNoteFor, retryThreshold, rewriteStockFrame, soundNotFirst, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -500,6 +500,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   /** The first riddle (of up to two calls) that passed every check. */
   let riddle: string | null = null;
   let riddleDrop: SpotReason | null = null;
+  /** Judge R7 T2: was the riddle ever asked for (a short whole retry may leave it out)? For the missing-riddle log. */
+  let riddleAsked = false;
   /** The last answer's own check result (the refill is told what went wrong in it). */
   let lastCheck: ValidationResult | null = null;
 
@@ -543,8 +545,10 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       spotAsk = spotAsk && size.spot;
     } else callPlan = plan;
     if (!callPlan) break;
-    const shorter = !refill && call > 1 && callPlan.ask.n < plan.ask.n;
+    // Round-7 quality Q-7-06: "fewer finds" only when the retry asks for fewer than the pass promises (not fewer spares).
+    const shorter = !refill && call > 1 && callPlan.ask.n < plan.mix.n;
     const callSpot = spotAsk ? promptSpot : null;
+    if (callSpot) riddleAsked = true;
     const notes: RefillNotes | undefined =
       refill && best
         ? {
@@ -678,8 +682,13 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     }
     return out;
   };
-  const items: PassItem[] = [...best.items]
-    .sort((a, b) => SECTION_ORDER[a.item.section] - SECTION_ORDER[b.item.section])
+  // Judge R7: a very common Park Find is never "hard" for ages 4-10, and a sound clue is never Find 1. The grown-up's
+  // tip is written again from this final order and these labels (it names finds by number and "easy").
+  const printed = soundNotFirst(
+    [...best.items].sort((a, b) => SECTION_ORDER[a.item.section] - SECTION_ORDER[b.item.section]).map((v) => capDifficulty(v, band)),
+  );
+  const parentNote = parentNoteFor(printed);
+  const items: PassItem[] = printed
     .map((v) => ({
       section: v.item.section,
       // Round-6 Q-6-03: "Who has bright-orange parts ...?" for a lichen reads as an animal: the printed clue says "What".
@@ -695,6 +704,11 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       ref: v.item.id,
     }));
   if (framesRewritten > 0) log("pass_frames_rewritten", { park: f.park.id, n: framesRewritten });
+  // Judge R7 T2: say why a pass with a Find This Spot map prints the fixed line instead of a riddle.
+  if (spotPlan.status === "target" && riddle === null) {
+    const why = !target ? "map_arrived_after_the_clues" : !riddleAsked ? "not_asked_short_retry" : riddleDrop ?? "no_answer";
+    log("spot_riddle_missing", { park: f.park.id, id: input.id, reason: why, target: spotPlan.target.kind, walkM: spotPlan.target.walk?.meters ?? null }, "warn");
+  }
   const dropped = best.drops as Record<DropReason, number | undefined>;
   const other = Object.entries(dropped)
     .filter(([k]) => k !== "not_grounded")
@@ -711,7 +725,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     sections,
     removed: { notGrounded: dropped.not_grounded ?? 0, other },
     safetyFiltered: wild.blocked,
-    parentNote: best.parentNote,
+    parentNote,
     model: { answered, attempts: Math.max(1, attempts), latencyMs: Math.round(modelLatency) },
     generatedAt: new Date(deps.now()).toISOString(),
     dataCheckedAt: {

@@ -243,6 +243,17 @@ const BIRD_WORDS = new Set(["bird", "birds"]);
 const PHRASE_END = new Set([
   "that", "which", "who", "whose", "with", "without", "on", "in", "at", "by", "near", "of", "from", "for", "to", "and", "or", "but",
   "is", "are", "has", "have", "can", "will", "may", "eats", "catches", "hunts", "chases", "looks", "sits", "flies", "lives",
+  // Round-7 quality Q-7-05: "the berries a bird would eat", "the tree where a bird builds nests": a second article or a
+  // clause word starts a new phrase; the bird there is not the subject.
+  "a", "an", "the", "where", "when", "while", "would", "could", "should", "love", "loves", "like", "likes",
+]);
+/**
+ * Q-7-05: head nouns of a plant (or a thing) phrase. A kind word AFTER one of these ("the plant birds love") describes
+ * it; it is not the subject.
+ */
+const THING_HEADS = new Set([
+  "plant", "plants", "tree", "trees", "vine", "vines", "bush", "bushes", "shrub", "shrubs", "flower", "flowers", "berry", "berries",
+  "seed", "seeds", "fruit", "fruits", "leaf", "leaves", "nest", "nests", "grass", "weed", "weeds", "herb", "moss", "mushroom", "feeder", "house",
 ]);
 /** Wild things are never pets ("a water pet" for a wild sunfish), and "pet it" would be a touch instruction. */
 const PET_RE = /\bpets?\b/i;
@@ -260,6 +271,8 @@ export function subjectWords(clue: string): string[] {
   for (const w of words.slice(at + 1, at + 5)) {
     if (PHRASE_END.has(w) || (w.length > 4 && w.endsWith("ing"))) break;
     out.push(w);
+    // Q-7-05: the phrase's head noun ends it ("the plant birds love" -> ["plant"]).
+    if (THING_HEADS.has(w)) break;
   }
   return out;
 }

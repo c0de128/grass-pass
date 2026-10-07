@@ -543,6 +543,11 @@ export function validateDraft(
       drop("generic_clue");
       continue;
     }
+    // Judge R7 T1: "Spot a great distance." / "Spot 2 spots." name nothing to look for, in any section.
+    if (nothingToSee(d.clue)) {
+      drop("generic_clue");
+      continue;
+    }
     // Audit R5-C3 / Q-5-01: Wikipedia jargon ("a moth of the Crambidae family", "pale yellow hindtarsomere",
     // "a mass of 24-39.5 g") gives a child nothing to look for: always removed. A hint with jargon is left out.
     if (jargonProblem(d.clue, opts.band, item.section) !== null) {
@@ -1057,6 +1062,24 @@ export function isGenericClue(clue: string, sourceText: string): boolean {
   return !traitWords(clue).some((w) => first4.has(traitStem(w)) || stems.has(suffixStem(w)));
 }
 
+/**
+ * Judge R7 T1: describing words that still name nothing a child can see ("Spot a great distance." for a viewpoint,
+ * from the fact "From there you can see a great distance").
+ */
+const NOTHING_TO_SEE = new Set(["distance", "far", "away", "great", "spot", "place", "location", "point", "somewhere", "everywhere", "thing"]);
+
+/**
+ * Judge R7 T1: a clue with no seeable thing in it: every describing word is a placeholder ("Spot a great distance."),
+ * or it asks to spot "spots" ("Spot 2 spots."). A clue with only stop words ("Find a place to sit") is not this check's
+ * business (the other checks and the model's own source decide). Dropped as `generic_clue` for every section.
+ */
+export function nothingToSee(clue: string): boolean {
+  const first = sentencesOf(clue)[0] ?? [];
+  if (first[0] === "spot" && first.slice(1, 5).some((w) => singularWord(w) === "spot")) return true;
+  const words = traitWords(clue);
+  return words.length > 0 && words.every((w) => NOTHING_TO_SEE.has(w));
+}
+
 /** A copied run is this many words in a row (content tuning, M10). */
 export const COPY_RUN = 4;
 
@@ -1094,25 +1117,51 @@ export function isCutOff(clue: string): boolean {
 /** The first words of a clue (lower case, letters and digits). */
 const firstWords = (clue: string, k: number) => (sentencesOf(clue)[0] ?? []).slice(0, k).join(" ");
 
-/** The banned frame a clue starts with ("somewhere you will see"; prompt.ts STOCK_FRAMES), or null. */
+/**
+ * Round-7 quality Q-7-02: frames the STOCK_FRAMES list (the prompt's "avoid" list) does not name but that are the same
+ * worn-out start, matched here too. Each can be rewritten safely (below). "where can you count" becomes "Count".
+ */
+const EXTRA_FRAMES = [
+  "somewhere you might see", "somewhere you may see", "somewhere you see", "somewhere you might find", "somewhere you will spot",
+  "somewhere there are", "where can you count", "where can you spot", "where do you see",
+] as const;
+
+/**
+ * The banned frame a clue starts with ("somewhere you will see"; prompt.ts STOCK_FRAMES plus EXTRA_FRAMES), or null.
+ * Q-7-02: ANY other clue whose first word is "Somewhere" is a stock start too ("somewhere"): a preference that a spare
+ * replaces, never rewritten by code.
+ */
 export function stockFrame(clue: string): string | null {
   const start = `${firstWords(clue, 5)} `;
-  return STOCK_FRAMES.map((f) => f.toLowerCase()).find((f) => start.startsWith(`${f} `)) ?? null;
+  const listed = [...STOCK_FRAMES.map((f) => f.toLowerCase()), ...EXTRA_FRAMES].sort((a, b) => b.length - a.length).find((f) => start.startsWith(`${f} `));
+  if (listed) return listed;
+  return start.startsWith("somewhere ") ? "somewhere" : null;
 }
 
-/** Frames that are a question or a "there is" (they become a plain command); "Hunt for a tree" already is one. */
-const REWRITABLE_FRAMES = STOCK_FRAMES.filter((f) => !f.startsWith("Hunt")).map((f) => f.toLowerCase());
+/** Frames that are a question or a "there is" (they become a plain command); "Hunt for a tree" and bare "somewhere" are not. */
+const REWRITABLE_FRAMES: readonly string[] = [...STOCK_FRAMES.filter((f) => !f.startsWith("Hunt")).map((f) => f.toLowerCase()), ...EXTRA_FRAMES];
 /** Plain first words for a rewritten frame, in order of preference (the first one not used on the pass wins). */
 export const FRAME_VERBS = ["Spot", "Notice", "Peek at", "Watch for", "Check for"] as const;
 
+/** Q-7-01: the rest of a rewritten clue must start with a noun phrase: one of these words within its first 3 words. */
+const DETERMINERS = new Set(["a", "an", "the", "some", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "many", "lots", "one"]);
+/** Q-7-01: ... and never start with one of these ("Spot far away from…", "Spot how high you are.", "Spot me."). */
+const NOT_A_THING_START = new Set(["far", "how", "me", "what", "where", "if", "when", "why", "who", "it", "them", "there", "here", "up", "down", "out"]);
+/** Q-7-01: a base-form verb after the noun ("a spray of water bob up", "the ducks swim"): the rest is a clause. */
+const CLAUSE_VERB_RE = /\b(?:bob|leap|swim|fly|jump|splash|spurt|shine|sparkle|glitter|move|run|flow|fall|float|drift|sway|spin|turn|rise|pop|spray|hop|dart|dive|land|perch|sit|hang|grow|crawl|climb|play|bounce)\b/i;
+
 /**
  * M10 (run 2026-10-06-8): a printed clue that starts with a banned frame gets a plain first word instead:
- * "Somewhere you will see a low dirt hill in the center." -> "Spot a low dirt hill in the center."; "Where can you see
- * a spray of water bob up from a spout?" -> "Notice a spray of water bob up from a spout." (a frame that hears becomes
- * "Listen for"). Only the frame words change: the rest of the clue is the model's own, already checked. `taken` holds
- * the first words of the pass's other clues (lower case), so the new word does not repeat one; a verb that starts
- * like a word of the answer ("Spot" for Spotted Sandpiper) is skipped. Returns the clue unchanged when no frame or no
- * word fits.
+ * "Somewhere you will see a low dirt hill in the center." -> "Spot a low dirt hill in the center." (a frame that hears
+ * becomes "Listen for"; "Where can you count the 2 courts?" becomes "Count the 2 courts."). Only the frame words change.
+ * `taken` holds the first words of the pass's other clues (lower case), so the new word does not repeat one; a verb
+ * that starts like a word of the answer ("Spot" for Spotted Sandpiper) is skipped.
+ *
+ * Round-7 quality Q-7-01 (the rewrite wrote "Spot a great distance." and "Spot 2 spots with metal bars"): the clue is
+ * kept as the model wrote it (still a style preference, so a spare can replace it) unless the rest starts with a
+ * findable noun phrase (an article, number or "some" in its first 3 words, not "far/how/me/what…"), does not hold the
+ * verb's own word ("spot" in "spots"), and the new clue still names something to see (`nothingToSee`). A rest that is
+ * a clause ("a spray of water bob up from a spout") gets "Watch" ("Watch a spray of water bob up…"), or stays.
  */
 export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answer: string): string {
   const frame = stockFrame(clue);
@@ -1125,13 +1174,24 @@ export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answ
   const firstEnd = rest.search(/[.?!]/);
   if (firstEnd >= 0 && rest[firstEnd] === "?") rest = `${rest.slice(0, firstEnd)}.${rest.slice(firstEnd + 1)}`;
   else if (firstEnd < 0) rest = `${rest}.`;
+  const head = (sentencesOf(rest)[0] ?? []).slice(0, 3);
+  const isNumber = (w: string) => /^\d+$/.test(w) || numberOf(w) !== null;
+  // A sound needs no article ("Listen for water splashing"); a thing to see does.
+  const hears = frame.includes("hear");
+  if (head.length === 0 || NOT_A_THING_START.has(head[0]) || (!hears && !head.some((w) => DETERMINERS.has(w) || isNumber(w)))) return clue;
+  const firstSentence = rest.split(/[.?!]/)[0] ?? rest;
+  const clause = CLAUSE_VERB_RE.test(firstSentence);
   const ans = answer.toLowerCase();
-  const candidates = frame.includes("hear") ? ["Listen for"] : [...FRAME_VERBS];
+  // Judge R7: "Spot 2 spots with metal bars" (the rewrite's verb is also the clue's own noun): skip that verb.
+  const restWords = new Set(sentencesOf(rest).flat().map(singularWord));
+  const candidates = frame.includes("hear") ? ["Listen for"] : frame.endsWith("count") ? ["Count"] : clause ? ["Watch"] : [...FRAME_VERBS];
   const verb = candidates.find((v) => {
     const w = v.split(" ")[0].toLowerCase();
-    return !taken.has(w) && !ans.includes(w.slice(0, 4));
+    return (!taken.has(w) || v === "Count") && !ans.includes(w.slice(0, 4)) && !restWords.has(w);
   });
-  return verb ? `${verb} ${rest}` : clue;
+  if (!verb) return clue;
+  const out = `${verb} ${rest}`;
+  return nothingToSee(out) ? clue : out;
 }
 
 /** The stock opening a clue starts with ("can you find"), or null (prompt.ts STOCK_OPENINGS). */
@@ -1456,6 +1516,33 @@ export function withWaterSafety<T extends Pick<ValidItem, "item" | "clue" | "loo
   if (own && /water/i.test(own)) return v;
   const safety = own ? `${own} ${SAFETY_LINES.water}` : SAFETY_LINES.water;
   return { ...v, item: { ...v.item, safety: safety.length <= 120 ? safety : SAFETY_LINES.water } };
+}
+
+/** Judge R7: a Park Find the map counts this many times or more is easy to find, whatever the model said. */
+export const COMMON_FEATURE_COUNT = 10;
+
+/**
+ * Judge R7 ("Where is the seat with elbow rests at both ends? Hard · 234 on the park map" on a 4-6 pass): a very
+ * common Park Find is never "hard" for the younger bands: easy for ages 4-6, medium for 6-10. Ages 10-13 keep the
+ * model's label (that band promises 2 hard finds, and a riddle can make a common thing hard to pin down).
+ */
+export function capDifficulty<T extends Pick<ValidItem, "item" | "difficulty">>(v: T, band: AgeBand): T {
+  const n = v.item.section === "park" ? (v.item.count?.n ?? 0) : 0;
+  if (band === "10-13" || n < COMMON_FEATURE_COUNT || v.difficulty !== "hard") return v;
+  return { ...v, difficulty: band === "4-6" ? "easy" : "medium" };
+}
+
+/**
+ * Judge R7 T2: a listening clue never goes first (the grown-up's tip "Start with find 1" then pointed at a sound).
+ * Items in print order (park, wild, lucky); when Find 1 is a sound clue, the first non-sound find of the same section
+ * moves to the front. Nothing else moves.
+ */
+export function soundNotFirst<T extends Pick<ValidItem, "item" | "clue">>(items: readonly T[]): T[] {
+  const out = [...items];
+  if (out.length < 2 || !isSoundClue(out[0].clue)) return out;
+  const i = out.findIndex((v) => v.item.section === out[0].item.section && !isSoundClue(v.clue));
+  if (i > 0) out.unshift(...out.splice(i, 1));
+  return out;
 }
 
 export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[]): string {

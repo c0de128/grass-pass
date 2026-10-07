@@ -16,7 +16,7 @@ export function FinalCta() {
             href="#find"
             className="group inline-flex h-14 items-center gap-2 rounded-full bg-[#10291a] px-8 font-heading text-lg font-extrabold text-[#eef3e2] transition-transform [--gp-ring:#10291a] motion-safe:hover:-translate-y-0.5"
           >
-            Make your first pass free
+            Make a free pass
             <ArrowRight className="size-5 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
           </a>
         </div>

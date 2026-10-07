@@ -67,9 +67,24 @@ const NominatimHit = z.object({
 });
 const NominatimBody = z.array(z.unknown());
 
-/** Parse a `format=jsonv2` answer. Returns the first usable hit, null for "no match". Throws on a bad shape. */
-export function parseNominatim(json: unknown): Place | null {
+/**
+ * Judge R7: "Forest Park Portland OR" matched the Forest Park NEIGHBOURHOOD (Nominatim's first hit), so Portland's
+ * 5,000-acre park was not in the list. A query that names a park asks for a few hits and takes the first one that is
+ * itself a park (leisure=park | nature_reserve), else the first hit as before. Still one request.
+ */
+export const PARK_QUERY_RE = /\b(?:park|parks|preserve|reserve|nature|arboretum|greenbelt|greenway|commons?)\b/i;
+/** Hits asked for (the first is used unless a park-named query finds a park among them). */
+export const NOMINATIM_GEOCODE_LIMIT = 5;
+
+/** Parse a `format=jsonv2` answer. Returns the first usable hit (the first park hit with `preferPark`), null for "no match". Throws on a bad shape. */
+export function parseNominatim(json: unknown, opts: { preferPark?: boolean } = {}): Place | null {
   const list = NominatimBody.parse(json);
+  const places = parseHits(list);
+  return (opts.preferPark ? places.find((p) => p.parkKind) : undefined) ?? places[0] ?? null;
+}
+
+function parseHits(list: unknown[]): Place[] {
+  const out: Place[] = [];
   for (const item of list) {
     const hit = NominatimHit.safeParse(item);
     if (!hit.success) continue;
@@ -82,9 +97,9 @@ export function parseNominatim(json: unknown): Place | null {
     const osmRef = hit.data.osm_type && hit.data.osm_id ? `${hit.data.osm_type}/${hit.data.osm_id}` : null;
     const t = hit.data.type;
     const parkKind = hit.data.category === "leisure" && (t === "park" || t === "nature_reserve") ? t : null;
-    return { name, displayName, lat, lng, osmRef, parkKind };
+    out.push({ name, displayName, lat, lng, osmRef, parkKind });
   }
-  return null;
+  return out;
 }
 
 /** Clean user text for the query: trim, collapse spaces, drop control characters. */
@@ -100,7 +115,7 @@ export function nominatimUrl(q: string): string {
   const u = new URL(NOMINATIM_SEARCH_URL);
   u.searchParams.set("format", "jsonv2");
   u.searchParams.set("q", q);
-  u.searchParams.set("limit", "1");
+  u.searchParams.set("limit", String(PARK_QUERY_RE.test(q) ? NOMINATIM_GEOCODE_LIMIT : 1));
   u.searchParams.set("addressdetails", "0");
   u.searchParams.set("accept-language", "en");
   return u.toString();
@@ -207,7 +222,7 @@ export async function geocode(q: string, deps: GeocodeDeps): Promise<Place | nul
   const r = await nominatimGet(nominatimUrl(q), "geocode", deps);
   let place: Place | null;
   try {
-    place = parseNominatim(r.json);
+    place = parseNominatim(r.json, { preferPark: PARK_QUERY_RE.test(q) });
   } catch (err) {
     log("upstream_call", { source: NOMINATIM_SOURCE, what: "geocode", status: r.status, latencyMs: r.latencyMs, outcome: "bad_output" }, "warn");
     throw new SourceError(NOMINATIM_SOURCE, "bad_output", { status: r.status, started: true, cause: err });

@@ -3,7 +3,7 @@ import { MemoryStore } from "@/lib/cache/store";
 import { breakerRetryAfter, createSpacedQueue } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { contactUrl, DEFAULT_CONTACT_URL, parseRetryAfter, readTextCapped, SourceError, userAgent } from "@/lib/sources/common";
-import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, parseNominatim } from "@/lib/sources/nominatim";
+import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, PARK_QUERY_RE, parseNominatim } from "@/lib/sources/nominatim";
 import { breakerName, isErrorRemark, isHeavyQueryRemark, overpassEndpoints, OVERPASS_DEFAULT_URLS, runOverpass } from "@/lib/sources/overpass";
 import { parseParks, parksNear, parksQuery } from "@/lib/sources/overpass-parks";
 import { distanceLabel, distanceM, roundCoord } from "@/lib/geo";
@@ -89,6 +89,21 @@ describe("Nominatim parsing (live recordings, 2026-10-05)", () => {
     expect(u.searchParams.get("q")).toBe("Allen TX");
     expect(u.searchParams.get("format")).toBe("jsonv2");
     expect(u.searchParams.get("limit")).toBe("1");
+  });
+
+  it("judge R7: a query that names a park takes the first PARK hit ('Forest Park Portland OR' first matches the neighbourhood)", () => {
+    const rec = fixture("nominatim-forest-park-portland-or");
+    const meta = rec._recording as unknown as { url: string };
+    expect(nominatimUrl("Forest Park Portland OR")).toBe(meta.url); // the recorded request is exactly ours (limit 5)
+    const body = rec.body as { category: string; type: string }[];
+    expect(`${body[0].category}/${body[0].type}`).toBe("boundary/administrative"); // the neighbourhood comes first
+    const place = parseNominatim(rec.body, { preferPark: true })!;
+    expect(place).toMatchObject({ name: "Forest Park", osmRef: "relation/1760140", parkKind: "nature_reserve" });
+    // Without the preference (a town or ZIP search) the first hit stays the answer.
+    expect(parseNominatim(rec.body)?.osmRef).toBe("relation/7732409");
+    expect(PARK_QUERY_RE.test("Forest Park Portland OR")).toBe(true);
+    expect(PARK_QUERY_RE.test("Allen TX")).toBe(false);
+    expect(PARK_QUERY_RE.test("Parkville MO")).toBe(false);
   });
 });
 

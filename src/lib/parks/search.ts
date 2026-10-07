@@ -99,7 +99,9 @@ const ParksNearSchema = z.object({ parks: z.array(ParkSchema).max(MAX_PARKS), to
 
 const placeCache = createCachePair({
   // "-v2": places now carry parkKind (T2, audit R4); older cached places without it are not reused.
-  name: "geocode-v2",
+  // "-v3" (judge R7): a park-named query now prefers a park hit, so "Forest Park Portland OR" cached as the
+  // neighbourhood is looked up again.
+  name: "geocode-v3",
   schema: PlaceSchema,
   negativeSchema: NoneSchema,
   ttlSec: PLACE_TTL_SEC,

@@ -1,0 +1,58 @@
+{
+  "_recording": {
+    "what": "Nominatim search for \"Forest Park Portland OR\" (5 hits: judge R7, the first hit is the neighbourhood)",
+    "live": true,
+    "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=Forest+Park+Portland+OR&limit=5&addressdetails=0&accept-language=en",
+    "method": "GET",
+    "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+    "status": 200,
+    "contentType": "application/json; charset=utf-8",
+    "fetchedAt": "2026-10-07T04:18:18.493Z",
+    "latencyMs": 533,
+    "recordedBy": "builder AE (judge R7 search): scratch node fetch, same URL rules as src/lib/sources/nominatim.ts (the test checks the URL)"
+  },
+  "body": [
+    {
+      "place_id": 327206268,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "relation",
+      "osm_id": 7732409,
+      "lat": "45.5357687",
+      "lon": "-122.7385667",
+      "category": "boundary",
+      "type": "administrative",
+      "place_rank": 20,
+      "importance": 0.41937349466021984,
+      "addresstype": "suburb",
+      "name": "Forest Park",
+      "display_name": "Forest Park, Portland, Multnomah County, Oregon, United States",
+      "boundingbox": [
+        "45.5166855",
+        "45.6172381",
+        "-122.8675867",
+        "-122.7120642"
+      ]
+    },
+    {
+      "place_id": 327202545,
+      "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+      "osm_type": "relation",
+      "osm_id": 1760140,
+      "lat": "45.5708775",
+      "lon": "-122.7716492",
+      "category": "leisure",
+      "type": "nature_reserve",
+      "place_rank": 24,
+      "importance": 0.41937349466021984,
+      "addresstype": "nature_reserve",
+      "name": "Forest Park",
+      "display_name": "Forest Park, Portland, Multnomah County, Oregon, United States",
+      "boundingbox": [
+        "45.5244343",
+        "45.6380522",
+        "-122.8472874",
+        "-122.7120642"
+      ]
+    }
+  ]
+}

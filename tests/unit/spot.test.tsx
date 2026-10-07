@@ -36,7 +36,7 @@ import {
   type ParkGeometry,
 } from "@/lib/spot/geometry";
 import { finishSpot, geometryWithin, loadGeometry, planLateSpot, planSpot, SPOT_EARLY_WAIT_MS, SPOT_LATE_GRACE_MS } from "@/lib/spot/load";
-import { candidates, pickTarget, roundWalk } from "@/lib/spot/pick-target";
+import { candidates, minWalkM, pickTarget, roundWalk } from "@/lib/spot/pick-target";
 import { drawMap, LAYER_STYLE, STROKE_MIN } from "@/lib/spot/render-map";
 import { MAP_H, MAP_W, MAX_MAP_POINTS, SPOT_COPY, SpotMapSchema, SpotSchema, type SpotOk } from "@/lib/spot/types";
 import { modelRec, PARKS, passReplay, rec } from "./support/pass-replay";
@@ -191,6 +191,28 @@ describe("pickTarget (code decides where the X goes)", () => {
       status: "none",
       message: "No Find This Spot today: this park has no single landmark on the map (OpenStreetMap).",
     });
+  });
+
+  it("judge R7 T2: START is never right next to the X (test-built: the real parking lot copied onto the shelter)", () => {
+    const g = geo(CEL);
+    const min = minWalkM(g);
+    expect(min).toBeGreaterThanOrEqual(60);
+    expect(min).toBeLessThanOrEqual(120);
+    const shelter = g.elements.find((e) => e.osmId === "way/536185861")!;
+    const lot = g.elements.find((e) => e.osmId === "way/374628989")!;
+    const near: ParkGeometry = { ...g, elements: [...g.elements, { ...lot, osmId: "way/999999998", lines: shelter.lines }] };
+    const t = pickTarget(near, { parkName: "Celebration Park", features: feats(CEL), variant: 1 })!;
+    expect(t.kind).toBe("shelter");
+    expect(t.start?.osmId).not.toBe("way/999999998"); // the lot ON the X is skipped ...
+    expect(t.start).toMatchObject({ osmId: "way/374628989" }); // ... for the nearest one far enough away
+    expect(t.walk!.meters).toBeGreaterThanOrEqual(min);
+    // When no START is far enough from any target, the X keeps no START (the map says "Use the map to find the X").
+    const allNear: ParkGeometry = {
+      ...g,
+      elements: g.elements.filter((e) => !e.tags.entrance && e.tags.amenity !== "parking").concat([{ ...lot, osmId: "way/999999998", lines: shelter.lines }]),
+    };
+    const lone = pickTarget(allNear, { parkName: "Celebration Park", features: feats(CEL), variant: 1 })!;
+    expect(lone.start === null || lone.walk!.meters >= min).toBe(true);
   });
 
   it("a landmark kind the park has two of is not 'the X' (test-built: the real shelter copied under a second id)", () => {
@@ -473,7 +495,11 @@ describe("Find This Spot on paper and on screen", () => {
   it("stub answer: what the X is, its OSM id, the START and the walk", () => {
     const t = text(renderToStaticMarkup(<SpotAnswer spot={spot} />));
     expect(t).toContain("Find This Spot: The picnic shelter.");
-    expect(t).toContain("OpenStreetMap way/536185861; START: parking lot, OpenStreetMap way/374628989; about 140 m south-east of START.");
+    expect(t).toContain("OpenStreetMap way/536185861; START: parking lot, OpenStreetMap way/374628989; About 140 m south-east of START.");
+    // UX-7-01: the OSM ids and the check time are optional print lines (level 1); the walk always prints.
+    const html = renderToStaticMarkup(<SpotAnswer spot={spot} />);
+    expect(html).toMatch(/<span data-print-drop="1">\s*OpenStreetMap way\/536185861/);
+    expect(html).toMatch(/<\/span>About 140 m south-east of START\. <span data-print-drop="1">Map data checked/);
     expect(t).not.toContain("fixed one");
     expect(text(renderToStaticMarkup(<SpotAnswer spot={{ ...spot, riddleBy: "code" }} />))).toContain("so the pass uses a fixed one");
   });

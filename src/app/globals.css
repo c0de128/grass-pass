@@ -111,12 +111,16 @@
 }
 
 /*
- * UX-4-07 (R4): Find This Spot labels (START, N, P, the scale) stay >= 9 px on phones. The 420-unit map shrinks to
- * about 240-300 px there, so its 12-13 unit labels would be about 7 px. Screen only; the printed map is unchanged.
+ * UX-4-07 (R4), UX-6-02 (R6): Find This Spot labels (START, N, P, the scale) on phones. The 420-unit map shrinks to
+ * about 276 px at a 360 px screen (scale ~0.66), so the 12-13 unit labels were ~8 px. On phones they are 1.4x
+ * (13 -> 18.2, 12 -> 16.8 map units: ~12 px and ~11 px at 360). Screen only; the printed map (print.css) is unchanged.
  */
 @media screen and (max-width: 639px) {
-  .gp-spot-screen .gp-spot-svg text {
-    font-size: 16px;
+  .gp-spot-screen .gp-spot-svg .gp-map-label-lg {
+    font-size: 18.2px;
+  }
+  .gp-spot-screen .gp-spot-svg .gp-map-label-sm {
+    font-size: 16.8px;
   }
 }
 

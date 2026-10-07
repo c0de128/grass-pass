@@ -59,7 +59,7 @@ export function SpotMapSvg({ map, title }: { map: SpotMapData; title: string }) 
 
       {/* Parking lots: a "P" in the middle. */}
       {d.parkingLabels.map(([px, py]) => (
-        <text key={`${px},${py}`} data-marker="parking" x={px} y={py + 4.5} textAnchor="middle" fontSize="12" fontWeight="800" fill={INK} {...halo}>
+        <text key={`${px},${py}`} data-marker="parking" className="gp-map-label-sm" x={px} y={py + 4.5} textAnchor="middle" fontSize="12" fontWeight="800" fill={INK} {...halo}>
           P
         </text>
       ))}
@@ -68,7 +68,7 @@ export function SpotMapSvg({ map, title }: { map: SpotMapData; title: string }) 
       {d.start ? (
         <g data-marker="start">
           <path d={d.start.d} fill={INK} stroke={PAPER} strokeWidth="3" paintOrder="stroke" strokeLinejoin="round" />
-          <text x={d.start.label.x} y={d.start.label.y} textAnchor={d.start.label.anchor} fontSize="13" fontWeight="800" fill={INK} {...halo}>
+          <text className="gp-map-label-lg" x={d.start.label.x} y={d.start.label.y} textAnchor={d.start.label.anchor} fontSize="13" fontWeight="800" fill={INK} {...halo}>
             START
           </text>
         </g>
@@ -83,7 +83,7 @@ export function SpotMapSvg({ map, title }: { map: SpotMapData; title: string }) 
       {/* North arrow. */}
       <g data-marker="north">
         <path d={d.north.arrow} fill={INK} stroke={PAPER} strokeWidth="2" paintOrder="stroke" />
-        <text x={d.north.x} y={d.north.y} textAnchor="middle" fontSize="13" fontWeight="800" fill={INK} {...halo}>
+        <text className="gp-map-label-lg" x={d.north.x} y={d.north.y} textAnchor="middle" fontSize="13" fontWeight="800" fill={INK} {...halo}>
           N
         </text>
       </g>
@@ -92,7 +92,7 @@ export function SpotMapSvg({ map, title }: { map: SpotMapData; title: string }) 
       <g data-marker="scale">
         <path d={d.scale.d} fill="none" stroke={PAPER} strokeWidth="6" strokeLinecap="square" />
         <path d={d.scale.d} fill="none" stroke={INK} strokeWidth="2.4" strokeLinecap="square" />
-        <text x={d.scale.x} y={d.scale.y - 9} fontSize="12" fontWeight="700" fill={INK} {...halo}>
+        <text className="gp-map-label-sm" x={d.scale.x} y={d.scale.y - 9} fontSize="12" fontWeight="700" fill={INK} {...halo}>
           {d.scale.label}
         </text>
       </g>

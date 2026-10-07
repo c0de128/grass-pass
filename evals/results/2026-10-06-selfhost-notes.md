@@ -1,9 +1,15 @@
 # Self-hosted Gemma 4 on a laptop CPU (2026-10-06, Dallas time)
 
 Judge item G1 asked: "run it yourself" is claimed but not measured. This is the measurement. **Two partial runs, 5 parks,
-one run each, age band 6-10, $0 (no paid call).** Not the frozen numbers: the frozen hosted run is the 20-park run
-[`2026-10-06-7`](2026-10-06-7.md), which every page quotes and which is the comparison column below (updated
-2026-10-06 evening, RULES-6-01; this file first compared against run `-6`, the frozen run when it was measured).
+one run each, age band 6-10, $0 (no paid call).** Not the frozen numbers. The comparison column below is the 20-park hosted run
+[`2026-10-06-7`](2026-10-06-7.md), the frozen run when this was written (this file first compared against run `-6`).
+**The pages now quote run [`2026-10-06-9`](2026-10-06-9.md)** (eval sync, Builder AD, RULES-7-03): hosted Gemma 4 31B
+there took 9.9 s / 27.1 s per call (p50 / p95) at 39.5 answer tokens/s, with 90.2% complete passes (46 of 51). Each
+eval run's number sync updates this paragraph.
+
+**Which limit is "the app clock".** The app-clock run gave each call 70 s (the eval lane's `timeoutMs: 70_000` in `evals/run.ts`,
+the same as setting `MODEL_TIMEOUT_MS=70000`), the most the app allows without the local clock. It is not the hosted site's limit: since the slow-provider fix (`src/lib/pass/budget.ts`) a hosted
+first call gets a sized 30-40 s, a refill 15-30 s, and the pass 85 s.
 
 **Which code.** These two runs used the app code of the `selfhost-gemma` branch as it was at 16:56-17:14 CDT (later
 committed as `4523fd2`), that is **before** the round-5 safety and jargon checks were merged (`637dd7b`, 17:49 CDT).
@@ -28,7 +34,7 @@ Run `-7` used the newer checks, so the self-host rows were filtered by slightly 
 
 ## Results
 
-| | App clock (70 s per call, 85 s per pass) | Patient clock (eval only) | Gemma 4 31B hosted, 20 parks (`2026-10-06-7`, frozen) |
+| | App clock (70 s per call, the most the app allows; 85 s per pass) | Patient clock (eval only) | Gemma 4 31B hosted, 20 parks (`2026-10-06-7`, frozen when this was written) |
 |---|---|---|---|
 | Passes made | **2 of 5** (3 hit the 70 s limit) | 5 of 5 | no pass lost (60 runs: 54 passes; 6 runs on the 2 no-data parks made none) |
 | Complete passes (n-1 or more) | **0 of 5** (both 6/8) | 4 of 5 (80%; Arbor Hills 6/8) | 96.1% (49 of 51) |

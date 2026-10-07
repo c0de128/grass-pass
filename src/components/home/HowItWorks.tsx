@@ -16,7 +16,7 @@ export const HOW_STEPS: readonly Step[] = [
   {
     icon: Sparkles,
     title: "AI builds the hunt",
-    body: "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.",
+    body: "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds, up to about a minute and a half on a slow evening.",
     ticker: ["Reading the park map…", "Checking what people spotted…", "Writing clues…"],
   },
   {

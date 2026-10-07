@@ -29,7 +29,7 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -173,6 +173,7 @@ export default function HowItWorksPage() {
   const softer = DROP_REASONS.filter((r) => DROP_REASON_INFO[r].kind !== "always");
   const speedMet = (gemma.p50s ?? Infinity) <= EVAL_THRESHOLDS.p50s && (gemma.p95s ?? Infinity) <= EVAL_THRESHOLDS.p95s;
   const speedMetBefore = PREVIOUS_RUN.p50s <= EVAL_THRESHOLDS.p50s && PREVIOUS_RUN.p95s <= EVAL_THRESHOLDS.p95s;
+  const p50Met = (gemma.p50s ?? Infinity) <= EVAL_THRESHOLDS.p50s;
   const smokeP50Over = SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s;
   const smokeP95Over = SMOKE_10_13.p95s > EVAL_THRESHOLDS.p95s;
 
@@ -312,8 +313,10 @@ export default function HowItWorksPage() {
             answer (or says &quot;map&quot; with no map) is dropped; its clue stays.
           </p>
           <p>
-            Code never rewrites a clue to make it pass. It makes only two edits: it cuts a filler opener (&quot;Quick!&quot;,
-            &quot;Psst,&quot;) and turns &quot;?&quot; after a command (&quot;Track 3 fields?&quot;) into a full stop.
+            Code never rewrites what a clue says. It makes four small edits: it cuts a filler opener (&quot;Quick!&quot;,
+            &quot;Psst,&quot;), turns &quot;?&quot; after a command (&quot;Track 3 fields?&quot;) into a full stop, swaps a worn-out
+            opening (&quot;Somewhere you will see a&quot;) for a plain word (&quot;Spot a&quot;), and says &quot;What&quot;, not
+            &quot;Who&quot;, for a lichen.
           </p>
         </>
       ),
@@ -485,7 +488,7 @@ export default function HowItWorksPage() {
         <p className="flex items-start gap-2 text-muted-foreground">
           <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
           <span>
-            A new pass usually takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing,
+            A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing,
             the pass says &quot;No data available&quot; and why.
           </span>
         </p>
@@ -541,7 +544,7 @@ export default function HowItWorksPage() {
             {
               icon: Hammer,
               title: "It can be self-hosted.",
-              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes finished in the app's normal time; given more, 1-3 minutes a pass.",
+              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass.",
             },
             {
               icon: ShieldCheck,
@@ -611,9 +614,12 @@ export default function HowItWorksPage() {
             </table>
           </div>
           <p>
-            Speed is {speedMet ? "met" : "missed"}: the typical call took {GEMMA_P50_EXACT_S} s, first calls alone{" "}
-            {GEMMA_FIRST_CALL_P50_S} s, with DigitalOcean answering at {GEMMA_TOKENS_PER_S.now} answer tokens a second (
-            {GEMMA_TOKENS_PER_S.before} the run before, when speed was {speedMetBefore ? "met" : "missed"}). Lucky Finds and Find This Spot are not in this test.
+            Speed is {speedMet ? "met" : p50Met ? "met for a typical call and missed for the slow ones" : "missed"}: the typical
+            call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s, with DigitalOcean answering at{" "}
+            {GEMMA_TOKENS_PER_S.now} answer tokens a second ({GEMMA_TOKENS_PER_S.before} the run before, when speed was{" "}
+            {speedMetBefore ? "met" : "missed"}). This is the first full run with time limits sized to each call (up to{" "}
+            {GEMMA_RUN_FIRST_CALL_LIMIT_S} s for a first call; the run before had a fixed {PREVIOUS_RUN.firstCallLimitS} s). Lucky
+            Finds and Find This Spot are not in this test.
           </p>
           <p>
             Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}

@@ -133,8 +133,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Old:** Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.
 - **Gemma:** Gemma 4 uses real maps and sightings from the last 14 days to write the clues. Code checks every find against its source. It usually takes 10–30 seconds.
 - **Code check:** passed
-- **Shipped:** Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds.
-- **Why:** Drops 'Gemma writes, code checks.' (Kevin's line, corrected from his reference) and 'a fair mix'.
+- **Shipped:** Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds, up to about a minute and a half on a slow evening.
+- **Why:** Drops 'Gemma writes, code checks.' (Kevin's line, corrected from his reference) and 'a fair mix'. Fact fix (RULES-7-06, Builder AD, not Gemma): the shipped line now adds the measured upper bound, 'up to about a minute and a half on a slow evening' (PASS_WAIT_COPY, README); 'Gemma writes, code checks.' is untouched.
 - **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / It works from the park's real OpenStreetMap map and the last 14 days of nearby iNaturalist wildlife sightings. / Code checks every clue against its source and removes any that fail; the model never decides what is safe. / A new pass usually takes 10-30 seconds (PASS_WAIT_COPY), up to about a minute and a half when the free map websites are slow. · KEEP: "Gemma 4", "14 days", "10–30 seconds"
 
 #### `home.how.s3.title`: rejected
@@ -442,7 +442,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.meta.title`: rejected
 
-`src/app/how-it-works/page.tsx:47` · browser tab / share title, 12 words or fewer, starts with "How Grass Pass works" · max 75 characters
+`src/app/how-it-works/page.tsx:48` · browser tab / share title, 12 words or fewer, starts with "How Grass Pass works" · max 75 characters
 
 - **Old:** How Grass Pass works: real park data in, one open model, paper out
 - **Gemma:** How Grass Pass works: real data, AI, and paper
@@ -453,7 +453,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.meta.description`: edited
 
-`src/app/how-it-works/page.tsx:49` · meta description, 2-3 sentences · max 260 characters
+`src/app/how-it-works/page.tsx:50` · meta description, 2-3 sentences · max 260 characters
 
 - **Old:** Step by step: how Grass Pass turns one park's real map and recent wildlife sightings into a printable kids' pass. Gemma 4, an open model, writes the clues; code fact-checks every one. What the AI does and doesn't do, and what we measured.
 - **Gemma:** See how we turn real maps and wildlife sightings into a printable pass. Gemma 4 AI writes the clues and code fact-checks every one. We share what the AI does, what it doesn't, and our measured results.
@@ -464,7 +464,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.h1`: unchanged
 
-`src/app/how-it-works/page.tsx:430` · page headline, 7 words or fewer, ends with a full stop · max 45 characters
+`src/app/how-it-works/page.tsx:437` · page headline, 7 words or fewer, ends with a full stop · max 45 characters
 
 - **Old:** How a park becomes a pass.
 - **Gemma:** How a park becomes a pass.
@@ -475,7 +475,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.lead`: rejected
 
-`src/app/how-it-works/page.tsx:433` · lead paragraph under the headline, 3-4 short sentences · max 230 characters
+`src/app/how-it-works/page.tsx:440` · lead paragraph under the headline, 3-4 short sentences · max 230 characters
 
 - **Old:** You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest.
 - **Gemma:** You pick the park. Gemma 4 AI writes the clues using real maps and the last 14 days of wildlife sightings. Code fact-checks every clue. Your printer does the rest.
@@ -486,7 +486,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.title`: rejected
 
-`src/app/how-it-works/page.tsx:461` · section headline (the 30-second version), 8 words or fewer · max 50 characters
+`src/app/how-it-works/page.tsx:468` · section headline (the 30-second version), 8 words or fewer · max 50 characters
 
 - **Old:** Pick a park. Print a pass. Phone away.
 - **Gemma:** Pick a park. Print. Phone away.
@@ -497,7 +497,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.1.title`: rejected
 
-`src/app/how-it-works/page.tsx:153` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:154` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** Pick a park & age
 - **Gemma:** Pick a park and age
@@ -508,7 +508,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.1.body`: rejected
 
-`src/app/how-it-works/page.tsx:153` · card body, 1 sentence · max 100 characters
+`src/app/how-it-works/page.tsx:154` · card body, 1 sentence · max 100 characters
 
 - **Old:** A real park near you, plus your kid's age: 4-6, 6-10 or 10-13.
 - **Gemma:** Choose a local park and an age group: 4-6, 6-10, or 10-13.
@@ -519,7 +519,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.2.title`: rejected
 
-`src/app/how-it-works/page.tsx:156` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:157` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** We read the park
 - **Gemma:** We gather the data
@@ -530,7 +530,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.2.body`: rejected
 
-`src/app/how-it-works/page.tsx:157` · card body, 1 sentence · max 120 characters
+`src/app/how-it-works/page.tsx:158` · card body, 1 sentence · max 120 characters
 
 - **Old:** Its map, the last {days} days of wildlife sightings nearby, and what visitor reviews mention.
 - **Gemma:** It uses the park map, visitor reviews, and wildlife sightings from the last {days} days.
@@ -541,7 +541,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.3.title`: unchanged
 
-`src/app/how-it-works/page.tsx:161` · card title, 5 words or fewer; must say AI · max 30 characters
+`src/app/how-it-works/page.tsx:162` · card title, 5 words or fewer; must say AI · max 30 characters
 
 - **Old:** AI writes, code checks
 - **Gemma:** AI writes, code checks
@@ -552,7 +552,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.3.body`: edited
 
-`src/app/how-it-works/page.tsx:162` · card body, 2 sentences · max 160 characters
+`src/app/how-it-works/page.tsx:163` · card body, 2 sentences · max 160 characters
 
 - **Old:** Gemma 4, an open model, picks a fair mix and writes kid-sized clues. Code checks each one, and asks once more if too many fail.
 - **Gemma:** Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks once more if too many fail.
@@ -563,7 +563,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.4.title`: accepted
 
-`src/app/how-it-works/page.tsx:164` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:165` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** Print, phone away
 - **Gemma:** Print and go
@@ -574,7 +574,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.4.body`: accepted
 
-`src/app/how-it-works/page.tsx:164` · card body, 1-2 short sentences · max 100 characters
+`src/app/how-it-works/page.tsx:165` · card body, 1-2 short sentences · max 100 characters
 
 - **Old:** One page. The kid takes the hunt; you keep the answer key.
 - **Gemma:** One page. The kid gets the hunt and you keep the answer key.
@@ -585,18 +585,18 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.quick.note`: edited
 
-`src/app/how-it-works/page.tsx:484` · small note under the 4 cards, 2 sentences, one light joke allowed · max 170 characters
+`src/app/how-it-works/page.tsx:491` · small note under the 4 cards, 2 sentences, one light joke allowed · max 170 characters
 
 - **Old:** A new pass usually takes 10-30 seconds, about as long as finding the other shoe. A section with no data says "No data available" and why.
 - **Gemma:** A pass takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing, it says "No data available" and why.
 - **Code check:** passed
-- **Shipped:** A new pass usually takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing, the pass says "No data available" and why. _(Gemma draft, edited)_
-- **Why:** Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'.
+- **Shipped:** A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing, the pass says "No data available" and why. _(Gemma draft, edited)_
+- **Why:** Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'. Fact fix (RULES-7-06, Builder AD, not Gemma): the upper bound 'up to about a minute and a half on a slow evening' replaces the missing-shoe aside (the block's 170-character limit).
 - **FACTS:** A new pass usually takes 10-30 seconds (PASS_WAIT_COPY), up to about a minute and a half when the free map websites are slow. / Missing data is never faked: the site says "No data available" and why. · KEEP: "10-30 seconds"
 
 #### `how.steps.title`: rejected
 
-`src/app/how-it-works/page.tsx:490` · section headline, 8 words or fewer · max 45 characters
+`src/app/how-it-works/page.tsx:497` · section headline, 8 words or fewer · max 45 characters
 
 - **Old:** From “which park?” to “found it!”
 - **Gemma:** From choosing a park to finding it
@@ -607,7 +607,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.steps.intro`: accepted
 
-`src/app/how-it-works/page.tsx:492` · intro paragraph, 2 sentences · max 190 characters
+`src/app/how-it-works/page.tsx:499` · intro paragraph, 2 sentences · max 190 characters
 
 - **Old:** Each step says who does it: code (the same result every time), the open model, or you. The AI has one job: picking the finds and writing the words.
 - **Gemma:** Each step is handled by code, the open model, or you. The AI has one job: picking the finds and writing the words.
@@ -618,7 +618,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.park.title`: accepted
 
-`src/app/how-it-works/page.tsx:180` · step title, 5 words or fewer · max 35 characters
+`src/app/how-it-works/page.tsx:185` · step title, 5 words or fewer · max 35 characters
 
 - **Old:** Find the park
 - **Gemma:** Pick your park
@@ -629,7 +629,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.park.summary`: edited
 
-`src/app/how-it-works/page.tsx:181` · step summary, 2 sentences · max 190 characters
+`src/app/how-it-works/page.tsx:186` · step summary, 2 sentences · max 190 characters
 
 - **Old:** Type a town, ZIP or park name, or tap Use my location (we round it to about 1 km). Code lists the parks within 5 km, from OpenStreetMap.
 - **Gemma:** Search by town, ZIP, park name, or tap Use my location (rounded to 1 km). Code finds parks within 5 km using OpenStreetMap.
@@ -640,7 +640,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.data.title`: rejected
 
-`src/app/how-it-works/page.tsx:195` · step title, 6 words or fewer · max 40 characters
+`src/app/how-it-works/page.tsx:200` · step title, 6 words or fewer · max 40 characters
 
 - **Old:** Gather what's really there
 - **Gemma:** Find what is actually there
@@ -651,7 +651,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.data.summary`: accepted
 
-`src/app/how-it-works/page.tsx:197` · step summary, 1-2 sentences · max 200 characters
+`src/app/how-it-works/page.tsx:202` · step summary, 1-2 sentences · max 200 characters
 
 - **Old:** Code fills three lists, each fact dated and sourced: Park Finds (OpenStreetMap), Wild Finds (iNaturalist, Wikipedia) and Lucky Finds (review counts via SerpApi).
 - **Gemma:** Code builds three dated, sourced lists. Park Finds come from OpenStreetMap, Wild Finds from iNaturalist and Wikipedia, and Lucky Finds from Google review counts via SerpApi.
@@ -662,7 +662,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.safety.title`: rejected
 
-`src/app/how-it-works/page.tsx:227` · step title, 9 words or fewer, light humor welcome · max 55 characters
+`src/app/how-it-works/page.tsx:232` · step title, 9 words or fewer, light humor welcome · max 55 characters
 
 - **Old:** Take out anything that bites, stings or itches
 - **Gemma:** Skip the things that bite or sting
@@ -673,7 +673,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.safety.summary`: accepted
 
-`src/app/how-it-works/page.tsx:228` · step summary, 1-2 sentences · max 170 characters
+`src/app/how-it-works/page.tsx:233` · step summary, 1-2 sentences · max 170 characters
 
 - **Old:** Code removes {blocked} blocked groups of risky species (think fire ants and poison ivy) before the model sees the list, and checks again after.
 - **Gemma:** Code removes {blocked} groups of risky species, like fire ants and poison ivy, before the model sees the list and checks again after.
@@ -684,7 +684,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.model.title`: accepted
 
-`src/app/how-it-works/page.tsx:247` · step title, 6 words or fewer · max 40 characters
+`src/app/how-it-works/page.tsx:252` · step title, 6 words or fewer · max 40 characters
 
 - **Old:** The open model writes the clues
 - **Gemma:** The AI writes the clues
@@ -695,7 +695,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.model.summary`: rejected
 
-`src/app/how-it-works/page.tsx:250` · step summary, 3 short sentences · max 260 characters
+`src/app/how-it-works/page.tsx:255` · step summary, 3 short sentences · max 260 characters
 
 - **Old:** Code sends the park's fact list to {model} on DigitalOcean serverless inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is one call; step 6 is the exception.
 - **Gemma:** Code sends the data to {model} on DigitalOcean serverless inference. The AI picks finds by id and writes a clue, a proof quote, and one riddle. This is usually one call, unless step 6 happens.
@@ -706,7 +706,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.checks.title`: rejected
 
-`src/app/how-it-works/page.tsx:284` · step title, 5 words or fewer · max 35 characters
+`src/app/how-it-works/page.tsx:289` · step title, 5 words or fewer · max 35 characters
 
 - **Old:** Code fact-checks every clue
 - **Gemma:** Code checks every clue
@@ -717,7 +717,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.checks.summary`: rejected
 
-`src/app/how-it-works/page.tsx:285` · step summary, 2 sentences · max 240 characters
+`src/app/how-it-works/page.tsx:290` · step summary, 2 sentences · max 240 characters
 
 - **Old:** Code never takes the AI's word for it. It removes any clue that breaks one of {always} hard rules (proof quote, name leaks, numbers, safety), and swaps out clues that miss {softer} style rules when it can.
 - **Gemma:** Code doesn't just trust the AI. It removes clues that break {always} hard rules on safety, numbers, name leaks, or proof quotes, and swaps those that miss {softer} style rules.
@@ -728,7 +728,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.retry.title`: rejected
 
-`src/app/how-it-works/page.tsx:321` · step title, 6 words or fewer · max 40 characters
+`src/app/how-it-works/page.tsx:328` · step title, 6 words or fewer · max 40 characters
 
 - **Old:** Refill once, or print it short
 - **Gemma:** Refill the list or print
@@ -739,7 +739,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.retry.summary`: edited
 
-`src/app/how-it-works/page.tsx:322` · step summary, 3 short sentences · max 190 characters
+`src/app/how-it-works/page.tsx:329` · step summary, 3 short sentences · max 190 characters
 
 - **Old:** Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.
 - **Gemma:** Too few clues pass the check? Code asks the AI once more for the missing ones. Still short? We list how many are missing. No made-up filler.
@@ -750,7 +750,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.spot.title`: unchanged
 
-`src/app/how-it-works/page.tsx:346` · step title, 7 words or fewer · max 45 characters
+`src/app/how-it-works/page.tsx:353` · step title, 7 words or fewer · max 45 characters
 
 - **Old:** Find This Spot and the October box
 - **Gemma:** Find This Spot and the October box
@@ -761,7 +761,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.spot.summary`: accepted
 
-`src/app/how-it-works/page.tsx:347` · step summary, 2 sentences · max 150 characters
+`src/app/how-it-works/page.tsx:354` · step summary, 2 sentences · max 150 characters
 
 - **Old:** Code picks a landmark, draws a map with an X and measures the walk. The October box is all code.
 - **Gemma:** Code picks a landmark, draws a map with an X, and measures the walk. The October box is all code.
@@ -772,7 +772,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.print.title`: accepted
 
-`src/app/how-it-works/page.tsx:367` · step title, 5 words or fewer · max 35 characters
+`src/app/how-it-works/page.tsx:374` · step title, 5 words or fewer · max 35 characters
 
 - **Old:** Print it, hide the phone
 - **Gemma:** Print and ditch the phone
@@ -783,7 +783,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.print.summary`: rejected
 
-`src/app/how-it-works/page.tsx:368` · step summary, 2 sentences, light humor welcome · max 160 characters
+`src/app/how-it-works/page.tsx:375` · step summary, 2 sentences, light humor welcome · max 160 characters
 
 - **Old:** One black-and-white page: the kid's hunt on top, your answer key and sources below. Then the phone goes in the bag.
 - **Gemma:** One black-and-white page. The kid's hunt is on top, and the grown-up's answer key and sources are below.
@@ -794,7 +794,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.cache.title`: accepted
 
-`src/app/how-it-works/page.tsx:383` · step title, 5 words or fewer · max 35 characters
+`src/app/how-it-works/page.tsx:390` · step title, 5 words or fewer · max 35 characters
 
 - **Old:** Saving work, and fair limits
 - **Gemma:** Saved passes and fair limits
@@ -805,7 +805,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.step.cache.summary`: rejected
 
-`src/app/how-it-works/page.tsx:384` · step summary, 2 sentences · max 190 characters
+`src/app/how-it-works/page.tsx:391` · step summary, 2 sentences · max 190 characters
 
 - **Old:** Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.
 - **Gemma:** Passes are saved for 30 days. To keep map servers and budgets healthy, grown-ups get {perDay} new passes a day.
@@ -816,7 +816,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.title`: rejected
 
-`src/app/how-it-works/page.tsx:498` · section headline, 9 words or fewer; must say AI · max 55 characters
+`src/app/how-it-works/page.tsx:505` · section headline, 9 words or fewer; must say AI · max 55 characters
 
 - **Old:** The AI picks and writes. Code does the rest.
 - **Gemma:** The AI writes. Code does the rest.
@@ -827,7 +827,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.does.1`: rejected
 
-`src/app/how-it-works/page.tsx:506` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:513` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Pick the finds, inside the mix code allows.
 - **Gemma:** Pick the finds using the code mix
@@ -838,7 +838,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.does.2`: rejected
 
-`src/app/how-it-works/page.tsx:507` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:514` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Write each clue in kid words, plus a hint.
 - **Gemma:** Write kid-level clues and hints
@@ -849,7 +849,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.does.3`: rejected
 
-`src/app/how-it-works/page.tsx:508` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:515` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Rate each find easy, medium or hard.
 - **Gemma:** Rate finds as easy, medium or hard
@@ -860,7 +860,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.does.4`: rejected
 
-`src/app/how-it-works/page.tsx:509` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:516` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Copy a proof quote from its facts.
 - **Gemma:** Copies a proof quote from the facts.
@@ -871,7 +871,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.does.5`: rejected
 
-`src/app/how-it-works/page.tsx:510` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:517` · bullet under "The AI does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Write the Find This Spot riddle.
 - **Gemma:** Writes the Find This Spot riddle.
@@ -882,7 +882,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.1`: rejected
 
-`src/app/how-it-works/page.tsx:519` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:526` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Collect every fact, with its source and date.
 - **Gemma:** Collects every fact, source, and date.
@@ -893,7 +893,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.2`: rejected
 
-`src/app/how-it-works/page.tsx:520` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:527` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Remove unsafe species, before and after.
 - **Gemma:** Removes unsafe species before and after.
@@ -904,7 +904,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.3`: rejected
 
-`src/app/how-it-works/page.tsx:521` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:528` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Set the mix and the number of finds.
 - **Gemma:** Sets the mix and number of finds.
@@ -915,7 +915,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.4`: rejected
 
-`src/app/how-it-works/page.tsx:522` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
+`src/app/how-it-works/page.tsx:529` · bullet under "Code does", 8 words or fewer, starts with a verb · max 50 characters
 
 - **Old:** Check every clue; remove failures.
 - **Gemma:** Checks clues and removes failures.
@@ -926,7 +926,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.5`: rejected
 
-`src/app/how-it-works/page.tsx:523` · bullet under "Code does", 9 words or fewer, starts with a verb · max 55 characters
+`src/app/how-it-works/page.tsx:530` · bullet under "Code does", 9 words or fewer, starts with a verb · max 55 characters
 
 - **Old:** Pick the spot, draw the map, measure the walk.
 - **Gemma:** Picks the spot, draws maps, and measures walks.
@@ -937,7 +937,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.code.does.6`: rejected
 
-`src/app/how-it-works/page.tsx:524` · bullet under "Code does", 9 words or fewer, starts with a verb · max 55 characters
+`src/app/how-it-works/page.tsx:531` · bullet under "Code does", 9 words or fewer, starts with a verb · max 55 characters
 
 - **Old:** Write every number, date, safety line and answer.
 - **Gemma:** Writes the numbers, dates, safety lines, and answers.
@@ -948,7 +948,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.ai.schema`: accepted
 
-`src/app/how-it-works/page.tsx:529` · one sentence under the two lists · max 110 characters
+`src/app/how-it-works/page.tsx:536` · one sentence under the two lists · max 110 characters
 
 - **Old:** The AI can't invent a find: its answer's schema only allows ids from the park's own list.
 - **Gemma:** The AI cannot invent finds because it can only use ids from the park's own fact list.
@@ -959,7 +959,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.title`: unchanged
 
-`src/app/how-it-works/page.tsx:533` · section headline, 6 words or fewer · max 40 characters
+`src/app/how-it-works/page.tsx:540` · section headline, 6 words or fewer · max 40 characters
 
 - **Old:** Open weights, our own rules
 - **Gemma:** Open weights, our own rules
@@ -970,7 +970,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.1.title`: rejected
 
-`src/app/how-it-works/page.tsx:536` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:543` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** The licence is open.
 - **Gemma:** Open licensing
@@ -981,7 +981,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.1.body`: rejected
 
-`src/app/how-it-works/page.tsx:536` · card body, 1 sentence · max 100 characters
+`src/app/how-it-works/page.tsx:543` · card body, 1 sentence · max 100 characters
 
 - **Old:** Gemma 4's weights are Apache-2.0: anyone can download, run and build on them.
 - **Gemma:** Gemma 4 uses Apache-2.0, so anyone can download, run and build on it.
@@ -992,7 +992,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.2.title`: rejected
 
-`src/app/how-it-works/page.tsx:539` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:546` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** It can be self-hosted.
 - **Gemma:** Self-hosting works
@@ -1003,18 +1003,18 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.2.body`: edited
 
-`src/app/how-it-works/page.tsx:540` · card body, 2 short sentences; must give the measured self-host result · max 150 characters
+`src/app/how-it-works/page.tsx:547` · card body, 2 short sentences; must give the measured self-host result · max 150 characters
 
 - **Old:** Any OpenAI-compatible server works, such as Ollama on your computer. Not measured yet.
 - **Gemma:** Use any OpenAI-compatible server, like Ollama on your computer. Not measured yet.
 - **Code check:** passed
-- **Shipped:** Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes finished in the app's normal time; given more, 1-3 minutes a pass. _(Gemma draft, edited)_
-- **Why:** True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became "edited". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both.
+- **Shipped:** Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass. _(Gemma draft, edited)_
+- **Why:** True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became "edited". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both. Fact fix (RULES-7-02, Builder AD, not Gemma): 2 of the 5 app-clock passes did finish (short, 6 of 8), and the 70 s limit of that run is not the hosted site's (30-40 s sized first calls), so the card says '0 of 5 passes complete within the app's limits'.
 - **FACTS:** Any OpenAI-compatible server works, for example Ollama on your own computer. / Measured: Gemma 4 E2B on a laptop CPU costs $0 but takes 1-3 minutes a pass, too slow for the app's 70 s limit. / With the app's normal time limits, 0 of 5 passes finished complete; given more time (the eval's longer clock), a pass takes 1-3 minutes. · KEEP: "OpenAI-compatible", "Ollama", "$0", "0 of 5"
 
 #### `how.open.3.title`: rejected
 
-`src/app/how-it-works/page.tsx:544` · card title, 5 words or fewer · max 30 characters
+`src/app/how-it-works/page.tsx:551` · card title, 5 words or fewer · max 30 characters
 
 - **Old:** Our rules, not a vendor's.
 - **Gemma:** Our rules, not theirs
@@ -1025,7 +1025,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.open.3.body`: rejected
 
-`src/app/how-it-works/page.tsx:545` · card body, 1 sentence · max 110 characters
+`src/app/how-it-works/page.tsx:552` · card body, 1 sentence · max 110 characters
 
 - **Old:** The same checks run on any model; Llama 4 Maverick went through them in our test.
 - **Gemma:** We run the same checks on every model, including Llama 4 Maverick.
@@ -1036,7 +1036,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.limits.title`: accepted
 
-`src/app/how-it-works/page.tsx:632` · section headline, 6 words or fewer · max 40 characters
+`src/app/how-it-works/page.tsx:652` · section headline, 6 words or fewer · max 40 characters
 
 - **Old:** What doesn’t work (yet)
 - **Gemma:** Where we fall short
@@ -1047,7 +1047,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.title`: rejected
 
-`src/app/how-it-works/page.tsx:659` · section headline, 5 words or fewer · max 35 characters
+`src/app/how-it-works/page.tsx:679` · section headline, 5 words or fewer · max 35 characters
 
 - **Old:** Nothing about your child
 - **Gemma:** Kid privacy first
@@ -1058,7 +1058,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.built.title`: rejected
 
-`src/app/how-it-works/page.tsx:680` · section headline, 9 words or fewer · max 60 characters
+`src/app/how-it-works/page.tsx:700` · section headline, 9 words or fewer · max 60 characters
 
 - **Old:** Built in the contest week, with AI coding agents
 - **Gemma:** Built in a week with AI
@@ -1069,7 +1069,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.built.body`: rejected
 
-`src/app/how-it-works/page.tsx:682` · short paragraph, 2 sentences · max 200 characters
+`src/app/how-it-works/page.tsx:702` · short paragraph, 2 sentences · max 200 characters
 
 - **Old:** Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding agents wrote and reviewed most of the code.
 - **Gemma:** Built for Hacktoberfest 2026 Week 1, starting Oct 5, 2026. Kevin made the calls, while AI coding agents wrote and reviewed the code.
@@ -1080,7 +1080,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.1`: accepted
 
-`src/lib/about/content.ts:211` · privacy bullet, 1-2 short sentences · max 90 characters
+`src/lib/about/content.ts:212` · privacy bullet, 1-2 short sentences · max 90 characters
 
 - **Old:** No names, no photos, no analytics. Browsing and printing set no cookie.
 - **Gemma:** No names, photos, or analytics. Browsing and printing set no cookie.
@@ -1091,7 +1091,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.3`: rejected
 
-`src/lib/about/content.ts:213` · privacy bullet, 1 sentence · max 100 characters
+`src/lib/about/content.ts:214` · privacy bullet, 1 sentence · max 100 characters
 
 - **Old:** What you type goes to our server and OpenStreetMap, never into the web address.
 - **Gemma:** Your typing goes to our server and OpenStreetMap, never the web address.
@@ -1102,7 +1102,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.4`: edited
 
-`src/lib/about/content.ts:214` · privacy bullet, 1 sentence · max 80 characters
+`src/lib/about/content.ts:215` · privacy bullet, 1 sentence · max 80 characters
 
 - **Old:** "Use my location" is rounded to about 1 km in your browser.
 - **Gemma:** Use my location is rounded to about 1 km in your browser before it is sent.
@@ -1113,7 +1113,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `how.privacy.5`: accepted
 
-`src/lib/about/content.ts:215` · privacy bullet, 1 sentence · max 90 characters
+`src/lib/about/content.ts:216` · privacy bullet, 1 sentence · max 90 characters
 
 - **Old:** The model sees the park's public facts and the age band, nothing about you.
 - **Gemma:** The AI sees park facts and the age band, nothing about you or your child.
@@ -1214,7 +1214,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.1`: unchanged
 
-`src/lib/about/content.ts:84` · check-mark bullet, 1 sentence · max 70 characters
+`src/lib/about/content.ts:85` · check-mark bullet, 1 sentence · max 70 characters
 
 - **Old:** Anyone can download, run and build on the weights.
 - **Gemma:** Anyone can download, run and build on the weights.
@@ -1225,7 +1225,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.2`: accepted
 
-`src/lib/about/content.ts:85` · check-mark bullet, 1 sentence · max 70 characters
+`src/lib/about/content.ts:86` · check-mark bullet, 1 sentence · max 70 characters
 
 - **Old:** Our safety rules live in our code, not a vendor's.
 - **Gemma:** Our safety rules are in our code, not a vendor's.
@@ -1236,7 +1236,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.whyopen.3`: unchanged
 
-`src/lib/about/content.ts:86` · check-mark bullet, 1 sentence; must give the measured self-host result · max 70 characters
+`src/lib/about/content.ts:87` · check-mark bullet, 1 sentence; must give the measured self-host result · max 70 characters
 
 - **Old:** Self-hosting is possible, but not measured yet.
 - **Gemma:** Self-hosting is possible, but not measured yet.
@@ -1258,7 +1258,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.osm`: rejected
 
-`src/lib/about/content.ts:97` · one-line description of a data source (OpenStreetMap), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:98` · one-line description of a data source (OpenStreetMap), 8 words or fewer · max 50 characters
 
 - **Old:** Parks, paths and what is mapped inside them
 - **Gemma:** Parks, paths and what's inside them
@@ -1269,7 +1269,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.inat`: accepted
 
-`src/lib/about/content.ts:105` · one-line description of a data source (iNaturalist), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:106` · one-line description of a data source (iNaturalist), 8 words or fewer · max 50 characters
 
 - **Old:** Wildlife people really spotted nearby
 - **Gemma:** Wildlife people actually spotted nearby
@@ -1280,7 +1280,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.wiki`: accepted
 
-`src/lib/about/content.ts:112` · one-line description of a data source (Wikipedia), 8 words or fewer · max 50 characters
+`src/lib/about/content.ts:113` · one-line description of a data source (Wikipedia), 8 words or fewer · max 50 characters
 
 - **Old:** A short fact about each species
 - **Gemma:** A short summary of each species
@@ -1291,7 +1291,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.data.serp`: accepted
 
-`src/lib/about/content.ts:119` · one-line description of a data source (SerpApi), 10 words or fewer · max 60 characters
+`src/lib/about/content.ts:120` · one-line description of a data source (SerpApi), 10 words or fewer · max 60 characters
 
 - **Old:** How often Google Maps reviews mention dogs or bikes
 - **Gemma:** Google Maps review counts for dogs or bikes
@@ -1357,7 +1357,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.1`: accepted
 
-`src/lib/about/content.ts:128` · privacy check-mark bullet, 1 short sentence · max 60 characters
+`src/lib/about/content.ts:129` · privacy check-mark bullet, 1 short sentence · max 60 characters
 
 - **Old:** Browsing and printing need no account or cookie.
 - **Gemma:** No account or cookies needed to browse and print.
@@ -1368,7 +1368,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.2`: accepted
 
-`src/lib/about/content.ts:129` · privacy check-mark bullet, 1 sentence · max 85 characters
+`src/lib/about/content.ts:130` · privacy check-mark bullet, 1 sentence · max 85 characters
 
 - **Old:** Sign-in only to make a new pass; we keep a scrambled ID, no email or name.
 - **Gemma:** Sign-in is only for new passes. We keep a scrambled ID, no name or email.
@@ -1379,7 +1379,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.3`: accepted
 
-`src/lib/about/content.ts:130` · privacy check-mark bullet, 1 short sentence · max 50 characters
+`src/lib/about/content.ts:131` · privacy check-mark bullet, 1 short sentence · max 50 characters
 
 - **Old:** Nothing about your child is asked for.
 - **Gemma:** We never ask for info about your child.
@@ -1390,7 +1390,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.4`: edited
 
-`src/lib/about/content.ts:131` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:132` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Your location is rounded to about 1 km first.
 - **Gemma:** Your location is rounded to 1 km in your browser.
@@ -1401,7 +1401,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.5`: rejected
 
-`src/lib/about/content.ts:132` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:133` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Your IP is kept only scrambled, for about a day.
 - **Gemma:** Your IP is kept scrambled for about a day.
@@ -1412,7 +1412,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.6`: accepted
 
-`src/lib/about/content.ts:133` · privacy check-mark bullet, 1 short sentence · max 55 characters
+`src/lib/about/content.ts:134` · privacy check-mark bullet, 1 short sentence · max 55 characters
 
 - **Old:** Park facts and age band go to the model (US).
 - **Gemma:** Park facts and age band go to the model in the US.
@@ -1456,7 +1456,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.note2`: edited
 
-`src/lib/about/content.ts:195` · paragraph under the privacy table, 1 sentence · max 120 characters
+`src/lib/about/content.ts:196` · paragraph under the privacy table, 1 sentence · max 120 characters
 
 - **Old:** The model runs on DigitalOcean's servers in the US, so the park facts and the age band do leave your device.
 - **Gemma:** The model runs on DigitalOcean servers in the US, so park facts and age bands leave your device.
@@ -1467,7 +1467,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `about.privacy.note3`: rejected
 
-`src/lib/about/content.ts:196` · paragraph under the privacy table, 1 sentence · max 130 characters
+`src/lib/about/content.ts:197` · paragraph under the privacy table, 1 sentence · max 130 characters
 
 - **Old:** Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.
 - **Gemma:** Logs track the model, timing, outcome, and pass id; they never record your prompt, IP, or what you typed.

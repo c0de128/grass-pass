@@ -62,29 +62,39 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-8");
-    expect(t).toContain("2026-10-06-partial-2121");
+    expect(t).toContain("2026-10-06-9");
+    expect(t).toContain("2026-10-06-partial-2320");
     expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
     expect(t).toContain(`${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete in ${SMOKE_10_13.calls} model calls`);
     // RULES-6-03: the smoke's speed and name-leak misses are labelled, like its cost.
     expect(SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s && SMOKE_10_13.nameLeakPct > EVAL_THRESHOLDS.nameLeakPct).toBe(true);
-    // (`t` puts a space at each tag edge, so "(<strong>over" reads "( over" here.) Smoke partial-2121: only the typical
+    // (`t` puts a space at each tag edge, so "(<strong>over" reads "( over" here.) Smoke partial-2320: only the typical
     // time is over; the slow one is under 20 s.
     expect(SMOKE_10_13.p95s).toBeLessThanOrEqual(EVAL_THRESHOLDS.p95s);
     expect(t).toMatch(new RegExp(`${SMOKE_10_13.p50s} s typical \\( ?over the ${EVAL_THRESHOLDS.p50s} s target\\) and ${SMOKE_10_13.p95s} s slow \\(under ${EVAL_THRESHOLDS.p95s} s\\)`));
     expect(t).toMatch(new RegExp(`${SMOKE_10_13.nameLeakPct}% of its clues named their answer \\( ?over the ${EVAL_THRESHOLDS.nameLeakPct}% target\\)`));
-    // Run 2026-10-06-8 (a slow provider evening): cost, speed, repetition and complete passes missed; the table says so.
+    // Run 2026-10-06-9 (the first with sized time limits): cost and speed (the slow calls) missed, complete passes and
+    // repetition met; the table says so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
     expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
     expect(rows).toContainEqual(["Cost per pass (DigitalOcean list prices)", "Missed"]);
-    expect(t).toContain("$0.00111 (up to $0.00127 if 15 timed-out calls were billed in full)");
-    expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Missed"]);
-    expect(t).toContain("Speed is missed: the typical call took 15.35 s, first calls alone 16.4 s, with DigitalOcean answering at 28.1 answer tokens a second (47.3 the run before, when speed was met)");
-    expect(rows).toContainEqual(["Clues repeated across parks", "Missed"]);
+    expect(t).toContain("$0.00108 (up to $0.00109 if 2 timed-out calls were billed in full)");
+    expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Met"]);
+    expect(t).toContain("Speed is met for a typical call and missed for the slow ones: the typical call took 9.91 s, first calls alone 12.8 s, with DigitalOcean answering at 39.5 answer tokens a second (28.1 the run before, when speed was missed)");
+    expect(t).toContain("This is the first full run with time limits sized to each call (up to 40 s for a first call; the run before had a fixed 30 s).");
+    expect(rows).toContainEqual(["Clues repeated across parks", "Met"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
-    expect(g.repeatPct).toBeGreaterThan(EVAL_THRESHOLDS.repeatPct);
+    expect(g.repeatPct).toBeLessThanOrEqual(EVAL_THRESHOLDS.repeatPct);
     expect(g.costPerPass).toBeGreaterThan(EVAL_THRESHOLDS.costPerPass);
-    expect(t).toContain(`${SMOKE_10_13.hardKept} of ${SMOKE_10_13.parks} with their 2 hard finds`);
+    expect(SMOKE_10_13.hardKept).toBe(SMOKE_10_13.parks);
+    expect(t).toContain(`all ${SMOKE_10_13.hardKept} with their 2 hard finds`);
+    // RULES-7-01: every code edit to a printed clue is listed; no "only two edits".
+    expect(t).not.toContain("only two edits");
+    expect(t).toContain('swaps a worn-out opening ("Somewhere you will see a") for a plain word ("Spot a"), and says "What", not "Who", for a lichen.');
+    // RULES-7-06: the short wait line keeps its upper bound.
+    expect(t).toContain("A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening.");
+    // RULES-7-02: the self-host card says "complete", not "finished in the app's normal time".
+    expect(t).toContain("0 of 5 passes complete within the app's limits");
   });
 
   it("the 10-13 smoke numbers match the committed results JSON", () => {
@@ -104,7 +114,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(Math.round(s.m7.p50Ms / 100) / 10).toBe(SMOKE_10_13.p50s);
     expect(Math.round(s.m7.p95Ms / 100) / 10).toBe(SMOKE_10_13.p95s);
     expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_10_13.costPerPass);
-    // Q-5-05: "all 3 with their 2 hard finds"
+    // Q-5-05: "all 3 with their 2 hard finds" (partial-2320)
     expect(s.hard).toMatchObject({ checked: SMOKE_10_13.parks, met: SMOKE_10_13.hardKept, hardMin: 2 });
     const finished = j.runs.filter((r) => r.model === "gemma-4-31B-it" && r.kind === "pass").length;
     expect(finished).toBe(3);

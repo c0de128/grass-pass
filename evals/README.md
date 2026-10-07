@@ -5,7 +5,7 @@ How good are the passes, measured on 20 real parks, with real recorded park data
 | Command | What it does | Network / cost |
 |---|---|---|
 | `pnpm eval:record` | Records the 20 parks LIVE with the app's own source code (Overpass park features, iNaturalist species in 1.5 km over the last 14 days, taxa summaries, and the season check's "Flowers and Fruits" counts for the plant candidates) into `tests/fixtures/evals/<park>.json`, each answer with its fetch time. Keeps existing files unless `EVAL_RECORD_FORCE=1`. Writes `tests/fixtures/evals/RECORDING-LOG.md`. | OpenStreetMap + iNaturalist (free, polite: one park at a time, the app's rate limits, a pause between parks) |
-| `pnpm eval` | Runs the real pass builder (`src/lib/ai/build-pass.ts`) on the recorded parks with `gemma-4-31B-it` x 3 runs and `llama-4-maverick` x 1 run on DigitalOcean, plus the no-AI template baseline. Scores M1-M8, M10 and M11, prints the table, writes `evals/results/<date>.md` + `.json` and appends `evals/results/SPEND.md`. | DigitalOcean serverless inference, about $0.07-0.09 for a full run (2026-10-06-8: $0.090); hard cap `EVAL_BUDGET_USD` (default $1) |
+| `pnpm eval` | Runs the real pass builder (`src/lib/ai/build-pass.ts`) on the recorded parks with `gemma-4-31B-it` x 3 runs and `llama-4-maverick` x 1 run on DigitalOcean, plus the no-AI template baseline. Scores M1-M8, M10 and M11, prints the table, writes `evals/results/<date>.md` + `.json` and appends `evals/results/SPEND.md`. | DigitalOcean serverless inference, about $0.07-0.10 for a full run (2026-10-06-9: $0.092, the first full run with the sized time limits); hard cap `EVAL_BUDGET_USD` (default $1) |
 | `pnpm eval:check` | Free dry run: every recorded park through the real `buildPass`, twice and in two lanes like `pnpm eval`, with the model off. Fails on any request the fixtures cannot answer. Run it before a paid run. | none |
 | `pnpm eval:report` | Re-renders the newest (or `EVAL_FROM=<file>.json`) results file. | none |
 | `pnpm eval:replay` | Free replay (builder T, 2026-10-06): `EVAL_FROM=<file>.json` runs today's real `buildPass` on that run's recorded parks and answers each model call with the raw answer the run recorded, in order (virtual clock with the recorded latencies; a recorded timeout or HTTP error is replayed as one). A call today's code makes that the run never made (a second refill, a retry after a timeout) gets no invented answer: it keeps nothing and is listed, so the replayed M3 is a lower bound. Prints M3, M5, M6, M10, M11 and the drops. `EVAL_REPLAY_MODELS` (default `gemma-4-31B-it`; `no-AI template` re-runs the template), `EVAL_REPLAY_OUT=<path>` writes the details. Changed fact-sheet words make old quotes fail grounding, so replays after a fact change under-count. Slow-provider fix (2026-10-06): the app's own sized time limits run on the virtual clock (no real waiting; the recorded data time comes before the first call); a recorded timeout times out at today's limit for that call (the pessimistic reading: it never answers); `EVAL_REPLAY_TPS=<answer tokens/s>` slows every answered call to at most that speed; `EVAL_REPLAY_OLD_BUDGET=1` uses the fixed limits from before (30 s a call, 20 s a refill, the same whole retry) to compare on the same clock. | none |
@@ -31,6 +31,11 @@ Gemma 4 E2B (`ollama pull gemma4:e2b-it-qat`, Apache-2.0) re-tagged with an 8,19
 named `<date>-selfhost-<HHMM>`. Measured numbers and the exact commands: `results/2026-10-06-selfhost-notes.md`.
 
 Partial runs are written as `<date>-partial-<HHMM>.md` and are never the frozen numbers.
+
+**After a full run, sync every quoted number** (RULES-7-03): `src/lib/about/eval-summary.ts` (checked against the JSON
+by `tests/unit/about.test.tsx` and `how-it-works.test.tsx`), `src/lib/about/content.ts`, `/how-it-works`, the README
+(Limitations, Evals, Why open, Run it yourself), `docs/EVALS.md`, this file, and
+`results/2026-10-06-selfhost-notes.md` (its paragraph naming the run the pages quote).
 
 ## Files
 

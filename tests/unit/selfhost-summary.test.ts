@@ -67,7 +67,9 @@ describe("self-host patient-only figures", () => {
   it("the page paragraph says both results and the 70 s limit", () => {
     const d = selfHostDetail();
     expect(d).toContain("gemma4:e2b-it-qat, Apache-2.0");
-    expect(d).toContain("70 s limit, 3 of 5 passes ran out of time and the other 2 came out short");
+    // RULES-7-02: 70 s is the most the app allows, not the hosted site's limit (a sized 30-40 s first call there).
+    expect(d).toContain("With a 70 s limit per model call (the most the app allows; the hosted site gives a first call 30-40 s), 0 of 5 passes were complete: 3 ran out of time and the other 2 came out short");
+    expect(d).not.toMatch(/normal 70 s/);
     expect(d).toContain("4 of 5 were complete");
     expect(d).toContain("$0");
     // RULES-6-01: the RAM is a range (5.2 GB working set, 5.8 GB private at most), not the top of one of them.

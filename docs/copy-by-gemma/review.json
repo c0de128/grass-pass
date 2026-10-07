@@ -40,8 +40,9 @@
       "id": "home.how.s2.body",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Drops 'Gemma writes, code checks.' (Kevin's line, corrected from his reference) and 'a fair mix'.",
-      "shipped": "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds."
+      "reason": "Drops 'Gemma writes, code checks.' (Kevin's line, corrected from his reference) and 'a fair mix'. Fact fix (RULES-7-06, Builder AD, not Gemma): the shipped line now adds the measured upper bound, 'up to about a minute and a half on a slow evening' (PASS_WAIT_COPY, README); 'Gemma writes, code checks.' is untouched.",
+      "shipped": "Gemma writes, code checks. Gemma 4 picks a fair mix from the park’s real map and 14 days of nearby sightings, then writes the clues. Code checks each one against its source. Usually 10–30 seconds, up to about a minute and a half on a slow evening.",
+      "factFixAfterRun": true
     },
     {
       "id": "home.how.s3.title",
@@ -328,8 +329,9 @@
       "id": "how.quick.note",
       "decision": "edited",
       "stage": "agent-review",
-      "reason": "Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'.",
-      "shipped": "A new pass usually takes 10-30 seconds, roughly the time it takes to find a missing shoe. If data is missing, the pass says \"No data available\" and why."
+      "reason": "Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'. Fact fix (RULES-7-06, Builder AD, not Gemma): the upper bound 'up to about a minute and a half on a slow evening' replaces the missing-shoe aside (the block's 170-character limit).",
+      "shipped": "A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing, the pass says \"No data available\" and why.",
+      "factFixAfterRun": true
     },
     {
       "id": "how.steps.title",
@@ -596,8 +598,8 @@
       "id": "how.open.2.body",
       "decision": "edited",
       "stage": "agent-review",
-      "reason": "True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became \"edited\". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both.",
-      "shipped": "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes finished in the app's normal time; given more, 1-3 minutes a pass.",
+      "reason": "True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became \"edited\". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both. Fact fix (RULES-7-02, Builder AD, not Gemma): 2 of the 5 app-clock passes did finish (short, 6 of 8), and the 70 s limit of that run is not the hosted site's (30-40 s sized first calls), so the card says '0 of 5 passes complete within the app's limits'.",
+      "shipped": "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass.",
       "factFixAfterRun": true
     },
     {

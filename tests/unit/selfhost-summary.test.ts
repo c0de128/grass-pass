@@ -70,5 +70,48 @@ describe("self-host patient-only figures", () => {
     expect(d).toContain("70 s limit, 3 of 5 passes ran out of time and the other 2 came out short");
     expect(d).toContain("4 of 5 were complete");
     expect(d).toContain("$0");
+    // RULES-6-01: the RAM is a range (5.2 GB working set, 5.8 GB private at most), not the top of one of them.
+    expect(d).toContain("about 5-6 GB of RAM");
+    // G2: the one measured browser click-through with the longer local clock.
+    expect(d).toContain("LOCAL_MODEL_TIMEOUT_MS, off by default");
+    expect(d).toContain("Celebration Park pass came out with 7 of 8 finds and its map in 96 s (2 model calls)");
+  });
+});
+
+describe("self-host browser click-through (G2)", () => {
+  type Ev = { event: string; latencyMs?: number; model?: string; items?: number; ms?: number; id?: string; spot?: string; asked?: number; refill?: boolean };
+  const j = JSON.parse(readFileSync(join(ROOT, SELFHOST.browser.file), "utf8")) as {
+    meta: { env: Record<string, string>; ageBand: string; browser: { makeMyPassToPassPageSeconds: number }; result: { finds: number; asked: number; modelCalls: number } };
+    events: Ev[];
+  };
+  const b = SELFHOST.browser;
+
+  it("the quoted numbers match the saved server log of that run", () => {
+    expect(j.meta.env.MODEL_BASE_URL).toBe("http://localhost:11434/v1");
+    expect(j.meta.env.MODEL_ID).toBe(SELFHOST.modelId);
+    expect(Number(j.meta.env.LOCAL_MODEL_TIMEOUT_MS)).toBe(b.localTimeoutMs);
+    expect(j.meta.ageBand).toBe(b.ageBand);
+    expect(Math.round(j.meta.browser.makeMyPassToPassPageSeconds)).toBe(b.seconds);
+    const calls = j.events.filter((e) => e.event === "model_call");
+    expect(calls).toHaveLength(b.calls);
+    expect(calls.every((c) => c.model === SELFHOST.modelId)).toBe(true);
+    const made = j.events.find((e) => e.event === "pass_made")!;
+    expect(made.items).toBe(b.finds);
+    expect(j.meta.result.asked).toBe(b.asked);
+    expect(j.events.find((e) => e.event === "pass_checks" && !e.refill)?.asked).toBe(b.asked);
+    expect(j.events.every((e) => e.event !== "pass_checks" || e.spot === "ok")).toBe(b.spot);
+    // Under the normal limits (85 s pass, 95 s page) this run could not have finished as it did.
+    expect(made.ms! / 1000).toBeGreaterThan(85);
+  });
+});
+
+describe("self-host notes (RULES-6-01)", () => {
+  const notes = readFileSync(join(ROOT, SELFHOST.notes), "utf8");
+  it("compare against the frozen run -7, name the app code, and give the RAM as a range", () => {
+    expect(notes).toContain("`2026-10-06-7`, frozen");
+    expect(notes).not.toMatch(/run `2026-10-06-6` still is/);
+    expect(notes).toMatch(/before(\*\*)? the round-5 safety and jargon checks/);
+    expect(notes).toContain("`637dd7b`");
+    expect(notes).toContain("About 5-6 GB of RAM");
   });
 });

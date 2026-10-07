@@ -32,7 +32,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1512, files: 54, day: "Oct 6, 2026" } as const;
+export const UNIT_TESTS = { passed: 1541, files: 56, day: "Oct 6, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 export const AUDIT_ROUNDS = { done: 5, day: "Oct 6, 2026" } as const;
 const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
@@ -289,7 +289,8 @@ export function aboutLimits(): Limit[] {
 /** The measured self-host result in one paragraph (judge G1; numbers from SELFHOST, checked against the JSON by tests). */
 export function selfHostDetail(): string {
   const s = SELFHOST;
-  return `We ran the small Gemma 4 E2B (${s.model}, ${s.licence}) with Ollama on ${s.hardware}, on ${s.parks} test parks, for $0. With the app's own ${MAX_MODEL_TIMEOUT_MS / 1000} s limit, ${s.app.lost} of ${s.parks} passes ran out of time and the other ${s.app.passes} came out short. Given more time (an eval-only setting), ${s.patient.complete} of ${s.parks} were complete, ${pct(s.patient.groundedPct)} of clues quoted their source, reading grade ${s.patient.fkGrade.toFixed(1)}, ${s.patient.blockedPrinted} risky species printed, at ${secs(s.patient.p50s)} a typical call (hosted Gemma 4 31B: ${secs(evalColumn("gemma-4-31B-it").p50s)}). The model used about ${s.ramGb} GB of RAM.`;
+  const b = s.browser;
+  return `We ran the small Gemma 4 E2B (${s.model}, ${s.licence}) with Ollama on ${s.hardware}, on ${s.parks} test parks, for $0. With the app's normal ${MAX_MODEL_TIMEOUT_MS / 1000} s limit, ${s.app.lost} of ${s.parks} passes ran out of time and the other ${s.app.passes} came out short. Given more time (an eval-only setting), ${s.patient.complete} of ${s.parks} were complete, ${pct(s.patient.groundedPct)} of clues quoted their source, reading grade ${s.patient.fkGrade.toFixed(1)}, ${s.patient.blockedPrinted} risky species printed, at ${secs(s.patient.p50s)} a typical call (hosted Gemma 4 31B: ${secs(evalColumn("gemma-4-31B-it").p50s)}). The app now has a longer clock for a model on your own computer (LOCAL_MODEL_TIMEOUT_MS, off by default): in one browser try, a ${b.park} pass came out with ${b.finds} of ${b.asked} finds and its map in ${b.seconds} s (${b.calls} model calls). The model used about ${s.ram.label} GB of RAM.`;
 }
 
 /**

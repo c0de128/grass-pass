@@ -1,0 +1,221 @@
+{
+  "meta": {
+    "what": "G2 browser click-through: one new pass made in the browser with a self-hosted model and the longer local clock",
+    "day": "2026-10-06",
+    "startedAtCdt": "2026-10-06 19:59 CDT",
+    "server": "next start (production build of branch r6-polish) on http://localhost:3440",
+    "model": "gemma4-e2b-8k (gemma4:e2b-it-qat, Apache-2.0, 8,192-token context; evals/selfhost/Modelfile)",
+    "runner": "Ollama 0.32.15, CPU only",
+    "hardware": "Windows 11 laptop, Intel Core Ultra 7 155H, 32 GB RAM, no NVIDIA GPU",
+    "env": {
+      "MODEL_BASE_URL": "http://localhost:11434/v1",
+      "MODEL_ID": "gemma4-e2b-8k",
+      "MODEL_REASONING_EFFORT": "none",
+      "LOCAL_MODEL_TIMEOUT_MS": "270000",
+      "PREWARM_EXAMPLES": "0",
+      "SERPAPI_DAILY_CAP": "0"
+    },
+    "park": "Celebration Park (Allen TX, way/188145317)",
+    "ageBand": "6-10",
+    "browser": {
+      "search": "Celebration Park Allen TX",
+      "searchSeconds": 8.5,
+      "makeMyPassToPassPageSeconds": 96,
+      "waitCopySeen": "3 s so far. A model on this computer can take a few minutes. This page waits for it."
+    },
+    "result": {
+      "passId": "w188145317-6to10-20261006-1",
+      "finds": 7,
+      "asked": 8,
+      "modelCalls": 2,
+      "modelCallSeconds": [
+        62.8,
+        30.7
+      ],
+      "spot": "ok",
+      "wild": "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.",
+      "serverPassMs": 94612
+    },
+    "notes": [
+      "One run, not a benchmark. Other programs were running on the laptop.",
+      "With the normal clock this pass would not have finished as shown: the page stops waiting at 95 s, and the refill (call 2) needs 20 s left of the 85 s pass deadline.",
+      "0 DigitalOcean calls, 0 SerpApi searches."
+    ]
+  },
+  "events": [
+    {
+      "ts": "2026-10-07T00:59:10.835Z",
+      "event": "signin",
+      "provider": "judge"
+    },
+    {
+      "ts": "2026-10-07T00:59:11.364Z",
+      "event": "upstream_call",
+      "source": "nominatim",
+      "what": "geocode",
+      "status": 200,
+      "latencyMs": 106,
+      "outcome": "ok"
+    },
+    {
+      "ts": "2026-10-07T00:59:19.097Z",
+      "event": "upstream_call",
+      "source": "overpass",
+      "endpoint": "overpass-api.de",
+      "status": 200,
+      "latencyMs": 7730,
+      "outcome": "ok",
+      "failover": false
+    },
+    {
+      "ts": "2026-10-07T00:59:21.555Z",
+      "event": "upstream_call",
+      "source": "inaturalist",
+      "what": "species_counts",
+      "status": 200,
+      "latencyMs": 945,
+      "outcome": "ok"
+    },
+    {
+      "ts": "2026-10-07T00:59:22.199Z",
+      "event": "upstream_call",
+      "source": "inaturalist",
+      "what": "monarch_histogram",
+      "status": 200,
+      "latencyMs": 580,
+      "outcome": "ok"
+    },
+    {
+      "ts": "2026-10-07T00:59:22.924Z",
+      "event": "upstream_call",
+      "source": "inaturalist",
+      "what": "milkweed_count",
+      "status": 200,
+      "latencyMs": 296,
+      "outcome": "ok"
+    },
+    {
+      "ts": "2026-10-07T00:59:23.346Z",
+      "event": "upstream_call",
+      "source": "overpass",
+      "endpoint": "overpass-api.de",
+      "status": 200,
+      "latencyMs": 2737,
+      "outcome": "ok",
+      "failover": false
+    },
+    {
+      "ts": "2026-10-07T00:59:23.348Z",
+      "event": "osm_refresh_ok",
+      "kind": "features",
+      "parkId": "way/188145317"
+    },
+    {
+      "ts": "2026-10-07T00:59:26.893Z",
+      "event": "upstream_call",
+      "source": "overpass",
+      "endpoint": "overpass-api.de",
+      "status": 200,
+      "latencyMs": 3544,
+      "outcome": "ok",
+      "failover": false
+    },
+    {
+      "ts": "2026-10-07T00:59:26.903Z",
+      "event": "osm_refresh_ok",
+      "kind": "geometry",
+      "parkId": "way/188145317"
+    },
+    {
+      "ts": "2026-10-07T01:00:24.402Z",
+      "event": "model_call",
+      "task": "pass",
+      "model": "gemma4-e2b-8k",
+      "attempt": 1,
+      "outcome": "ok",
+      "latencyMs": 62819,
+      "upstreamStatus": 200,
+      "answeredModel": "gemma4-e2b-8k",
+      "finishReason": "stop",
+      "promptTokens": 2439,
+      "completionTokens": 689
+    },
+    {
+      "ts": "2026-10-07T01:00:24.458Z",
+      "event": "pass_checks",
+      "spot": "ok",
+      "call": 1,
+      "refill": false,
+      "model": "gemma4-e2b-8k",
+      "n": 8,
+      "asked": 8,
+      "lowData": false,
+      "returned": 8,
+      "kept": 6,
+      "drops": {
+        "repeats_opening": 2
+      },
+      "belowMin": [
+        "park"
+      ],
+      "hard": 0,
+      "lookWhereCleared": 4,
+      "quotesRepaired": 0,
+      "styleKept": 6,
+      "openersTrimmed": 0,
+      "trailersTrimmed": 0,
+      "questionsFixed": 0,
+      "hardMin": 0
+    },
+    {
+      "ts": "2026-10-07T01:00:55.146Z",
+      "event": "model_call",
+      "task": "pass",
+      "model": "gemma4-e2b-8k",
+      "attempt": 1,
+      "outcome": "ok",
+      "latencyMs": 30683,
+      "upstreamStatus": 200,
+      "answeredModel": "gemma4-e2b-8k",
+      "finishReason": "stop",
+      "promptTokens": 2000,
+      "completionTokens": 293
+    },
+    {
+      "ts": "2026-10-07T01:00:55.158Z",
+      "event": "pass_checks",
+      "spot": "ok",
+      "call": 2,
+      "refill": true,
+      "model": "gemma4-e2b-8k",
+      "n": 2,
+      "asked": 4,
+      "lowData": false,
+      "returned": 4,
+      "kept": 1,
+      "drops": {
+        "repeats_opening": 3
+      },
+      "belowMin": [
+        "park"
+      ],
+      "hard": 0,
+      "lookWhereCleared": 0,
+      "quotesRepaired": 0,
+      "styleKept": 1,
+      "openersTrimmed": 0,
+      "trailersTrimmed": 0,
+      "questionsFixed": 0,
+      "hardMin": 0
+    },
+    {
+      "ts": "2026-10-07T01:00:55.173Z",
+      "event": "pass_made",
+      "id": "w188145317-6to10-20261006-1",
+      "items": 7,
+      "model": "gemma4-e2b-8k",
+      "ms": 94612,
+      "degraded": false
+    }
+  ]
+}

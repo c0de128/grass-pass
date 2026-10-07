@@ -245,8 +245,11 @@ export const SELFHOST = {
   licence: "Apache-2.0",
   hardware: "a Windows laptop CPU (Intel Core Ultra 7 155H, 32 GB RAM, no GPU)",
   parks: 5,
-  /** The model runner's RAM, GB (1 decimal), at most. */
-  ramGb: 5.2,
+  /**
+   * The model runner's RAM (RULES-6-01): 4.9-5.2 GB working set and 5.8 GB private bytes at most, so "about 5-6 GB"
+   * on the pages.
+   */
+  ram: { workingSetMaxGb: 5.2, privateMaxGb: 5.8, label: "5-6" },
   /** Measured once on the real Arbor Hills request: prompt reading and answer writing speed (tokens/s). */
   promptTokensPerS: 99.6,
   answerTokensPerS: 17.9,
@@ -276,6 +279,24 @@ export const SELFHOST = {
     perPassP50s: 104.1,
     blockedPrinted: 0,
     wrongCounts: 0,
+  },
+  /**
+   * Judge G2: ONE browser click-through of the app itself with the longer local clock (LOCAL_MODEL_TIMEOUT_MS=270000,
+   * src/lib/pass/local-clock.ts). evals/results/2026-10-06-selfhost-browser-1959.{md,json}; tests/unit/selfhost-summary
+   * re-reads the JSON. One run, not a benchmark.
+   */
+  browser: {
+    file: "evals/results/2026-10-06-selfhost-browser-1959.json",
+    notes: "evals/results/2026-10-06-selfhost-browser-1959.md",
+    park: "Celebration Park",
+    ageBand: "6-10",
+    localTimeoutMs: 270_000,
+    /** From pressing "Make my pass" to the pass page. */
+    seconds: 96,
+    calls: 2,
+    finds: 7,
+    asked: 8,
+    spot: true,
   },
 } as const;
 

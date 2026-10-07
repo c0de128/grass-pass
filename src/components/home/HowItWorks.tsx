@@ -268,7 +268,10 @@ export function HowItWorks() {
     <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 sm:scroll-mt-16">
       <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32 xl:gap-12">
         <div className="flex max-w-3xl flex-col gap-4">
-          <h2 id="how-title" className="text-xs font-bold tracking-widest text-primary uppercase">How it works</h2>
+          {/* Kevin 2026-10-07: same font and size as the hero's "Family time is back!" (HomeHero h1 sizes x 1.25). */}
+          <h2 id="how-title" className="text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
+            <span className="text-[1.25em] leading-[0.95]">How it works</span>
+          </h2>
         </div>
 
         <div data-testid="how-diagram" className="relative xl:aspect-[1216/780]">

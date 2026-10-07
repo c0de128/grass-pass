@@ -121,16 +121,20 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   const statsBefore = await page.getByTestId("report-stats").allTextContents();
   const judgeAnswer = /Judge demo reports are logged for review, but they don't change the counts or passes\./;
   const find1 = page.getByRole("group", { name: "Report find 1" });
+  // UX-7-03: the three buttons sit behind one "Report this find" disclosure per find.
+  await find1.getByText("Report this find").click();
   await find1.getByRole("button", { name: "Found it" }).click();
   // UX-4-05: each judge browser has its own "already sent" check, so a judge's first click is never a dead end.
   await expect(find1.getByTestId("report-status")).toHaveText(judgeAnswer);
   await expect(find1.getByRole("button", { name: "Found it" })).toHaveAttribute("aria-pressed", "true");
   const find2 = page.getByRole("group", { name: "Report find 2" });
+  await find2.getByText("Report this find").click();
   await find2.getByRole("button", { name: "Didn't find it" }).click();
   await expect(find2.getByTestId("report-status")).toHaveText(judgeAnswer);
 
   // "Not safe" asks once more first; Cancel sends nothing.
   const find3 = page.getByRole("group", { name: "Report find 3" });
+  await find3.getByText("Report this find").click();
   await find3.getByRole("button", { name: "Not safe" }).click();
   await expect(find3.getByText(/Report find 3 as not safe\?/)).toBeVisible();
   await find3.getByRole("button", { name: "Cancel" }).click();

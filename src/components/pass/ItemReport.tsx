@@ -88,13 +88,19 @@ export function ItemReport({ passId, itemRef, findNumber }: { passId: string; it
           </button>
         </div>
       ) : (
-        <div className="flex flex-wrap gap-2">
-          {button("found", () => void send("found"))}
-          {button("notfound", () => void send("notfound"))}
-          {button("unsafe", () => {
-            if (!busy && !done) setState({ kind: "confirm-unsafe" });
-          })}
-        </div>
+        // UX-7-03: one tab stop per find (a native disclosure) instead of three buttons on every find.
+        <details className="group/report" open={state.kind !== "idle" || undefined}>
+          <summary className="inline-flex min-h-11 cursor-pointer items-center rounded-full px-3 text-sm font-semibold text-muted-foreground underline underline-offset-2 hover:text-foreground">
+            Report this find
+          </summary>
+          <div className="mt-1 flex flex-wrap gap-2">
+            {button("found", () => void send("found"))}
+            {button("notfound", () => void send("notfound"))}
+            {button("unsafe", () => {
+              if (!busy && !done) setState({ kind: "confirm-unsafe" });
+            })}
+          </div>
+        </details>
       )}
       <p role="status" className="min-h-5 text-sm" data-testid="report-status">
         {state.kind === "sending" ? "Sending…" : state.kind === "done" ? state.message : state.kind === "failed" ? state.message : ""}

@@ -124,9 +124,16 @@ test("UX-5-02: a page over the limit is a styled page with the wait and a way ho
   expect(html).toMatch(/Please wait about (1 second|\d+ seconds|\d+ minutes),/);
   // UX-6-03: the ticket logo is on the page.
   expect(html).toContain('<svg class="ticket"');
-  // The same page in a browser: readable, with its links (and no script needed).
+  // The same page in a browser: readable, with its links (and no script needed). Round-7 quality Q-7-03: the bucket
+  // refills about 1 token every 0.5 s, so a single goto after the request flood raced the refill (2 of 3 runs got the
+  // normal page). The browser itself loops until IT gets the 429.
   await page.setExtraHTTPHeaders({ "x-forwarded-for": ip });
-  await page.goto("/pass/not-a-pass-x");
+  let browser429 = false;
+  for (let i = 0; i < 200 && !browser429; i++) {
+    const res = await page.goto(`/pass/not-a-pass-b${i}`);
+    browser429 = res?.status() === 429;
+  }
+  expect(browser429, "the browser never got the over-limit page").toBe(true);
   await expect(page.getByRole("heading", { level: 1, name: "Whoa, lots of visits!" })).toBeVisible();
   await expect(page.getByRole("link", { name: "Go to the home page" })).toHaveAttribute("href", "/");
 });

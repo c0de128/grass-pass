@@ -37,9 +37,9 @@ afterEach(async () => {
 
 describe("pinned files are real, complete and unedited", () => {
   it("every pinned pass is byte-for-byte its recorded source, complete, valid, and belongs to its example park", () => {
-    // Pinned on 2026-10-07: Oak Point (Oct 6 recording) and White Rock (Oct 7, the warm-up's first try). Arbor Hills and
-    // Celebration have no pinnable pass (reports/pin-examples-2026-10-07.md in the factory repo).
-    expect(Object.keys(PINNED_FILES).sort()).toEqual(["oak-point", "white-rock"]);
+    // Pinned on 2026-10-07: Oak Point (Oct 6 recording), White Rock (Oct 7, the warm-up's first try) and Celebration (Oct 7,
+    // after the other_feature check). Arbor Hills has no pinnable pass (reports/bench-shelter-2026-10-07.md in the factory repo).
+    expect(Object.keys(PINNED_FILES).sort()).toEqual(["celebration", "oak-point", "white-rock"]);
     for (const [slug, raw] of Object.entries(PINNED_FILES)) {
       const file = z.object({ _source: z.object({ pinnedFrom: z.string(), recording: z.object({ live: z.literal(true) }).passthrough() }).passthrough(), pass: z.unknown() }).parse(raw);
       const source = JSON.parse(readFileSync(new URL(`../../${file._source.pinnedFrom}`, import.meta.url), "utf8")) as { pass: unknown };
@@ -54,7 +54,6 @@ describe("pinned files are real, complete and unedited", () => {
       expect(pinnedPassById(pass.id)?.id).toBe(pass.id);
     }
     expect(pinnedPass("arbor-hills")).toBeNull(); // nothing complete and sound on disk for it yet
-    expect(pinnedPass("celebration")).toBeNull();
     expect(pinnedPassById("w1-6to10-20261006-1")).toBeNull();
   });
 });
@@ -103,7 +102,7 @@ describe("example cards: today's complete -> the store's last complete -> pinned
     expect(renderToStaticMarkup(<SampleParks statuses={[wr]} enabled />)).toContain(`href="/pass/${WR_PIN_ID}?example=1"`);
     // The other examples have nothing pinned: they still say why (honestly), with no link.
     const unpinned = statuses.filter((s) => !(s.example.slug in PINNED_FILES));
-    expect(unpinned.map((s) => s.example.slug).sort()).toEqual(["arbor-hills", "celebration"]);
+    expect(unpinned.map((s) => s.example.slug).sort()).toEqual(["arbor-hills"]);
     expect(unpinned.every((s) => s.pass === null && s.missing !== null)).toBe(true);
   });
 

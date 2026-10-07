@@ -17,14 +17,17 @@
  *   Find This Spot riddle written by gemma-4-31B-it).
  * - White Rock Lake Park (made Oct 7, 2026, 10:11 AM CDT by the app's own example warm-up, its first try that day:
  *   8 of 8 finds and a Find This Spot riddle by gemma-4-31B-it).
- * Arbor Hills and Celebration Park have nothing pinned: on Oct 7 every Arbor Hills try came out 7 of 8, and the
- * complete Celebration tries had a clue that didn't match its answer (a roof-and-pillars clue for "Benches"), so
- * they were not pinned (factory repo: projects/grass-pass/reports/pin-examples-2026-10-07.md).
+ * - Celebration Park (made Oct 7, 2026, 11:07 AM CDT, after the other_feature clue check: 8 of 8 Park Finds, every clue
+ *   about its own answer, and a Find This Spot riddle by gemma-4-31B-it). The morning's complete Celebration tries had a
+ *   roof-and-pillars clue for "Benches" and were not pinned (factory repo: reports/pin-examples-2026-10-07.md,
+ *   reports/bench-shelter-2026-10-07.md).
+ * Arbor Hills has nothing pinned: on Oct 7 all 6 tries came out short (7, 7, 7, 7, 7 and 5 of 8).
  */
 import "@/lib/zod-config";
 import { z } from "zod";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
 import { isCompletePass } from "@/lib/pass/complete";
+import celebration from "@/data/pinned-examples/celebration.json";
 import oakPoint from "@/data/pinned-examples/oak-point.json";
 import whiteRock from "@/data/pinned-examples/white-rock.json";
 
@@ -37,7 +40,7 @@ const FileSchema = z.object({
 export const HERO_PINNED_SLUG = "oak-point";
 
 /** Example slug -> the raw pinned file (exported for the tests that prove each file is real, complete and unedited). */
-export const PINNED_FILES: Readonly<Record<string, unknown>> = { "oak-point": oakPoint, "white-rock": whiteRock };
+export const PINNED_FILES: Readonly<Record<string, unknown>> = { "oak-point": oakPoint, "white-rock": whiteRock, celebration };
 
 function load(): ReadonlyMap<string, Pass> {
   const out = new Map<string, Pass>();

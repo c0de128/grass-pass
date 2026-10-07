@@ -10,6 +10,7 @@ import { setLogSink } from "@/lib/log";
 import { loadPass, resetPassMaking } from "@/lib/pass/make";
 import { EXAMPLE_PARKS, exampleStatuses, prewarmEnabled, prewarmIdle, readyExample, resetPrewarm, warmExamples, REFRESH_LOCK_SEC, RETRY_NO_MODEL_SEC, type ExamplePark, type ExampleStatus } from "@/lib/prewarm";
 import { PassSchema } from "@/lib/pass/schema";
+import { pinnedPass } from "@/lib/pinned";
 import { localDay } from "@/lib/time";
 import { searchParks } from "@/lib/parks/search";
 import { ExampleLinkSchema } from "@/lib/parks/schema";
@@ -24,6 +25,7 @@ import { PARKS, passReplay, type Call } from "./support/pass-replay";
 const CONNEMARA_EXAMPLE: ExamplePark = { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "recorded test park" };
 const EXAMPLES: ExamplePark[] = [CONNEMARA_EXAMPLE, EXAMPLE_PARKS.find((e) => e.slug === "celebration")!];
 const DAY_MS = 24 * 3600 * 1000;
+const bySlug = (list: readonly ExampleStatus[], slug: string) => list.find((s) => s.example.slug === slug)!;
 
 let replay: ReturnType<typeof passReplay>;
 let restoreLog: () => void;
@@ -255,13 +257,17 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     useReplay(passReplay({ model: () => new Response("upstream error", { status: 500 }) }));
     const now = Date.now();
     const first = await exampleStatuses({ examples: EXAMPLES, now: () => now });
-    expect(first.every((s) => s.pass === null && s.refreshing)).toBe(true);
-    expect(first[0].missing).toBe("No data available yet: it is being made right now (about 15-30 seconds).");
+    // Bench/shelter (2026-10-07): Celebration now has a pinned real pass, so its card shows that while the try runs
+    // (statuses list ready cards first, so each is found by slug).
+    expect(first.every((s) => s.refreshing)).toBe(true);
+    expect(bySlug(first, "connemara").pass).toBeNull();
+    expect(bySlug(first, "celebration").pass?.passId).toBe(pinnedPass("celebration")!.id);
+    expect(bySlug(first, "connemara").missing).toBe("No data available yet: it is being made right now (about 15-30 seconds).");
     await prewarmIdle();
     const s = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
-    expect(s[0].pass).toBeNull();
+    expect(bySlug(s, "connemara").pass).toBeNull();
     // Q-1-10: one sentence, one "No data available", a short code-written reason (never the nested message).
-    expect(s[0].missing).toBe("No data available yet: the last try didn't work because the AI model didn't write clues.");
+    expect(bySlug(s, "connemara").missing).toBe("No data available yet: the last try didn't work because the AI model didn't write clues.");
   });
 
   it("R1-B1: a park search that can't answer offers a link to a READY example pass (none ready -> no link)", async () => {
@@ -286,7 +292,11 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     await warmExamples({ examples: EXAMPLES });
     const s = await exampleStatuses({ examples: EXAMPLES });
     expect(replay.calls).toHaveLength(0);
-    expect(s.every((x) => x.pass === null && x.missing === "No data available yet: example passes are switched off on this server.")).toBe(true);
+    // Connemara has nothing pinned: the card says why. Celebration (pinned 2026-10-07) shows its pinned real pass.
+    const c = bySlug(s, "connemara");
+    expect(c.pass === null && c.missing === "No data available yet: example passes are switched off on this server.").toBe(true);
+    expect(bySlug(s, "celebration").pass?.passId).toBe(pinnedPass("celebration")!.id);
+    expect(bySlug(s, "celebration").missing).toBeNull();
   });
 
   it("renders links with the real generated time, and an honest line when there is no pass", async () => {
@@ -303,7 +313,10 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const full = PassSchema.parse((JSON.parse(readFileSync(new URL("../fixtures/pass-oak-point-complete-live.json", import.meta.url), "utf8")) as { pass: unknown }).pass);
     const saved = { passId: full.id, day: full.day, generatedAt: full.generatedAt };
     const ready: ExampleStatus = { example: EXAMPLE_PARKS.find((e) => e.slug === "oak-point")!, pass: saved, latest: saved, passData: full, fresh: true, today: true, short: null, refreshing: false, missing: null };
-    const statuses = [ready, ...warmed.filter((s) => s.example.slug !== "connemara")];
+    // Celebration is pinned (2026-10-07), so its card links its pinned pass; Arbor Hills (nothing pinned) gives the
+    // switched-off line.
+    const arbor = await exampleStatuses({ examples: EXAMPLE_PARKS.filter((e) => e.slug === "arbor-hills"), now: () => now });
+    const statuses = [ready, ...warmed.filter((s) => s.example.slug !== "connemara"), ...arbor];
     const html = renderToStaticMarkup(<SampleParks statuses={statuses} enabled={false} />);
     expect(html).toContain(`href="/pass/${full.id}?example=1"`);
     expect(html).toMatch(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
@@ -313,7 +326,8 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     );
     // R1-B1 / ux M1: no dashed failure cards; one sentence per missing example, in the same card style.
     expect(html).toContain("No data available yet: example passes are switched off on this server.");
-    expect(html.match(/No data available yet/g)).toHaveLength(statuses.length - 1);
+    expect(html.match(/No data available yet/g)).toHaveLength(statuses.length - 2);
+    expect(html).toContain(`href="/pass/${pinnedPass("celebration")!.id}?example=1"`);
     for (const card of html.split("<li data-testid=").slice(1)) {
       if (!card.includes("<a ")) expect(card).not.toContain("border-dashed");
     }
@@ -323,7 +337,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     // Switched off: nothing to retry, so no button. A failed try (warm-up on) offers ONE "Try again"
     // button below the list (not a link: every link in the list is a ready pass).
     expect(html).not.toContain("Try again");
-    const waiting = { ...statuses[1], refreshing: false, missing: "No data available yet: the last try didn't work because OpenStreetMap was busy." };
+    const waiting = { ...bySlug(statuses, "arbor-hills"), refreshing: false, missing: "No data available yet: the last try didn't work because OpenStreetMap was busy." };
     const html2 = renderToStaticMarkup(<SampleParks statuses={[statuses[0], waiting]} enabled />);
     expect(html2).toContain(`${waiting.example.name}</h3>`);
     expect(html2).toContain("No data available yet: the last try didn&#x27;t work because OpenStreetMap was busy.");

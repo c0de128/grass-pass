@@ -160,3 +160,20 @@ describe("the new drop reason is explained", () => {
     expect(DROP_REASON_INFO.other_feature.kind).toBe("always");
   });
 });
+
+describe("the pinned Celebration pass (made after this fix) has every Park Find clue about its own item", () => {
+  it("no clue names another feature's own thing, and the bench clue has no roof", async () => {
+    const { pinnedPass } = await import("@/lib/pinned");
+    const pass = pinnedPass("celebration");
+    expect(pass).not.toBeNull();
+    const park = pass!.items.filter((i) => i.section === "park");
+    expect(park.length).toBeGreaterThan(0);
+    for (const i of park) {
+      const ref = (i as { ref?: string }).ref;
+      expect(ref, i.clue).toBeTruthy();
+      expect(otherFeatureWord(i.clue, byId(ref!)), `${ref}: ${i.clue}`).toBeNull();
+    }
+    const bench = park.find((i) => (i as { ref?: string }).ref === "osm-bench");
+    if (bench) expect(bench.clue.toLowerCase()).not.toMatch(/roof|pillar/);
+  });
+});

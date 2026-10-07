@@ -36,6 +36,7 @@ import { cronAuth, cronWarmResponse } from "@/lib/prewarm-cron";
 import { resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { passReplay, type Call } from "./support/pass-replay";
 import { serpFixture, serpReplay } from "./support/serpapi-replay";
+import { pinnedPass } from "@/lib/pinned";
 
 const CONNEMARA: ExamplePark = { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "recorded test park" };
 const CELEBRATION = EXAMPLE_PARKS.find((e) => e.slug === "celebration")!;
@@ -104,8 +105,11 @@ describe("1. serverless-safe warm-up", { timeout: 90_000 }, () => {
     vi.stubEnv("VERCEL", "1");
     const now = Date.now();
     const first = await exampleStatuses({ examples: EXAMPLES, now: () => now });
-    expect(first.map((s) => [s.example.slug, s.refreshing])).toEqual([["connemara", true], ["celebration", false]]);
-    expect(first.find((s) => s.example.slug === "celebration")!.missing).toBe("No data available yet: no pass has been made for it today.");
+    // Bench/shelter (2026-10-07): Celebration has a pinned real pass now, so its card shows that (ready cards list first).
+    expect(Object.fromEntries(first.map((s) => [s.example.slug, s.refreshing]))).toEqual({ connemara: true, celebration: false });
+    const cel = first.find((s) => s.example.slug === "celebration")!;
+    expect(cel.pass?.passId).toBe(pinnedPass("celebration")!.id);
+    expect(cel.missing).toBeNull();
     // Another request while that pass is still being made: nothing new starts in this instance.
     const during = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
     expect(during.find((s) => s.example.slug === "celebration")!.refreshing).toBe(false);
@@ -177,7 +181,9 @@ describe("1. serverless-safe warm-up", { timeout: 90_000 }, () => {
     expect(await warmExamples(deps)).toEqual({ enabled: true, attempts: [], stopped: "store" });
     expect(await warmExamples(deps)).toEqual({ enabled: true, attempts: [], stopped: "store" });
     const s = await exampleStatuses(deps);
-    expect(s.every((x) => x.pass === null && !x.refreshing)).toBe(true);
+    // Only pinned real passes (from the repo, no store) are shown: Celebration's; Connemara has none.
+    expect(s.every((x) => !x.refreshing && (x.pass === null || x.pass.passId === pinnedPass(x.example.slug)?.id))).toBe(true);
+    expect(s.find((x) => x.example.slug === "connemara")!.pass).toBeNull();
     expect(replay.calls).toHaveLength(0);
     expect(events("prewarm_store_unavailable")).toHaveLength(1);
     t += STORE_WARN_EVERY_MS + 1;

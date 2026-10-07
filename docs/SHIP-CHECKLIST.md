@@ -63,9 +63,9 @@ Caps and switches (set explicitly, so a default can't surprise anyone):
 - [ ] Open the home page: all 4 example cards should show a complete pass ("See the pass"). A card that says "No data
       available yet" says why; a short pass is never shown. Each example gets one second try a day when its pass
       comes out short.
-- [ ] "Pin" the examples for judging: two real passes are pinned in the repo (`src/data/pinned-examples/`, see
-      `src/lib/pinned.ts`): Oak Point (the hero card) and White Rock. Their links always open, from the repo, with no
-      store. Arbor Hills and Celebration have nothing pinned: the home page keeps their last complete pass (60 days),
+- [ ] "Pin" the examples for judging: three real passes are pinned in the repo (`src/data/pinned-examples/`, see
+      `src/lib/pinned.ts`): Oak Point (the hero card), White Rock and Celebration. Their links always open, from the
+      repo, with no store. Arbor Hills has nothing pinned (all 6 tries on Oct 7 came out short): the home page keeps their last complete pass (60 days),
       the pass itself opens for 30 days, and the daily cron keeps them fresh. Before publishing, write down the example
       pass links that are complete and use those in the DEV post and README.
 

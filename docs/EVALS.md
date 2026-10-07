@@ -91,15 +91,20 @@ Arbor Hills, White Rock Lake, Cedar Ridge), one run each, ages 6-10. Notes, hard
 | M7 Model call p50 / p95 | 68.0 s / 70.0 s | **59.3 s / 84.8 s** | 9.4 s / 13.8 s |
 | Model time per pass (p50) | 70.0 s | 104.1 s | 11.2 s |
 | Speed | | 17.9 answer tokens/s writing, 99.6 tokens/s reading the prompt (measured once, Arbor Hills); end to end 8.7 tok/s median | 47.3 answer tokens/s |
-| RAM | | model runner 4.9-5.2 GB (working set); free system RAM 11.4 -> 5.2 GB at the lowest | hosted |
+| RAM | | about 5-6 GB: model runner 4.9-5.2 GB working set, 5.8 GB private at most; free system RAM 11.4 -> 5.2 GB at the lowest | hosted |
 | Cost | $0 | $0 | $0.00103 to $0.00105 a pass |
 
 **What it means:** the open weights really run on a laptop with no GPU, for $0, and the code-side safety and grounding
 checks hold. With the app's own time limits (set for the hosted route's 90 s cap) this CPU is too slow: 3 of 5 first
 calls hit 70 s. Given time, the 2B-class model writes usable passes (4 of 5 complete, grade 2.9) at 1-3 minutes a pass.
 M10 is 0% in both runs but is not comparable: 5 parks x 1 run, not 20 x 3. The patient clock (`EVAL_LOCAL_PATIENT=1`)
-is an eval setting only; the app never waits more than 70 s for a model call. The CPU was shared with other programs
-during the runs, so the timing is a real-laptop figure, not a clean benchmark.
+is an eval setting only. These runs used the app code before the round-5 safety and jargon checks (`637dd7b`). The CPU
+was shared with other programs during the runs, so the timing is a real-laptop figure, not a clean benchmark.
+
+**Update (judge G2, same evening):** the app now has a longer clock for a model on your own computer,
+`LOCAL_MODEL_TIMEOUT_MS` (localhost `MODEL_BASE_URL` only, off by default, never on Vercel). One browser click-through
+with `LOCAL_MODEL_TIMEOUT_MS=270000` made a Celebration Park pass with 7 of 8 finds and its map in 96 s (2 model calls):
+[`2026-10-06-selfhost-browser-1959.md`](../evals/results/2026-10-06-selfhost-browser-1959.md). One run, not a benchmark.
 
 ## Run `2026-10-06-6` (previous, kept for history)
 

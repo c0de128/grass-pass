@@ -64,10 +64,9 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover"
               />
-              <span className="absolute right-3 bottom-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
-                {HERO_ILLUSTRATION.caption}
-              </span>
             </div>
+            {/* Kept outside the picture so the tilted pass card can never cover it (honest AI label). */}
+            <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">{HERO_ILLUSTRATION.caption}</p>
             {/* Phones: in the flow, overlapping the picture's lower part (a real pass is taller than v0's sample, so an
                 absolute card would cover the search card). From 640 px: v0's absolute, tilted placement. */}
             <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-12 sm:-left-10 sm:mt-0 sm:w-72 lg:-left-2 lg:w-80">

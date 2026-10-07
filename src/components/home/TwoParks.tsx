@@ -68,12 +68,10 @@ export function TwoParks() {
                   <h3 id={`two-${park.slug}`} className="absolute top-4 left-4 rounded-full bg-paper px-3 py-1 font-sans text-sm font-bold text-ink">
                     {park.name}
                   </h3>
-                  <a
-                    href={pic.sourceUrl}
-                    className="absolute right-3 bottom-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink underline-offset-2 hover:underline"
-                  >
+                  {/* UX-6-04: plain text; the linked source and licence are in the one "Photo credits and licences" link. */}
+                  <span className="absolute right-3 bottom-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
                     {photoCredit(pic)}
-                  </a>
+                  </span>
                 </div>
                 <div className="flex flex-col gap-6 p-6 sm:p-8">
                   <div className="flex items-end gap-8">

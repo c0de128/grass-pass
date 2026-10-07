@@ -188,10 +188,11 @@ describe("home copy checked against the app", () => {
     }
     const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("connemara", "No data available yet: x.")]} enabled />);
     expect(html).toContain(photoCredit(PARK_PHOTOS.connemara));
-    expect(html).toContain(`href="${PARK_PHOTOS.connemara.sourceUrl}"`);
-    expect(html).toContain(`href="${PARK_PHOTOS.connemara.licenceUrl}"`);
+    // UX-6-04: the source page and licence links live in the full list on /about (one link from here).
+    expect(html).toContain(`${PARK_PHOTOS.connemara.title} by ${PARK_PHOTOS.connemara.author}`);
+    expect(html).toContain('href="/about#credits"');
     const band = renderToStaticMarkup(<TwoParks />);
-    expect(band).toContain(`href="${PARK_PHOTOS.celebration.sourceUrl}"`);
+    expect(band).toContain(photoCredit(PARK_PHOTOS.celebration));
     expect(band).not.toContain("AI illustration");
   });
 
@@ -220,17 +221,23 @@ describe("phone example row (R1 UX m8 kept in the v3 layout)", () => {
   });
 });
 
-describe("UX-5-07: the photo credit line links each photo once and each licence once", () => {
-  it("4 photos with 2 licences -> 4 photo links + 2 licence links, every author and licence named", async () => {
+describe("UX-6-04: the home photo credits are one Tab stop", () => {
+  it("names every photo, author, date and licence as text, with one link to the full list on /about", async () => {
     const { PhotoCredits } = await import("@/components/home/PhotoCredits");
     const html = renderToStaticMarkup(<PhotoCredits />);
     const photos = Object.values(PARK_PHOTOS);
-    const licences = new Set(photos.map((p) => p.licenceUrl));
-    expect(html.match(/<a /g)).toHaveLength(photos.length + licences.size);
+    expect(html.match(/<a /g)).toHaveLength(1);
+    expect(html).toContain('href="/about#credits"');
+    expect(html).toContain("Photo credits and licences");
     for (const p of photos) {
-      expect(html).toContain(`href="${p.sourceUrl}"`);
-      expect(html).toContain(`by ${p.author}`);
+      expect(html).toContain(`${p.title} by ${p.author} (${p.taken})`);
+      expect(html).toContain(`(${p.licence})`);
     }
-    for (const u of licences) expect(html.split(`href="${u}"`).length - 1).toBe(1);
+  });
+
+  it("the two-parks photos carry a text credit, not a link", async () => {
+    const src = (await import("node:fs")).readFileSync("src/components/home/TwoParks.tsx", "utf8");
+    expect(src).not.toMatch(/href={pic.sourceUrl}/);
+    expect(src).toContain("{photoCredit(pic)}");
   });
 });

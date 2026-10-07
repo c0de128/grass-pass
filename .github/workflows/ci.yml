@@ -1,8 +1,9 @@
 name: CI
 
 on:
+  # Every pushed branch, so a fix branch shows green or red before it is merged (RULES-8-01: main was red for 22 pushes).
   push:
-    branches: [main]
+    branches: ["**"]
   pull_request:
 
 permissions:

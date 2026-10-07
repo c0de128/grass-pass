@@ -72,6 +72,9 @@ Caps and switches (set explicitly, so a default can't surprise anyone):
 ## 8. README and post
 - [ ] README: add the live URL at the top and a real screenshot of the production home page (no mock-ups).
 - [ ] README "Run it yourself" and the DEV post name the same model that the pages name (`gemma-4-31B-it`).
+- [ ] GitHub Actions `check` is green on the exact commit you deploy (`gh run list -c <sha>`), RULES-8-01. `/how-it-works`
+  says the CI results are public, so a red X on the shipped commit contradicts the page.
+- [ ] Re-count `AUDIT_ROUNDS` and `UNIT_TESTS` in `src/lib/about/content.ts`.
 
 ## 9. After the deploy
 - [ ] `node scripts/smoke.mjs <url> --expect "Grass Pass"` (factory repo), then add the URL to `ops/uptime.json`.

@@ -44,6 +44,13 @@ test.describe("default limits (SEC-3-01)", () => {
 
   test("home -> each example pass -> its print page -> home, three times, never 429, no prefetch of limited pages", async ({ page }) => {
     test.setTimeout(240_000);
+    // Count print dialogs instead of opening real ones. sessionStorage keeps the count across the walk's
+    // client-side navigations and full loads in this tab.
+    await page.addInitScript(() => {
+      const w = window as unknown as { __prints: number };
+      Object.defineProperty(w, "__prints", { get: () => Number(sessionStorage.getItem("__prints") ?? "0"), configurable: true });
+      window.print = () => sessionStorage.setItem("__prints", String(Number(sessionStorage.getItem("__prints") ?? "0") + 1));
+    });
     const w = watch(page);
 
     await page.goto("/");
@@ -68,8 +75,18 @@ test.describe("default limits (SEC-3-01)", () => {
           await page.getByRole("list", { name: "Example parks" }).getByRole("link").nth(i).click();
           await expect(page).toHaveURL(/\/pass\/[nwr]\d+-/);
           await expect(page.getByRole("heading", { level: 1 })).toBeVisible();
-          await page.getByRole("link", { name: "Print pass" }).click();
-          await expect(page).toHaveURL(/\/print\?print=1$/);
+          // The pass page's link asks the print page to open the print dialog (?print=1). PrintButton
+          // (src/components/pass/PrintButton.tsx) opens it once and then drops ?print=1 from the address so a
+          // reload doesn't print again, so the address ends in /print and the dialog count goes up by one.
+          // (RULES-8-01: this used to expect /print?print=1, which only held before hydration.)
+          const printLink = page.getByRole("link", { name: "Print pass" });
+          await expect(printLink).toHaveAttribute("href", /\/print\?print=1$/);
+          const printsBefore = await page.evaluate(() => (window as unknown as { __prints: number }).__prints);
+          await printLink.click();
+          await expect(page).toHaveURL(/\/pass\/[nwr]\d+-[^/?]+\/print$/);
+          await expect
+            .poll(() => page.evaluate(() => (window as unknown as { __prints: number }).__prints), { message: "the print dialog opened once" })
+            .toBe(printsBefore + 1);
         } else {
           const res = await page.goto(passPaths[i]);
           expect(res?.status(), passPaths[i]).toBe(404);

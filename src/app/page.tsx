@@ -1,6 +1,7 @@
 import { after, connection } from "next/server";
 import { FinalCta } from "@/components/home/FinalCta";
 import { HomeAnchors } from "@/components/home/HomeAnchors";
+import { FadeInOnScroll } from "@/components/home/FadeInOnScroll";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { PassAnatomy } from "@/components/home/PassAnatomy";
@@ -64,6 +65,7 @@ export default async function Home() {
       <SampleParks statuses={statuses} enabled={enabled} />
       <FinalCta />
       <HomeAnchors />
+      <FadeInOnScroll />
     </main>
   );
 }

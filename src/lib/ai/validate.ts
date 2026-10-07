@@ -1148,7 +1148,13 @@ const DETERMINERS = new Set(["a", "an", "the", "some", "two", "three", "four", "
 /** Q-7-01: ... and never start with one of these ("Spot far away from…", "Spot how high you are.", "Spot me."). */
 const NOT_A_THING_START = new Set(["far", "how", "me", "what", "where", "if", "when", "why", "who", "it", "them", "there", "here", "up", "down", "out"]);
 /** Q-7-01: a base-form verb after the noun ("a spray of water bob up", "the ducks swim"): the rest is a clause. */
-const CLAUSE_VERB_RE = /\b(?:bob|leap|swim|fly|jump|splash|spurt|shine|sparkle|glitter|move|run|flow|fall|float|drift|sway|spin|turn|rise|pop|spray|hop|dart|dive|land|perch|sit|hang|grow|crawl|climb|play|bounce)\b/i;
+const CLAUSE_VERB_RE = /\b(?:bob|leap|swim|fly|jump|splash|spurt|shine|sparkle|glitter|move|run|flow|fall|float|drift|sway|spin|turn|rise|pop|spray|spread|hop|dart|dive|land|perch|sit|hang|grow|crawl|climb|play|bounce)\b/i;
+/** Words that open a relative clause: a verb after one of them belongs to that clause. */
+const RELATIVE_RE = /\b(?:that|which|where|who|whose|when|to)\b/i;
+/** First words that start a noun phrase with no article ("still water", "tall grass"). */
+const BARE_NOUN_START = new Set(["water", "grass", "sand", "mud", "moss", "still", "tall", "big", "small", "little", "bright", "green", "red", "white", "black", "yellow", "blue", "brown", "wild", "wet", "shiny", "smooth", "flat", "round", "long"]);
+/** Words ending in "s" that are not plural nouns. */
+const NOT_PLURAL = new Set(["this", "is", "was", "has", "its", "his", "hers", "ours", "yours", "theirs", "always", "perhaps", "across", "towards", "plus"]);
 
 /**
  * M10 (run 2026-10-06-8): a printed clue that starts with a banned frame gets a plain first word instead:
@@ -1178,9 +1184,13 @@ export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answ
   const isNumber = (w: string) => /^\d+$/.test(w) || numberOf(w) !== null;
   // A sound needs no article ("Listen for water splashing"); a thing to see does.
   const hears = frame.includes("hear");
-  if (head.length === 0 || NOT_A_THING_START.has(head[0]) || (!hears && !head.some((w) => DETERMINERS.has(w) || isNumber(w)))) return clue;
+  // A bare plural or mass noun is a noun phrase too ("things to slide down", "still water with turtles").
+  const bareNoun = (w: string) => BARE_NOUN_START.has(w) || (w.length > 3 && w.endsWith("s") && !w.endsWith("ss") && !NOT_PLURAL.has(w));
+  if (head.length === 0 || NOT_A_THING_START.has(head[0]) || (!hears && !head.some((w) => DETERMINERS.has(w) || isNumber(w)) && !bareNoun(head[0]))) return clue;
   const firstSentence = rest.split(/[.?!]/)[0] ?? rest;
-  const clause = CLAUSE_VERB_RE.test(firstSentence);
+  // A verb inside a relative clause ("3 flat tops where people sit", "2 seats that hang") does not make a clause.
+  const verbAt = firstSentence.search(CLAUSE_VERB_RE);
+  const clause = verbAt >= 0 && !RELATIVE_RE.test(firstSentence.slice(0, verbAt));
   const ans = answer.toLowerCase();
   // Judge R7: "Spot 2 spots with metal bars" (the rewrite's verb is also the clue's own noun): skip that verb.
   const restWords = new Set(sentencesOf(rest).flat().map(singularWord));

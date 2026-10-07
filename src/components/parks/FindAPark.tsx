@@ -6,7 +6,7 @@
  * OpenStreetMap parks nearest first. Field errors follow the starter-kit pattern: focus the
  * field, aria-invalid, aria-describedby, role=alert, re-announced on every failed submit.
  */
-import { LoaderCircle, LocateFixed, MapPin, ShieldCheck, Target } from "lucide-react";
+import { LoaderCircle, LocateFixed, MapPin, Target } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useId, useRef, useState, type FormEvent, type ReactNode, type RefObject } from "react";
 import { buttonClassName } from "@/components/ui/Button";
@@ -72,7 +72,6 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
   const hintId = `${ids}-place-hint`;
   const errorId = `${ids}-place-error`;
   const locErrorId = `${ids}-loc-error`;
-  const locNoteId = `${ids}-loc-note`;
 
   const [q, setQ] = useState("");
   const [fieldError, setFieldError] = useState<string | null>(null);
@@ -303,7 +302,7 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
             type="button"
             onClick={onUseLocation}
             aria-disabled={busy || undefined}
-            aria-describedby={locError ? `${locNoteId} ${locErrorId}` : locNoteId}
+            aria-describedby={locError ? locErrorId : undefined}
             className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md font-semibold text-link underline-offset-4 hover:underline aria-disabled:opacity-60"
           >
             {phase.kind === "locating" ? (
@@ -313,10 +312,6 @@ export function FindAPark({ onPick, ageSlot }: FindAParkProps) {
             )}
             Use my location
           </button>
-          <p id={locNoteId} className="inline-flex items-center gap-1.5 text-muted-foreground">
-            <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
-            Rounded to about 1 km before it&apos;s sent
-          </p>
         </div>
         {locError ? (
           <p key={`loc-${attempt}`} id={locErrorId} role="alert" className="-mt-2 text-sm font-semibold text-destructive">

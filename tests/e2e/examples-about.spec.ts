@@ -14,37 +14,19 @@ test.describe("example parks", () => {
     test.setTimeout(240_000);
     await page.goto("/");
     await expect(page.getByRole("heading", { level: 2, name: "See a real pass, right now." })).toBeVisible();
+    // Kevin 2026-10-07: only parks with a ready pass are listed; with none ready the section says "No data available".
+    const none = page.getByTestId("examples-none");
+    if (await none.isVisible()) {
+      await expect(none).toContainText(/^No data available: \S.{10,}/);
+      test.skip(true, `No example pass is ready; the section says: ${await none.textContent()}`);
+    }
     const list = page.getByRole("list", { name: "Example parks" });
-    await expect(list.locator(":scope > li")).toHaveCount(4);
-
-    // Each card has a data-state (ExampleParks.tsx): ready | off | making | waiting. Decide on that, not on copy.
-    const states = async () => list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
-    const explainsItself = async () => {
-      // Every example without a pass says why, in words (never a blank or a made-up pass).
-      for (const item of await list.locator(":scope > li").all()) {
-        if ((await item.getByRole("link").count()) === 0) await expect(item).toContainText(/^.+No data available yet: \S.{10,}/);
-      }
-    };
-
-    // PREWARM_EXAMPLES=0 (keyless CI): every card says the examples are switched off, so SKIP with that copy.
-    if ((await states()).every((s) => s === "off")) {
-      await explainsItself();
-      test.skip(true, `Example warm-up is switched off on this server; every card says: ${await list.locator(":scope > li").first().textContent()}`);
-    }
-
-    // Wait (reloading) while the server is making an example pass. When nothing is ready and nothing is
-    // being made (the last try failed, e.g. no AI key or OpenStreetMap busy), SKIP with the cards' copy.
-    let link = list.getByRole("link").first();
-    for (let i = 0; i < 40 && (await list.getByRole("link").count()) === 0; i++) {
-      await explainsItself();
-      const now = await states();
-      if (!now.includes("making")) {
-        test.skip(true, `No example pass is ready and none is being made; the cards say: ${(await list.textContent())?.slice(0, 300)}`);
-      }
-      await page.waitForTimeout(5_000);
-      await page.reload();
-      link = list.getByRole("link").first();
-    }
+    const count = await list.locator(":scope > li").count();
+    expect(count).toBeGreaterThan(0);
+    expect(count).toBeLessThanOrEqual(4);
+    // Every listed park is a ready pass: one link per card, never a card that only explains itself.
+    await expect(list.getByRole("link")).toHaveCount(count);
+    const link = list.getByRole("link").first();
     await expect(link).toBeVisible();
     await expect(link).toContainText(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
     const name = (await link.getByRole("heading", { level: 3 }).textContent())?.trim() ?? "";
@@ -64,11 +46,11 @@ test.describe("example parks", () => {
     await page.goto("/");
     const list = page.getByRole("list", { name: "Example parks" });
     // Judge R7 T1: Oak Point replaced Connemara, and parks with a complete pass come first (ready cards before the rest).
-    await expect(list.locator(":scope > li")).toHaveCount(4);
+    // Kevin 2026-10-07: only ready (complete) examples are listed at all, so every card is ready.
     await expect(list).toContainText("Oak Point Park and Nature Preserve");
     const order = await list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
-    const readyFirst = [...order].sort((a, b) => (a === "ready" ? 0 : 1) - (b === "ready" ? 0 : 1));
-    expect(order, "ready (complete) examples come first").toEqual(readyFirst);
+    expect(order.length).toBeGreaterThan(0);
+    expect(order.every((s) => s === "ready"), "only ready examples are listed").toBe(true);
     // Let the warm-up finish (cards say "making" while a pass is being made), so every example that CAN be
     // made is checked, not just the first one ready.
     const states = async () => list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));

@@ -103,6 +103,36 @@ export class StoreError extends Error {
   }
 }
 
+/**
+ * Pre-prod fixes (2026-10-07): a paused serverless instance made every in-flight store command time out at once
+ * (7 store_error lines in 2.5 min on the first preview). Network errors (timeouts, resets) are logged at most once
+ * per STORE_ERROR_LOG_EVERY_MS per process; the next logged line says how many were left out (`notLogged`). Every
+ * command still fails safe (StoreError) whether or not it was logged. Bad answers and refusals are always logged.
+ */
+export const STORE_ERROR_LOG_EVERY_MS = 60_000;
+const NET_LOG = Symbol.for("grass-pass.store-net-log");
+function netLog(): { at: number; notLogged: number } {
+  const g = globalThis as unknown as Record<symbol, { at: number; notLogged: number } | undefined>;
+  return (g[NET_LOG] ??= { at: 0, notLogged: 0 });
+}
+function logNetworkError(fields: Record<string, unknown>, nowMs: number = Date.now()): void {
+  const s = netLog();
+  if (s.at !== 0 && nowMs - s.at < STORE_ERROR_LOG_EVERY_MS) {
+    s.notLogged++;
+    return;
+  }
+  const notLogged = s.notLogged;
+  s.at = nowMs;
+  s.notLogged = 0;
+  log("store_error", { ...fields, ...(notLogged > 0 ? { notLogged } : {}) }, "error");
+}
+/** Tests: forget the network-error log throttle. */
+export function resetStoreErrorLog(): void {
+  const s = netLog();
+  s.at = 0;
+  s.notLogged = 0;
+}
+
 const ttlMs = (ttlSec: number) => Math.max(1, Math.ceil(ttlSec)) * 1000;
 
 /** Bounded in-memory store (oldest-written entry evicted first). */
@@ -470,7 +500,7 @@ export class UpstashStore implements Store {
         redirect: "error",
       });
     } catch (err) {
-      log("store_error", { store: "upstash", cmd: String(args[0]), outcome: "network", latencyMs: Date.now() - started, errName: err instanceof Error ? err.name : typeof err }, "error");
+      logNetworkError({ store: "upstash", cmd: String(args[0]), outcome: "network", latencyMs: Date.now() - started, errName: err instanceof Error ? err.name : typeof err });
       throw new StoreError("The shared store did not answer.", { cause: err });
     }
     let json: unknown;
@@ -636,4 +666,5 @@ export function resetStores(): void {
   const h = holder();
   h.upstash = undefined;
   h.memory.clear();
+  resetStoreErrorLog();
 }

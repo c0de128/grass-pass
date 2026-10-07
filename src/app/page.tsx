@@ -10,12 +10,15 @@ import { PassMaker } from "@/components/pass/PassMaker";
 import { memoize } from "@/lib/cache/memo";
 import { heroCard, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { restingState } from "@/lib/limits/budget";
-import { exampleStatuses, prewarmEnabled, prewarmIdle } from "@/lib/prewarm";
+import { exampleStatuses, prewarmEnabled, prewarmIdle, WARMUP_BUDGET_MS } from "@/lib/prewarm";
 import { signInOptions } from "@/lib/accounts/config";
 import { currentSession } from "@/lib/accounts/current";
 
-/** A background example refresh (one real pass) may run after the page is sent. */
-export const maxDuration = 90;
+/**
+ * A background example refresh (one real pass, at most 85 s) may run after the page is sent; after() waits for it at
+ * most WARMUP_BUDGET_MS (105 s). Must equal HOME_MAX_DURATION_SEC in src/lib/prewarm.ts (a literal: Next reads it statically).
+ */
+export const maxDuration = 120;
 
 /**
  * Example status is read from the shared store at most once per this many ms per instance (SEC-1-02:
@@ -44,8 +47,9 @@ export default async function Home() {
   // Accounts: signed in or not (the session cookie only, no store command), and which sign-in buttons exist.
   const session = await currentSession();
   const account = { signedIn: session !== null, judge: session?.p === "judge", options: signInOptions() };
-  // Keep any background refresh this visit started alive after the response (serverless).
-  after(() => prewarmIdle());
+  // Keep any background refresh this visit started alive after the response (serverless: Vercel waitUntil), inside a
+  // time budget below maxDuration.
+  after(() => prewarmIdle({ budgetMs: WARMUP_BUDGET_MS }));
   return (
     <main id="main" tabIndex={-1} className="gp-home flex w-full flex-1 flex-col focus:outline-none">
       <HomeHero card={heroCard(statuses)} examples={readyExamples(statuses)}>

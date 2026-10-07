@@ -121,11 +121,14 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     vi.stubEnv("PASS_PER_IP_PER_MIN", "1");
     vi.stubEnv("PASS_PER_IP_PER_DAY", "1");
     const now = Date.now();
-    await warmExamples({ examples: EXAMPLES, now: () => now });
-    // One pass per example: Celebration is one model call; Connemara is its first call + two refills (completeness recording).
-    expect(modelCalls()).toBe(4);
+    const summary = await warmExamples({ examples: EXAMPLES, now: () => now });
+    // One pass per example: Celebration is one model call; Connemara is its first call + two refills (completeness
+    // recording). Pre-prod fixes: Connemara's pass is short (6 of 8) and it has no complete pass yet, so the warm-up
+    // makes its ONE second try (a new variant: 3 more calls, the same recordings, so short again). Celebration's is complete.
+    expect(summary).toEqual({ enabled: true, attempts: [{ example: "connemara", need: "refresh" }, { example: "connemara", need: "retry" }, { example: "celebration", need: "refresh" }], stopped: null });
+    expect(modelCalls()).toBe(7);
     const statuses = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
-    expect(modelCalls()).toBe(4); // the page never calls upstream for a fresh example
+    expect(modelCalls()).toBe(7); // the page never calls upstream for a fresh example, nor a second try twice
     for (const s of statuses) {
       expect(s.latest).not.toBeNull();
       expect(s.fresh).toBe(true);
@@ -141,9 +144,11 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
         expect(s.missing).toBe(`No data available yet: today's pass came out with ${pass!.items.length} of ${pass!.target} finds${s.short!.riddle === "code" ? " and no Find This Spot riddle" : ""}, and this page only shows complete example passes.`);
       } else expect(s.missing).toBeNull();
     }
-    // A second warm-up the same day makes nothing new.
+    // A second warm-up the same day makes nothing new (the second try is once a day, across instances too).
     await warmExamples({ examples: EXAMPLES, now: () => now + 2000 });
-    expect(modelCalls()).toBe(4);
+    resetPrewarm();
+    await warmExamples({ examples: EXAMPLES, now: () => now + 3000 });
+    expect(modelCalls()).toBe(7);
   });
 
   it("next day: serves yesterday's pass with its real time and starts ONE background refresh per example", async () => {
@@ -163,12 +168,21 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
       });
     }
     await prewarmIdle();
-    expect(modelCalls()).toBe(8); // 4 on day 1 + exactly 1 refresh per example on day 2 (Connemara's is 3 calls)
+    // 7 on day 1 (Connemara's second try included) + exactly 1 refresh per example on day 2 (Connemara's is 3 calls).
+    expect(modelCalls()).toBe(11);
     const after = await exampleStatuses({ examples: EXAMPLES, now: () => day2 + 1000 });
     for (const s of after) {
       expect(s.fresh).toBe(true);
       expect(s.latest!.day).toBe(localDay(day2));
     }
+    // Pre-prod fixes: day 2's Connemara pass is short again with nothing complete saved, so this check starts its one
+    // second try for day 2 (and says so); Celebration's is complete, so nothing more for it.
+    const conn = after.find((s) => s.example.slug === "connemara")!;
+    expect(conn.refreshing).toBe(true);
+    expect(conn.missing).toMatch(/^No data available yet: today's first pass came out with \d of 8 finds, so a second one is being made right now/);
+    expect(after.find((s) => s.example.slug === "celebration")!.refreshing).toBe(false);
+    await prewarmIdle();
+    expect(modelCalls()).toBe(14);
   });
 
   it("a failed refresh keeps the old pass, and no instance retries within the lock window", async () => {

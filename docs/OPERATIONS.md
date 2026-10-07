@@ -14,6 +14,25 @@ Measured on Oct 5, 2026 (~11:15 PM CDT) on the build laptop (Windows 11, Node 22
 
 These are laptop numbers, not the hosting provider's; the deployed cold start will be added after the deploy.
 
+## Example warm-up on Vercel (changed 2026-10-07)
+On the first private preview (Oct 7) the start-up warm-up ran outside any request. Vercel paused the instance between
+requests, so the store's 3 s timers fired 4-105 s late (7 `store_error` lines), and the warm-up used all 6 of the
+preview's daily SerpApi searches. Now (`src/lib/prewarm.ts`, `src/lib/prewarm-cron.ts`):
+- On Vercel (`VERCEL` set) nothing starts at boot. A home-page request starts at most **one** example (none while one
+  is still running in that instance) and keeps it alive with `after()` (Vercel `waitUntil`) for at most 105 s; the
+  page's `maxDuration` is 120 s. The next request picks up the next example.
+- A **daily Vercel Cron** (`vercel.json`: `/api/cron/warm-examples` at `0 10 * * *`, so 5:00-5:59 AM CDT; Hobby allows
+  daily crons for free) warms the examples one after another while a whole pass (85 s + 10 s) still fits its 280 s
+  budget (`maxDuration` 300, the Hobby maximum). It needs `CRON_SECRET` (Vercel sends it as a Bearer header);
+  without it the route answers 503 and spends nothing.
+- An example whose pass came out short, with no complete pass saved, gets **one** more full attempt that day (a new
+  variant), inside the daily AI cap. A short pass is never shown.
+- The warm-up may use at most **half** of `SERPAPI_DAILY_CAP` (`SERPAPI_WARMUP_DAILY_CAP` can only lower it).
+- Store trouble during a warm-up stops that round and is logged once (`prewarm_store_unavailable`, at most every
+  10 min per instance). Upstash network errors are logged at most once a minute per instance, with the number left
+  out (`notLogged`); every failed command still fails safe.
+- On a long-running server (local, self-hosted) the start-up warm-up still makes all examples, one at a time.
+
 
 ## Abuse limits and the free storage quota
 Every cache, limit and saved pass lives in Upstash Redis, whose free plan allows 500,000 commands a month. A

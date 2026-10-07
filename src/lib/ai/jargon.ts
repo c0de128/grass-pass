@@ -13,7 +13,8 @@
  * - `triviaProblem` -> drop reason `trivia` (a preference: the first to go when a spare can replace it):
  *   where it lives on the globe ("native to Texas and Oklahoma", "common to Hawaii and Mexico"), field-guide
  *   words a child may not know (operculum, arboreal, aquatic...), and a bare colour ("a bird that is black").
- * Code only reads the clue; it never rewrites it.
+ * These checks only read the clue; they never rewrite it. (The four small edits code does make to a printed clue, a
+ * filler opener, "?" after a command, a stock frame and "Who" for a lichen, are in build-pass.ts and validate.ts.)
  */
 import type { AgeBand } from "@/lib/pass/constants";
 

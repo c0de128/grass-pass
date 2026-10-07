@@ -1,11 +1,12 @@
 /**
  * Judge G2 (round 6): a model on your own computer (Ollama, CPU only) needs minutes, not seconds. The app's normal
- * clock (70 s per model call at most, 85 s per pass, the page gives up at 95 s) exists because the hosted route runs on
- * Vercel with a 90 s limit; with it, a laptop CPU finished 0 of 5 passes (evals/results/2026-10-06-selfhost-notes.md).
+ * clock (calls sized by src/lib/pass/budget.ts, a first call 30-40 s; at most 70 s a call with MODEL_TIMEOUT_MS; 85 s
+ * per pass; the page gives up at 95 s) exists because the hosted route runs on Vercel with a 90 s limit; even at 70 s a
+ * call, a laptop CPU made 0 of 5 complete passes (evals/results/2026-10-06-selfhost-notes.md).
  *
  * LOCAL_MODEL_TIMEOUT_MS switches on a longer clock, and ONLY when all of these hold:
  * - MODEL_BASE_URL points to this computer (localhost, 127.0.0.1 or [::1]; plain http is only allowed there anyway);
- * - LOCAL_MODEL_TIMEOUT_MS is set to a number above the normal 70 s limit (it is not set by default);
+ * - LOCAL_MODEL_TIMEOUT_MS is set to a number above the 70 s most-allowed call limit (it is not set by default);
  * - the server is not a Vercel deploy (VERCEL unset), so production can never get it.
  * Then a model call may take up to LOCAL_MODEL_TIMEOUT_MS (at most 10 minutes), a refill two thirds of that, the
  * whole pass LOCAL_PASS_DEADLINE_MS (default twice the call limit plus a minute, at most 20 minutes), and the page

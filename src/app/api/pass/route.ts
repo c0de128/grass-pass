@@ -31,7 +31,8 @@ import { localModelClock } from "@/lib/pass/local-clock";
 
 export const runtime = "nodejs";
 /**
- * Overpass (<= 50 s) + iNaturalist + the model (30 s) are cut by an 85 s pass deadline. (A model on the server's own
+ * Overpass (<= 50 s) + iNaturalist + the model (each call's limit sized by src/lib/pass/budget.ts: a first call 30-40 s,
+ * the whole retry the time left, a refill 15-30 s) are cut by an 85 s pass deadline. (A model on the server's own
  * computer may get a longer clock, src/lib/pass/local-clock.ts; maxDuration only applies on Vercel, where it is off.)
  */
 export const maxDuration = 90;

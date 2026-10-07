@@ -5,7 +5,9 @@
  *
  * - Strict `json_schema` output, validated again with zod. `finish_reason: length`,
  *   empty content, non-JSON and schema mismatches are all MODEL_BAD_OUTPUT.
- * - 30 s timeout: ~3x the slowest measured Gemma 4 31B answer (9.3 s, 2026-10-05).
+ * - Time limits: a pass call's limit is sized by the pass builder from what it asks (src/lib/pass/budget.ts: a first
+ *   call 30-40 s, a refill 15-30 s, the whole retry the time left, all inside the 85 s pass deadline). A call made
+ *   without a limit (scripts, copy tools) gets MODEL_TIMEOUT_MS (30 s). A set MODEL_TIMEOUT_MS env value replaces both.
  * - One retry on a network error or 5xx, after 500 ms, or an HTTP 403, after 1 s, only if a normal answer still fits.
  *   DigitalOcean answers a bad key with 401 ("Unable to authenticate you", checked 2026-10-06), so a 403 with a working
  *   key is a short-lived refusal (runs -3 to -8: 0.2-0.4 s or about 5.1 s; a retry after one answered in run -6).
@@ -31,7 +33,10 @@ export const MAX_TOKENS = 2_000;
 export const TEMPERATURE = 0.4;
 /** Slowest measured Gemma 4 31B answer on DO (2026-10-05: 7.0-9.3 s). */
 export const MEASURED_SLOWEST_MS = 9_300;
-/** ADR 0001 / SPEC §6.3: 30 s. */
+/**
+ * ADR 0001 / SPEC §6.3: 30 s, the fallback for a call made without a sized limit (pass calls are sized by
+ * src/lib/pass/budget.ts, 30-40 s for a first call; this was the fixed pass limit up to eval run 2026-10-06-8).
+ */
 export const MODEL_TIMEOUT_MS = 30_000;
 /** Routes that call the model export `maxDuration = 90` (SPEC §5.2); keep 20 s of headroom. */
 export const ROUTE_MAX_DURATION_SEC = 90;
@@ -40,7 +45,7 @@ export const MIN_MODEL_TIMEOUT_MS = 5_000;
 export const RETRY_BACKOFF_MS = 500;
 /** Wait before the one retry after an HTTP 403 (a short-lived refusal; see above). */
 export const FORBIDDEN_BACKOFF_MS = 1_000;
-/** A retry starts only when at least this share of the timeout is left (12 s at 30 s). */
+/** A retry starts only when at least this share of the call's timeout is left (12 s at 30 s, 16 s at 40 s). */
 export const RETRY_BUDGET_SHARE = 0.4;
 
 const LOCAL_HOSTS = new Set(["localhost", "127.0.0.1", "[::1]"]);
@@ -401,7 +406,8 @@ const ERROR_ID_RE = /^[\w.-]{1,40}$/;
 
 /**
  * The provider's short error id from an error body ({"id": "Unauthorized", ...} on DigitalOcean; {"error": {"code"}}
- * or {"error": {"type"}} on OpenAI-compatible servers), read from at most 2 KB. Never the message text: only a token
+ * or {"error": {"type"}} on OpenAI-compatible servers), parsed from the first 2,048 characters of the body (the
+ * body is read in full first; error bodies are small). Never the message text: only a token
  * of letters, digits, dot, dash or underscore is kept, so nothing the provider echoes from the prompt reaches the log.
  */
 export async function errorIdOf(res: Response): Promise<string | undefined> {

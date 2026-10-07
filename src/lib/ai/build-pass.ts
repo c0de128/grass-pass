@@ -178,8 +178,8 @@ export type BuildDeps = {
   validateTrace?: ValidateOptions["trace"];
   /**
    * Eval self-host lane only (evals/run.ts with EVAL_LOCAL_PATIENT=1, 2026-10-06): a longer clock, to measure what a
-   * CPU-only model writes when it is not cut off. No route sets it, so the app always uses PASS_DEADLINE_MS,
-   * modelTimeoutMs(env) (at most 70 s) and REFILL_TIMEOUT_MS.
+   * CPU-only model writes when it is not cut off. No route sets it, so the app always uses PASS_DEADLINE_MS and the
+   * sized call limits of src/lib/pass/budget.ts (capped by MODEL_TIMEOUT_MS when it is set, at most 70 s).
    */
   clock?: PassClock;
   /** Eval replay only (evals/replay.ts): the model call's timeout signal on a virtual clock. */

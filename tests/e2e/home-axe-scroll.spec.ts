@@ -24,7 +24,7 @@ async function animationsDone(page: import("@playwright/test").Page) {
 test("#parks paints its own page-coloured background above the skipped sections (phone and desktop, light and dark)", async ({ browser }) => {
   for (const width of [390, 1280]) {
     for (const scheme of ["light", "dark"] as const) {
-      const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 800 } });
+      const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 800 }, reducedMotion: "reduce" });
       const page = await context.newPage();
       await page.goto("/");
       const r = await page.evaluate(() => {
@@ -38,12 +38,14 @@ test("#parks paints its own page-coloured background above the skipped sections 
     }
   }
 });
+// The home sections fade in on scroll (globals.css gp-fade-up). Fading is transient, so the scans use reduced motion
+// and check the settled page; a mid-fade frame would only report a contrast that no reader sees for long.
 
 test("home: axe is clean at every scroll position (target-size at the top only) (390/412 phones and 1280, light and dark)", async ({ browser }) => {
   test.setTimeout(240_000);
   for (const width of [390, 412, 1280]) {
     for (const scheme of ["light", "dark"] as const) {
-      const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 800 } });
+      const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 800 }, reducedMotion: "reduce" });
       const page = await context.newPage();
       await page.goto("/");
       await page.waitForLoadState("networkidle");

@@ -201,3 +201,28 @@
   }
 }
 
+
+/* Kevin 2026-10-07: "How it works" and every home section below it fade in as they scroll into view. Each block
+   inside a section (heading, diagram, cards) rises 24 px and fades from 0 to 1 while its top edge travels through
+   the bottom part of the screen, so it is fully visible well before it reaches the middle. Scroll-driven CSS only
+   (no script); nothing moves for visitors who ask for less motion, and browsers without scroll timelines simply
+   show everything. The sections themselves are not transformed, so #parks keeps its stacking layer (UX-5-01). */
+@keyframes gp-fade-up {
+  from {
+    opacity: 0;
+    transform: translateY(24px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+@media screen and (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .gp-home > section:is(#how, #why, #pass, #parks, [aria-labelledby="cta-title"]) > div > * {
+      animation: gp-fade-up linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 60%;
+    }
+  }
+}

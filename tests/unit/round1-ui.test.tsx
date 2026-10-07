@@ -29,9 +29,9 @@ describe("example cards (R1-B2 data-state, UX m8 phone row)", () => {
     expect(exampleState(waiting, true)).toBe("waiting");
     expect(exampleState(waiting, false)).toBe("off");
     const html = renderToStaticMarkup(<SampleParks statuses={[ready, making, waiting]} enabled />);
-    expect(html).toContain('data-state="ready"');
-    expect(html).toContain('data-state="making"');
-    expect(html).toContain('data-state="waiting"');
+    // Kevin 2026-10-07: parks with no ready pass are left out of the list.
+    expect(html).not.toContain('data-state="making"');
+    expect(html).not.toContain('data-state="waiting"');
   });
 
   it("v3: with no example pass ready, the hero card says why and links nothing", () => {

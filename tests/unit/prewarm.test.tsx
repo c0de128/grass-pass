@@ -324,26 +324,23 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     expect(renderToStaticMarkup(<SampleParks statuses={[{ ...ready, fresh: true, today: false, short: { items: 7, target: 8, riddle: "model" } }]} enabled />)).toMatch(
       /Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T from that day&#x27;s data\. Today&#x27;s pass had 7 of 8 finds, so this complete one is shown\./,
     );
-    // R1-B1 / ux M1: no dashed failure cards; one sentence per missing example, in the same card style.
-    expect(html).toContain("No data available yet: example passes are switched off on this server.");
-    expect(html.match(/No data available yet/g)).toHaveLength(statuses.length - 2);
+    // Kevin 2026-10-07: a park with no ready pass is left out of Explore (no card, no "Try again" button).
+    expect(html).not.toContain("No data available yet");
+    expect(html).not.toContain("Try again");
+    expect(html.match(/<li data-testid="example-/g)).toHaveLength(2); // the ready Oak Point pass and the pinned Celebration pass
     expect(html).toContain(`href="/pass/${pinnedPass("celebration")!.id}?example=1"`);
-    for (const card of html.split("<li data-testid=").slice(1)) {
-      if (!card.includes("<a ")) expect(card).not.toContain("border-dashed");
-    }
     // v3: the real pass facts (sections, when it was made) on the ready card; never a made-up distance.
     expect(html).toContain("See the pass");
     expect(html).not.toMatch(/\d(\.\d)? mi\b/);
-    // Switched off: nothing to retry, so no button. A failed try (warm-up on) offers ONE "Try again"
-    // button below the list (not a link: every link in the list is a ready pass).
-    expect(html).not.toContain("Try again");
     const waiting = { ...bySlug(statuses, "arbor-hills"), refreshing: false, missing: "No data available yet: the last try didn't work because OpenStreetMap was busy." };
     const html2 = renderToStaticMarkup(<SampleParks statuses={[statuses[0], waiting]} enabled />);
-    expect(html2).toContain(`${waiting.example.name}</h3>`);
-    expect(html2).toContain("No data available yet: the last try didn&#x27;t work because OpenStreetMap was busy.");
-    expect(html2.match(/Try again/g)).toHaveLength(1);
-    expect(html2).toMatch(/<form[^>]*action="\/" method="get"/);
-    expect(html2.match(/<a [^>]*href="\/pass\//g)).toHaveLength(1); // only the ready pass (the other links are photo credits)
+    expect(html2).not.toContain(`${waiting.example.name}</h3>`);
+    expect(html2).not.toContain("Try again");
+    expect(html2.match(/<a [^>]*href="\/pass\//g)).toHaveLength(1);
+    // With no ready pass at all, the section says so honestly instead of showing empty cards.
+    const none = renderToStaticMarkup(<SampleParks statuses={[waiting]} enabled />);
+    expect(none).toContain("No data available: no example pass is ready right now.");
+    expect(none).not.toContain("<li data-testid=");
     expect(html).toContain('<h2 id="examples-title"');
   });
 });

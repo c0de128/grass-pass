@@ -12,6 +12,7 @@ import { AgePicker } from "@/components/pass/PassMaker";
 import { cardFacts, HERO_EXAMPLE_ORDER, heroCard, heroFinds, isCountedParkFind, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
+import { pinnedPass } from "@/lib/pinned";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
 import { EXAMPLE_PARKS, type ExampleStatus } from "@/lib/prewarm";
 
@@ -242,7 +243,9 @@ describe("home copy checked against the app", () => {
       const word = ex.name.split(" ")[0];
       expect(`${p.title} ${p.alt}`).toContain(word);
     }
-    const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("oak-point", "No data available yet: x.")]} enabled />);
+    const oak = pinnedPass("oak-point")!;
+    const saved = { passId: oak.id, day: oak.day, generatedAt: oak.generatedAt };
+    const html = renderToStaticMarkup(<SampleParks statuses={[{ ...missingStatus("oak-point", ""), pass: saved, latest: saved, passData: oak, fresh: true, today: false, missing: null }]} enabled />);
     expect(html).toContain(photoCredit(PARK_PHOTOS["oak-point"]));
     // UX-6-04: the source page and licence links live in the full list on /about (one link from here).
     expect(html).toContain(`${PARK_PHOTOS.connemara.title} by ${PARK_PHOTOS.connemara.author}`);

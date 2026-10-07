@@ -36,7 +36,8 @@ async function makePassOrHonestError(page: Page, parkName: string) {
   const widths = await page
     .getByRole("radio")
     .evaluateAll((els) => els.map((e) => Math.round(e.closest("label")!.getBoundingClientRect().width)));
-  expect(widths).toHaveLength(3);
+  // One tile per band in AGE_BANDS (4 since Teens & adults (13+), 2026-10-07).
+  expect(widths).toHaveLength(4);
   expect(new Set(widths).size).toBe(1);
   await page.getByRole("button", { name: "Make my pass" }).click();
 

@@ -1,4 +1,4 @@
-import { CircleCheck, PhoneOff } from "lucide-react";
+import { PhoneOff } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ExampleChips } from "@/components/home/ExampleChips";
@@ -9,8 +9,8 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 /**
  * v3 hero (Kevin's v0 design, Kevin's home copy 2026-10-06): the yellow "Screen-free & re-wilded" badge, the big
  * headline with the sunflower underline under "kids back.", the lead (the "about 30 seconds" is PASS_WAIT_COPY's
- * usual 10-30 s), the real park search card (children: RestingNotice + PassMaker) and the "Free for parents." line; on the
- * right the meadow picture with the tilted real example pass and the "Fits on 1 page" sticker.
+ * usual 10-30 s), the real park search card (children: RestingNotice + PassMaker); on the
+ * right the meadow picture with the tilted real example pass.
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
@@ -43,10 +43,6 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
 
           <div className="flex flex-col gap-4">
             {children}
-            <p className="inline-flex items-center gap-2 text-sm font-semibold text-ink" data-testid="hero-trust">
-              <CircleCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
-              Free for parents.
-            </p>
           </div>
         </div>
 
@@ -72,9 +68,6 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:-bottom-32 lg:-left-2 lg:w-64">
               <HeroPassCard card={card} />
             </div>
-            <p className="absolute top-8 -right-1 rotate-6 rounded-full bg-sun px-4 py-2 font-heading text-sm font-extrabold text-sun-foreground shadow-lg sm:-right-6">
-              Fits on 1 page
-            </p>
           </div>
         </div>
       </div>

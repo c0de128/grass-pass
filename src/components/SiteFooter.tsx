@@ -107,7 +107,7 @@ export function SiteFooter() {
       <div className="relative h-[clamp(130px,16.25vw,320px)] overflow-hidden">
         <FooterLandscape />
       </div>
-      <div className="relative -mt-1 bg-footer bg-[radial-gradient(60rem_22rem_at_78%_0%,color-mix(in_oklab,var(--gp-footer-sun)_7%,transparent),transparent)]">
+      <div className="relative -mt-1 bg-footer">
         <div className="mx-auto flex max-w-7xl flex-col px-5 pt-6 pb-12 md:px-8 lg:pt-4">
           <nav aria-label="Footer">
             <div className="grid gap-y-9 sm:grid-cols-3">

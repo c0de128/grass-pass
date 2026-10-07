@@ -226,7 +226,7 @@ describe("in-process pre-limiter (SEC-1-02)", () => {
       expect(page.headers.get("cache-control")).toBe("no-store");
       const html = await page.text();
       expect(html).toContain("<h1>Whoa, lots of visits!</h1>");
-      expect(html).toMatch(/Please wait about \d+ seconds/);
+      expect(html).toMatch(/Please wait about \d+ seconds?,/);
       expect(html).toContain('href="/"');
       expect(html).toContain('href="/pass/w1-6to10-20261005-1"');
       expect(html).not.toMatch(/<script/i);

@@ -27,9 +27,13 @@ import { makePass, type MakeOutcome } from "@/lib/pass/make";
 import { EXAMPLE_PARKS, readyExample } from "@/lib/prewarm";
 import { MAP_DATA_FAILURE_CODES, PassRequestSchema, type PassLine } from "@/lib/pass/schema";
 import { withRefreshScope } from "@/lib/sources/osm-refresh";
+import { localModelClock } from "@/lib/pass/local-clock";
 
 export const runtime = "nodejs";
-/** Overpass (<= 50 s) + iNaturalist + the model (30 s) are cut by an 85 s pass deadline. */
+/**
+ * Overpass (<= 50 s) + iNaturalist + the model (30 s) are cut by an 85 s pass deadline. (A model on the server's own
+ * computer may get a longer clock, src/lib/pass/local-clock.ts; maxDuration only applies on Vercel, where it is off.)
+ */
 export const maxDuration = 90;
 
 const NDJSON = { "Content-Type": "application/x-ndjson; charset=utf-8", "Cache-Control": "no-store", "X-Content-Type-Options": "nosniff" };
@@ -114,6 +118,9 @@ export async function POST(req: Request): Promise<Response> {
           open = false; // the client went away; the build keeps going and is cached
         }
       };
+      // G2: a model on this computer with the longer clock: tell the page how long to wait, before any step.
+      const clock = localModelClock();
+      if (clock) write({ type: "clock", local: true, waitMs: clock.clientWaitMs });
       for (const l of pending.splice(0)) write(l);
       push = write;
       const r = await work;

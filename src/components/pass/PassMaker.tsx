@@ -23,7 +23,7 @@ import type { Park } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
 import { AGE_BAND_INFO, AGE_BAND_STORAGE_KEY, AGE_BANDS, DEFAULT_AGE_BAND, isAgeBand, type AgeBand } from "@/lib/pass/constants";
 import { ParkDataList, ProgressSteps, SectionNotes } from "./PassStatus";
-import { clientNow, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
+import { clientNow, LOCAL_WAIT_COPY, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
 const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "SIGN_IN_REQUIRED"]);
@@ -366,7 +366,7 @@ export function PassMaker({ account }: { account?: PassMakerAccount } = {}) {
               <ProgressSteps steps={state.steps} />
               {/* Not a live region: a ticking number would be read out every second. */}
               <p className="text-base" data-testid="pass-elapsed">
-                {elapsed} s so far. {PASS_WAIT_COPY}
+                {elapsed} s so far. {state.local ? LOCAL_WAIT_COPY : PASS_WAIT_COPY}
               </p>
             </div>
           ) : null}

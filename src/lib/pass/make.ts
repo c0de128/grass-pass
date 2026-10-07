@@ -24,6 +24,7 @@ import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
 import { localDay } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
+import { localModelClock } from "./local-clock";
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
@@ -465,7 +466,10 @@ async function buildCounted(ctx: {
   // October special (S7): free iNaturalist counts, fetched while the model writes clues.
   let october: Promise<OctoberBoxData> | null = null;
   // R1-M1: the October box's iNaturalist calls stop at the pass deadline too (never after the answer).
-  const octoberDeadline = createDeadline(ctx.startedAt + PASS_DEADLINE_MS - now());
+  // G2: a model on this computer may get a longer clock (LOCAL_MODEL_TIMEOUT_MS, never on a deploy; ./local-clock.ts).
+  const clock = localModelClock(ctx.env);
+  const passDeadlineMs = clock?.passDeadlineMs ?? PASS_DEADLINE_MS;
+  const octoberDeadline = createDeadline(ctx.startedAt + passDeadlineMs - now());
   // Audit Q-3-05: once the pass has failed (no model key, model down, quota), the box's iNaturalist
   // requests that haven't been sent yet are not sent (the box would never be shown).
   const octoberStop = new AbortController();
@@ -511,12 +515,13 @@ async function buildCounted(ctx: {
         onPoolsReady: startOctober,
         featuresPlan,
         exclude,
+        ...(clock ? { clock } : {}),
       },
     );
     if (out.kind === "pass") {
       startOctober(out.pass.park);
       if (october) {
-        const cap = Math.max(0, Math.min(OCTOBER_WAIT_MS, ctx.startedAt + PASS_DEADLINE_MS - now()));
+        const cap = Math.max(0, Math.min(OCTOBER_WAIT_MS, ctx.startedAt + passDeadlineMs - now()));
         out = { ...out, pass: { ...out.pass, october: await within(october, cap) } };
       }
       await passCache.set(ctx.id, out.pass, { now: now() });

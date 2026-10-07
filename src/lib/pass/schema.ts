@@ -139,6 +139,11 @@ export type ParkData = z.infer<typeof ParkDataSchema>;
 
 export const PassLineSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("step"), step: PassStepSchema, text: z.string() }),
+  /**
+   * G2: first line when the server runs a model on its own computer with the longer clock (src/lib/pass/local-clock.ts):
+   * how long the page should wait (ms, at most 20 min + 10 s). Never sent with the normal clock.
+   */
+  z.object({ type: z.literal("clock"), local: z.literal(true), waitMs: z.number().int().positive().max(1_210_000) }),
   z.object({ type: z.literal("result"), pass: PassSchema, cached: z.boolean() }),
   /** No pass: the park has no usable data at all (SPEC §5.4 "All empty"). */
   z.object({

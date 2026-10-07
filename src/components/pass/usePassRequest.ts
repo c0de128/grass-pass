@@ -31,6 +31,18 @@ export const CLIENT_COPY = {
     "This is taking longer than a minute and a half, so we stopped waiting. Free map and wildlife sites can be slow when they're busy. Try again; if your pass is ready, it will open now.",
 } as const;
 
+/**
+ * G2: when the server runs the model on its own computer with the longer clock (LOCAL_MODEL_TIMEOUT_MS), its first
+ * line says so and how long to wait; the page then waits that long and says why it is slow.
+ */
+export const LOCAL_WAIT_COPY = "A model on this computer can take a few minutes. This page waits for it.";
+
+/** The timeout line for a local model, with the real wait (whole minutes). */
+export function localTimeoutCopy(waitMs: number): string {
+  const min = Math.max(1, Math.round(waitMs / 60_000));
+  return `This is taking longer than ${min} ${min === 1 ? "minute" : "minutes"}, so we stopped waiting. A model on this computer can be slow; the server keeps going and saves the pass. Try again; if your pass is ready, it will open now.`;
+}
+
 /** Codes for failures the page itself detects (server failures carry the server's code). */
 export const CLIENT_CODES = { offline: "OFFLINE", badAnswer: "BAD_ANSWER", timeout: "CLIENT_TIMEOUT" } as const;
 
@@ -69,7 +81,7 @@ export function autoRetryWaitMs(retryAfterSec: number | undefined): number {
 
 export type PassState =
   | { kind: "idle" }
-  | { kind: "working"; steps: { step: PassStep; text: string }[]; startedAt: number }
+  | { kind: "working"; steps: { step: PassStep; text: string }[]; startedAt: number; local?: { waitMs: number } }
   | { kind: "done"; pass: Pass; cached: boolean }
   | { kind: "empty"; parkName: string; message: string; sections: Pass["sections"] }
   | {
@@ -121,13 +133,14 @@ export function usePassRequest() {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
-    const timer = setTimeout(() => ac.abort(), CLIENT_TIMEOUT_MS);
+    let timer = setTimeout(() => ac.abort(), CLIENT_TIMEOUT_MS);
     const steps: { step: PassStep; text: string }[] = [];
     const startedAt = clientNow();
+    let local: { waitMs: number } | undefined;
     setState({ kind: "working", steps: [], startedAt });
     const lost = (): PassState =>
       ac.signal.aborted
-        ? { kind: "failed", message: CLIENT_COPY.timeout, code: CLIENT_CODES.timeout }
+        ? { kind: "failed", message: local ? localTimeoutCopy(local.waitMs) : CLIENT_COPY.timeout, code: CLIENT_CODES.timeout }
         : { kind: "failed", message: CLIENT_COPY.offline, code: CLIENT_CODES.offline };
     const bad: PassState = { kind: "failed", message: CLIENT_COPY.badAnswer, code: CLIENT_CODES.badAnswer };
     const finish = (result: PassState) => {
@@ -190,9 +203,17 @@ export function usePassRequest() {
           const line = PassLineSchema.safeParse(parsed);
           if (!line.success) return finish(bad);
           const l = line.data;
+          if (l.type === "clock") {
+            // G2: the server's longer clock for a model on its own computer: wait that long instead (from the start).
+            local = { waitMs: l.waitMs };
+            clearTimeout(timer);
+            timer = setTimeout(() => ac.abort(), Math.max(0, l.waitMs - (clientNow() - startedAt)));
+            if (abortRef.current === ac) setState({ kind: "working", steps: [...steps], startedAt, local });
+            continue;
+          }
           if (l.type === "step") {
             steps.push({ step: l.step, text: l.text });
-            if (abortRef.current === ac) setState({ kind: "working", steps: [...steps], startedAt });
+            if (abortRef.current === ac) setState({ kind: "working", steps: [...steps], startedAt, ...(local ? { local } : {}) });
             continue;
           }
           if (l.type === "result") return finish({ kind: "done", pass: l.pass, cached: l.cached });

@@ -8,13 +8,13 @@ import "server-only";
 import { getStore } from "@/lib/cache/store";
 import { clientIp, hitRateLimit } from "@/lib/limits";
 import { log } from "@/lib/log";
-import { SIGNIN_PER_IP_PER_10MIN } from "./config";
+import { SIGNIN_PER_IP_PER_10MIN, SIGNIN_WINDOW_SEC } from "./config";
 
 export type SignInRate = { ok: true } | { ok: false; retryAfter: number };
 
 export async function signInRate(req: Request, now: number = Date.now()): Promise<SignInRate> {
   try {
-    const r = await hitRateLimit(getStore("limits"), { name: "signin", key: clientIp(req), limit: SIGNIN_PER_IP_PER_10MIN, windowSec: 600, now });
+    const r = await hitRateLimit(getStore("limits"), { name: "signin", key: clientIp(req), limit: SIGNIN_PER_IP_PER_10MIN, windowSec: SIGNIN_WINDOW_SEC, now });
     if (!r.ok) log("signin_rate_limited", { retryAfter: r.retryAfter }, "warn");
     return r;
   } catch {

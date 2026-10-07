@@ -11,9 +11,15 @@ export function jsonError(status: number, err: ApiError): Response {
   return Response.json({ error: err }, { status, headers });
 }
 
-/** Friendly wait text, e.g. "about 40 seconds", "about 3 minutes", "about 5 hours". */
+/**
+ * Friendly wait text, e.g. "about 1 second", "about 40 seconds", "about 3 minutes", "about 5 hours" (UX-6-01:
+ * singular for 1). Minutes and hours start at 90 s and 90 min, so they always round to 2 or more.
+ */
 export function waitText(seconds: number): string {
-  if (seconds < 90) return `about ${Math.max(1, Math.round(seconds))} seconds`;
+  if (seconds < 90) {
+    const s = Math.max(1, Math.round(seconds));
+    return `about ${s} ${s === 1 ? "second" : "seconds"}`;
+  }
   if (seconds < 90 * 60) return `about ${Math.round(seconds / 60)} minutes`;
   return `about ${Math.round(seconds / 3600)} hours`;
 }

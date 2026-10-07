@@ -3,8 +3,9 @@
  * and the ?signedin=1 way back from /signin.
  */
 import { describe, expect, it } from "vitest";
-import { busyActionResponse, busyPageHtml, busyPageResponse, signInBusyPath } from "@/lib/http/busy-page";
-import { errorText, ERRORS } from "@/lib/accounts/signin-errors";
+import { busyActionResponse, busyMessage, busyPageHtml, busyPageResponse, signInBusyPath } from "@/lib/http/busy-page";
+import { errorText, ERRORS, maxSignInWaitSec } from "@/lib/accounts/signin-errors";
+import { COSTS } from "@/lib/limits/prelimit";
 import { allowedReturnPath, withSignedInFlag } from "@/lib/accounts/redirect";
 import { signedInAnnouncement, withoutSignedInFlag } from "@/components/account/AccountMenu";
 
@@ -48,6 +49,22 @@ describe("refused sign-in button (RULES-5-04)", () => {
     expect(errorText("rate_limited", undefined)).toBe(ERRORS.rate_limited);
     expect(errorText("rate_limited", "abc")).toBe(ERRORS.rate_limited);
     expect(errorText("nope", undefined)).toMatch(/didn't work this time/);
+  });
+
+  it("UX-6-01: 1 second is singular", () => {
+    expect(errorText("rate_limited", "1")).toMatch(/Please wait about 1 second, then/);
+    expect(busyMessage(1)).toMatch(/about 1 second, then/);
+    expect(busyMessage(2)).toMatch(/about 2 seconds, then/);
+  });
+
+  it("SEC-6-03: a wait longer than the app can produce is not repeated (crafted link)", () => {
+    const max = maxSignInWaitSec({});
+    expect(max).toBe(600); // the 10-minute sign-in window is the longest real wait with the default limits
+    expect(errorText("rate_limited", String(max))).toMatch(/Please wait about 10 minutes/);
+    expect(errorText("rate_limited", "999999")).toBe(ERRORS.rate_limited);
+    expect(errorText("rate_limited", String(max + 1))).toBe(ERRORS.rate_limited);
+    // A slower cost bucket (PRELIMIT_COST_PER_HOUR) makes real waits longer, so the cap follows it.
+    expect(maxSignInWaitSec({ PRELIMIT_COST_PER_HOUR: "3" })).toBe(Math.ceil(((COSTS.passPage + COSTS.passStats + COSTS.action) * 3600) / 3));
   });
 });
 

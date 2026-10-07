@@ -29,6 +29,8 @@ export const JUDGE_DEMO_DAILY_CAP_DEFAULT = 60;
 export const JUDGE_PASSES_PER_IP_PER_DAY = 3;
 /** Sign-in attempts (judge or OAuth start/callback) per IP per 10 minutes. */
 export const SIGNIN_PER_IP_PER_10MIN = 20;
+/** The sign-in limiter's window (seconds): its longest possible wait (src/lib/accounts/signin-rate.ts). */
+export const SIGNIN_WINDOW_SEC = 600;
 /** Item reports per account per hour, and per IP per hour. */
 export const REPORTS_PER_ACCOUNT_PER_HOUR = 30;
 export const REPORTS_PER_IP_PER_HOUR = 60;

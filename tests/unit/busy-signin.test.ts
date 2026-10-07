@@ -2,7 +2,10 @@
  * Round 5 (RULES-5-04, UX-5-02, UX-5-05): the over-the-limit page and sign-in redirect, the /signin wait line,
  * and the ?signedin=1 way back from /signin.
  */
+import { existsSync } from "node:fs";
+import { join } from "node:path";
 import { describe, expect, it } from "vitest";
+import { config as proxyConfig } from "@/proxy";
 import { busyActionResponse, busyMessage, busyPageHtml, busyPageResponse, signInBusyPath } from "@/lib/http/busy-page";
 import { errorText, ERRORS, maxSignInWaitSec } from "@/lib/accounts/signin-errors";
 import { COSTS } from "@/lib/limits/prelimit";
@@ -49,6 +52,20 @@ describe("refused sign-in button (RULES-5-04)", () => {
     expect(errorText("rate_limited", undefined)).toBe(ERRORS.rate_limited);
     expect(errorText("rate_limited", "abc")).toBe(ERRORS.rate_limited);
     expect(errorText("nope", undefined)).toMatch(/didn't work this time/);
+  });
+
+  it("UX-6-03: the busy page has the ticket logo (inline SVG, no script) and the site fonts from this site only", () => {
+    const html = busyPageHtml(30, "/");
+    expect(html).toMatch(/<p class="brand"><svg class="ticket" viewBox="0 0 48 36" aria-hidden="true"/);
+    expect(html).toContain(">Grass Pass</p>");
+    expect(html).toContain('url("/fonts/bricolage-grotesque-latin-wght-normal.woff2")');
+    expect(html).toContain('url("/fonts/dm-sans-latin-wght-normal.woff2")');
+    expect(html).not.toMatch(/<script|https?:\/\//);
+    // The proxy never matches /fonts, so the fonts load even while the visitor is over the limit.
+    expect(proxyConfig.matcher.some((m) => m.startsWith("/fonts"))).toBe(false);
+    for (const f of ["bricolage-grotesque-latin-wght-normal.woff2", "dm-sans-latin-wght-normal.woff2", "OFL-BricolageGrotesque.txt", "OFL-DMSans.txt"]) {
+      expect(existsSync(join(__dirname, "../../public/fonts", f)), f).toBe(true);
+    }
   });
 
   it("UX-6-01: 1 second is singular", () => {

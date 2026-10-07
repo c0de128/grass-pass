@@ -1,4 +1,3 @@
-import { PhoneOff } from "lucide-react";
 import Image from "next/image";
 import type { ReactNode } from "react";
 import { ExampleChips } from "@/components/home/ExampleChips";
@@ -7,8 +6,8 @@ import type { HeroCard, ReadyExample } from "@/lib/home/showcase";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 
 /**
- * v3 hero (Kevin's v0 design, Kevin's home copy 2026-10-06): the yellow "Screen-free & re-wilded" badge, the big
- * headline with the sunflower underline under "kids back.", the lead (the "about 30 seconds" is PASS_WAIT_COPY's
+ * v3 hero (Kevin's v0 design, Kevin's home copy 2026-10-06): the big
+ * headline with the sunflower underline under "powered by AI.", the lead (the "about 30 seconds" is PASS_WAIT_COPY's
  * usual 10-30 s), the real park search card (children: RestingNotice + PassMaker); on the
  * right the meadow picture with the tilted real example pass.
  */
@@ -18,10 +17,6 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
       <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-12 pb-20 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-28">
         <div className="flex min-w-0 flex-col gap-8 lg:col-span-7">
-          <p className="gp-rise inline-flex w-fit items-center gap-2 rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">
-            <PhoneOff className="size-3.5" aria-hidden="true" />
-            Screen-free &amp; re-wilded
-          </p>
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
             <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}

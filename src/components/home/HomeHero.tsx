@@ -64,7 +64,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover"
               />
-              <span className="absolute top-3 left-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
+              <span className="absolute right-3 bottom-3 rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
                 {HERO_ILLUSTRATION.caption}
               </span>
             </div>

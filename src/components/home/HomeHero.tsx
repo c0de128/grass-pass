@@ -28,13 +28,15 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             </span>
           </h1>
 
+          {/* Phones only: directly under the headline so a ready example is above the fold at 360x740 (round1.spec.ts),
+              even with Kevin's bigger "Family time is back!" (2026-10-07). */}
+          <ExampleChips examples={examples} />
+
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
             Grass Pass turns your local park into an interactive adventure. Our AI analyzes real-world maps and actual
             wildlife sightings to craft a custom scavenger hunt in seconds. Just hit print, grab a pencil, and head
             outside&mdash;no screens required.
           </p>
-
-          <ExampleChips examples={examples} />
 
           <div className="flex flex-col gap-4">
             {children}

@@ -1,9 +1,12 @@
 import Link from "next/link";
 import type { ReadyExample } from "@/lib/home/showcase";
 
-/** "Arbor Hills Nature Preserve" -> "Arbor Hills", "White Rock Lake Park" -> "White Rock Lake" (short pill labels). */
+/**
+ * "Arbor Hills Nature Preserve" -> "Arbor Hills", "White Rock Lake Park" -> "White Rock Lake", "Oak Point Park and Nature
+ * Preserve" -> "Oak Point" (short pill labels; the 360 px screenshot of 2026-10-07 showed "Oak Point Park and").
+ */
 export function shortParkName(name: string): string {
-  return name.replace(/ Nature Preserve$| Preserve$/, "").replace(/ Lake Park$/, " Lake");
+  return name.replace(/ Park and Nature Preserve$| and Nature Preserve$| Nature Preserve$| Preserve$/, "").replace(/ Lake Park$/, " Lake");
 }
 
 /**

@@ -3,6 +3,7 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import { ExampleChips, shortParkName } from "@/components/home/ExampleChips";
 import { HeroPassCard } from "@/components/home/HeroPassCard";
+import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { PassAnatomy } from "@/components/home/PassAnatomy";
 import { SampleParks } from "@/components/home/SampleParks";
@@ -273,6 +274,19 @@ describe("phone example row (R1 UX m8 kept in the v3 layout)", () => {
     expect(renderToStaticMarkup(<ExampleChips examples={readyExamples([missingStatus("celebration", "x")])} />)).toBe("");
     expect(shortParkName("White Rock Lake Park")).toBe("White Rock Lake");
     expect(shortParkName("Connemara Meadow Preserve")).toBe("Connemara Meadow");
+    expect(shortParkName("Oak Point Park and Nature Preserve")).toBe("Oak Point");
+    expect(shortParkName("Arbor Hills Nature Preserve")).toBe("Arbor Hills");
+  });
+
+  it("sits directly under the headline, before the lead paragraph (above the fold at 360x740 with Kevin's bigger h1)", () => {
+    const statuses = [readyStatus("arbor-hills", realPass())];
+    const html = renderToStaticMarkup(<HomeHero card={null} examples={readyExamples(statuses)}>{null}</HomeHero>);
+    const h1End = html.indexOf("</h1>");
+    const row = html.indexOf('aria-label="Open an example pass"');
+    const lead = html.indexOf("Grass Pass turns your local park");
+    expect(h1End).toBeGreaterThan(0);
+    expect(row).toBeGreaterThan(h1End);
+    expect(lead).toBeGreaterThan(row);
   });
 });
 

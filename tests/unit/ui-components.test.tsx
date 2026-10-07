@@ -3,7 +3,9 @@ import { describe, expect, it } from "vitest";
 import { readFileSync } from "node:fs";
 import { DIVIDER_HEIGHT, GRASS_LAYERS, GRASS_TILES, TILE, grassStripSvg } from "@/components/art/grass";
 import { Logo } from "@/components/site/Logo";
-import { SiteFooter } from "@/components/SiteFooter";
+import { SiteFooter, footerColumns, footerParkLinks } from "@/components/SiteFooter";
+import { pinnedPassById } from "@/lib/pinned";
+import { REPO_URL } from "@/lib/site-url";
 import { SiteHeader } from "@/components/SiteHeader";
 import { parseTheme } from "@/components/theme";
 import { ThemeToggle, themeToggleLabel } from "@/components/ThemeToggle";
@@ -200,6 +202,36 @@ describe("v3 logo, header and footer", () => {
     expect(out).toContain('href="https://github.com/c0de128/grass-pass"');
     expect(out).toContain('href="/about"');
     expect(out).toContain('href="/how-it-works"');
+  });
+
+  it("SiteFooter (Kevin 2026-10-07): LEARN / EXPLORE / RESOURCES, his closing line word for word, a decorative landscape", () => {
+    const out = html(<SiteFooter />);
+    expect(out).toContain('<nav aria-label="Footer">');
+    for (const h of ["Learn", "Explore", "Resources"]) expect(out).toMatch(new RegExp(`<h2 id="footer-${h.toLowerCase()}"[^>]*uppercase[^>]*>${h}</h2>`));
+    const closing = out.match(/<p[^>]*data-testid="footer-closing"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
+    expect(closing.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()).toBe(
+      "© 2026 Grass Pass. An AI-powered service dedicated to real-world family exploration. Pocket the pencil. Leave the phone.",
+    );
+    expect(out).toMatch(/<svg aria-hidden="true" focusable="false" data-testid="footer-landscape"/);
+    expect(out).not.toContain("<img");
+    expect(out).toMatch(/^<footer[^>]*print:hidden/);
+  });
+
+  it("SiteFooter links only to real places: every park link is a pinned (always available) example pass", () => {
+    const cols = footerColumns();
+    const hrefs = cols.flatMap((c) => c.links.map((l) => l.href));
+    for (const h of ["/about", "/how-it-works", "/#pass", "/#why", "/how-it-works#why-open", "/#find", "/#parks", "/about#privacy", "/about#credits", REPO_URL]) {
+      expect(hrefs).toContain(h);
+    }
+    const parks = footerParkLinks();
+    expect(parks.length).toBeGreaterThan(0);
+    for (const p of parks) {
+      const id = p.href.match(/^\/pass\/([^?]+)\?example=1$/)?.[1];
+      expect(id && pinnedPassById(id), p.href).toBeTruthy();
+      expect(pinnedPassById(id!)!.park.name).toBe(p.label);
+    }
+    // A park with no pinned pass is left out, never a dead link.
+    expect(footerParkLinks(["arbor-hills", "no-such-park"])).toEqual([]);
   });
 });
 

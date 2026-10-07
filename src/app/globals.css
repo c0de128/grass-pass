@@ -28,6 +28,10 @@
   --color-why: var(--gp-why);
   --color-why-foreground: var(--gp-why-foreground);
   --color-why-muted: var(--gp-why-muted);
+  --color-footer: var(--gp-footer);
+  --color-footer-foreground: var(--gp-footer-foreground);
+  --color-footer-muted: var(--gp-footer-muted);
+  --color-footer-heading: var(--gp-footer-heading);
   --color-destructive: var(--gp-destructive);
   --color-border: var(--gp-border);
   --color-line: var(--gp-line);
@@ -185,3 +189,4 @@
     }
   }
 }
+

@@ -52,6 +52,18 @@
   --gp-why: #137838; /* = --gp-primary, the logo ticket */
   --gp-why-foreground: #ffffff; /* 5.57:1 on the panel */
   --gp-why-muted: #e3f0dc; /* 4.71:1 on the panel */
+  /* Site footer (Kevin, 2026-10-07, his landscape reference): a deep forest-green band under a hand-drawn ridge.
+     The hills fade from the page colour (far, pale sage) to the footer green (front ridge). */
+  --gp-footer: #1d3a25; /* deep forest */
+  --gp-footer-foreground: #eef3e2; /* 11.0:1 */
+  --gp-footer-muted: #c3cdb9; /* 7.6:1 */
+  --gp-footer-heading: #ffc72c; /* sunflower, 8.0:1 */
+  --gp-hill-1: #dbe4c6; /* far hills (decorative) */
+  --gp-hill-2: #bfcca2;
+  --gp-hill-3: #94a979;
+  --gp-hill-4: #5d7a55;
+  --gp-footer-sun: #ffc72c; /* the low sun behind the hills; a pale moon in dark mode */
+  --gp-stars: 0; /* night sky only */
   --gp-destructive: #b42318;
   --gp-border: rgb(16 41 26 / 0.12); /* soft card ring (decorative; cards are also set apart by fill and shadow) */
   --gp-line: #78867c; /* input outlines and control borders: 3.7:1 on white, 3.3:1 on the background */
@@ -84,6 +96,16 @@
     --gp-why: #137838; /* the same logo green as light mode (the brand colour, not the lighter dark-mode button green) */
     --gp-why-foreground: #ffffff;
     --gp-why-muted: #e3f0dc;
+    --gp-footer: #0b2013; /* a touch greener than the night page */
+    --gp-footer-foreground: #e6eedb; /* 14.3:1 */
+    --gp-footer-muted: #aeb6a6; /* 8.2:1 */
+    --gp-footer-heading: #ffc72c; /* 10.9:1 */
+    --gp-hill-1: #2a4a33;
+    --gp-hill-2: #22412c;
+    --gp-hill-3: #2b5036;
+    --gp-hill-4: #1b3a26;
+    --gp-footer-sun: #e6eedb;
+    --gp-stars: 0.7;
     --gp-destructive: #ff8a7a;
     --gp-border: rgb(230 238 219 / 0.14);
     --gp-line: #7f907c; /* 4.4:1 on the card */
@@ -115,6 +137,16 @@
   --gp-why: #137838;
   --gp-why-foreground: #ffffff;
   --gp-why-muted: #e3f0dc;
+  --gp-footer: #0b2013; /* a touch greener than the night page */
+  --gp-footer-foreground: #e6eedb; /* 14.3:1 */
+  --gp-footer-muted: #aeb6a6; /* 8.2:1 */
+  --gp-footer-heading: #ffc72c; /* 10.9:1 */
+  --gp-hill-1: #2a4a33;
+  --gp-hill-2: #22412c;
+  --gp-hill-3: #2b5036;
+  --gp-hill-4: #1b3a26;
+  --gp-footer-sun: #e6eedb;
+  --gp-stars: 0.7;
   --gp-destructive: #ff8a7a;
   --gp-border: rgb(230 238 219 / 0.14);
   --gp-line: #7f907c;

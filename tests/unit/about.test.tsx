@@ -459,7 +459,8 @@ describe("site header and footer", () => {
     expect(t).toContain("OpenStreetMap contributors (ODbL)");
     expect(t).toContain("iNaturalist");
     expect(t).toContain("Apache-2.0");
-    expect(html).toMatch(/<a[^>]*href="\/about"[^>]*>About<\/a>/);
+    // Kevin 2026-10-07 footer redesign: the label sits in a span (the hover underline).
+    expect(html).toMatch(/<a[^>]*href="\/about"[^>]*><span[^>]*>About<\/span><\/a>/);
     expect(html).toContain(`href="${REPO_URL}"`);
     // The pass page and park list own the "© OpenStreetMap contributors" link name (e2e looks it up).
     expect(html).not.toMatch(/>© OpenStreetMap contributors</);

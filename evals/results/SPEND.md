@@ -92,3 +92,10 @@ Builder U (eval r6, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 11.5 s, 
 | 2026-10-06T22:04:20.877Z | 2026-10-06-selfhost-patient-1704.md | 10 | 27623 | 5290 | $0.0000 |
 
 Builder W (self-host row, 2026-10-06 CDT): the two rows above ran `gemma4-e2b-8k` on a local Ollama server (this laptop's CPU), **no paid call, $0** (tokens counted by Ollama; electricity not counted). Plus 5 local probe calls outside the eval (2 tiny speed probes, 1 trial eval case that timed out at 70 s and was discarded, 2 timing calls with the real Arbor Hills request), also $0. SerpApi: 0 searches.
+
+| Started (UTC) | Results | Model calls | Prompt tokens | Completion tokens | USD |
+|---|---|---|---|---|---|
+| 2026-10-06T23:34:22.299Z | 2026-10-06-7.md | 111 | 285583 | 40712 | $0.0894 |
+| 2026-10-06T23:53:10.837Z | 2026-10-06-partial-1853.md | 4 | 14692 | 1753 | $0.0035 |
+
+Builder Y (eval r7, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 48.9 answer tokens/s) + full run `2026-10-06-7` 111 calls $0.0894 + 10-13 smoke `partial-1853` 4 calls $0.0035 = **116 calls, about $0.0930**. SerpApi: 0 searches.

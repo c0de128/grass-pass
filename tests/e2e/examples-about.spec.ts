@@ -1,4 +1,5 @@
 import { expect, test, type Page } from "@playwright/test";
+import { HERO_FINDS } from "@/lib/home/showcase";
 
 // S8b: pre-warmed example parks, /about, and 360 px smoke. Example passes are made by the server at start-up
 // from LIVE data (OpenStreetMap, iNaturalist, the open model), so the first test waits for them.
@@ -101,7 +102,8 @@ test.describe("example parks", () => {
     await expect(card).toBeVisible();
     if ((await card.getAttribute("data-state")) === "ready") {
       await expect(card.getByRole("link", { name: /View pass/ })).toHaveAttribute("href", /^\/pass\/[nwr]\d+-6to10-\d{8}-[1-3]\?example=1$/);
-      await expect(card.getByRole("listitem")).toHaveCount(4);
+      // Kevin (2026-10-07): the hero card shows HERO_FINDS finds (3 since his smaller card).
+      await expect(card.getByRole("listitem")).toHaveCount(HERO_FINDS);
     } else {
       await expect(card).toContainText(/Example pass not ready yet: \S/);
     }

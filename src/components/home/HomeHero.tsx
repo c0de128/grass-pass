@@ -25,7 +25,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
             <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}
-            <span className="relative mt-2 inline-block self-end text-[0.533em] text-primary lg:whitespace-nowrap">
+            <span className="relative mt-2 inline-block self-end text-[0.667em] text-primary lg:whitespace-nowrap">
               powered by AI.
               <svg aria-hidden="true" viewBox="0 0 300 20" preserveAspectRatio="none" className="absolute -bottom-2 left-0 h-3 w-full text-sun sm:h-4">
                 <path d="M2 14 C 80 4, 200 4, 298 12" fill="none" stroke="currentColor" strokeWidth="7" strokeLinecap="round" />
@@ -34,7 +34,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            Grass Pass turns your local park into an interactive adventure. Our AI analyzes real-world maps and recent
+            Grass Pass turns your local park into an interactive adventure. Our AI analyzes real-world maps and actual
             wildlife sightings to craft a custom scavenger hunt in seconds. Just hit print, grab a pencil, and head
             outside&mdash;no screens required.
           </p>

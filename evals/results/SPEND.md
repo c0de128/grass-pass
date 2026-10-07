@@ -113,3 +113,10 @@ Builder AB (eval r8, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 
 | 2026-10-07T03:43:40.354Z | 2026-10-06-partial-2243-3.md | 1 | 2879 | 437 | $0.0007 |
 
 Builder AC (slow provider, 2026-10-06 CDT, branch `slow-provider`): live check after the time-budget change, 5 partial runs `partial-2242`, `partial-2242-2`, `partial-2243`, `partial-2243-2`, `partial-2243-3` (Connemara, Klyde Warren, Arbor Hills, White Rock 6-10; Cedar Ridge 10-13), capped with EVAL_MAX_CALLS = **7 calls, $0.0049**. Replays (`pnpm eval:replay`) are free. SerpApi: 0 searches.
+
+| Started (UTC) | Results | Model calls | Prompt tokens | Completion tokens | USD |
+|---|---|---|---|---|---|
+| 2026-10-07T04:01:47.860Z | 2026-10-06-9.md | 124 | 308355 | 45483 | $0.0922 |
+| 2026-10-07T04:20:53.422Z | 2026-10-06-partial-2320.md | 6 | 18271 | 2145 | $0.0044 |
+
+Builder AD (eval r9, 2026-10-06 CDT, branch `eval-r9` on main `43ceae0`): speed probe 1 call (about $0.0001; 10.1 s, 17.7 answer tokens/s) + full run `2026-10-06-9` 124 calls $0.0922 (the first full run with the sized time limits) + 10-13 smoke `partial-2320` 6 calls $0.0044 (EVAL_MAX_CALLS=8) = **131 calls, about $0.0967**. SerpApi: 0 searches.

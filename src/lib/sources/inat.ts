@@ -148,6 +148,9 @@ export function stripHtml(s: string): string {
     .replace(/&gt;/gi, ">")
     .replace(/&amp;/gi, "&")
     .replace(/&#(\d{1,6});/g, (_, n: string) => String.fromCodePoint(Number(n)))
+    // Round-6 SEC-6-02: a soft hyphen or zero-width character inside a word ("p&shy;oisonous") hid it from the safety words.
+    .replace(/&shy;/gi, "")
+    .replace(/\p{Cf}/gu, "")
     .replace(/\s+/g, " ")
     .trim();
 }

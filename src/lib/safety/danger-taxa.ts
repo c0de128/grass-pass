@@ -54,6 +54,53 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   { id: 48419, name: "Amanita", common: "amanitas (death cap, destroying angel, fly agaric)", why: "deadly mushrooms" }, // genus Amanita
   { id: 118297, name: "Galerina", common: "galerinas (funeral bell)", why: "deadly mushrooms" }, // genus Galerina, "Moss Bells"
   { id: 117308, name: "Chlorophyllum molybdites", common: "green-spored parasol", why: "poisonous mushroom often found on lawns" }, // species, "Green-spored Parasol"
+  // r7 follow-ups (eval run 2026-10-06-7, ADR 0003 "nothing a kid could get hurt by touching or eating is a find").
+  // Ids resolved live on iNaturalist 2026-10-06 (`/v1/taxa?q=<name>&rank=<rank>`; species checked through their ancestor_ids).
+  // Snow-on-the-prairie (Euphorbia bicolor 120585) printed on 4 Cedar Ridge passes; its summary never says its milky
+  // sap burns skin and eyes, so the word filter cannot see it. Every spurge has that latex: the whole genus goes.
+  { id: 51822, name: "Euphorbia", common: "spurges (snow-on-the-prairie, snow-on-the-mountain, spotted spurge)", why: "milky sap irritates skin and eyes" }, // genus Euphorbia, "Spurges"
+  // Texas Brown Tarantula (Aphonopelma hentzi 120596) printed on Arbor Hills passes as "a big bug". Big, slow and
+  // tempting to touch: it flicks itchy hairs and can bite. A touch hazard like the asp caterpillar, so it is blocked
+  // (other spiders stay "Look, don't touch.").
+  { id: 47424, name: "Theraphosidae", common: "tarantulas", why: "itchy hairs and a painful bite" }, // family Theraphosidae, "Tarantulas"
+  // Stinging wasps beyond Vespidae (blocked since ADR 0003). Organ-pipe Mud-dauber (Trypoxylon politum 84844, under
+  // Crabronidae 51955) printed at Trinity. iNat has no Pemphredonidae / Bembicidae family: they sit in Crabronidae.
+  { id: 48742, name: "Sphecidae", common: "thread-waisted wasps (mud daubers)", why: "stings" }, // family Sphecidae, "Thread-waisted Wasps"
+  { id: 51955, name: "Crabronidae", common: "square-headed and sand wasps (organ-pipe mud dauber, cicada killer)", why: "stings" }, // family Crabronidae
+  { id: 1269342, name: "Pompiloidea", common: "spider wasps (tarantula hawks) and velvet ants", why: "very painful stings" }, // superfamily Pompiloidea
+  { id: 51967, name: "Scoliidae", common: "scoliid wasps", why: "stings" }, // family Scoliidae, "Scoliid Wasps"
+  { id: 371108, name: "Tiphioidea", common: "tiphiid flower wasps", why: "stings" }, // superfamily Tiphioidea
+  { id: 605157, name: "Thynnidae", common: "thynnid flower wasps (five-banded thynnid)", why: "stings" }, // family Thynnidae
+  // Blister beetles: their body fluid (cantharidin) blisters the skin of a child who picks one up.
+  { id: 59510, name: "Meloidae", common: "blister beetles", why: "body fluid blisters skin" }, // family Meloidae, "Blister Beetles"
+  // Round-6 security SEC-6-01 + quality Q-6-01 (2026-10-06): common North Texas species whose Wikipedia lead describes
+  // looks and range, not danger, so the word filter has nothing to catch. Genus level where every member shares the
+  // hazard. Ids resolved live on iNaturalist 2026-10-06 (`/v1/taxa?q=<name>&rank=genus|family`, exact name match).
+  { id: 83071, name: "Gelsemium", common: "Carolina jessamine", why: "every part is poisonous" }, // genus Gelsemium
+  { id: 82771, name: "Erythrina", common: "coral bean, coral trees", why: "poisonous seeds" }, // genus Erythrina, "Coral trees"
+  { id: 72030, name: "Campsis", common: "trumpet creeper (cow itch vine)", why: "sap causes skin rash" }, // genus Campsis, "trumpet vines" (rank 3 near Connemara)
+  { id: 126547, name: "Nandina", common: "nandina (heavenly bamboo)", why: "poisonous berries" }, // genus Nandina
+  { id: 69819, name: "Ligustrum", common: "privets", why: "poisonous berries" }, // genus Ligustrum, "privets" (Quihoui privet at Cedar Ridge)
+  { id: 53350, name: "Aesculus", common: "buckeyes", why: "poisonous nuts" }, // genus Aesculus, "buckeyes and horse-chestnuts"
+  { id: 56089, name: "Robinia", common: "black locust", why: "poisonous seeds and bark" }, // genus Robinia, "Locust Trees"
+  { id: 72405, name: "Tragia", common: "noseburns", why: "stinging hairs" }, // genus Tragia, "noseburns"
+  { id: 132171, name: "Mucuna", common: "velvet bean", why: "itchy hairs on the pods" }, // genus Mucuna
+  { id: 147272, name: "Dieffenbachia", common: "dumbcanes", why: "sap burns the mouth" }, // genus Dieffenbachia
+  { id: 141506, name: "Caladium", common: "caladiums", why: "sap burns the mouth" }, // genus Caladium
+  { id: 50280, name: "Parthenocissus", common: "Virginia creeper", why: "poisonous berries" }, // genus Parthenocissus, "Virginia Creepers"
+  { id: 1555996, name: "Nephroia", common: "Carolina snailseed", why: "poisonous berries" }, // genus Nephroia (iNat moved Carolina snailseed 1555999 out of Cocculus; at Celebration)
+  { id: 49671, name: "Phoradendron", common: "American mistletoe", why: "poisonous berries" }, // genus Phoradendron, "leafy mistletoes"
+  { id: 51267, name: "Wisteria", common: "wisterias", why: "poisonous seeds and pods" }, // genus Wisteria
+  { id: 48230, name: "Ranunculus", common: "buttercups", why: "sap blisters skin and mouth" }, // genus Ranunculus, "buttercups"
+  { id: 64014, name: "Omphalotus", common: "jack-o'-lantern mushrooms", why: "poisonous mushroom that looks like a chanterelle" }, // genus Omphalotus
+  // Stinging caterpillars beyond the asp (Megalopyge opercularis, above): the whole flannel-moth and slug-moth
+  // families (saddleback Acharia stimulea, hag moth Phobetron), io moths and buck moths.
+  { id: 84186, name: "Megalopygidae", common: "flannel moths (puss caterpillars)", why: "stinging caterpillars" }, // family Megalopygidae
+  { id: 84165, name: "Limacodidae", common: "slug caterpillar moths (saddleback, hag moth)", why: "stinging caterpillars" }, // family Limacodidae
+  { id: 82286, name: "Automeris", common: "io moths", why: "stinging caterpillars" }, // genus Automeris, "Eyed Silkmoths"
+  { id: 82145, name: "Hemileuca", common: "buck moths", why: "stinging caterpillars" }, // genus Hemileuca, "Sheepmoths"
+  { id: 64819, name: "Rhinella", common: "cane toad", why: "poisonous skin" }, // genus Rhinella, "Beaked Toads"
+  // Velvet ants (Mutillidae 48511, "cow killer" Dasymutilla occidentalis 117221) are inside Pompiloidea 1269342 above.
 ];
 
 const BLOCKED_IDS = new Map(BLOCKED_TAXA.map((t) => [t.id, t]));
@@ -135,14 +182,78 @@ export const BLOCKED_WORDS: readonly string[] = [
   "fly agaric",
   "funeral bell",
   "false parasol",
+  // r7 follow-ups (common names of the new blocked groups).
+  "spurge",
+  "snow-on-the-prairie",
+  "snow-on-the-mountain",
+  "tarantula",
+  "mud dauber",
+  "mud-dauber",
+  "cicada killer",
+  "velvet ant",
+  "cow killer",
+  "blister beetle",
+  // Round-6 SEC-6-01 (common names of the new blocked groups).
+  "jessamine",
+  "coral bean",
+  "trumpet creeper",
+  "cow itch",
+  "nandina",
+  "privet",
+  "buckeye",
+  "black locust",
+  "noseburn",
+  "velvet bean",
+  "dumbcane",
+  "caladium",
+  "virginia creeper",
+  "snailseed",
+  "mistletoe",
+  "wisteria",
+  "buttercup",
+  "jack-o'-lantern",
+  "saddleback",
+  "hag moth",
+  "io moth",
+  "buck moth",
+  "cane toad",
 ];
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
 const BLOCKED_WORD_RE = new RegExp(`\\b(?:${BLOCKED_WORDS.map(escapeRe).join("|")})(?:e?s)?\\b`, "i");
 
+/**
+ * Round-6 SEC-6-02: Latin look-alike letters from Cyrillic and Greek ("t\u043Exic" with a Cyrillic o) folded to
+ * Latin before any safety match. NFKC does not fold them.
+ */
+const CONFUSABLES: Readonly<Record<string, string>> = {
+  "\u0430": "a", "\u0435": "e", "\u043E": "o", "\u0440": "p", "\u0441": "c", "\u0443": "y", "\u0445": "x", "\u0456": "i",
+  "\u0458": "j", "\u0455": "s", "\u0501": "d", "\u04BB": "h", "\u04CF": "l", "\u043A": "k", "\u0432": "b", "\u043D": "h",
+  "\u0442": "t", "\u043C": "m", "\u0410": "A", "\u0412": "B", "\u0415": "E", "\u041A": "K", "\u041C": "M", "\u041D": "H",
+  "\u041E": "O", "\u0420": "P", "\u0421": "C", "\u0422": "T", "\u0425": "X", "\u0423": "Y", "\u0406": "I", "\u0408": "J",
+  "\u0405": "S", "\u03B1": "a", "\u03BF": "o", "\u03BD": "v", "\u03C1": "p", "\u03C4": "t", "\u03B9": "i", "\u03BA": "k",
+  "\u03C5": "u", "\u03B5": "e", "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z", "\u0397": "H", "\u0399": "I",
+  "\u039A": "K", "\u039C": "M", "\u039D": "N", "\u039F": "O", "\u03A1": "P", "\u03A4": "T", "\u03A5": "Y", "\u03A7": "X",
+};
+const CONFUSABLE_RE = new RegExp(`[${Object.keys(CONFUSABLES).join("")}]`, "gu");
+
+/**
+ * Text as the safety checks read it (round-6 SEC-6-02): NFKC, invisible format characters removed (soft hyphen,
+ * zero-width space and joiners, word joiner, BOM: "p\u00ADoisonous" is "poisonous"), Cyrillic/Greek look-alikes
+ * folded to Latin, curly apostrophes made straight, one space between words.
+ */
+export function safetyText(s: string): string {
+  return s
+    .normalize("NFKC")
+    .replace(/\p{Cf}/gu, "")
+    .replace(CONFUSABLE_RE, (c) => CONFUSABLES[c] ?? c)
+    .replace(/[‘’]/g, "'")
+    .replace(/\s+/g, " ");
+}
+
 /** The first blocked word in `text`, or null. */
 export function blockedWordIn(text: string): string | null {
-  const m = BLOCKED_WORD_RE.exec(text.normalize("NFKC").replace(/[‘’]/g, "'"));
+  const m = BLOCKED_WORD_RE.exec(safetyText(text));
   return m ? m[0] : null;
 }
 
@@ -173,6 +284,7 @@ export const SAFETY_LINES = {
   bee: "Look, don't touch. It can sting.",
   wildlife: "Watch from far away. Never chase or touch.",
   small: "Look, don't touch.",
+  water: "Stay with your grown-up near water.",
 } as const;
 
 export const SAFETY_FOOTNOTE = "Some things seen here are left off for safety.";
@@ -213,11 +325,18 @@ export function isStationary(t: TaxonLike): boolean {
  * snakeroot, flowerpot parasol ("poisonous, if consumed") and Lindheimer's senna ("lethally toxic to
  * livestock") hit; nothing harmless did once negations ("nonvenomous", "no venom") are taken out.
  */
-const DANGER_SOURCE_RE =
-  /\b(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|deadly|fatal(?:ly)?|lethal(?:ly)?|irritant\w*|irritation|irritating|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|do not eat|don't eat|should not be eaten|not be eaten|not edible|causes? burns?|burns? the skin)\b/i;
+/**
+ * Round-6 SEC-6-02 / Q-6-01: ONE danger-word list for the species source text and for model-written text (the two
+ * lists had drifted: "can kill livestock" passed the source check, "itch" and "bite" passed both). Added: death,
+ * kill(s), necrosis, itch/itchy/itching, irritate(s), allergic, anaphylaxis, urticating, painful, unsafe to eat,
+ * inedible. Checked against the 231 recorded summaries of the 20 eval parks (r7-followups report).
+ */
+const DANGER_WORDS =
+  String.raw`\w*poison\w*|\w*toxi[cn]\w*|\w*venom\w*|deadly|fatal\w*|lethal\w*|irrita\w*|itch|itches|itchy|itching|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|deaths?|kills?|killing|necros\w*|necrotic|allerg\w*|anaphyla\w*|urticat\w*|painful(?:ly)?|do not eat|don't eat|should not be eaten|not be eaten|not edible|inedible|unsafe to eat|causes? burns?|burns? the skin`;
+const DANGER_SOURCE_RE = new RegExp(String.raw`\b(?:${DANGER_WORDS})\b`, "i");
 
 /** Words about stings: bees are "look, don't touch: it can sting" by design (ADR 0003), so for them only these are ignored. */
-const STING_ONLY_RE = /^(?:stings?|stinging|stinger\w*)$/i;
+const STING_ONLY_RE = /^(?:stings?|stinging|stinger\w*|painful(?:ly)?)$/i;
 
 /**
  * Negated danger words ("nonvenomous", "non-toxic", "not poisonous", "no venom", "not considered
@@ -226,7 +345,7 @@ const STING_ONLY_RE = /^(?:stings?|stinging|stinger\w*)$/i;
 const NEGATED_RE =
   /\b(?:non-?|not\s+(?:considered\s+|known\s+to\s+be\s+|thought\s+to\s+be\s+)?|no\s+|never\s+|nor\s+)(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|dangerous|harmful|deadly)\b|\bharmless\b/gi;
 
-const normalizeText = (s: string) => s.normalize("NFKC").replace(/[‘’]/g, "'").replace(/\s+/g, " ");
+const normalizeText = safetyText;
 
 /**
  * The first danger word in a Wild Find's SOURCE text (names + summary), or null when it reads safe.
@@ -247,8 +366,8 @@ export function dangerSourceWord(text: string, taxon?: TaxonLike): string | null
  * Danger words that must never be printed in a clue, hint or riddle (audit R5-S1, post-model check).
  * No negation is allowed here: "a snake that is not venomous" is no sentence for a kids' pass either.
  */
-const DANGER_CLUE_RE =
-  /\b(?:\w*poison\w*|\w*toxi[cn]\w*|\w*venom\w*|deadly|fatal\w*|lethal\w*|irritat\w*|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|deaths?|kills?|killing|do not eat|don't eat)\b/i;
+/** The shared list plus "bite(s)/biting" (Q-6-01: "a big hairy spider that can bite"; "bite-sized" is fine). */
+const DANGER_CLUE_RE = new RegExp(String.raw`\b(?:${DANGER_WORDS}|bites?(?!-)|biting)\b`, "i");
 
 /** The first danger word in a model-written clue / hint / riddle, or null. */
 export function dangerClueWord(text: string): string | null {

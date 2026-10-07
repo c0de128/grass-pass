@@ -44,3 +44,30 @@ The plant list of the season check changes with the summary list, so the three s
 the same five parks were fetched live on 2026-10-06 too, with the exact query today's code sends (same place,
 radius and month) and appended next to the 2026-10-05 ones (15 exchanges). They hold this month's counts as of
 2026-10-06, a day newer than the rest of each fixture.
+
+## 2026-10-06 (evening): r7 follow-ups + round-6 SEC-6-01 blocklist
+
+The blocklist grew again (Euphorbia, tarantulas, stinging wasps beyond Vespidae, blister beetles, and the round-6
+regional hazards: Campsis, Ligustrum, Parthenocissus, Phoradendron and others). Blocked species leave the summary
+request, so the next species in line enters the 24 asked for. Each such taxon was fetched live from iNaturalist on
+2026-10-06 about 7:42-7:45 PM CDT (`/v1/taxa/<id>?per_page=30&locale=en`, the app's User-Agent) and appended as its
+own `taxa` exchange with its real fetch time. The season (phenology) lookups whose plant list changed with it were
+fetched live with the exact query today's code sends and appended next to the old ones (they hold this month's
+counts as of 2026-10-06). Nothing recorded earlier was changed.
+
+| Park | Added taxa | Phenology lookups added |
+|---|---|---|
+| Connemara Meadow Preserve | 60946 green antelopehorns | 3 |
+| Arbor Hills Nature Preserve | 130379 dotted gayfeather | 3 |
+| Bethany Lakes Park | (none) | 3 |
+| Cedar Ridge Preserve | (none) | 3 |
+| Spring Creek Forest Preserve Park | 58579 Question Mark | 3 |
+| White Rock Lake Park | 144496 Wilson's Snipe | 0 |
+| Trinity River Audubon Center | 1647419 Mexican Long-nosed Armadillo | 3 |
+| Zilker Metropolitan Park | 53034 giant ragweed, 57867 greater duckweed, 62776 autumn clematis | 6 |
+| Allen Station Park | (none) | 3 |
+| Frisco Commons | (none) | 3 |
+
+A second pass (about 7:58-7:59 PM CDT) ran each case with the app's caches reset first: the in-process taxon cache had
+hidden three of these requests in the first pass (Zilker's 62776 and the Allen Station, Frisco and second Zilker
+season lookups).

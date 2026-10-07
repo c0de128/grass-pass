@@ -213,6 +213,102 @@
      {"count":1,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/58579?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:43:54.330Z",
+   "latencyMs": 210,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":58579,"name":"Polygonia interrogationis","preferred_common_name":"Question Mark","wikipedia_summary":"<i><b>Polygonia interrogationis</b></i>, the <b>question mark</b>, is a North American nymphalid butterfly. It lives in wooded areas, city parks, generally in areas with a combination of trees and open space. The color and textured appearance of the underside of its wings combine to provide camouflage that resembles a dead leaf. The adult butterfly has a wingspan of 4.5–7.6 cm (1.8–3.0 in). Its flight period is from May to September. \"The silver mark on the underside of the hindwing is...","ancestor_ids":[48460,1,47120,372739,47158,184884,47157,47224,47922,202067,202066,50392]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C554401&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:43:55.675Z",
+   "latencyMs": 299,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":29,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":28,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":18,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":16,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":14,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":10,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":7,"taxon":{"id":58387,"name":"Sorghum halepense","rank":"species","preferred_common_name":"Johnson grass","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388,58387]}},
+     {"count":6,"taxon":{"id":52119,"name":"Populus deltoides","rank":"species","preferred_common_name":"Eastern Cottonwood","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,51820,47567,47566,1430520,52119]}},
+     {"count":6,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}},
+     {"count":3,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C554401&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:43:58.830Z",
+   "latencyMs": 324,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 5,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":29,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":25,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":17,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":3,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}},
+     {"count":1,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.96609&lng=-96.65887&radius=50&verifiable=true&month=10&taxon_id=49399%2C52119%2C54781%2C58387%2C75842%2C79064%2C81792%2C84364%2C135263%2C142653%2C554401&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:04.011Z",
+   "latencyMs": 298,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 8,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":13,"taxon":{"id":54781,"name":"Quercus macrocarpa","rank":"species","preferred_common_name":"bur oak","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,47852,47851,861029,861033,1552797,1552799,54781]}},
+     {"count":9,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":7,"taxon":{"id":58387,"name":"Sorghum halepense","rank":"species","preferred_common_name":"Johnson grass","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138113,58388,58387]}},
+     {"count":6,"taxon":{"id":81792,"name":"Celtis laevigata","rank":"species","preferred_common_name":"sugar hackberry","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,53781,54858,81792]}},
+     {"count":5,"taxon":{"id":75842,"name":"Bothriochloa ischaemum","rank":"species","preferred_common_name":"King Ranch bluestem","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,635417,1138103,72016,75842]}},
+     {"count":4,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":2,"taxon":{"id":554401,"name":"Zephyranthes chlorosolen","rank":"species","preferred_common_name":"Brazos rain-lily","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47218,55849,924654,924785,924787,120027,554401]}},
+     {"count":1,"taxon":{"id":79064,"name":"Sesbania herbacea","rank":"species","preferred_common_name":"bigpod sesbania","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,507502,747197,72358,79064]}}
+    ]
+   }
   }
  ]
 }

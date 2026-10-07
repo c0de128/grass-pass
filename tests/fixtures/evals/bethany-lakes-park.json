@@ -191,6 +191,64 @@
      {"count":2,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C119145%2C120151&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:41:56.831Z",
+   "latencyMs": 291,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":7,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}},
+     {"count":4,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C119145%2C120151&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:41:59.378Z",
+   "latencyMs": 220,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":7,"taxon":{"id":119145,"name":"Mikania scandens","rank":"species","preferred_common_name":"climbing hempvine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,153419,901062,83588,119145]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.08760&lng=-96.64300&radius=50&verifiable=true&month=10&taxon_id=49399%2C119145%2C120151&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:42:03.849Z",
+   "latencyMs": 3887,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":2,"taxon":{"id":120151,"name":"Frangula caroliniana","rank":"species","preferred_common_name":"Carolina buckthorn","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,49041,1256740,53424,120151]}}
+    ]
+   }
   }
  ]
 }

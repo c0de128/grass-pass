@@ -216,6 +216,86 @@
      {"count":1,"taxon":{"id":75995,"name":"Campsis radicans","rank":"species","preferred_common_name":"American trumpet vine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,48377,604091,72030,75995]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/1647419?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:13.013Z",
+   "latencyMs": 335,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":1647419,"name":"Dasypus mexicanus","preferred_common_name":"Mexican Long-nosed Armadillo","wikipedia_summary":"The <b>nine-banded armadillo</b> (<i><b>Dasypus novemcinctus</b></i>), also called the <b>nine-banded long-nosed armadillo</b> or <b>common long-nosed armadillo</b>, is a species of armadillo native to North, Central, and South America, making it the most widespread of the armadillos. They superficially resemble pangolins, though the two are not closely related; they have undergone convergent evolution.","ancestor_ids":[48460,1,2,355675,40151,848317,848320,848322,67639,1714770,47069,47070,1431530]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C170070%2C194109&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:14.467Z",
+   "latencyMs": 587,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":18,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}},
+     {"count":3,"taxon":{"id":170070,"name":"Ungnadia speciosa","rank":"species","preferred_common_name":"Mexican buckeye","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,155712,170070]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C170070%2C194109&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:17.328Z",
+   "latencyMs": 499,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":14,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C170070%2C194109&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:22.081Z",
+   "latencyMs": 627,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 3,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":5,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}},
+     {"count":3,"taxon":{"id":170070,"name":"Ungnadia speciosa","rank":"species","preferred_common_name":"Mexican buckeye","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,155712,170070]}}
+    ]
+   }
   }
  ]
 }

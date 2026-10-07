@@ -192,6 +192,72 @@
      {"count":15,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:16.721Z",
+   "latencyMs": 261,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 6,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":82,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":50,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":45,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":19,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}},
+     {"count":19,"taxon":{"id":200074,"name":"Gonolobus suberosus","rank":"species","preferred_common_name":"Anglepod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448,200074]}},
+     {"count":18,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:20.011Z",
+   "latencyMs": 142,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":18,"taxon":{"id":53478,"name":"Commelina erecta","rank":"species","preferred_common_name":"whitemouth dayflower","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,49146,49147,1432346,1432348,1687101,52893,53478]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=33.15628&lng=-96.81382&radius=50&verifiable=true&month=10&taxon_id=53478%2C58205%2C67593%2C83435%2C143792%2C200074&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:25.200Z",
+   "latencyMs": 232,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 5,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":59,"taxon":{"id":83435,"name":"Diospyros virginiana","rank":"species","preferred_common_name":"American persimmon","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47181,71506,83434,83435]}},
+     {"count":44,"taxon":{"id":58205,"name":"Maclura pomifera","rank":"species","preferred_common_name":"Osage-orange","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47132,50998,1529475,58206,58205]}},
+     {"count":30,"taxon":{"id":143792,"name":"Pistacia chinensis","rank":"species","preferred_common_name":"Chinese pistache","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,48874,707807,72301,143792]}},
+     {"count":18,"taxon":{"id":200074,"name":"Gonolobus suberosus","rank":"species","preferred_common_name":"Anglepod","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47362,373579,632307,632315,185448,200074]}},
+     {"count":15,"taxon":{"id":67593,"name":"Carya illinoinensis","rank":"species","preferred_common_name":"pecan","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47853,54497,54788,67593]}}
+    ]
+   }
   }
  ]
 }

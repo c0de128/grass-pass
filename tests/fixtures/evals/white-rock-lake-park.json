@@ -641,6 +641,25 @@
      {"count":1,"taxon":{"id":135262,"name":"Ipomoea lacunosa","rank":"species","preferred_common_name":"White Morning-glory","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135262]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/144496?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:07.310Z",
+   "latencyMs": 245,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":144496,"name":"Gallinago delicata","preferred_common_name":"Wilson's Snipe","wikipedia_summary":"<b>Wilson's snipe</b> (<i>Gallinago delicata</i>) is a small, stocky shorebird. The genus name <i>gallinago</i> is New Latin for a woodcock or snipe from Latin <i>gallina</i>, \"hen\" and the suffix <i>-ago</i>, \"resembling\". The specific <i>delicata</i> is Latin for \"dainty\".","ancestor_ids":[48460,1,2,355675,3,67561,3835,3912]}
+    ]
+   }
   }
  ]
 }

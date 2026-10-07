@@ -68,10 +68,14 @@ describe("R1-M4 season check: iNaturalist 'Flowers and Fruits' annotations (live
   it("asks only about plant candidates, with the URL the recording holds", () => {
     const list = parseSpeciesCounts(rec(`inat-species-${CON.slug}`).body);
     const ids = plantCandidateIds(list);
-    expect([...ids].sort((a, b) => a - b)).toEqual(phenologyRec(CON.slug)._recording.taxonIds.slice().sort((a, b) => a - b));
+    // r7 follow-ups: Virginia creeper (50278, Parthenocissus) is blocked now, so green antelopehorns (60946) takes its
+    // place. The 3 queries for today's list were recorded live 2026-10-07 00:43 UTC and appended (`taxonIdsR7`).
+    const rr = phenologyRec(CON.slug)._recording as { taxonIds: number[]; taxonIdsR7?: number[] };
+    expect([...ids].sort((a, b) => a - b)).toEqual(rr.taxonIdsR7 ?? []);
+    expect(rr.taxonIdsR7).toEqual([...rr.taxonIds.filter((id) => id !== 50278), 60946].sort((a, b) => a - b));
     const f = parseFeatures(rec(`overpass-features-${CON.slug}`).body, parseParkId(CON.id)!)!;
     const sorted = [...ids].sort((a, b) => a - b);
-    expect(phenologyRec(CON.slug).exchanges.map((e) => e.url)).toEqual([
+    expect(phenologyRec(CON.slug).exchanges.slice(3).map((e) => e.url)).toEqual([
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, null),
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, 13),
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, 14),

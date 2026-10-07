@@ -594,6 +594,242 @@
      {"count":1,"taxon":{"id":142776,"name":"Vitis mustangensis","rank":"species","preferred_common_name":"mustang grape","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,60773,142776]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/53034?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:25.405Z",
+   "latencyMs": 474,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":53034,"name":"Ambrosia trifida","preferred_common_name":"giant ragweed","wikipedia_summary":"<i><b>Ambrosia trifida</b></i>, the <b>giant ragweed</b>, is a species of flowering plant in the sunflower family. It is native to North America, where it is widespread in Canada, the United States, and northern Mexico. It is present in Europe and Asia as an introduced species, and it is known as a common weed in many regions. Its common names include <b>great ragweed</b>, <b>Texan great ragweed</b>, <b>giant ragweed</b>, <b>tall ragweed</b>, <b>blood ragweed</b>, <b>perennial ragweed</b>, <b>horseweed</b>, <b>buffaloweed</b>, and <b>kinghead</b>.","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/57867?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:26.989Z",
+   "latencyMs": 192,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":57867,"name":"Spirodela polyrhiza","preferred_common_name":"greater duckweed","wikipedia_summary":"<i><b>Spirodela polyrhiza</b></i> (orth. var. <i>S. polyrrhiza</i>) is a species of duckweed known by the common names <b>common duckmeat</b>, <b>greater duckweed</b>, <b>great duckmeat</b>, <b>common duckweed</b>, and <b>duckmeat</b>. It can be found nearly worldwide in many types of freshwater habitat. It is a perennial aquatic plant usually growing in dense colonies, forming a mat on the water surface. Each plant is a smooth, round, flat disc 0.5 to 1.0 cm wide. It produces several minute roots. It also","ancestor_ids":[48460,47126,211194,47125,47163,48073,48536,502646,57869]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843%2C1555999&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:28.308Z",
+   "latencyMs": 1706,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 13,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":205,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":66,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":39,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":30,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":28,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":27,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":25,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":18,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":17,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":15,"taxon":{"id":142776,"name":"Vitis mustangensis","rank":"species","preferred_common_name":"mustang grape","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,60773,142776]}},
+     {"count":13,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}},
+     {"count":11,"taxon":{"id":50616,"name":"Mirabilis jalapa","rank":"species","preferred_common_name":"marvel of Peru","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,50615,50616]}},
+     {"count":9,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843%2C1555999&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:32.297Z",
+   "latencyMs": 480,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 10,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":148,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":62,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":36,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":26,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":23,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":12,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":11,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":10,"taxon":{"id":50616,"name":"Mirabilis jalapa","rank":"species","preferred_common_name":"marvel of Peru","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,50615,50616]}},
+     {"count":4,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}},
+     {"count":1,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843%2C1555999&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T00:44:37.055Z",
+   "latencyMs": 284,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":114,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":27,"taxon":{"id":1555999,"name":"Nephroia carolina","rank":"species","preferred_common_name":"Carolina snailseed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,62992,1555996,1555999]}},
+     {"count":16,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":15,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":13,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}},
+     {"count":7,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":7,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":6,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}},
+     {"count":5,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":4,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":3,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":1,"taxon":{"id":142776,"name":"Vitis mustangensis","rank":"species","preferred_common_name":"mustang grape","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,60773,142776]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "taxa",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/taxa/62776?per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:48.638Z",
+   "latencyMs": 290,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"id":62776,"name":"Clematis terniflora","preferred_common_name":"autumn clematis","wikipedia_summary":"<i><b>Clematis terniflora</b></i> (<b>sweet autumn clematis</b>, <b>sweet autumn virginsbower</b>, <b>圆锥铁线莲 yuan zhui tie xian lian</b>) is a plant in the buttercup family, Ranunculaceae. It is native to countries in northeastern Asia (China, Japan, Korea, Mongolia, Russia (Siberia), Taiwan).. It was introduced into the United States in the late 1800s as an ornamental garden plant, and has naturalized in many of the eastern states. It is considered a Category II invasive plant in New Jersey, South Carolina and...","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988]}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C62776%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:50.060Z",
+   "latencyMs": 304,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 13,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":205,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":66,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":39,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":28,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":27,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":25,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":18,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":17,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":15,"taxon":{"id":142776,"name":"Vitis mustangensis","rank":"species","preferred_common_name":"mustang grape","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,60773,142776]}},
+     {"count":13,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}},
+     {"count":11,"taxon":{"id":50616,"name":"Mirabilis jalapa","rank":"species","preferred_common_name":"marvel of Peru","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,50615,50616]}},
+     {"count":10,"taxon":{"id":62776,"name":"Clematis terniflora","rank":"species","preferred_common_name":"autumn clematis","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988,62776]}},
+     {"count":9,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C62776%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:52.653Z",
+   "latencyMs": 485,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 11,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":148,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":62,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":36,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":26,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":23,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":12,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":11,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":10,"taxon":{"id":50616,"name":"Mirabilis jalapa","rank":"species","preferred_common_name":"marvel of Peru","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47366,50256,50615,50616]}},
+     {"count":9,"taxon":{"id":62776,"name":"Clematis terniflora","rank":"species","preferred_common_name":"autumn clematis","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988,62776]}},
+     {"count":4,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}},
+     {"count":1,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=30.26932&lng=-97.77131&radius=50&verifiable=true&month=10&taxon_id=48514%2C50616%2C51768%2C53034%2C57867%2C62776%2C63916%2C84364%2C119982%2C120942%2C135263%2C142653%2C142776%2C168215%2C168843&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T01:05:57.429Z",
+   "latencyMs": 244,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 12,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":114,"taxon":{"id":120942,"name":"Malvaviscus arboreus","rank":"species","preferred_common_name":"Turk's cap","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48796,48797,860115,860846,120943,120942]}},
+     {"count":16,"taxon":{"id":84364,"name":"Chasmanthium latifolium","rank":"species","preferred_common_name":"river oats","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47163,47162,47434,326013,956879,84365,84364]}},
+     {"count":15,"taxon":{"id":53034,"name":"Ambrosia trifida","rank":"species","preferred_common_name":"giant ragweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,639449,53036,53034]}},
+     {"count":13,"taxon":{"id":48514,"name":"Capsicum annuum","rank":"species","preferred_common_name":"chili pepper","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,48516,634936,634937,48517,48514]}},
+     {"count":7,"taxon":{"id":168215,"name":"Ruellia drummondiana","rank":"species","preferred_common_name":"Drummond's ruellia","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,50151,851875,1369796,1369799,83892,1653714,168215]}},
+     {"count":7,"taxon":{"id":168843,"name":"Senna lindheimeriana","rank":"species","preferred_common_name":"Lindheimer's Senna","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47123,47122,324170,542136,1076875,52348,168843]}},
+     {"count":6,"taxon":{"id":51768,"name":"Gaillardia pulchella","rank":"species","preferred_common_name":"firewheel","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,632795,635184,51769,51768]}},
+     {"count":5,"taxon":{"id":119982,"name":"Verbesina virginica","rank":"species","preferred_common_name":"frostweed","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,605446,960963,72422,119982]}},
+     {"count":4,"taxon":{"id":135263,"name":"Ipomoea cordatotriloba","rank":"species","preferred_common_name":"Tievine","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48515,52345,1395312,993824,52346,135263]}},
+     {"count":3,"taxon":{"id":142653,"name":"Agalinis heterophylla","rank":"species","preferred_common_name":"Prairie False Foxglove","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48151,47322,902069,62403,142653]}},
+     {"count":2,"taxon":{"id":62776,"name":"Clematis terniflora","rank":"species","preferred_common_name":"autumn clematis","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,48232,48231,746709,746724,49877,1690988,62776]}},
+     {"count":1,"taxon":{"id":142776,"name":"Vitis mustangensis","rank":"species","preferred_common_name":"mustang grape","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,71291,50279,60773,142776]}}
+    ]
+   }
   }
  ]
 }

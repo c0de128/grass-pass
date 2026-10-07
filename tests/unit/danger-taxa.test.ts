@@ -28,7 +28,7 @@ describe("hard-blocked taxa (ADR 0003): one test per entry", () => {
     });
   }
 
-  it("has the 15 ADR ids (pokeweed widened to genus 48601 in R5), Urtica (51886), Solanum (50641) and the 15 R5-S1 groups, no duplicates", () => {
+  it("has the 15 ADR ids (pokeweed widened to genus 48601 in R5), Urtica (51886), Solanum (50641), the 15 R5-S1 groups, the 9 r7 and the 22 round-6 groups, no duplicates", () => {
     const ids = BLOCKED_TAXA.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
     expect(ids).toEqual(
@@ -37,7 +37,16 @@ describe("hard-blocked taxa (ADR 0003): one test per entry", () => {
     expect(ids).toEqual(
       expect.arrayContaining([64116, 60126, 52999, 54899, 53095, 53725, 47564, 56740, 47555, 468609, 50334, 50311, 48419, 118297, 117308]),
     );
-    expect(ids).toHaveLength(32);
+    // r7 follow-ups (eval run 2026-10-06-7): spurges, tarantulas, stinging wasps beyond Vespidae, blister beetles.
+    expect(ids).toEqual(expect.arrayContaining([51822, 47424, 48742, 51955, 1269342, 51967, 371108, 605157, 59510]));
+    // Round-6 SEC-6-01 / Q-6-01: regional hazards whose Wikipedia lead never says so.
+    expect(ids).toEqual(
+      expect.arrayContaining([
+        83071, 82771, 72030, 126547, 69819, 53350, 56089, 72405, 132171, 147272, 141506, 50280, 1555996, 49671, 51267, 48230, 64014, 84186, 84165, 82286,
+        82145, 64819,
+      ]),
+    );
+    expect(ids).toHaveLength(63);
   });
 
   it("SPEC 6.4 planted cases, REAL iNat records: Copperhead, Brown Recluse, Poison Ivy, Fire Ant, Pokeweed are all blocked", () => {

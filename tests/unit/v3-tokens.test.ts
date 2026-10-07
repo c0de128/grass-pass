@@ -57,6 +57,8 @@ describe.each([
     ["sun", "band", "sunflower text on the dark band"],
     ["band-foreground", "band", "text on the dark band"],
     ["band-muted", "band", "muted text on the dark band"],
+    ["why-foreground", "why", "text on the logo-green \"The problem\" panel"],
+    ["why-muted", "why", "body text and source line on the logo-green panel"],
     ["on-ink", "ink", "text on ink pills"],
   ];
   it.each(text)("%s on %s >= 4.5:1 (%s)", (fg, bg) => {

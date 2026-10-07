@@ -25,6 +25,9 @@
   --color-band: var(--gp-band);
   --color-band-foreground: var(--gp-band-foreground);
   --color-band-muted: var(--gp-band-muted);
+  --color-why: var(--gp-why);
+  --color-why-foreground: var(--gp-why-foreground);
+  --color-why-muted: var(--gp-why-muted);
   --color-destructive: var(--gp-destructive);
   --color-border: var(--gp-border);
   --color-line: var(--gp-line);
@@ -152,3 +155,21 @@
   }
 }
 
+
+/* "The problem" unit charts: each mark (one species / one field or court) pops in as the chart scrolls into view.
+   Decorative only (the numbers are text); no motion when the visitor asks for less, or without scroll timelines. */
+@keyframes gp-why-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  @supports (animation-timeline: view()) {
+    .gp-why-mark {
+      animation: gp-why-pop linear both;
+      animation-timeline: view();
+      animation-range: entry 0% entry 90%;
+    }
+  }
+}

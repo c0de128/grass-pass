@@ -4,7 +4,7 @@ import { bandLabel, placeLabel, type HeroCard } from "@/lib/home/showcase";
 
 /**
  * The tilted pass card over the hero picture (Kevin's v0 design), filled from a REAL saved example pass:
- * its park, place, age band and first finds with their code-written evidence lines. The ticks on the
+ * its park, place, age band and 4 of its finds (a counted Park Find first; src/lib/home/showcase.ts heroFinds) with their code-written evidence lines. The ticks on the
  * first two rows are decoration (a kid half-way through). With no ready example pass, the same card says
  * why. Never hard-coded clues.
  */
@@ -39,7 +39,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
         </div>
 
         {card?.kind === "ready" ? (
-          <ul className="flex flex-col gap-2" aria-label={`First ${card.finds.length} finds on the ${name} example pass`}>
+          <ul className="flex flex-col gap-2" aria-label={`${card.finds.length} finds from the ${name} example pass`}>
             {card.finds.map((find, i) => {
               const done = i < 2;
               return (

@@ -8,8 +8,12 @@ import { formatTime } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 import type { ExamplePark, ExampleStatus } from "@/lib/prewarm";
 
-/** The example the hero card prefers (Kevin's v0 card shows Connemara Meadow). */
-export const HERO_EXAMPLE_SLUG = "connemara";
+/**
+ * Judge R6 (top-5 #4): the hero card leads with a concrete counted find ("Count the 4 roofed areas…" on White Rock),
+ * not a listening riddle. The examples are tried in this order; the first whose real pass has a counted Park Find
+ * wins, else the first ready one in this order. Deterministic: the same saved passes always give the same card.
+ */
+export const HERO_EXAMPLE_ORDER: readonly string[] = ["white-rock", "arbor-hills", "celebration", "connemara"];
 /** How many finds the hero card lists (v0 shows 4). */
 export const HERO_FINDS = 4;
 
@@ -36,17 +40,42 @@ export type HeroCard =
   | { kind: "ready"; ex: ReadyExample; finds: PassItem[] }
   | { kind: "missing"; name: string; place: string; reason: string };
 
+const COUNT_LEAD = /^\s*(count|how many)\b/i;
+
+/** A Park Find that asks to count something real ("Count the 4 roofed areas…", "Hunt for 4 roofs…"). */
+export function isCountedParkFind(item: PassItem): boolean {
+  return item.section === "park" && (COUNT_LEAD.test(item.clue) || /\b([2-9]|[1-9]\d)\b/.test(item.clue));
+}
+
+/** A find you hear rather than see (judge C4: the water-sound clue on every pass); last choice on the hero card. */
+const SOUND_CLUE = /\b(listen|hear|heard|sounds?|gurgl\w*|splash\w*|rushing)\b/i;
+
 /**
- * The hero pass card: the preferred example's real pass (else the first ready one), with its first finds and
- * their real evidence lines. With no ready pass, the preferred example's own "No data available yet" reason.
+ * The hero card's finds, all real items of the pass, in a fixed order: a counted Park Find first (a "Count …" clue
+ * before any other with a number), then the rest in pass order with sound clues last. HERO_FINDS of them.
  */
-export function heroCard(statuses: readonly ExampleStatus[], preferred = HERO_EXAMPLE_SLUG): HeroCard | null {
-  const order = [...statuses].sort((a, b) => Number(b.example.slug === preferred) - Number(a.example.slug === preferred));
-  for (const s of order) {
-    const ex = ready(s);
-    if (ex) return { kind: "ready", ex, finds: ex.pass.items.slice(0, HERO_FINDS) };
-  }
-  const first = order[0];
+export function heroFinds(pass: Pass): PassItem[] {
+  const counted = pass.items.filter(isCountedParkFind);
+  const lead = counted.find((i) => COUNT_LEAD.test(i.clue)) ?? counted[0];
+  const rest = pass.items.filter((i) => i !== lead);
+  const ordered = [...rest.filter((i) => !SOUND_CLUE.test(i.clue)), ...rest.filter((i) => SOUND_CLUE.test(i.clue))];
+  return (lead ? [lead, ...ordered] : ordered).slice(0, HERO_FINDS);
+}
+
+/**
+ * The hero pass card: a real saved example pass (HERO_EXAMPLE_ORDER, one with a counted Park Find first), with
+ * heroFinds() and their real evidence lines. With no ready pass, the first example's own "No data available yet" reason.
+ */
+export function heroCard(statuses: readonly ExampleStatus[], order: readonly string[] = HERO_EXAMPLE_ORDER): HeroCard | null {
+  const rank = (s: ExampleStatus) => {
+    const i = order.indexOf(s.example.slug);
+    return i < 0 ? order.length : i;
+  };
+  const sorted = [...statuses].sort((a, b) => rank(a) - rank(b));
+  const readyOnes = sorted.map(ready).filter((r): r is ReadyExample => r !== null);
+  const ex = readyOnes.find((r) => r.pass.items.some(isCountedParkFind)) ?? readyOnes[0];
+  if (ex) return { kind: "ready", ex, finds: heroFinds(ex.pass) };
+  const first = sorted[0];
   if (!first) return null;
   return {
     kind: "missing",

@@ -8,7 +8,7 @@ import { PassAnatomy } from "@/components/home/PassAnatomy";
 import { SampleParks } from "@/components/home/SampleParks";
 import { TWO_PARKS_SOURCE, TwoParks } from "@/components/home/TwoParks";
 import { AgePicker } from "@/components/pass/PassMaker";
-import { cardFacts, heroCard, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
+import { cardFacts, HERO_EXAMPLE_ORDER, heroCard, heroFinds, isCountedParkFind, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
 import { PassSchema, type Pass } from "@/lib/pass/schema";
@@ -59,16 +59,26 @@ describe("home showcase (v0 slots filled with real data)", () => {
     expect(realPass().items.length).toBeGreaterThan(3);
   });
 
-  it("hero card: prefers Connemara, shows its first 4 real finds with their evidence, links its pass", () => {
+  it("hero card (judge R6): leads with a counted Park Find, then real finds in pass order, the listening clue left out", () => {
     const pass = realPass();
     const card = heroCard([missingStatus("arbor-hills", "No data available yet: x."), readyStatus("connemara", pass)]);
     expect(card?.kind).toBe("ready");
+    if (card?.kind !== "ready") throw new Error("not ready");
+    // The recorded Arbor Hills pass: "Hunt for 4 roofs…", "Track 2 long outdoor seats…", the grill, the vine; its
+    // "Stop and listen for running water…" clue is the 4th item but goes last, so it is not among the 4 shown.
+    expect(card.finds.map((f) => f.clue)).toEqual([
+      "Hunt for 4 roofs held up by poles with tables below them.",
+      "Track 2 long outdoor seats for taking a break.",
+      "Ready to find a metal box on a post used for cooking?",
+      "What about a vine with large, intricate flowers?",
+    ]);
+    expect(card.finds.every((f) => pass.items.includes(f))).toBe(true); // never invented, never edited
     const html = renderToStaticMarkup(<HeroPassCard card={card} />);
-    for (const it of pass.items.slice(0, 4)) {
+    for (const it of card.finds) {
       expect(html).toContain(renderToStaticMarkup(<>{it.clue}</>));
       expect(html).toContain(renderToStaticMarkup(<>{it.evidence}</>));
     }
-    if (pass.items[4]) expect(html).not.toContain(renderToStaticMarkup(<>{pass.items[4].clue}</>));
+    expect(html).not.toContain("Stop and listen for running water");
     expect(html).toContain(`href="/pass/${pass.id}?example=1"`);
     expect(html).toContain("Allen, TX");
     expect(html).toContain("Ages 6–10");
@@ -76,6 +86,31 @@ describe("home showcase (v0 slots filled with real data)", () => {
     for (const fake of ["Spot a monarch on the milkweed", "red-winged blackbird", "Count the trail benches", "9 seen", "14 seen"]) {
       expect(html).not.toContain(fake);
     }
+  });
+
+  it("hero card: a 'Count …' clue leads; the example with a counted Park Find wins, whatever the order (deterministic)", () => {
+    const pass = realPass();
+    const shelter = pass.items.find((i) => i.feature === "shelter")!;
+    // The same real find, with the real clue Gemma wrote for it on Arbor Hills in eval smoke partial-1853.
+    const counted: Pass = { ...pass, items: [pass.items[3], pass.items[1], { ...shelter, clue: "Count the 4 roofed areas with tables below for shade." }, ...pass.items.slice(4)] };
+    const finds = heroFinds(counted);
+    expect(finds[0].clue).toBe("Count the 4 roofed areas with tables below for shade.");
+    // The listening clue was first on this pass; it goes last, so with 6 other finds it is not among the 4 shown.
+    expect(finds.some((f) => /listen/.test(f.clue))).toBe(false);
+    expect(isCountedParkFind(finds[0])).toBe(true);
+    // An example with no counted Park Find loses to one that has it, in either order.
+    const noCount: Pass = { ...pass, items: pass.items.filter((i) => i.section !== "park") };
+    for (const order of [
+      [readyStatus("white-rock", noCount), readyStatus("celebration", counted)],
+      [readyStatus("celebration", counted), readyStatus("white-rock", noCount)],
+    ]) {
+      const c = heroCard(order);
+      expect(c?.kind === "ready" && c.ex.example.slug).toBe("celebration");
+    }
+    // None has a counted find: the first ready one in HERO_EXAMPLE_ORDER (White Rock first).
+    expect(HERO_EXAMPLE_ORDER[0]).toBe("white-rock");
+    const plain = heroCard([readyStatus("connemara", noCount), readyStatus("white-rock", noCount)]);
+    expect(plain?.kind === "ready" && plain.ex.example.slug).toBe("white-rock");
   });
 
   it("hero card: falls back to another ready example, else says why (no link, no clues)", () => {

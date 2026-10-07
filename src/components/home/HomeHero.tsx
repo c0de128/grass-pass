@@ -1,4 +1,5 @@
 import Image from "next/image";
+import { ArrowDown } from "lucide-react";
 import type { ReactNode } from "react";
 import { ExampleChips } from "@/components/home/ExampleChips";
 import { HeroPassCard } from "@/components/home/HeroPassCard";
@@ -39,6 +40,13 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </p>
 
           <div className="flex flex-col gap-4">
+            {/* Kevin 2026-10-07: a call to action right above the search box. */}
+            <p className="inline-flex items-center gap-3 font-heading text-2xl font-extrabold tracking-tight text-ink sm:text-3xl" data-testid="hero-cta">
+              <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-sun text-sun-foreground shadow-sm" aria-hidden="true">
+                <ArrowDown className="size-5" />
+              </span>
+              Create your pass now
+            </p>
             {children}
           </div>
         </div>

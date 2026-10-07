@@ -202,8 +202,19 @@ const EDITED_RULE_PREFIXES = [
   "- Some first-try clues used field-guide words",
 ] as const;
 
+/**
+ * Bench/shelter fix (2026-10-07): rule lines added after the recordings were made (left out on both sides), and the
+ * sentence added to the SPOT riddle line and the SPOT label (taken out on both sides, so the rest of each, with its
+ * target id and SPOT source, is still compared byte-for-byte). The recorded answers are answers to the prompt without them.
+ */
+const ADDED_RULE_LINES: readonly string[] = ["- Each clue uses facts ONLY from its own item's SOURCE."];
+export const ADDED_SPOT_SENTENCE = " The SPOT facts are for this riddle only, never for a POOL clue.";
+export const SPOT_LABEL_NOW = "SPOT (for the riddle only, not a POOL item):";
+
 function shapeOfSystemLine(line: string): string | null {
   if (line === kidWordsRule()) return null;
+  if (ADDED_RULE_LINES.includes(line)) return null;
+  if (line.startsWith("- spot: one riddle")) return line.replace(ADDED_SPOT_SENTENCE, "");
   if (line.startsWith("- Start each clue with a different first word.")) return line.split(". Never start with")[0];
   const edited = EDITED_RULE_PREFIXES.find((p) => line.startsWith(p));
   // The voice-switch rule was merged into the "Write every clue" line: compared as one rule.
@@ -266,7 +277,7 @@ export function recordedShape<T extends { role: string; content: string }>(messa
       return { ...m, content: lines.join("\n") };
     }
     if (m.role !== "user") return m;
-    const wildBlank = m.content.replace(/(<source id="inat-[^"]*" section="wild" kind="[^"]*">)[^<]*(<\/source>)/g, "$1$2");
+    const wildBlank = m.content.replace(SPOT_LABEL_NOW, "SPOT:").replace(/(<source id="inat-[^"]*" section="wild" kind="[^"]*">)[^<]*(<\/source>)/g, "$1$2");
     // Round-6 C4: creek and fountain fact sheets are compared by id, section and kind (their text blanked on both sides).
     return { ...m, content: wildBlank.replace(/(<source id="([^"]*)" section="park" kind="[^"]*">)[^<]*(<\/source>)/g, (all, open: string, id: string, close: string) => (WATER_FACT_IDS.test(id) ? `${open}${close}` : all)) };
   });

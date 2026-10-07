@@ -512,6 +512,10 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
     "- A good clue gives the child ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.",
+    // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches at Celebration
+    // (the roof and pillars were the Find This Spot shelter's facts). Each clue's facts come from its own item only.
+    // Short on purpose (prompt budget M8); the SPOT line below says its facts are for the riddle only.
+    "- Each clue uses facts ONLY from its own item's SOURCE.",
     // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
     ...(ctx?.openers && ctx.openers.length > 0
       ? [
@@ -571,7 +575,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // S5: only when code picked a Find This Spot target (a pass without one gets exactly the S3 prompt).
     ...(spot
       ? [
-          `- spot: one riddle (at most ${RIDDLE_MAX} characters) about the place marked X on the map, using ONLY the SPOT source. Never name it, same rules as a clue. targetId must be "${spot.id}". sourceQuote copied exactly from the SPOT source.`,
+          `- spot: one riddle (at most ${RIDDLE_MAX} characters) about the place marked X on the map, using ONLY the SPOT source. The SPOT facts are for this riddle only, never for a POOL clue. Never name it, same rules as a clue. targetId must be "${spot.id}". sourceQuote copied exactly from the SPOT source.`,
         ]
       : []),
     // R2-M5: no parentNote from the model any more; code writes the grown-up's tip from the pass's real items (validate.ts).
@@ -585,7 +589,7 @@ export function userPrompt(parkName: string, pool: readonly PoolItem[], spot: Pr
     (p) => `<source id="${escapeSource(p.id)}" section="${p.section}" kind="${escapeSource(p.kind)}">${escapeSource(p.sourceText)}</source>`,
   );
   const spotLines = spot
-    ? ["SPOT:", `<source id="${escapeSource(spot.id)}" section="spot" kind="${escapeSource(spot.label)}">${escapeSource(spot.sourceText)}</source>`]
+    ? ["SPOT (for the riddle only, not a POOL item):", `<source id="${escapeSource(spot.id)}" section="spot" kind="${escapeSource(spot.label)}">${escapeSource(spot.sourceText)}</source>`]
     : [];
   return [`Park: <source id="park-name" section="park" kind="park name">${escapeSource(parkName)}</source>`, "POOL:", ...lines, ...spotLines].join("\n");
 }

@@ -24,6 +24,7 @@ import { seasonProblem } from "@/lib/pool/season";
 import { hasUrlOrMarkup } from "@/lib/safety/contact";
 import { blockedBy, blockedWordIn, dangerClueWord, SAFETY_LINES } from "@/lib/safety/danger-taxa";
 import type { AgeBand } from "@/lib/pass/constants";
+import { otherFeatureWord } from "./feature-words";
 import { jargonProblem, triviaKind, wrongKindWord } from "./jargon";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
@@ -43,6 +44,7 @@ export const DROP_REASONS = [
   "section_mismatch",
   "danger",
   "not_grounded",
+  "other_feature",
   "name_leak",
   "name_trait",
   "mentions_map",
@@ -80,7 +82,7 @@ export type ValidItem = {
 
 /** Drops that say the model could not write a valid clue for THAT item (not an id or shape problem, not style). */
 const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
-  "cut_off", "url_or_markup", "danger", "not_grounded", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
+  "cut_off", "url_or_markup", "danger", "not_grounded", "other_feature", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
   "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "jargon", "copies_example", "repeats_clue",
   // r7 follow-ups: a wrong kind word ("a big bug" for a tarantula) and nothing-to-see trivia dropped on a pool with spares.
   "wrong_kind", "trivia",
@@ -451,6 +453,13 @@ export function validateDraft(
     }
     if (nameLeak(d.clue, item.nameWords)) {
       drop("name_leak");
+      continue;
+    }
+    // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches (Celebration,
+    // 2 complete warm-up passes). The roof and pillars were the picnic shelter's facts (the Find This Spot target); the
+    // quote was a real bench phrase. A Park Find clue naming another feature's own thing that its SOURCE never says goes.
+    if (otherFeatureWord(d.clue, item) !== null) {
+      drop("other_feature");
       continue;
     }
     // PM decision 1B (2026-10-06): a colour, pattern or size word of the species' own name ("a plant with

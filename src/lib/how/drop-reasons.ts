@@ -24,6 +24,7 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   section_mismatch: { kind: "always", plain: "It puts a find in the wrong section." },
   danger: { kind: "always", plain: "It is about, or names, a blocked species (\"poison ivy\"), or says poisonous, toxic, venomous or stings." },
   not_grounded: { kind: "always", plain: "Its proof quote isn't in that find's facts, word for word." },
+  other_feature: { kind: "always", plain: "A Park Find clue describes a different thing (a roof and pillars for a bench): its facts never say that." },
   name_leak: {
     kind: "always",
     plain: "It gives the answer away: a word of the name, the phrase the name is made of (\"a bird with a red tail\" for Red-tailed Hawk), or talk about the name.",

@@ -260,6 +260,32 @@ export const SMOKE_10_13 = {
 } as const;
 
 /**
+ * RULES-8-04: the Teens & adults (13+) partial check (2026-10-07, 3 parks, one run each, 6 model calls). Notes:
+ * evals/results/2026-10-07-13plus-notes.md. tests/unit/how-it-works.test.tsx re-reads the JSON.
+ */
+export const SMOKE_13PLUS = {
+  file: "evals/results/2026-10-07-partial-1617.json",
+  summary: "evals/results/2026-10-07-partial-1617.md",
+  day: "2026-10-07",
+  ageBand: "13+",
+  parks: 3,
+  /** Complete by the M3 rule (at most one find short). */
+  complete: 3,
+  /** Passes that printed every find they asked for (Oak Point 8/8, White Rock 8/8; Celebration 7/8). */
+  full: 2,
+  calls: 6,
+  /** Reading grade: the kid target (3.5 or less) does not apply to 13+. */
+  fkGrade: 3.9,
+  nameLeakPct: 2.4,
+  p50s: 9.5,
+  p95s: 11.8,
+  costPerPass: 0.00162,
+  /** Passes that printed the promised 3 hard finds. */
+  hardKept: 2,
+  hardMin: 3,
+} as const;
+
+/**
  * Self-hosted row (judge G1, Builder W, 2026-10-06): Gemma 4 E2B (`gemma4:e2b-it-qat`, Apache-2.0) served by Ollama on
  * a laptop CPU with no GPU, 5 parks x 1 run, 6-10 band, $0. Two PARTIAL runs: `app` with a 70 s limit per call, the most the app allows (the hosted site sizes a first call to 30-40 s) (70 s per
  * call, 85 s per pass), `patient` with the eval-only longer clock (EVAL_LOCAL_PATIENT=1). Notes:

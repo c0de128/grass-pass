@@ -3,7 +3,8 @@ import { join, resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import AboutPage from "@/app/about/page";
-import { SiteFooter } from "@/components/SiteFooter";
+import { SiteFooter, parkPhotoCreditText } from "@/components/SiteFooter";
+import { PARK_PHOTOS } from "@/data/photo-credits";
 import { SiteHeader } from "@/components/SiteHeader";
 import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
 import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN } from "@/lib/about/eval-summary";
@@ -272,6 +273,8 @@ describe("/about", () => {
   it("v3: the stat tiles are the committed eval numbers, and the misses say Missed", () => {
     const tiles = aboutStatTiles();
     const g = EVAL_COLUMNS.find((c) => c.model === "gemma-4-31B-it")!;
+    // RULES-8-04: the tiles' header says which age band the numbers are for.
+    expect(t).toContain(`Gemma 4 on 20 real parks, ages 6-10, ${g.runs} runs`);
     expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["99.8%", "0", "$0.00108", "Grade 2.3", "90.2%", "9.9 s", "4.1%", String(UNIT_TESTS.passed)]));
     // Run 2026-10-06-9 (the first with sized time limits): cost and speed (the slow calls, p95 27.1 s) are Missed;
     // complete passes (90.2%) and repeats (4.1%) are Met.
@@ -347,7 +350,10 @@ describe("/about", () => {
       "$0.00111 in the run before (2026-10-06-8). Only 2 calls timed out this time, so the miss is the real price of the answered calls: $0.00106 a pass even if those were free.",
       "Most of it is the prompt (2,844 prompt tokens on a first call, 2,872 before).",
       "Each timed-out call is priced at its prompt size, up to $0.00109 if 2 timed-out calls were billed in full.",
-      "A 10-13 pass in the small 10-13 check cost $0.00145.",
+      // RULES-8-04: the headline numbers are for ages 6-10; the other bands' cost misses are named.
+      "These numbers are for ages 6-10. Longer passes cost more in their small checks: a 10-13 pass $0.00145 and a 13+ pass $0.00162, both over the goal.",
+      // RULES-8-08 (a): the examples are chosen complete passes.
+      "The example passes are real Gemma passes, but we keep complete ones as examples, so they show a good day, not a typical one.",
       "Some clues are still vague: 11 of 119 Wild Finds.",
       "8 of 112 in the run before, counted with the same checks",
       "Check for a small bird that is yellow.",
@@ -425,6 +431,13 @@ describe("/about", () => {
     expect(t).toContain("the original banner was made by Kevin with Google Gemini; the logo and scene are a traced, hand-cleaned SVG redraw of it.");
     expect(t).toContain("unpublished practice project, written on Oct 2, 2026, before the contest entry period");
     expect(t).toContain("Everything specific to Grass Pass was written from Oct 5, 2026.");
+    // RULES-8-08 (b): the Oct 7 work was built by AI coding agents, not in v0.
+    expect(t).toContain(
+      "Oct 7, 2026 redesign (the home page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its animation): built by AI coding agents (Claude Code) at Kevin's direction; the footer art is code-drawn SVG, no stock art.",
+    );
+    const readme = readFileSync(join(ROOT, "README.md"), "utf8").replace(/\s+/g, " ");
+    expect(readme).toContain("were built by AI coding agents (Claude Code) at Kevin's direction. The footer art is code-drawn SVG, no stock art.");
+    expect(readme).toContain("we keep complete ones as examples");
     // Default model is Gemma: no "Built with Llama" badge, only the explanation of when it shows.
     expect(html).not.toContain('data-testid="built-with-llama"');
   });
@@ -464,6 +477,23 @@ describe("site header and footer", () => {
     expect(html).toContain(`href="${REPO_URL}"`);
     // The pass page and park list own the "© OpenStreetMap contributors" link name (e2e looks it up).
     expect(html).not.toMatch(/>© OpenStreetMap contributors</);
+  });
+
+  it("RULES-8-02: the footer's photo credit is built from PARK_PHOTOS and names every author with their licence", () => {
+    const t = text(renderToStaticMarkup(<SiteFooter />));
+    expect(t).toContain("Park photos: Robert Nunnally (CC BY 2.0), Vulturesong and Jackilometresan (CC0), details on the About page");
+    for (const p of Object.values(PARK_PHOTOS)) expect(t, p.author).toContain(p.author);
+    // Each author once, grouped by licence, first-seen order.
+    expect(
+      parkPhotoCreditText([
+        { ...PARK_PHOTOS["white-rock"], author: "A" },
+        { ...PARK_PHOTOS["arbor-hills"], author: "B" },
+        { ...PARK_PHOTOS["oak-point"], author: "C" },
+        { ...PARK_PHOTOS.celebration, author: "B" },
+        { ...PARK_PHOTOS.connemara, author: "D" },
+        { ...PARK_PHOTOS["oak-point"], author: "E" },
+      ]),
+    ).toBe("A, C and E (CC0), B and D (CC BY 2.0)");
   });
 });
 
@@ -515,10 +545,10 @@ describe("fonts are self-hosted", () => {
 });
 
 describe("audit rounds line (one constant)", () => {
-  it("says six rounds (RULES-7-05: round 6 is done), from AUDIT_ROUNDS", async () => {
+  it("says eight rounds (RULES-8-03: round 8 ran Oct 7), from AUDIT_ROUNDS", async () => {
     const { AUDIT_ROUNDS, auditRoundsLine } = await import("@/lib/about/content");
-    expect(AUDIT_ROUNDS.done).toBe(6);
-    expect(auditRoundsLine()).toBe("Six rounds so far (Oct 6, 2026).");
+    expect(AUDIT_ROUNDS.done).toBe(8);
+    expect(auditRoundsLine()).toBe("Eight rounds so far (Oct 7, 2026).");
     expect(auditRoundsLine({ done: 1, day: "x" })).toBe("One round so far (x).");
     expect(auditRoundsLine({ done: 12, day: "x" })).toBe("12 rounds so far (x).");
   });

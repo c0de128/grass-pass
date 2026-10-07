@@ -4,7 +4,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import HowItWorksPage from "@/app/how-it-works/page";
 import { howLimits } from "@/lib/about/content";
-import { EVAL_THRESHOLDS, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_THRESHOLDS, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
+import { HARD_EXTRA } from "@/lib/ai/prompt";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
@@ -95,6 +96,53 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(t).toContain("A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening.");
     // RULES-7-02: the self-host card says "complete", not "finished in the app's normal time".
     expect(t).toContain("0 of 5 passes complete within the app's limits");
+  });
+
+  it("RULES-8-04: the open-model card says ages 6-10, and the 13+ check is quoted with its over-target label", () => {
+    const g = evalColumn("gemma-4-31B-it");
+    expect(t).toContain(`On 20 parks, ages 6-10: $${g.costPerPass.toFixed(5)} a pass, reading grade ${g.fkGrade.toFixed(1)}`);
+    // (`t` puts a space at each tag edge: "partial-1617 ,".)
+    expect(t).toMatch(/Teens and adults \(13\+\), a smaller partial check \(run 2026-10-07-partial-1617 ?, 2026-10-07, 3 parks, one run each,/);
+    expect(t).toContain("3 of 3 passes complete (at most one find short; 2 printed every find) in 6 model calls, 2 of 3 with their 3 hard finds, 9.5 s typical and 11.8 s slow (within the 10 s / 20 s targets), 2.4% of clues named their answer before the checks (code removed them).");
+    expect(t).toMatch(/A 13\+ pass cost about \$0\.00162, which is over the \$0\.00100 target\./);
+    expect(t).toContain("Its clues read at grade 3.9; the grade 3.5 reading target is for kids and does not apply to 13+.");
+    // The labels follow the numbers: speed and name leaks within target, cost over.
+    expect(SMOKE_13PLUS.p50s).toBeLessThanOrEqual(EVAL_THRESHOLDS.p50s);
+    expect(SMOKE_13PLUS.p95s).toBeLessThanOrEqual(EVAL_THRESHOLDS.p95s);
+    expect(SMOKE_13PLUS.nameLeakPct).toBeLessThanOrEqual(EVAL_THRESHOLDS.nameLeakPct);
+    expect(SMOKE_13PLUS.costPerPass).toBeGreaterThan(EVAL_THRESHOLDS.costPerPass);
+  });
+
+  it("RULES-8-07: the hard-find wording matches HARD_EXTRA (asked for one more than promised, as a spare)", () => {
+    expect(HARD_EXTRA).toBe(1);
+    expect(t).toContain("For the bands with hard finds, the model is asked for one more hard find than the pass promises (3 for 10-13, 4 for 13+), as a spare, so one dropped hard clue still leaves the promised number.");
+  });
+
+  it("RULES-8-01: the checks line describes what CI runs and where its result is, not that every change passed", () => {
+    expect(t).not.toContain("Every change passes");
+    expect(t).toContain("on every push to main. Each run's result, green or red, is public on the repo's Actions tab.");
+  });
+
+  it("the 13+ check numbers match the committed results JSON", () => {
+    const j = JSON.parse(readFileSync(join(ROOT, SMOKE_13PLUS.file), "utf8")) as {
+      meta: { day: string; ageBand: string; partial: boolean; settings: { cases: number[] } };
+      scores: { model: string; errors: Record<string, number>; m3: { complete: number }; m5: { medianGrade: number }; m6: { rate: number }; m7: { calls: number; p50Ms: number; p95Ms: number }; m8: { costPerPass: number }; hard: { checked: number; met: number; hardMin: number | null }; drops: { byRun: { kept: number; n: number }[] } }[];
+    };
+    const s = j.scores.find((x) => x.model === "gemma-4-31B-it")!;
+    expect(j.meta.partial).toBe(true);
+    expect(j.meta.day).toBe(SMOKE_13PLUS.day);
+    expect(j.meta.ageBand).toBe(SMOKE_13PLUS.ageBand);
+    expect(j.meta.settings.cases).toHaveLength(SMOKE_13PLUS.parks);
+    expect(s.errors).toEqual({});
+    expect(s.m3.complete).toBe(SMOKE_13PLUS.complete);
+    expect(s.drops.byRun.filter((r) => r.kept === r.n)).toHaveLength(SMOKE_13PLUS.full);
+    expect(s.m7.calls).toBe(SMOKE_13PLUS.calls);
+    expect(Math.round(s.m5.medianGrade * 10) / 10).toBe(SMOKE_13PLUS.fkGrade);
+    expect(Math.round(s.m6.rate * 1000) / 10).toBe(SMOKE_13PLUS.nameLeakPct);
+    expect(Math.round(s.m7.p50Ms / 100) / 10).toBe(SMOKE_13PLUS.p50s);
+    expect(Math.round(s.m7.p95Ms / 100) / 10).toBe(SMOKE_13PLUS.p95s);
+    expect(Math.round(s.m8.costPerPass * 1e5) / 1e5).toBe(SMOKE_13PLUS.costPerPass);
+    expect(s.hard).toMatchObject({ checked: SMOKE_13PLUS.parks, met: SMOKE_13PLUS.hardKept, hardMin: SMOKE_13PLUS.hardMin });
   });
 
   it("the 10-13 smoke numbers match the committed results JSON", () => {

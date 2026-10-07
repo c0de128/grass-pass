@@ -29,7 +29,8 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
-import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
+import { HARD_EXTRA } from "@/lib/ai/prompt";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
 import { limitsConfig } from "@/lib/limits/config";
@@ -58,6 +59,8 @@ const template = evalColumn("no-AI template");
 const resultsUrl = `${REPO_URL}/blob/main/${EVAL_SUMMARY_FILE}`;
 const smokeUrl = `${REPO_URL}/blob/main/${SMOKE_10_13.summary}`;
 const smokeId = SMOKE_10_13.summary.replace(/^evals\/results\//, "").replace(/\.md$/, "");
+const smoke13Url = `${REPO_URL}/blob/main/${SMOKE_13PLUS.summary}`;
+const smoke13Id = SMOKE_13PLUS.summary.replace(/^evals\/results\//, "").replace(/\.md$/, "");
 
 /** A full-width band with the v3 section head (eyebrow + big title), like the home page. */
 function Band({
@@ -270,7 +273,10 @@ export default function HowItWorksPage() {
             {AGE_BAND_INFO["10-13"].items} with {AGE_BAND_INFO["10-13"].hardMin} hard ones for 10-13,{" "}
             {AGE_BAND_INFO["13+"].items} with {AGE_BAND_INFO["13+"].hardMin} hard ones for teens and adults (13+), and a reading
             level); the
-            month; and the Find This Spot place, if code picked one.
+            month; and the Find This Spot place, if code picked one. For the bands with hard finds, the model is asked for{" "}
+            {HARD_EXTRA === 1 ? "one" : HARD_EXTRA} more hard {HARD_EXTRA === 1 ? "find" : "finds"} than the pass promises (
+            {AGE_BAND_INFO["10-13"].hardMin + HARD_EXTRA} for 10-13, {AGE_BAND_INFO["13+"].hardMin + HARD_EXTRA} for 13+), as a
+            spare, so one dropped hard clue still leaves the promised number.
           </p>
           <p>
             <strong>What it is NOT given:</strong> review text, reviewer names or review counts, and nothing about you or your
@@ -564,7 +570,7 @@ export default function HowItWorksPage() {
         <p className="flex max-w-[65ch] items-start gap-2 text-band-muted">
           <Gauge aria-hidden="true" className="mt-1 size-4 shrink-0 text-sun" />
           <span>
-            On {EVAL_PARKS} parks: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
+            On {EVAL_PARKS} parks, ages 6-10: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
             {template.fkGrade.toFixed(1)}). All numbers: the{" "}
             <Link className={bandLink} href="/about#measured">
               About page
@@ -648,6 +654,21 @@ export default function HowItWorksPage() {
             <strong>over</strong> the {EVAL_THRESHOLDS.nameLeakPct}% target); code removed them all. Only {SMOKE_10_13.calls} model
             calls, so a small sample.
           </p>
+          <p>
+            Teens and adults ({SMOKE_13PLUS.ageBand}), a smaller partial check (run <code>{smoke13Id}</code>, {SMOKE_13PLUS.day},{" "}
+            {SMOKE_13PLUS.parks} parks, one run each,{" "}
+            <a className={bandLink} href={smoke13Url}>
+              results
+            </a>
+            ): {SMOKE_13PLUS.complete} of {SMOKE_13PLUS.parks} passes complete (at most one find short; {SMOKE_13PLUS.full} printed
+            every find) in {SMOKE_13PLUS.calls} model calls, {SMOKE_13PLUS.hardKept} of {SMOKE_13PLUS.parks} with their{" "}
+            {SMOKE_13PLUS.hardMin} hard finds, {SMOKE_13PLUS.p50s} s typical and {SMOKE_13PLUS.p95s} s slow (within the{" "}
+            {EVAL_THRESHOLDS.p50s} s / {EVAL_THRESHOLDS.p95s} s targets), {SMOKE_13PLUS.nameLeakPct}% of clues named their answer
+            before the checks (code removed them). A 13+ pass cost about {usd(SMOKE_13PLUS.costPerPass)}, which is{" "}
+            <strong>over</strong> the {usd(EVAL_THRESHOLDS.costPerPass)} target. Its clues read at grade {SMOKE_13PLUS.fkGrade}; the
+            grade {EVAL_THRESHOLDS.fkGrade} reading target is for kids and does not apply to 13+. Only {SMOKE_13PLUS.calls} model
+            calls, so a small sample.
+          </p>
         </Disclosure>
       </Band>
 
@@ -712,8 +733,9 @@ export default function HowItWorksPage() {
               simulator); builders then fix the findings. {auditRoundsLine()}
             </li>
             <li>
-              Every change passes lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
-              answers, a production build, and browser tests with accessibility checks.
+              GitHub Actions runs lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
+              answers, a production build, and browser tests with accessibility checks on every push to main. Each run&apos;s
+              result, green or red, is public on the repo&apos;s Actions tab.
             </li>
             <li>Claude never writes a pass: every clue comes from the open model named on that pass.</li>
           </ul>

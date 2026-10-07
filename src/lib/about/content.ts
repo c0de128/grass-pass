@@ -6,7 +6,7 @@
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
 import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
-import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, evalColumn } from "@/lib/about/eval-summary";
+import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { MAX_MODEL_TIMEOUT_MS } from "@/lib/model";
@@ -33,9 +33,11 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 1861, files: 68, day: "Oct 7, 2026" } as const;
+export const UNIT_TESTS = { passed: 1866, files: 68, day: "Oct 7, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
-export const AUDIT_ROUNDS = { done: 6, day: "Oct 6, 2026" } as const;
+// RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
+// audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
+export const AUDIT_ROUNDS = { done: 8, day: "Oct 7, 2026" } as const;
 const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
 /** "Five rounds so far (Oct 6, 2026)." */
 export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS): string {
@@ -258,7 +260,7 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: `Cost missed the goal: Gemma ${usd(g.costPerPass)} a pass.`,
-      detail: `Target ${usd(t.costPerPass)}; ${usd(PREVIOUS_RUN.costPerPass)} in the run before (${PREVIOUS_RUN.id}). Only ${GEMMA_COST_RANGE.timedOutCalls} calls timed out this time, so the miss is the real price of the answered calls: ${usd(GEMMA_COST_RANGE.atZero)} a pass even if those were free. Most of it is the prompt (${GEMMA_FIRST_PROMPT_TOKENS.now.toLocaleString("en-US")} prompt tokens on a first call, ${GEMMA_FIRST_PROMPT_TOKENS.before.toLocaleString("en-US")} before). Each timed-out call is priced at its prompt size, ${costHighNote()}. A 10-13 pass in the small ${SMOKE_10_13.ageBand} check cost ${usd(SMOKE_10_13.costPerFinishedPass)}.`,
+      detail: `Target ${usd(t.costPerPass)}; ${usd(PREVIOUS_RUN.costPerPass)} in the run before (${PREVIOUS_RUN.id}). Only ${GEMMA_COST_RANGE.timedOutCalls} calls timed out this time, so the miss is the real price of the answered calls: ${usd(GEMMA_COST_RANGE.atZero)} a pass even if those were free. Most of it is the prompt (${GEMMA_FIRST_PROMPT_TOKENS.now.toLocaleString("en-US")} prompt tokens on a first call, ${GEMMA_FIRST_PROMPT_TOKENS.before.toLocaleString("en-US")} before). Each timed-out call is priced at its prompt size, ${costHighNote()}. These numbers are for ages 6-10. Longer passes cost more in their small checks: a ${SMOKE_10_13.ageBand} pass ${usd(SMOKE_10_13.costPerFinishedPass)} and a ${SMOKE_13PLUS.ageBand} pass ${usd(SMOKE_13PLUS.costPerPass)}, both over the goal.`,
     },
     {
       title: `Some clues are still vague: ${GEMMA_VAGUE_CLUES.flagged} of ${GEMMA_VAGUE_CLUES.wildPrinted} Wild Finds.`,
@@ -287,6 +289,10 @@ export function aboutLimits(): Limit[] {
     {
       title: "Lucky Finds run on a free plan.",
       detail: `SerpApi's free plan allows ${SERPAPI_FREE_MONTHLY} searches a month; a new park uses up to 4. Grass Pass stops at ${serp.daily} searches a day and ${serp.monthly} a month and keeps counts 30 days. A count is a "maybe": visitors wrote about it, it may not be there today.`,
+    },
+    {
+      title: "Example passes are chosen.",
+      detail: "The example passes are real Gemma passes, but we keep complete ones as examples, so they show a good day, not a typical one. A new pass can come out short; it says how many finds are missing.",
     },
     {
       title: "Sparse data happens.",

@@ -161,11 +161,13 @@ pass can hold the model for up to 20 minutes). With it on, the app builds one ne
 at most 2) and asks anyone else to try again in a minute.
 
 The eval runs the app's own pass builder and checks. The browser flow was clicked through once with
-`LOCAL_MODEL_TIMEOUT_MS=270000` (above). The eval's "app clock" row is the normal clock, without that setting.
+`LOCAL_MODEL_TIMEOUT_MS=270000` (above). The eval's "app clock" row is the app's own clock at its 70 s maximum per call (the most `MODEL_TIMEOUT_MS` allows),
+without that setting. The hosted site sizes each call instead: a first call gets 30-40 s, a refill 15-30 s, all inside
+the 85 s pass deadline.
 
 ## Limitations
 The same list as the app's `/about` page, from eval run [`2026-10-06-9.md`](evals/results/2026-10-06-9.md), the first
-full run with time limits sized to each call:
+full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ checks are under [Evals](#evals)):
 - **Speed: the typical call met the goal, the slow ones did not: 9.9 s typical, 27.1 s slow (target 10 s / 20 s).**
   First calls alone took 12.8 s typical. DigitalOcean answered at 39.5 answer tokens a second (a probe just before the
   run: 17.7; 28.1 in the run before, `2026-10-06-8`, when the typical call took 15.3 s). With the sized limits (a first
@@ -180,7 +182,8 @@ full run with time limits sized to each call:
 - **Cost missed the goal: Gemma $0.00108 a pass (target $0.001; up to $0.00109 if the 2 timed-out calls were billed in
   full; $0.00106 if they were free).** With few timeouts, this is the real price of the answered calls; most of it is
   the prompt (2,844 prompt tokens on an answered first call, 2,872 in the run before). Run `-8` looked cheaper at $0
-  ($0.00097) only because 15 of its calls never answered. A finished 10-13 pass cost $0.00145 in the small check below.
+  ($0.00097) only because 15 of its calls never answered. Longer passes cost more in their small checks (see
+  [Evals](#evals)): a finished 10-13 pass $0.00145 and a 13+ pass $0.00162, both over the goal.
 - **Some clues are still vague: 11 of 119 printed Wild Finds** are flagged by our own checks (8 of 112 in the run
   before, counted with the same checks). A range fact or a bare colour is dropped when a spare can replace it and
   prints when none can ("Check for a small bird that is yellow."); a field-guide word goes first ("Watch for a
@@ -223,6 +226,9 @@ full run with time limits sized to each call:
 - **Find This Spot and Lucky Finds are not in the eval.** No map geometry or SerpApi answers were recorded for the 20
   test parks, and SerpApi was off for the run (`SERPAPI_DAILY_CAP=0`, no key) to save the free searches for the live
   site.
+- **Example passes are chosen.** The example passes on the home page are real Gemma passes, but we keep complete ones
+  as examples (`src/lib/pinned.ts`), so they show a good day, not a typical one. A new pass can come out short; it says
+  how many finds are missing.
 - **Sparse data happens.** 3 of the 17 North Texas eval parks had no research-grade sightings in the last 14 days; the
   pass says so instead of inventing Wild Finds.
 - **Depends on public Overpass servers,** often busy in US evenings. Park search waits 10 s, then falls back to a
@@ -354,7 +360,10 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   changed a lot since. Everything specific to Grass Pass was written from **Oct 5, 2026**: data sources, pools,
   safety filter, prompt, clue checks, the pass, print layout, Find This Spot map, October box, evals and brand.
 - **Site design (v3, Oct 6, 2026):** designed by Kevin in [v0 by Vercel](https://v0.app/) and ported by hand (no v0
-  runtime code, no analytics). Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
+  runtime code, no analytics).
+- **Oct 7, 2026 redesign:** the home page sections and How it works diagram, the footer landscape, the Find This Spot
+  map and the pass wizard with its animation were built by AI coding agents (Claude Code) at Kevin's direction. The
+  footer art is code-drawn SVG, no stock art. Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
   text; 90 of its drafts shipped (13 with small edits) after a code check and a review by an AI coding agent
   (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,

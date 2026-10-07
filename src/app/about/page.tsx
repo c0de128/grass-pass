@@ -123,7 +123,7 @@ export default function AboutPage() {
               </h2>
             </div>
             <p className="max-w-[55ch] text-band-muted">
-              Gemma 4 on {EVAL_PARKS} real parks, {gemma.runs} runs ({GEMMA_RUN_COUNTS.passes} passes), run <code>{EVAL_RUN_ID}</code> ({EVAL_DAY}). Misses
+              Gemma 4 on {EVAL_PARKS} real parks, ages 6-10, {gemma.runs} runs ({GEMMA_RUN_COUNTS.passes} passes), run <code>{EVAL_RUN_ID}</code> ({EVAL_DAY}). Misses
               stay on the page.{" "}
               <a className={bandLink} href={resultsUrl}>
                 Full results
@@ -465,7 +465,10 @@ export default function AboutPage() {
                 visitors only if <code>MODEL_ID</code> is switched to it; passes then show &quot;{BUILT_WITH_LLAMA}&quot;.
               </li>
               <li>
-                Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported by hand. Logo sprout and all icons:{" "}
+                Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported by hand. Oct 7, 2026 redesign (the home
+                page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its
+                animation): built by AI coding agents (Claude Code) at Kevin&apos;s direction; the footer art is code-drawn SVG, no
+                stock art. Logo sprout and all icons:{" "}
                 <a className={ext} href="https://lucide.dev/">
                   Lucide
                 </a>{" "}

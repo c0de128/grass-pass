@@ -10,7 +10,7 @@
  *   (tokens x DO price) reaches it; those runs are reported as skipped.
  * - Settings (env): EVAL_MODELS (default "gemma-4-31B-it,llama-4-maverick"; "none" = baseline only),
  *   EVAL_RUNS (override runs per model), EVAL_CASES (comma case numbers), EVAL_BUDGET_USD,
- *   EVAL_AGE_BAND (audit R3: "4-6" | "6-10" | "10-13", overrides cases.json's band; the run is then partial).
+ *   EVAL_AGE_BAND (audit R3: "4-6" | "6-10" | "10-13" | "13+", overrides cases.json's band; the run is then partial).
  */
 import "@/lib/zod-config";
 import { existsSync, mkdirSync, writeFileSync, appendFileSync } from "node:fs";
@@ -19,7 +19,7 @@ import { buildPass, type BuildDeps, type PassClock } from "@/lib/ai/build-pass";
 import { MemoryStore } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { resolveModelTarget, type ModelLogLine } from "@/lib/model";
-import { AGE_BANDS, AgeBandSchema, type AgeBand } from "@/lib/pass/schema";
+import { AGE_BAND_INFO, AGE_BANDS, AgeBandSchema, type AgeBand } from "@/lib/pass/schema";
 import type { FetchLike } from "@/lib/sources/common";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import { localDay } from "@/lib/time";
@@ -299,12 +299,11 @@ export function capturingModelFetch(pool: readonly { id: string }[], calls: Call
 /** Longer than the app's own 85 s pass deadline plus every model timeout: only a real hang reaches it. */
 export const CASE_GUARD_MS = 150_000;
 
-const PASS_ID_BAND: Record<AgeBand, string> = { "4-6": "4to6", "6-10": "6to10", "10-13": "10to13" };
 
 export function passIdFor(parkId: string, band: AgeBand, day: string, variant: number): string {
   const ref = parseParkId(parkId);
   if (!ref) throw new Error("bad park id");
-  return `${ref.type[0]}${ref.id}-${PASS_ID_BAND[band]}-${day.replace(/-/g, "")}-${variant}`;
+  return `${ref.type[0]}${ref.id}-${AGE_BAND_INFO[band].slug}-${day.replace(/-/g, "")}-${variant}`;
 }
 
 export async function runModelCase(
@@ -635,27 +634,31 @@ export async function main(): Promise<EvalResults> {
  * once like `pnpm eval`, with the model switched off. Proves the fixtures answer every request the
  * app makes (also when its caches are warm from other parks) before any paid run.
  */
-export async function checkReplay(): Promise<{ lane: number; caseN: number; kind: RunRecord["kind"]; errorCode?: string; message?: string }[]> {
+export async function checkReplay(): Promise<{ lane: number; caseN: number; band: AgeBand; kind: RunRecord["kind"]; errorCode?: string; message?: string }[]> {
   const casesFile = loadCases();
   // No key: the app refuses to call the model (MODEL_NOT_CONFIGURED), so nothing is ever spent.
   const meter = new SpendMeter(1);
   const noKey = {};
   const spec = MODEL_SPECS["gemma-4-31B-it"];
-  const out: { lane: number; caseN: number; kind: RunRecord["kind"]; errorCode?: string; message?: string }[] = [];
+  const out: { lane: number; caseN: number; band: AgeBand; kind: RunRecord["kind"]; errorCode?: string; message?: string }[] = [];
   const restore = setLogSink(() => undefined);
+  // Teens & adults (2026-10-07): every case is also replayed for the 13+ band (its own mix: 8 finds, 3 hard).
+  const bands: AgeBand[] = [...new Set<AgeBand>([casesFile.ageBand, "13+"])];
   try {
-    const loaded: { c: EvalCase; fx: EvalFixture; data: CaseData }[] = [];
-    for (const c of casesFile.cases) {
-      const fx = loadFixture(c.slug);
-      const r = await caseDataOrNull(fx, casesFile.ageBand);
-      if (!r.data) throw new Error(`case ${c.n}: ${r.problem}`);
-      loaded.push({ c, fx, data: r.data });
+    const loaded: { c: EvalCase; fx: EvalFixture; data: CaseData; band: AgeBand }[] = [];
+    for (const band of bands) {
+      for (const c of casesFile.cases) {
+        const fx = loadFixture(c.slug);
+        const r = await caseDataOrNull(fx, band);
+        if (!r.data) throw new Error(`case ${c.n} (${band}): ${r.problem}`);
+        loaded.push({ c, fx, data: r.data, band });
+      }
     }
     await Promise.all(
       [1, 2].map(async (lane) => {
         for (const l of loaded) {
-          const r = await runModelCase(l.c, l.fx, l.data, spec, lane, casesFile.ageBand, noKey, meter);
-          out.push({ lane, caseN: l.c.n, kind: r.kind, errorCode: r.errorCode, message: r.errorCode === "FIXTURE_MISS" ? r.message : undefined });
+          const r = await runModelCase(l.c, l.fx, l.data, spec, lane, l.band, noKey, meter);
+          out.push({ lane, caseN: l.c.n, band: l.band, kind: r.kind, errorCode: r.errorCode, message: r.errorCode === "FIXTURE_MISS" ? r.message : undefined });
         }
       }),
     );

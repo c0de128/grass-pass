@@ -120,3 +120,9 @@ Builder AC (slow provider, 2026-10-06 CDT, branch `slow-provider`): live check a
 | 2026-10-07T04:20:53.422Z | 2026-10-06-partial-2320.md | 6 | 18271 | 2145 | $0.0044 |
 
 Builder AD (eval r9, 2026-10-06 CDT, branch `eval-r9` on main `43ceae0`): speed probe 1 call (about $0.0001; 10.1 s, 17.7 answer tokens/s) + full run `2026-10-06-9` 124 calls $0.0922 (the first full run with the sized time limits) + 10-13 smoke `partial-2320` 6 calls $0.0044 (EVAL_MAX_CALLS=8) = **131 calls, about $0.0967**. SerpApi: 0 searches.
+| 2026-10-07T21:15:15.449Z | 2026-10-07-partial-1615.md | 6 | 19516 | 2731 | $0.0049 |
+| 2026-10-07T21:17:43.785Z | 2026-10-07-partial-1617.md | 6 | 19744 | 2601 | $0.0049 |
+
+Builder (age-13plus, 2026-10-07 CDT, branch `age-13plus` on main `2f696f1`): two 13+ checks on Celebration, Oak Point and
+White Rock, `partial-1615` (first 13+ prompt, 6 calls, EVAL_MAX_CALLS=10) and `partial-1617` (the 13+ prompt with the
+anti-jargon and no-baby-talk lines, 6 calls, EVAL_MAX_CALLS=6) = **12 calls, about $0.0098**. SerpApi: 0 searches.

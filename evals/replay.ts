@@ -25,6 +25,7 @@ import "@/lib/zod-config";
 import { buildPass, type BuildDeps } from "@/lib/ai/build-pass";
 import { MemoryStore } from "@/lib/cache/store";
 import type { DropReason } from "@/lib/ai/validate";
+import type { Pass } from "@/lib/pass/schema";
 import type { FetchLike } from "@/lib/sources/common";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import { localDay } from "@/lib/time";
@@ -69,6 +70,8 @@ export type ReplayRun = RunRecord & {
   budget?: { asked: number | null; timeoutMs: number | null; maxTokens: number | null }[];
   /** Virtual time from the start of the pass to its end (the deadline check: never above PASS_DEADLINE_MS). */
   virtualMs?: number;
+  /** Teens & adults (2026-10-07): the whole pass today's code built from the recorded answers (kind "pass" only). */
+  pass?: Pass;
 };
 
 /** System and user message lengths of a chat-completions request body (0 when it is not one). */
@@ -214,6 +217,7 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
       sections: p.sections,
       items: p.items.map((i) => ({ section: i.section, clue: i.clue, lookWhere: i.lookWhere, answer: i.answer })),
       removed: p.removed,
+      pass: p,
     };
   }
   if (out.kind === "empty") return { ...base, ...extra, parkName: out.parkName, kind: "empty", message: out.message, sections: out.sections, items: [] };

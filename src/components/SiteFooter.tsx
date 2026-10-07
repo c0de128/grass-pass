@@ -1,12 +1,33 @@
 import { ArrowUpRight, Ticket } from "lucide-react";
 import Link from "next/link";
 import { FooterLandscape } from "@/components/site/FooterLandscape";
+import { PARK_PHOTOS, type ParkPhoto } from "@/data/photo-credits";
 import { Logo } from "@/components/site/Logo";
 import { ILLUSTRATION_CREDIT } from "@/lib/illustrations";
 import { pinnedPass } from "@/lib/pinned";
 import { REPO_URL } from "@/lib/site-url";
 
 type FooterLink = { href: string; label: string; external?: boolean; pass?: boolean };
+
+/** "CC0 1.0" reads "CC0" in the footer (CC BY keeps its version, which the licence needs). */
+const shortLicence = (l: ParkPhoto["licence"]): string => (l === "CC0 1.0" ? "CC0" : l);
+
+/**
+ * RULES-8-02: the footer's photo credit, built from PARK_PHOTOS (src/data/photo-credits.ts) so a new photo can never
+ * be left out. Authors grouped by licence, in first-seen order, each named once:
+ * "Robert Nunnally (CC BY 2.0), Vulturesong and Jackilometresan (CC0)".
+ */
+export function parkPhotoCreditText(photos: readonly ParkPhoto[] = Object.values(PARK_PHOTOS)): string {
+  const byLicence = new Map<string, string[]>();
+  for (const p of photos) {
+    const key = shortLicence(p.licence);
+    const authors = byLicence.get(key) ?? [];
+    if (!authors.includes(p.author)) authors.push(p.author);
+    byLicence.set(key, authors);
+  }
+  const names = (a: string[]) => (a.length <= 1 ? a.join("") : `${a.slice(0, -1).join(", ")} and ${a[a.length - 1]}`);
+  return [...byLicence].map(([licence, authors]) => `${names(authors)} (${licence})`).join(", ");
+}
 
 /**
  * The example parks the footer links to: each one's PINNED pass (src/lib/pinned.ts), a real complete pass committed in
@@ -162,7 +183,7 @@ export function SiteFooter() {
               SerpApi
             </a>{" "}
             · Clues: Gemma 4 by default (open model, Apache-2.0) · Icons: Lucide (ISC) · Fonts: Bricolage Grotesque and DM Sans (site),
-            Fredoka and Nunito (print), SIL OFL 1.1 · Park photos: Robert Nunnally (CC BY 2.0) and Vulturesong (CC0), details on
+            Fredoka and Nunito (print), SIL OFL 1.1 · Park photos: {parkPhotoCreditText()}, details on
             the{" "}
             <Link className={credit} href="/about#credits">
               About page

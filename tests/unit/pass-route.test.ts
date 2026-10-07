@@ -147,6 +147,8 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     expect(p.parentNote).toBe("Start with find 6: it's easy and it stays put. Find 1 is near water: stay close.");
     for (const i of p.items) expect(i.evidence).toMatch(/· (OpenStreetMap|iNaturalist)$/);
     expect(p.items.some((i) => /^Golden-eye Lichen/.test(i.answer))).toBe(true);
+    // Round-6 Q-6-03: the recorded "Who has bright-orange parts with spiny projections?" prints as "What ...": a lichen is no "who".
+    expect(p.items.find((i) => /^Golden-eye Lichen/.test(i.answer))?.clue).toBe("What has bright-orange parts with spiny projections?");
 
     // Two Overpass queries, two iNaturalist calls plus the three R1-M4 season-check calls ("Flowers and
     // Fruits" counts), three model calls (the first answer and two refills). (In October the S7 monarch box adds two free iNaturalist counts; they

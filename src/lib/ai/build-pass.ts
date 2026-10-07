@@ -57,6 +57,7 @@ import {
 import { SPOT_COPY } from "@/lib/spot/types";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
+import { fixLichenWho } from "./jargon";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
 import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
@@ -622,7 +623,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     .sort((a, b) => SECTION_ORDER[a.item.section] - SECTION_ORDER[b.item.section])
     .map((v) => ({
       section: v.item.section,
-      clue: v.clue,
+      // Round-6 Q-6-03: "Who has bright-orange parts ...?" for a lichen reads as an animal: the printed clue says "What".
+      // Done here, on the finished pass, so the refill prompts still list the first words the model really wrote.
+      clue: v.item.section === "wild" ? fixLichenWho(v.clue, v.item.taxon) : v.clue,
       lookWhere: v.lookWhere,
       difficulty: v.difficulty,
       evidence: v.item.evidence,

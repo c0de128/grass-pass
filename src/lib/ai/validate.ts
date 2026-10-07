@@ -245,6 +245,28 @@ export function nameLeak(text: string, words: readonly string[]): string | null 
   return null;
 }
 
+/** Round-6 Q-6-03 (c): the root length a clue word shares with a common-name word ("glob" of "globular" in "globe"). */
+export const NAME_ROOT_LETTERS = 4;
+
+/**
+ * Round-6 Q-6-03 (c): a near give-away the stem check cannot see, or null: a clue word that starts with the first
+ * NAME_ROOT_LETTERS letters of a word of 6+ letters in the COMMON name ("a shell that is like a globe" for Globular
+ * Drop Snail, "climbs" for Climbing hempvine, "a wheel of fire" for Firewheel). Scientific names are left out
+ * ("Track a small turtle" is not a leak of Trachemys), and so are "-ed" words, like `nameStem`. A preference
+ * (`name_trait`): the item is the first to go when a spare can replace it; it is printed when none can.
+ */
+export function nameRootLeak(clue: string, answer: string): string | null {
+  const common = /^(.*?) \(/.exec(answer)?.[1] ?? answer;
+  const tokens = normalizeForMatch(clue).match(/\p{L}+/gu) ?? [];
+  for (const w of normalizeForMatch(common).match(/\p{L}+/gu) ?? []) {
+    if (w.length < 6 || w.endsWith("ed")) continue;
+    const root = w.slice(0, NAME_ROOT_LETTERS);
+    const hit = tokens.find((t) => t.length >= NAME_ROOT_LETTERS && t !== w && t.startsWith(root));
+    if (hit) return hit;
+  }
+  return null;
+}
+
 /** A clue that talks about the thing's name ("a white name", "named after", "is called"). */
 export const NAME_TALK_RE = /\b(?:names?|named|called|nicknamed?)\b/i;
 
@@ -549,7 +571,8 @@ export function validateDraft(
     // (Gemma kept copying in the refill too). The Park Finds facts now vary their words per park
     // (pool/park.ts chooseWords), so a copied phrase differs between parks. Near-repeats on the same
     // pass stay drops, except on a low-data pool.
-    let style: StyleReason | undefined = traitHit ? "name_trait" : undefined;
+    // Round-6 Q-6-03 (c): "a shell that is like a globe" for Globular Drop Snail is a near give-away: a preference too.
+    let style: StyleReason | undefined = traitHit || (item.section === "wild" && nameRootLeak(d.clue, item.answer) !== null) ? "name_trait" : undefined;
     // Audit R5-C3 / Q-5-01: range trivia ("native to Texas and Oklahoma"), field-guide words ("an operculum",
     // "arboreal") and a bare colour ("a bird that is black"): the first to go when a spare can replace it.
     // r7 follow-ups (run 2026-10-06-7): a range or habitat fact ("resident in the central United States", "grows in

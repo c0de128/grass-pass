@@ -213,7 +213,27 @@ export const KIND_TAXA = {
   arachnida: 47119, // class Arachnida
   insecta: 47158, // class Insecta
   diptera: 47822, // order Diptera (true flies)
+  lichens: 54743, // class Lecanoromycetes, "Common Lichens" (same id as danger-taxa.ts TAXA.lichens)
+  lichinomycetes: 152030, // class Lichinomycetes, small lichens (same id as danger-taxa.ts)
 } as const;
+
+/** Round-6 Q-6-03: to a child a lichen is not a mushroom or a fungus; the clue says "lichen" (or what it looks like). */
+const FUNGUS_WORDS = new Set(["fungus", "fungi", "funguses", "mushroom", "mushrooms", "toadstool", "toadstools"]);
+/** Round-6 Q-6-03: "Who has bright-orange rims ...?" for a lichen: "who" is for animals. */
+const WHO_RE = /^(\s*(?:guess\s+)?)who\b/i;
+
+const isLichen = (taxon: { taxonId: number; ancestorIds: readonly number[] } | undefined) =>
+  !!taxon && [KIND_TAXA.lichens, KIND_TAXA.lichinomycetes].some((id) => taxon.taxonId === id || taxon.ancestorIds.includes(id));
+
+/**
+ * Round-6 Q-6-03: the recorded Gemma clue "Who has bright-orange parts with spiny projections?" (Golden-eye Lichen,
+ * Connemara). A lichen is not a "who": code swaps the first word for "What" (it keeps the find; a drop would cost the
+ * smallest pool a find). Other clues come back unchanged.
+ */
+export function fixLichenWho(clue: string, taxon: { taxonId: number; ancestorIds: readonly number[] } | undefined): string {
+  if (!isLichen(taxon)) return clue;
+  return clue.replace(WHO_RE, (_m, pre: string) => `${pre}${pre ? "what" : "What"}`);
+}
 
 /** Kind words a clue calls its find by. */
 const BUG_WORDS = new Set(["bug", "bugs", "insect", "insects"]);
@@ -261,5 +281,10 @@ export function wrongKindWord(clue: string, taxon: { taxonId: number; ancestorId
   if (bird && !has(KIND_TAXA.aves)) return bird;
   // "a small fly" for a damselfly; dragonfly, butterfly and firefly are other words.
   if (subject.includes("fly") && has(KIND_TAXA.insecta) && !has(KIND_TAXA.diptera)) return "fly";
+  // Round-6 Q-6-03: "Spot a fungus with bright-orange parts that have spikes." for Golden-eye Lichen (builder Z live check).
+  if (isLichen(taxon)) {
+    const fungus = subject.find((w) => FUNGUS_WORDS.has(w));
+    if (fungus) return fungus;
+  }
   return null;
 }

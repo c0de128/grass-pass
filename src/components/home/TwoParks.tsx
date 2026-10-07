@@ -129,10 +129,6 @@ export function TwoParks() {
         {/* The logo ticket's notches, blown up. */}
         <span aria-hidden="true" className="absolute top-1/2 -left-4 size-8 -translate-y-1/2 rounded-full bg-background sm:-left-6 sm:size-12" />
         <span aria-hidden="true" className="absolute top-1/2 -right-4 size-8 -translate-y-1/2 rounded-full bg-background sm:-right-6 sm:size-12" />
-        <div
-          aria-hidden="true"
-          className="absolute inset-0 rounded-[inherit] opacity-[0.12] [background-image:radial-gradient(rgb(255_255_255)_1px,transparent_1px)] [background-size:18px_18px]"
-        />
 
         <div className="relative mx-auto flex max-w-7xl flex-col gap-7 px-5 pt-9 pb-7 sm:px-8 lg:gap-9 lg:pt-12 lg:pb-9">
           <div className="grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-8">

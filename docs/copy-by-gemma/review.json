@@ -175,7 +175,8 @@
       "decision": "unchanged",
       "stage": "gemma",
       "reason": "Gemma returned the current text unchanged.",
-      "shipped": "Fits on 1 page"
+      "shipped": "Fits on 1 page",
+      "removedAfterRun": "Kevin removed this sticker from the site on 2026-10-07; the decision is kept as history."
     },
     {
       "id": "home.cta.sub",

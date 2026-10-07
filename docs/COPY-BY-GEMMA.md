@@ -260,7 +260,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.explore.sub`: accepted
 
-`src/components/home/SampleParks.tsx:33` · subhead under "See a real pass, right now.", 2 short sentences · max 150 characters
+`src/components/home/SampleParks.tsx:34` · subhead under "See a real pass, right now.", 2 short sentences · max 150 characters
 
 - **Old:** Passes for parks near Dallas, already written from live park data for {ages}. Tap one to open it; no sign-up needed.
 - **Gemma:** Example passes for parks near Dallas, made from live data for {ages}. Tap one to open it; no sign-up needed.
@@ -271,7 +271,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.explore.live.making`: accepted
 
-`src/lib/home/showcase.ts:121` · status pill, 7 words or fewer · max 50 characters
+`src/lib/home/showcase.ts:146` · status pill, 7 words or fewer · max 50 characters
 
 - **Old:** Making today's example passes now
 - **Gemma:** Making today's example passes
@@ -282,7 +282,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.explore.live.off`: accepted
 
-`src/lib/home/showcase.ts:125` · status pill, 8 words or fewer · max 55 characters
+`src/lib/home/showcase.ts:150` · status pill, 8 words or fewer · max 55 characters
 
 - **Old:** Example passes are switched off on this server
 - **Gemma:** Example passes are turned off
@@ -293,7 +293,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.explore.live.notready`: unchanged
 
-`src/lib/home/showcase.ts:126` · status pill, 6 words or fewer · max 45 characters
+`src/lib/home/showcase.ts:151` · status pill, 6 words or fewer · max 45 characters
 
 - **Old:** Example passes not ready yet
 - **Gemma:** Example passes not ready yet
@@ -337,7 +337,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `home.hero.sticker`: unchanged
 
-`src/components/home/HomeHero.tsx:13` · sticker on the hero picture, 4 words or fewer · max 22 characters
+`src/components/home/HomeHero.tsx` · sticker on the hero picture, 4 words or fewer · max 22 characters
 
 - **Old:** Fits on 1 page
 - **Gemma:** Fits on 1 page
@@ -1827,7 +1827,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `pass.variantLimit`: rejected
 
-`src/lib/pass/schema.ts:170` · limit message, 2 sentences · max 170 characters
+`src/lib/pass/schema.ts:172` · limit message, 2 sentences · max 170 characters
 
 - **Old:** That's {max} different passes for this park and age today, the most we make. Print one of them, pick another park, or come back tomorrow.
 - **Gemma:** That is {max} different passes for this park and age today. Print one, pick another park, or come back tomorrow.
@@ -2025,7 +2025,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `lucky.down`: accepted
 
-`src/lib/pool/lucky.ts:134` · section message, starts with "No data available:", 1 sentence · max 110 characters
+`src/lib/pool/lucky.ts:136` · section message, starts with "No data available:", 1 sentence · max 110 characters
 
 - **Old:** No data available: Google reviews (via SerpApi) didn't answer, so there are no Lucky Finds on this pass.
 - **Gemma:** No data available: SerpApi didn't answer for Google reviews, so there are no Lucky Finds on this pass.
@@ -2082,7 +2082,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 
 #### `showcase.nofinds`: accepted
 
-`src/lib/home/showcase.ts:102` · example card line, starts with "No data available:", 1 sentence · max 80 characters
+`src/lib/home/showcase.ts:126` · example card line, starts with "No data available:", 1 sentence · max 80 characters
 
 - **Old:** No data available: this pass has no finds that passed our checks.
 - **Gemma:** No data available: none of the finds on this pass passed our checks.

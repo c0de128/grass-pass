@@ -81,7 +81,7 @@ describe("the copy blocks", () => {
 
 describe("the shipped copy is really in the code", () => {
   const review = JSON.parse(readFileSync(path.join(ROOT, "docs/copy-by-gemma/review.json"), "utf8")) as {
-    decisions: { id: string; decision: "accepted" | "edited" | "rejected" | "unchanged"; shipped: string }[];
+    decisions: { id: string; decision: "accepted" | "edited" | "rejected" | "unchanged"; shipped: string; removedAfterRun?: string }[];
   };
   const byId = new Map(BLOCKS.map((b) => [b.id, b]));
 
@@ -103,6 +103,7 @@ describe("the shipped copy is really in the code", () => {
 
   it.each(review.decisions.map((d) => [d.id, d] as const))("%s", (id, d) => {
     const b = byId.get(id);
+    if (d.removedAfterRun) return; // the owner later removed this text from the site; kept as history
     expect(b, `unknown block ${id}`).toBeDefined();
     const src = readFileSync(path.join(ROOT, b!.file), "utf8");
     expect(textIsInSource(d.shipped, src), `${d.decision} text for ${id} not found in ${b!.file}`).toBe(true);

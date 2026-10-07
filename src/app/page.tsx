@@ -56,7 +56,7 @@ export default async function Home() {
     <main id="main" tabIndex={-1} className="gp-home flex w-full flex-1 flex-col focus:outline-none">
       <HomeHero card={heroCard(statuses)} examples={readyExamples(statuses)}>
         <RestingNotice state={resting} />
-        <PassMaker account={account} />
+        <PassMaker account={account} notice={<RestingNotice state={resting} />} />
       </HomeHero>
       {/* Kevin 2026-10-07: How it works comes before The problem. */}
       <HowItWorks />

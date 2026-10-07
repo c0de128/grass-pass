@@ -124,7 +124,7 @@ function ParkTicket({ park }: { park: Park }) {
 
 export function TwoParks() {
   return (
-    <section id="why" aria-labelledby="why-title" className="scroll-mt-28 px-3 py-4 sm:scroll-mt-16 sm:px-5 lg:py-5">
+    <section id="why" aria-labelledby="why-title" className="scroll-mt-28 overflow-x-clip px-3 py-4 sm:scroll-mt-16 sm:px-5 lg:py-5">
       <div className="relative mx-auto max-w-[1600px] rounded-[2rem] bg-why text-why-foreground sm:rounded-[2.5rem]">
         {/* The logo ticket's notches, blown up. */}
         <span aria-hidden="true" className="absolute top-1/2 -left-4 size-8 -translate-y-1/2 rounded-full bg-background sm:-left-6 sm:size-12" />

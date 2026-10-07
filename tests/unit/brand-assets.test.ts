@@ -42,6 +42,8 @@ const V3_SUN_ON_DARK = new Set([
   "src/components/home/HowItWorks.tsx",
   "src/app/about/page.tsx",
   "src/app/how-it-works/page.tsx",
+  // The pass wizard: the step trail (sunflower dots and current step) sits on the wizard header's dark band.
+  "src/components/pass/WizardParts.tsx",
 ]);
 
 describe("design tokens", () => {

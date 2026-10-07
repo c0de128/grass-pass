@@ -61,11 +61,20 @@ test("keyboard only: 'Allen TX' lists real parks nearest first", async ({ page }
   await expect(items.first()).toContainText(/ mi \(\d+(\.\d)? km\) away/);
   await expect(page.getByRole("link", { name: "© OpenStreetMap contributors" })).toBeVisible();
 
-  // Tab reaches the first park; Enter picks it.
+  // The wizard: the list is inside the dialog, which says which step it is.
+  const dialog = page.getByRole("dialog", { name: "Pick your park" });
+  await expect(dialog).toBeVisible();
+  await expect(dialog.getByRole("form", { name: "Search for a park" })).toBeVisible();
+
+  // Tab reaches the first park; Enter picks it and moves on to "Who's exploring?"; Back shows it picked.
   await page.keyboard.press("Tab");
   await expect(items.first()).toBeFocused();
   await page.keyboard.press("Enter");
-  await expect(items.first()).toHaveAttribute("aria-pressed", "true");
+  const age = page.getByRole("dialog", { name: "Who's exploring?" });
+  await expect(age).toBeVisible();
+  await expect(age.getByRole("heading", { level: 2, name: "Who's exploring?" })).toBeFocused();
+  await age.getByRole("button", { name: "Back" }).click();
+  await expect(list.getByRole("button").first()).toHaveAttribute("aria-pressed", "true");
 });
 
 test("a park name puts that park first (Celebration Park, Allen TX)", async ({ page }) => {
@@ -78,13 +87,15 @@ test("a park name puts that park first (Celebration Park, Allen TX)", async ({ p
   await expect(list.getByRole("button").first()).toContainText("Celebration Park");
 });
 
-test("a place that doesn't exist shows the exact no-match copy on the field", async ({ page }) => {
+test("a place that doesn't exist shows the exact no-match copy on the wizard's search field", async ({ page }) => {
   test.setTimeout(60_000);
   await page.goto("/");
-  const form = page.getByRole("form", { name: "Find a park" });
-  const input = form.getByLabel("Town, ZIP or park name");
-  await input.fill("zzqxjv nowhere plorf");
-  await input.press("Enter");
+  const hero = page.getByRole("form", { name: "Find a park" }).getByLabel("Town, ZIP or park name");
+  await hero.fill("zzqxjv nowhere plorf");
+  await hero.press("Enter");
+  const form = page.getByRole("dialog", { name: "Pick your park" }).getByRole("form", { name: "Search for a park" });
+  const input = form.getByLabel("Search somewhere else");
+  await expect(input).toHaveValue("zzqxjv nowhere plorf");
   await expect(form.getByRole("alert")).toHaveText("We couldn't find that place. Try a town name or ZIP.", { timeout: 30_000 });
   await expect(input).toBeFocused();
   await expect(input).toHaveAttribute("aria-invalid", "true");
@@ -103,6 +114,7 @@ test.describe("Use my location", () => {
     expect(sent.method()).toBe("POST");
     expect(new URL(sent.url()).search).toBe("");
     expect(sent.postDataJSON()).toEqual({ lat: "33.09", lng: "-96.70" });
+    await expect(page.getByRole("dialog", { name: "Pick your park" })).toBeVisible();
     const list = page.getByRole("list", { name: "Parks near your location" });
     await parksOrBusy(page, list);
     await expect(page.getByRole("heading", { name: "Parks near your location" })).toBeVisible();
@@ -116,9 +128,11 @@ test.describe("Use my location, blocked", () => {
   test("explains the block and offers the text search", async ({ page, context }) => {
     await context.clearPermissions();
     await page.goto("/");
-    const button = page.getByRole("button", { name: "Use my location" });
-    await button.click();
-    const alert = page.getByRole("alert").filter({ hasText: "location" });
+    await page.getByRole("button", { name: "Use my location" }).click();
+    // The wizard opens on "Pick your park" and says it there, on its own "Use my location" button.
+    const dialog = page.getByRole("dialog", { name: "Pick your park" });
+    const button = dialog.getByRole("button", { name: "Use my location" });
+    const alert = dialog.getByRole("alert").filter({ hasText: "location" });
     await expect(alert).toContainText(/Type a town or ZIP instead|Type a town or ZIP, or allow location|Try again or type a town or ZIP/);
     const errorId = await alert.getAttribute("id");
     expect((await button.getAttribute("aria-describedby"))?.split(" ")).toContain(errorId);

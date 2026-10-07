@@ -21,24 +21,26 @@ async function searchAndPick(page: Page, query: string, parkName: string) {
   await expect(list.or(failed)).toBeVisible({ timeout: WAIT });
   if (await failed.isVisible()) await skipIfHonestAlert(failed, "park search");
   await list.getByRole("button", { name: new RegExp(`^${parkName}`) }).first().click();
+  // The wizard's step 2: "Who's exploring?" (6-10 by default), then Next.
+  const dialog = page.getByRole("dialog", { name: "Who's exploring?" });
+  await expect(dialog.getByRole("heading", { level: 2, name: "Who's exploring?" })).toBeFocused();
+  await expect(dialog.getByRole("radio", { name: /Ages 6–10 \(most kids\)/ })).toBeChecked();
+  // Every age card is drawn the same size (R1 UX m3: "Ages 4-6" used to shrink).
+  const widths = await dialog
+    .getByRole("radio")
+    .evaluateAll((els) => els.map((e) => Math.round(e.closest("label")!.getBoundingClientRect().width)));
+  expect(new Set(widths).size).toBe(1);
+  await dialog.getByRole("button", { name: "Next" }).click();
 }
 
 /** Make the pass; skips (after checking the code and the message) when an upstream or a limit stopped it. */
 async function makePassOrHonestError(page: Page, parkName: string) {
-  const heading = page.getByRole("heading", { name: `Make a pass for ${parkName}` });
-  // After the pick, focus moves to the make step and it scrolls into view (R1 UX m2).
-  await expect(heading).toBeFocused();
-  await expect(heading).toBeInViewport();
-  // v3: the age was chosen in the search card (Explorer age), so it isn't asked again; the step says which.
-  await expect(page.getByRole("radio", { name: /Ages 6–10 \(most kids\)/ })).toBeChecked();
-  await expect(page.getByTestId("chosen-age")).toContainText("Ages 6-10");
-  // Every age tile is drawn the same size (R1 UX m3: "Ages 4-6" used to shrink).
-  const widths = await page
-    .getByRole("radio")
-    .evaluateAll((els) => els.map((e) => Math.round(e.closest("label")!.getBoundingClientRect().width)));
-  expect(widths).toHaveLength(3);
-  expect(new Set(widths).size).toBe(1);
-  await page.getByRole("button", { name: "Make my pass" }).click();
+  // The wizard's step 3: the choices on a little ticket, focus on its heading.
+  const dialog = page.getByRole("dialog", { name: "Make your pass" });
+  await expect(dialog.getByRole("heading", { level: 2, name: "Make your pass" })).toBeFocused();
+  await expect(dialog.getByTestId("choice-ticket")).toContainText(parkName);
+  await expect(dialog.getByTestId("chosen-age")).toContainText("Ages 6-10");
+  await dialog.getByRole("button", { name: "Make my pass" }).click();
 
   const failed = page.locator("[data-error-code]");
   await expect(page.getByRole("heading", { level: 1, name: parkName }).or(failed)).toBeVisible({ timeout: WAIT });

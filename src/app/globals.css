@@ -220,3 +220,253 @@
     transform: none;
   }
 }
+
+
+/*
+ * The pass wizard (Kevin 2026-10-07: "a modal window to pop up and guide the user through the options" and "a fun
+ * animation when the pass is being created"). A native <dialog> opened with showModal(): the page behind is inert,
+ * focus stays inside, Esc closes it. Phones: a full-screen sheet. From 640 px: a centred ticket (notched sides at
+ * the seam between the ink header "stub" and the body, cut with a mask so the backdrop shows through).
+ */
+html:has(dialog.gp-wizard[open]) {
+  overflow: hidden;
+}
+dialog.gp-wizard {
+  margin: 0;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: var(--gp-foreground);
+  width: 100%;
+  max-width: 100%;
+  height: 100dvh;
+  max-height: 100dvh;
+  overflow: hidden;
+}
+dialog.gp-wizard::backdrop {
+  background: color-mix(in oklab, #06110a 62%, transparent);
+  backdrop-filter: blur(3px);
+}
+.gp-wizard-sheet {
+  --seam: 5.25rem;
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: var(--gp-card);
+  overflow: hidden;
+}
+@media (min-width: 640px) {
+  dialog.gp-wizard {
+    margin: auto;
+    width: min(42rem, calc(100vw - 3rem));
+    height: auto;
+    max-height: calc(100dvh - 3rem);
+    filter: drop-shadow(0 24px 40px rgb(0 0 0 / 0.28)) drop-shadow(0 2px 4px rgb(0 0 0 / 0.12));
+  }
+  .gp-wizard-sheet {
+    height: auto;
+    max-height: calc(100dvh - 3rem);
+    border-radius: 2rem;
+    -webkit-mask:
+      radial-gradient(circle 15px at 0 var(--seam), #0000 97%, #000 100%) left / 51% 100% no-repeat,
+      radial-gradient(circle 15px at 100% var(--seam), #0000 97%, #000 100%) right / 51% 100% no-repeat;
+    mask:
+      radial-gradient(circle 15px at 0 var(--seam), #0000 97%, #000 100%) left / 51% 100% no-repeat,
+      radial-gradient(circle 15px at 100% var(--seam), #0000 97%, #000 100%) right / 51% 100% no-repeat;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  dialog.gp-wizard[open] {
+    animation: gp-wiz-in 0.42s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+  dialog.gp-wizard[open]::backdrop {
+    animation: gp-wiz-fade-in 0.3s ease-out;
+  }
+}
+@keyframes gp-wiz-in {
+  from {
+    opacity: 0;
+    transform: translateY(2.5rem) scale(0.97);
+  }
+}
+@keyframes gp-wiz-fade-in {
+  from {
+    opacity: 0;
+  }
+}
+
+/* Steps, cards and the making picture. Every animation only runs when motion is OK; without it each part is simply
+   drawn in its final pose (the keyframes only say where a part comes FROM). */
+@keyframes gp-wiz-rise {
+  from {
+    opacity: 0;
+    transform: translateY(0.6rem);
+  }
+}
+@keyframes gp-wiz-pop {
+  0% {
+    opacity: 0;
+    transform: scale(0.2);
+  }
+  70% {
+    transform: scale(1.18);
+  }
+}
+@keyframes gp-wiz-pulse {
+  50% {
+    transform: scale(0.45);
+    opacity: 0.5;
+  }
+}
+@keyframes gp-wiz-shimmer {
+  50% {
+    opacity: 0.55;
+  }
+}
+@keyframes gp-wiz-draw {
+  from {
+    stroke-dashoffset: 1;
+  }
+}
+@keyframes gp-wiz-grow {
+  from {
+    transform: scaleY(0);
+  }
+  60% {
+    transform: scaleY(1.12);
+  }
+}
+@keyframes gp-wiz-drop {
+  0% {
+    transform: translateY(-70px);
+    opacity: 0;
+  }
+  55% {
+    transform: translateY(4px);
+    opacity: 1;
+  }
+  75% {
+    transform: translateY(-6px);
+  }
+}
+@keyframes gp-wiz-flyin {
+  from {
+    transform: translate(90px, -50px) rotate(18deg);
+    opacity: 0;
+  }
+}
+@keyframes gp-wiz-flap {
+  50% {
+    transform: scaleX(0.25);
+  }
+}
+@keyframes gp-wiz-float {
+  50% {
+    transform: translateY(-3px);
+  }
+}
+@keyframes gp-wiz-bob {
+  50% {
+    transform: translate(-4px, 5px) rotate(-3deg);
+  }
+}
+@keyframes gp-wiz-scribble {
+  0% { transform: translate(0, 0); }
+  22% { transform: translate(78px, 0); }
+  25% { transform: translate(0, 18px); }
+  47% { transform: translate(62px, 18px); }
+  50% { transform: translate(0, 36px); }
+  72% { transform: translate(78px, 36px); }
+  75% { transform: translate(0, 54px); }
+  97% { transform: translate(62px, 54px); }
+  100% { transform: translate(0, 0); }
+}
+@keyframes gp-wiz-burst {
+  from {
+    transform: translate(var(--dx), var(--dy)) scale(0.2);
+    opacity: 0;
+  }
+  70% {
+    opacity: 1;
+  }
+}
+@keyframes gp-wiz-sun {
+  50% {
+    transform: scale(1.08);
+  }
+}
+.gp-wiz-draw,
+.gp-wiz-draw-slow,
+.gp-wiz-draw-fast,
+.gp-wiz-write {
+  stroke-dasharray: 1;
+  stroke-dashoffset: 0;
+}
+/* Dashed strokes keep their own dashes: only their opacity animates. */
+.gp-wiz-draw-slow {
+  stroke-dasharray: 0.02 0.035;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-wiz-rise {
+    animation: gp-wiz-rise 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gp-wiz-pop {
+    animation: gp-wiz-pop 0.45s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+    transform-box: fill-box;
+  }
+  .gp-wiz-pulse {
+    animation: gp-wiz-pulse 1.1s ease-in-out infinite;
+  }
+  .gp-skeleton {
+    animation: gp-wiz-shimmer 1.4s ease-in-out infinite;
+  }
+  .gp-wiz-draw {
+    animation: gp-wiz-draw 1.1s ease-out both;
+  }
+  .gp-wiz-draw-fast {
+    animation: gp-wiz-draw 0.35s ease-out both;
+  }
+  .gp-wiz-draw-slow {
+    animation: gp-wiz-fade-in 0.9s ease-out both;
+  }
+  .gp-wiz-fade {
+    animation: gp-wiz-fade-in 0.5s ease-out both;
+  }
+  .gp-wiz-write {
+    animation: gp-wiz-draw 0.7s linear both;
+  }
+  .gp-wiz-grow {
+    animation: gp-wiz-grow 0.8s cubic-bezier(0.34, 1.56, 0.64, 1) both;
+  }
+  .gp-wiz-drop {
+    animation: gp-wiz-drop 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gp-wiz-flyin {
+    animation: gp-wiz-flyin 1.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gp-wiz-flap {
+    animation: gp-wiz-flap 0.32s ease-in-out infinite;
+  }
+  .gp-wiz-float {
+    animation: gp-wiz-float 3.2s ease-in-out infinite;
+  }
+  .gp-wiz-pencil-idle {
+    animation: gp-wiz-bob 1.6s ease-in-out infinite;
+    transform-box: fill-box;
+  }
+  .gp-wiz-pencil-write {
+    animation: gp-wiz-scribble 2.8s linear infinite;
+  }
+  .gp-wiz-burst {
+    animation: gp-wiz-burst 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
+  }
+  .gp-wiz-sun {
+    animation: gp-wiz-sun 4s ease-in-out infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+}
+/* The focus ring on the wizard's dark header band: sunflower (>= 3:1 on the band in both themes). */
+.gp-wizard-sheet > header :focus-visible {
+  outline-color: var(--gp-sun);
+}

@@ -29,6 +29,9 @@ async function searchAndPick(page: Page) {
   await expect(list.or(failed)).toBeVisible({ timeout: WAIT });
   if (await failed.isVisible()) await skipIfHonestAlert(failed, "park search");
   await list.getByRole("button", { name: new RegExp(`^${PARK}`) }).first().click();
+  // The wizard: "Who's exploring?" (6-10 by default), then Next to step 3.
+  await page.getByRole("dialog", { name: "Who's exploring?" }).getByRole("button", { name: "Next" }).click();
+  await expect(page.getByRole("dialog", { name: "Make your pass" })).toBeVisible();
 }
 
 async function axeClean(browser: Browser, path: string, signedInState: Awaited<ReturnType<BrowserContext["storageState"]>> | undefined, ready: (p: Page) => Promise<void>) {
@@ -95,8 +98,10 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   const sessionCookie = (await page.context().cookies()).find((c) => c.name.endsWith("authjs.session-token"))!;
   expect(Math.abs(sessionCookie.expires - (Date.now() / 1000 + 24 * 3600))).toBeLessThan(300);
 
-  // Back on the home page with the park and age restored, signed in.
-  await expect(page.getByRole("heading", { name: `Make a pass for ${PARK}` })).toBeVisible({ timeout: 30_000 });
+  // Back on the home page with the wizard reopened on step 3, the park and age restored, signed in.
+  const dialog = page.getByRole("dialog", { name: "Make your pass" });
+  await expect(dialog).toBeVisible({ timeout: 30_000 });
+  await expect(dialog.getByTestId("choice-ticket")).toContainText(PARK);
   await expect(page).toHaveURL(/\/#find$/);
   await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible();
   await expect(page.getByTestId("chosen-age")).toContainText("Ages 6-10");

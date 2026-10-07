@@ -1640,7 +1640,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "find.noGeo",
     page: ERR,
-    file: "src/components/parks/FindAPark.tsx",
+    file: "src/components/parks/useParkSearch.ts",
     role: "error, 2 short sentences",
     maxChars: 75,
     text: "Your browser can't share a location. Type a town or ZIP instead.",
@@ -1649,7 +1649,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "find.geoDenied",
     page: ERR,
-    file: "src/components/parks/FindAPark.tsx",
+    file: "src/components/parks/useParkSearch.ts",
     role: "error, 2 sentences",
     maxChars: 120,
     text: "Location is blocked for this site. Type a town or ZIP instead, or allow location in your browser settings.",
@@ -1658,7 +1658,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "find.geoFailed",
     page: ERR,
-    file: "src/components/parks/FindAPark.tsx",
+    file: "src/components/parks/useParkSearch.ts",
     role: "error, 2 short sentences",
     maxChars: 75,
     text: "We couldn't get your location. Try again, or type a town or ZIP.",
@@ -1667,7 +1667,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "find.offline",
     page: ERR,
-    file: "src/components/parks/FindAPark.tsx",
+    file: "src/components/parks/useParkSearch.ts",
     role: "error, 2 short sentences",
     maxChars: 90,
     text: "We couldn't reach Grass Pass. Check your internet connection and try again.",
@@ -1676,7 +1676,7 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "find.slow",
     page: ERR,
-    file: "src/components/parks/FindAPark.tsx",
+    file: "src/components/parks/useParkSearch.ts",
     role: "status while waiting, 2 sentences",
     maxChars: 180,
     text: "Still working: the OpenStreetMap park server can be slow. If it doesn't answer soon, we use a saved park list or the OpenStreetMap place search instead.",

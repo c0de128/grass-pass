@@ -46,7 +46,7 @@ export function skipIfHonest(code: string, message: string, where: string): void
   test.skip(true, `${where}: ${code}: ${message.trim()}`);
 }
 
-/** A page alert carrying `data-error-code` (FindAPark, PassMaker). */
+/** A page alert carrying `data-error-code` (the wizard: ParkStep, PassMaker). */
 export async function skipIfHonestAlert(alert: Locator, where: string): Promise<void> {
   const code = (await alert.getAttribute("data-error-code")) ?? "NO_CODE";
   skipIfHonest(code, (await alert.textContent()) ?? "", where);

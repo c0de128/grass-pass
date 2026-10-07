@@ -8,7 +8,8 @@ import { HowItWorks } from "@/components/home/HowItWorks";
 import { PassAnatomy } from "@/components/home/PassAnatomy";
 import { SampleParks } from "@/components/home/SampleParks";
 import { TWO_PARKS_SOURCE, TwoParks } from "@/components/home/TwoParks";
-import { AgePicker } from "@/components/pass/PassMaker";
+import { AgeChoices } from "@/components/pass/WizardParts";
+import { AGE_BAND_INFO, AGE_BANDS } from "@/lib/pass/constants";
 import { cardFacts, HERO_EXAMPLE_ORDER, heroCard, heroFinds, isCountedParkFind, liveStatement, placeLabel, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { HERO_ILLUSTRATION } from "@/lib/illustrations";
@@ -255,13 +256,13 @@ describe("home copy checked against the app", () => {
     expect(band).not.toContain("AI illustration");
   });
 
-  it("Explorer age picker: three real radios, 6-10 named 'most kids', the hint text is true to the age band", () => {
-    const html = renderToStaticMarkup(<AgePicker band="6-10" onChange={() => {}} legendId="t" />);
-    expect(html.match(/type="radio"/g)).toHaveLength(3);
+  it("Who's exploring? (wizard step 2): one real radio per age band from the shared list, 6-10 named 'most kids', each band's own hint", () => {
+    const html = renderToStaticMarkup(<AgeChoices band="6-10" onChange={() => {}} legendId="t" />);
+    expect(html.match(/type="radio"/g)).toHaveLength(AGE_BANDS.length);
     expect(html).toContain("Explorer age</legend>");
     expect(html).toContain("(most kids)");
-    expect(html).toContain("6 finds, you read aloud");
-    expect(html).toContain("8 finds, 2 brain-benders");
+    for (const b of AGE_BANDS) expect(html).toContain(AGE_BAND_INFO[b].hint);
+    expect(html).toContain('checked="" value="6-10"');
   });
 });
 

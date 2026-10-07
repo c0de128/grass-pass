@@ -30,6 +30,7 @@ import { Button, buttonClassName } from "@/components/ui/Button";
 import type { Park } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
 import { AGE_BAND_INFO, AGE_BAND_STORAGE_KEY, DEFAULT_AGE_BAND, isAgeBand, type AgeBand } from "@/lib/pass/constants";
+import { FOCUS_PASS_KEY } from "./FocusPassHeading";
 import { MAKING_PLAN, MakingChecklist, MakingScene, sceneStage } from "./PassMaking";
 import { ParkDataList, SectionNotes } from "./PassStatus";
 import { clientNow, LOCAL_WAIT_COPY, PASS_WAIT_COPY, retryFailsNow, usePassRequest, type PassState } from "./usePassRequest";
@@ -41,8 +42,34 @@ const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACC
 /** sessionStorage key: the park + age picked before signing in (this tab only, removed once restored). */
 export const RESUME_KEY = "grass-pass:resume";
 
-/** How long "Your pass is ready!" shows before the pass opens by itself (the button opens it at once). */
+/**
+ * How long "Your pass is ready!" shows before the pass opens by itself (the button opens it at once). UX-8-07: any key
+ * or tap inside the wizard in that moment (or "Stay here") stops the auto-open, so nobody is moved on mid-read.
+ */
 export const READY_PAUSE_MS = 1_600;
+
+
+/** UX-8-02: said in the wizard's live region when the pass is ready (it used to keep saying "Step 3 of 3"). */
+export function readyAnnouncement(parkName: string, cached: boolean, autoOpen: boolean): string {
+  const what = cached ? `Someone already made this pass for ${parkName} today.` : `Your pass for ${parkName} is ready.`;
+  return autoOpen ? `${what} Opening it now. Press Stay here to stop.` : `${what} Open it when you like.`;
+}
+
+/** The park + age of the request that is really running (labels follow it, not the newest choice: Q-8-03). */
+export type RunningRequest = { parkId: string; parkName: string; band: AgeBand };
+
+/** Q-8-03: only a finished pass for the CURRENT choice may open by itself. */
+export function matchesChoice(run: RunningRequest | null, park: Pick<Park, "id"> | null, band: AgeBand): boolean {
+  return run !== null && park !== null && run.parkId === park.id && run.band === band;
+}
+
+function markPassFocus(): void {
+  try {
+    window.sessionStorage.setItem(FOCUS_PASS_KEY, "1");
+  } catch {
+    // storage off: the pass page just keeps the default focus
+  }
+}
 
 export function rememberForSignIn(park: Park, band: AgeBand): void {
   try {
@@ -201,7 +228,11 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const resultRef = useRef<HTMLDivElement>(null);
   const openerRef = useRef<HTMLElement | null>(null);
   const heroInputRef = useRef<HTMLInputElement>(null);
-  const lastRequest = useRef<{ parkId: string; ageBand: AgeBand } | null>(null);
+  const readyLinkRef = useRef<HTMLAnchorElement>(null);
+  // Q-8-03: the request actually running (or last finished), so its labels never show a newer choice.
+  const [running, setRunning] = useState<RunningRequest | null>(null);
+  // UX-8-07: the visitor stopped the ready step's auto-open.
+  const [stayed, setStayed] = useState(false);
 
   const router = useRouter();
   const { state, run, reset } = usePassRequest();
@@ -289,16 +320,27 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   }, [resumed, park, signedInNow, judgeNow]);
 
   // The pass is ready: show the moment, then open it (only while the wizard is open; a closed wizard offers a link).
+  // Q-8-03: never for a request whose park/age is no longer the visitor's choice. UX-8-07: not once they chose to stay.
+  const autoOpen = state.kind === "done" && open && step === "make" && !stayed && matchesChoice(running, park, band);
   useEffect(() => {
     if (state.kind === "done") {
       const href = `/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}`;
       router.prefetch(href);
-      if (!open) return;
-      const t = setTimeout(() => router.push(href), READY_PAUSE_MS);
+      if (!autoOpen) return;
+      const t = setTimeout(() => {
+        markPassFocus();
+        router.push(href);
+      }, READY_PAUSE_MS);
       return () => clearTimeout(t);
     }
     if (state.kind === "failed" || state.kind === "empty") resultRef.current?.focus();
-  }, [state, router, open]);
+  }, [state, router, autoOpen]);
+
+  // UX-8-02: the ready moment takes focus (its heading), so keyboard users are not left on a removed button.
+  const isDone = state.kind === "done";
+  useEffect(() => {
+    if (isDone && open) headingRef.current?.focus({ preventScroll: true });
+  }, [isDone, open]);
 
   function onHeroSubmit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
@@ -321,7 +363,11 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   }
 
   function onPick(p: Park) {
-    if (!working) reset();
+    // Q-8-03: a new pick starts over. A pass still being made is no longer waited for (the stream is aborted, so its
+    // answer is ignored; the server still finishes and saves it, so the same choice later opens at once).
+    reset();
+    setRunning(null);
+    setStayed(false);
     setNote(null);
     setResumed(false);
     setPark(p);
@@ -329,24 +375,46 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   }
 
   function onBand(b: AgeBand) {
+    // Q-8-02: a different age clears an old failure, so its "Try again" can't send the old age.
+    if (b !== band && !working) {
+      reset();
+      setRunning(null);
+    }
     setPickedBand(b);
     storeBand(b);
   }
 
-  function make() {
+  /** Q-8-02: every request (first try and Try again) sends the CURRENT park and age. */
+  function start(autoRetry: boolean) {
     if (!park || working) return;
     storeBand(band);
     setNote(null);
-    lastRequest.current = { parkId: park.id, ageBand: band };
-    void run({ parkId: park.id, ageBand: band }, { autoRetry: true });
+    setStayed(false);
+    setRunning({ parkId: park.id, parkName: safeParkName(park.name).name, band });
+    void run({ parkId: park.id, ageBand: band }, autoRetry ? { autoRetry: true } : {});
   }
 
-  function tryAgain() {
-    if (working || !lastRequest.current) return;
-    void run(lastRequest.current);
+  const make = () => start(true);
+  const tryAgain = () => start(false);
+
+  /** UX-8-07: a key or tap in the wizard during the ready moment pauses the auto-open (its own two buttons act themselves). */
+  function pauseAutoOpen(e: { target: EventTarget }) {
+    if (e.target instanceof Element && e.target.closest("[data-ready-actions]")) return;
+    setStayed(true);
+  }
+
+  /** UX-8-07: stop the auto-open and keep the ready step on screen. */
+  function stay() {
+    setStayed(true);
+    readyLinkRef.current?.focus();
   }
 
   const parkName = park ? safeParkName(park.name).name : null;
+  // The labels of the pass being made (or just made): the request's own park and age.
+  const runName = running?.parkName ?? parkName;
+  const runBand = running?.band ?? band;
+  const readyHref = state.kind === "done" ? `/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}` : null;
+  const liveText = !open ? "" : step === "make" && state.kind === "done" ? readyAnnouncement(runName ?? "", state.cached, autoOpen) : announce;
   const showBack = (step === "age" || step === "make") && !working && state.kind !== "done";
 
   return (
@@ -426,13 +494,13 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
           {state.kind === "working" ? <LoaderCircle className="size-5 motion-safe:animate-spin" aria-hidden="true" /> : <Sparkles className="size-5" aria-hidden="true" />}
           <p className="min-w-0 flex-1 font-semibold">
             {state.kind === "working"
-              ? `Still making your pass for ${parkName}…`
+              ? `Still making your pass for ${runName}…`
               : state.kind === "done"
-                ? `Your pass for ${parkName} is ready!`
-                : `Your pass for ${parkName} didn't finish.`}
+                ? `Your pass for ${runName} is ready!`
+                : `Your pass for ${runName} didn't finish.`}
           </p>
           {state.kind === "done" ? (
-            <Link href={`/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}`} className="font-heading font-extrabold underline underline-offset-4">
+            <Link href={readyHref ?? "/"} onClick={markPassFocus} className="font-heading font-extrabold underline underline-offset-4">
               Open my pass
             </Link>
           ) : (
@@ -443,7 +511,16 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
         </div>
       ) : null}
 
-      <dialog ref={dialogRef} className="gp-wizard" aria-labelledby={titleId} onClose={onClosed} data-testid="pass-wizard">
+      <dialog
+        ref={dialogRef}
+        className="gp-wizard"
+        aria-labelledby={titleId}
+        onClose={onClosed}
+        data-testid="pass-wizard"
+        // UX-8-07: a key or tap during the ready moment means the visitor is busy here; don't move them on.
+        onKeyDown={autoOpen ? pauseAutoOpen : undefined}
+        onPointerDown={autoOpen ? pauseAutoOpen : undefined}
+      >
         <div className="gp-wizard-sheet">
           {/* The ticket's stub: ink band with the step trail and the close button. */}
           <header className="flex shrink-0 items-center gap-3 bg-band px-4 py-3 text-band-foreground sm:h-21 sm:px-7 sm:py-0">
@@ -464,7 +541,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
           </header>
 
           <p role="status" aria-live="polite" className="sr-only" data-testid="wizard-announce">
-            {open ? announce : ""}
+            {liveText}
           </p>
 
           {/* The scrolling body is itself keyboard-reachable, so it can be scrolled with the keys while nothing in it is
@@ -490,6 +567,17 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                   </p>
                 ) : null}
               </div>
+
+              {step === "park" && working ? (
+                <div className="flex flex-col items-start gap-2 rounded-2xl bg-sun px-4 py-3 text-sun-foreground" data-testid="still-making-note">
+                  <p className="font-semibold">
+                    Your pass for {runName} is still being made. Picking a park below stops waiting for it and starts a new one.
+                  </p>
+                  <button type="button" onClick={() => goTo("make")} className="min-h-11 text-left font-heading font-extrabold underline underline-offset-4">
+                    Back to my pass for {runName}
+                  </button>
+                </div>
+              ) : null}
 
               {step === "park" ? <ParkStep search={search} query={query} onQuery={setQuery} picked={park} onPick={onPick} /> : null}
 
@@ -534,7 +622,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                   {state.kind === "working" || state.kind === "done" ? (
                     <div className="flex flex-col gap-4" data-testid={state.kind === "working" ? "making" : "pass-ready"}>
                       <p className="text-base text-muted-foreground">
-                        For <strong className="text-foreground">{parkName}</strong> · {ageLabel(band)}
+                        For <strong className="text-foreground">{runName}</strong> · {ageLabel(runBand)}
                       </p>
                       <div className="overflow-hidden rounded-3xl bg-muted ring-1 ring-border">
                         <div className="mx-auto max-w-md px-2 pt-3">
@@ -551,12 +639,21 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                         </>
                       ) : (
                         <div className="flex flex-col items-center gap-4 text-center">
-                          <p role="status" className="text-lg font-semibold">
-                            {state.cached ? "Someone already made this pass today. Opening it…" : `Your pass for ${parkName} is ready. Opening it…`}
+                          {/* UX-8-02: the wizard's live region says it; this is the visible line (not a second live region). */}
+                          <p className="text-lg font-semibold" data-testid="ready-line">
+                            {state.cached ? "Someone already made this pass today." : `Your pass for ${runName} is ready.`}{" "}
+                            {autoOpen ? "Opening it…" : "Open it when you like."}
                           </p>
-                          <Link href={`/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}`} className={buttonClassName("primary", "px-8")}>
-                            Open my pass
-                          </Link>
+                          <div className="flex flex-wrap justify-center gap-3" data-ready-actions>
+                            <Link ref={readyLinkRef} href={readyHref ?? "/"} onClick={markPassFocus} className={buttonClassName("primary", "px-8 whitespace-nowrap")}>
+                              Open my pass
+                            </Link>
+                            {autoOpen ? (
+                              <Button variant="secondary" onClick={stay} className="whitespace-nowrap">
+                                Stay here
+                              </Button>
+                            ) : null}
+                          </div>
                         </div>
                       )}
                     </div>
@@ -593,7 +690,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
           {showBack || (step === "make" && !needsSignIn && (state.kind === "idle" || state.kind === "failed" || state.kind === "empty")) ? (
             <footer className="flex shrink-0 items-center justify-between gap-3 border-t border-border bg-card px-5 py-4 sm:px-8">
               {showBack ? (
-                <Button variant="secondary" onClick={() => goTo(step === "make" ? "age" : "park")}>
+                <Button variant="secondary" onClick={() => goTo(step === "make" ? "age" : "park")} className="px-4 whitespace-nowrap sm:px-6">
                   <ArrowLeft className="size-5" aria-hidden="true" />
                   Back
                 </Button>
@@ -606,8 +703,8 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                 </Button>
               ) : null}
               {step === "make" && !needsSignIn ? (
-                <button ref={makeRef} type="button" onClick={make} className={buttonClassName("primary", "px-8")}>
-                  <Sparkles className="size-5" aria-hidden="true" />
+                <button ref={makeRef} type="button" onClick={make} className={buttonClassName("primary", "px-5 whitespace-nowrap min-[400px]:px-8")}>
+                  <Sparkles className="size-5 max-[379px]:hidden" aria-hidden="true" />
                   Make my pass
                 </button>
               ) : null}

@@ -153,6 +153,19 @@ export function liveStatement(statuses: readonly ExampleStatus[], enabled: boole
 }
 
 /**
+ * Q-8-06 (R8): the Explore section's "No data available" line when no example pass is ready, true to the real state:
+ * warm-up switched off on this server (nothing will be made, so no "try again"), passes being made right now, or
+ * none made yet (the last try didn't give a complete pass).
+ */
+export function noExamplesText(statuses: readonly Pick<ExampleStatus, "refreshing">[], enabled: boolean): string {
+  if (!enabled) return "No data available: example passes are turned off on this server, so none are made here. You can still make your own pass above.";
+  if (statuses.some((s) => s.refreshing)) {
+    return "No data available: the example passes are being made from live park data right now. Reload the page in a minute or two.";
+  }
+  return "No data available: no example pass is ready right now. Each one is made from live park data, and none has come out complete yet. You can still make your own pass above.";
+}
+
+/**
  * Judge R7 T1: the "Made …" line under an example card. Today's pass: its time. An older complete pass (today's came
  * out short, or isn't made yet): its real date, that it was made from that day's data, and why it is shown.
  */

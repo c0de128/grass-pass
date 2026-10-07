@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { cache } from "react";
+import { FocusPassHeading } from "@/components/pass/FocusPassHeading";
 import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { buttonClassName } from "@/components/ui/Button";
@@ -61,6 +62,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
           {isAdultBand(pass.ageBand) ? ADULT_PRINT_LINE : "One black-and-white page. Cut it in half: kids get the hunt, you get the answers."}
         </p>
       </div>
+      <FocusPassHeading />
       <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">
         <DifferentPassButton

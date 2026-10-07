@@ -1,5 +1,6 @@
 import { after, connection } from "next/server";
 import { FinalCta } from "@/components/home/FinalCta";
+import { HomeAnchors } from "@/components/home/HomeAnchors";
 import { HomeHero } from "@/components/home/HomeHero";
 import { HowItWorks } from "@/components/home/HowItWorks";
 import { PassAnatomy } from "@/components/home/PassAnatomy";
@@ -62,6 +63,7 @@ export default async function Home() {
       <PassAnatomy spot={spotQuote(statuses)} />
       <SampleParks statuses={statuses} enabled={enabled} />
       <FinalCta />
+      <HomeAnchors />
     </main>
   );
 }

@@ -173,6 +173,13 @@
   .gp-home > section#pass {
     contain-intrinsic-size: auto 1450px;
   }
+  /* Explore link fix (2026-10-07): a smooth scroll to "/#parks" aimed at the placeholder layout and overshot the
+     heading by ~630 px when the sections above rendered at their real heights (no placeholder fits every width).
+     So a section jump lays them out for real first: HomeAnchors.tsx sets data-sections="real" before a section
+     link's click is handled, and a page opened with a hash (/#parks) matches :target. A plain visit to "/" is unchanged. */
+  .gp-home:is([data-sections="real"], :has(:target)) > section:is(#why, #how, #pass) {
+    content-visibility: visible;
+  }
 }
 
 

@@ -46,7 +46,8 @@ async function makePassOrHonestError(page: Page, parkName: string) {
     // A failed pass offers "Try again", except for limits that only reset later.
     const code = (await failed.getAttribute("data-error-code")) ?? "";
     if (!["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT"].includes(code)) {
-      await expect(page.getByRole("button", { name: "Try again" })).toBeVisible();
+      // The pass maker's own button (the example cards below may offer their own "Try again").
+      await expect(page.locator("#find").getByRole("button", { name: "Try again" })).toBeVisible();
     }
     await skipIfHonestAlert(failed, "new pass");
   }

@@ -74,7 +74,8 @@ test("/about: the footer credits link lands on the credits with the photo thumbn
   await page.goto("/about#credits");
   await expect(page.getByRole("heading", { level: 2, name: "Credits and licences" })).toBeInViewport();
   const photos = page.getByTestId("about-photo-credits").locator(":scope > li");
-  await expect(photos).toHaveCount(4);
+  // Judge R7 T1: the 4 example parks (Oak Point now) plus Connemara, still shown in the "two parks" band.
+  await expect(photos).toHaveCount(5);
   await expect(photos.first().getByRole("img")).toBeVisible();
 });
 

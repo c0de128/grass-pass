@@ -247,9 +247,15 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   ],
   bridge: [
     // Audit R4 (M10): "paths that cross over water" was printed on 4 parks.
-    "It lets a {path|trail|walkway|footpath} {cross|go|pass|run} {over|above|high over} water or a {dip|low spot|ditch} in the ground.",
+    // Run 2026-10-06-8 (M10): "paths that go over water" on 4 parks still: the model turns "a path ... over water" into
+    // the same words whatever the verb. The crossing fact no longer has "path" as its subject, and the bank has 6 facts
+    // (2 a park, in a row), so it is on 1 park in 3 instead of 2 in 3.
+    "It carries {people|walkers|hikers|you} {across|over|above} water or a {dip|low spot|ditch} {from one side to the other|to the far side|in a few steps}.",
     "Many have {rails|railings} on {the sides|both sides|each side} to hold on to.",
     "You may hear your feet {thump|clomp|tap} on its {boards|planks} as you walk across.",
+    "Its {floor|deck|top} is often {wooden boards|planks of wood|flat boards} laid side by side.",
+    "From its middle you can look {down|below} at what is {under|beneath} it.",
+    "Some {curve up in an arch|rise up in the middle|have a hump in the middle}, and some lie flat.",
   ],
   tower: [
     "It is a tall, narrow {structure|building} you can see from far away.",

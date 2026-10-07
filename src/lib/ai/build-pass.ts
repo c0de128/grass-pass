@@ -12,7 +12,19 @@ import "@/lib/zod-config";
 import { createJsonCache, type Store } from "@/lib/cache";
 import type { QuotaTicket } from "@/lib/limits";
 import { log } from "@/lib/log";
-import { callModel, configuredModelId, MAX_TOKENS, ModelError, modelTimeoutMs, type ModelLogger } from "@/lib/model";
+import { callModel, configuredModelId, MAX_TOKENS, ModelError, modelTimeoutCapMs, type ModelLogger } from "@/lib/model";
+import {
+  firstCallTimeoutMs,
+  maxTokensFor,
+  PASS_DEADLINE_MS,
+  refillTimeoutMs,
+  RETRY_TOKENS_PER_S_GEMMA,
+  retryTokensPerS,
+  slowTokensPerS,
+  wholeRetryMinLeftMs,
+  wholeRetrySize,
+  wholeRetryTimeoutMs,
+} from "@/lib/pass/budget";
 import {
   PASS_COPY,
   type AgeBand,
@@ -56,10 +68,10 @@ import {
 } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
 import type { SpotTarget } from "@/lib/spot/pick-target";
-import { buildMessages, mixFor, openingWord, planRequest, refillPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
+import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { fixLichenWho } from "./jargon";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { mergeResults, retryThreshold, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
+import { mergeResults, retryThreshold, rewriteStockFrame, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -70,8 +82,8 @@ export { FEATURES_TTL_SEC } from "@/lib/pass/park-data";
 export const SPECIES_TTL_SEC = 6 * HOUR;
 export const TAXA_TTL_SEC = 7 * DAY;
 
-/** Whole pass must finish inside the route's maxDuration (90 s) with room to answer. */
-export const PASS_DEADLINE_MS = 85_000;
+/** Whole pass must finish inside the route's maxDuration (90 s) with room to answer (src/lib/pass/budget.ts). */
+export { PASS_DEADLINE_MS };
 /** Don't start a model call with less than this left (a normal answer is 7-10 s). */
 export const MODEL_MIN_LEFT_MS = 15_000;
 /** Don't start a retry or a refill with less than this left. */
@@ -84,16 +96,11 @@ export const RETRY_MIN_LEFT_MS = 20_000;
  */
 export const MAX_MODEL_CALLS = 3;
 /**
- * A whole-request retry (after a failed first call) needs about a first call's time: run -5's first-call
- * p95 was 24 s. With less left it would only time out again (a Llama call that took its full 60 s).
+ * Slow provider (run 2026-10-06-8): a whole-request retry (after a failed first call) is sized to the time left
+ * (src/lib/pass/budget.ts): it starts only when an answer of MIN_PASS_ITEMS clues fits at the budgeted retry speed
+ * (Gemma: 16.3 s left). It used to need a fixed 25 s and always asked for the same whole pass again.
  */
-export const WHOLE_RETRY_MIN_LEFT_MS = 25_000;
-/**
- * A refill answer is a few items (run -5: p50 6.3 s, slowest answered 14.6 s), so it gets a shorter
- * timeout than a whole pass: a hung refill (White Rock run 3 waited the full 30 s) leaves time for the
- * second refill.
- */
-export const REFILL_TIMEOUT_MS = 20_000;
+export const WHOLE_RETRY_MIN_LEFT_MS = wholeRetryMinLeftMs(RETRY_TOKENS_PER_S_GEMMA);
 
 /** Failed first calls worth one whole-request retry inside the pass deadline (never quota, rate limit or a missing key). */
 const RETRYABLE_FIRST: ReadonlySet<string> = new Set(["MODEL_TIMEOUT", "MODEL_PROVIDER", "MODEL_BAD_OUTPUT", "MODEL_NETWORK"]);
@@ -111,15 +118,19 @@ export function retryableModelError(err: { code: string; upstreamStatus?: number
 }
 
 /** Why another model call is starting (Q-5-03: the progress line must say the true reason). */
-export type RetryReason = "timeout" | "failed" | "none_kept" | "refill" | "last_refill";
+export type RetryReason = "timeout" | "timeout_short" | "failed" | "failed_short" | "none_kept" | "refill" | "last_refill";
 
 /** The progress line for a second or third model call. */
 export function retryText(reason: RetryReason): string {
   switch (reason) {
     case "timeout":
       return "The AI didn't answer in time. Asking it again…";
+    case "timeout_short":
+      return "The AI didn't answer in time. Asking it again for fewer finds, so it can answer in the time left…";
     case "failed":
       return "The AI's answer didn't come through. Asking it again…";
+    case "failed_short":
+      return "The AI's answer didn't come through. Asking it again for fewer finds, so it can answer in the time left…";
     case "none_kept":
       return "None of the clues passed the checks. Asking the model again…";
     case "refill":
@@ -171,6 +182,8 @@ export type BuildDeps = {
    * modelTimeoutMs(env) (at most 70 s) and REFILL_TIMEOUT_MS.
    */
   clock?: PassClock;
+  /** Eval replay only (evals/replay.ts): the model call's timeout signal on a virtual clock. */
+  modelDeadline?: (ms: number) => AbortSignal;
 };
 
 /** Eval-only time limits (see BuildDeps.clock). */
@@ -373,6 +386,15 @@ export function passMaxTokens(modelId: string): number {
 }
 export const PASS_MAX_TOKENS = 1_200;
 
+/**
+ * Slow provider: max_tokens for one call, sized to what it asks (budget.ts `maxTokensFor`: 1.5x the budgeted answer,
+ * 400-1,200). gpt-oss keeps its full budget (its reasoning tokens count too).
+ */
+export function callMaxTokens(modelId: string, items: number, spot: boolean): number {
+  const ceiling = passMaxTokens(modelId);
+  return ceiling === PASS_MAX_TOKENS ? maxTokensFor(items, spot, ceiling) : ceiling;
+}
+
 export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<BuildOutcome> {
   const left = () => deps.startedAt + (deps.clock?.passDeadlineMs ?? PASS_DEADLINE_MS) - deps.now();
 
@@ -485,10 +507,14 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let wholeRetries = 0;
   /** Ids whose clue failed a content check in ANY earlier call (a second refill skips them too). */
   const failedSoFar = new Set<string>();
+  /** Slow provider (src/lib/pass/budget.ts): the budgeted answer speed, and MODEL_TIMEOUT_MS as a cap when set. */
+  const tps = slowTokensPerS(modelId);
+  const retryTps = retryTokensPerS(modelId);
+  const capMs = deps.clock ? deps.clock.modelTimeoutMs : modelTimeoutCapMs(deps.env);
   for (let call = 1; call <= MAX_MODEL_CALLS; call++) {
     const remaining = left();
     const isRefill: boolean = call > 1 && best !== null && best.items.length > 0;
-    if (remaining < (call === 1 ? MODEL_MIN_LEFT_MS : isRefill ? RETRY_MIN_LEFT_MS : WHOLE_RETRY_MIN_LEFT_MS)) {
+    if (remaining < (call === 1 ? MODEL_MIN_LEFT_MS : isRefill ? RETRY_MIN_LEFT_MS : wholeRetryMinLeftMs(retryTps))) {
       if (call === 1) {
         return {
           kind: "error",
@@ -506,9 +532,19 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       if (wholeRetries >= 1) break;
       wholeRetries++;
     }
-    const callPlan = refill && best ? refillPlan(plan, best.items, [...failedSoFar]) : plan;
+    let spotAsk = target !== null && riddle === null;
+    let callPlan: RequestPlan | null;
+    if (refill && best) callPlan = refillPlan(plan, best.items, [...failedSoFar]);
+    else if (call > 1 && !deps.clock) {
+      // Slow provider: the whole retry asks for what an answer can carry in the time left (budget.ts rule 2).
+      const size = wholeRetrySize(remaining, plan.ask.n, spotAsk, retryTps);
+      if (size.items === 0) break;
+      callPlan = shortRetryPlan(plan, size.items, band);
+      spotAsk = spotAsk && size.spot;
+    } else callPlan = plan;
     if (!callPlan) break;
-    const callSpot = target && riddle === null ? promptSpot : null;
+    const shorter = !refill && call > 1 && callPlan.ask.n < plan.ask.n;
+    const callSpot = spotAsk ? promptSpot : null;
     const notes: RefillNotes | undefined =
       refill && best
         ? {
@@ -526,7 +562,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     }
     if (call > 1) {
       const reason: RetryReason = prevFailed
-        ? prevFailed.code === "MODEL_TIMEOUT" ? "timeout" : "failed"
+        ? prevFailed.code === "MODEL_TIMEOUT"
+          ? shorter ? "timeout_short" : "timeout"
+          : shorter ? "failed_short" : "failed"
         : !refill
           ? "none_kept"
           : refills === 0 ? "refill" : "last_refill";
@@ -537,15 +575,21 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     // The paid call starts now: it counts, and it finishes (and is cached) even if every client leaves.
     ticket.commit();
     deps.pin();
-    const timeoutMs = Math.min(
-      deps.clock?.modelTimeoutMs ?? modelTimeoutMs(deps.env),
-      refill ? (deps.clock?.refillTimeoutMs ?? REFILL_TIMEOUT_MS) : Number.POSITIVE_INFINITY,
-      remaining - 3_000,
-    );
+    // Slow provider: each call's limit is sized from what it asks (src/lib/pass/budget.ts). The eval/local clock
+    // (deps.clock) keeps its fixed limits.
+    const askSpot = callSpot !== null;
+    const timeoutMs = deps.clock
+      ? Math.min(deps.clock.modelTimeoutMs, refill ? deps.clock.refillTimeoutMs : Number.POSITIVE_INFINITY, remaining - 3_000)
+      : call === 1
+        ? firstCallTimeoutMs({ leftMs: remaining, items: callPlan.ask.n, spot: askSpot, tps, retryTps, capMs })
+        : refill
+          ? refillTimeoutMs(remaining, callPlan.ask.n, askSpot, tps, capMs)
+          : wholeRetryTimeoutMs(remaining, capMs);
+    const maxTokens = callMaxTokens(modelId, callPlan.ask.n, askSpot);
     try {
       const r = await callModel(
-        { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope, maxTokens: passMaxTokens(modelId) },
-        { env: deps.env, fetch: deps.modelFetch, timeoutMs, logger: deps.modelLogger },
+        { task: "pass", messages, jsonSchema, schemaName: "grass_pass", schema: PassDraftEnvelope, maxTokens },
+        { env: deps.env, fetch: deps.modelFetch, timeoutMs, logger: deps.modelLogger, now: deps.now, ...(deps.modelDeadline ? { deadlineSignal: deps.modelDeadline } : {}) },
       );
       attempts += r.attempts;
       modelLatency += r.latencyMs;
@@ -564,6 +608,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         model: r.modelLabel,
         n: callPlan.mix.n,
         asked: callPlan.ask.n,
+        timeoutMs,
+        maxTokens,
         lowData: callPlan.lowData,
         returned: v.returned,
         kept: v.items.length,
@@ -587,7 +633,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       attempts += 1;
       lastError = err;
       prevFailed = err;
-      log("pass_call_failed", { call, refill, code: err.code, upstreamStatus: err.upstreamStatus ?? null, timeoutMs });
+      log("pass_call_failed", { call, refill, code: err.code, upstreamStatus: err.upstreamStatus ?? null, timeoutMs, asked: callPlan.ask.n, maxTokens });
       // Completeness (run 2026-10-06-5, Cedar Ridge 10-13: the first call timed out at 30 s and the pass was
       // lost): a failed first call gets ONE whole-request retry while the deadline allows it; a failed refill
       // may be followed by one more refill. Quota, rate limits and a missing key are never retried.
@@ -619,13 +665,26 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     log("spot_late", { park: f.park.id, ready: late !== null, status: spotPlan.status, ms: deps.now() - deps.startedAt });
   }
 
+  // M10 (run 2026-10-06-8): a printed clue that still starts with a banned frame ("Somewhere you will see a ...") gets a
+  // plain first word that no other clue on the pass starts with (validate.ts `rewriteStockFrame`). Done here, on the
+  // finished pass, like the lichen fix below, so the refill prompts list the first words the model really wrote.
+  const firstWords = new Set(best.items.map((v) => openingWord(v.clue)));
+  let framesRewritten = 0;
+  const clueOf = (v: ValidationResult["items"][number]): string => {
+    const out = rewriteStockFrame(v.clue, firstWords, v.item.answer);
+    if (out !== v.clue) {
+      framesRewritten++;
+      firstWords.add(openingWord(out));
+    }
+    return out;
+  };
   const items: PassItem[] = [...best.items]
     .sort((a, b) => SECTION_ORDER[a.item.section] - SECTION_ORDER[b.item.section])
     .map((v) => ({
       section: v.item.section,
       // Round-6 Q-6-03: "Who has bright-orange parts ...?" for a lichen reads as an animal: the printed clue says "What".
       // Done here, on the finished pass, so the refill prompts still list the first words the model really wrote.
-      clue: v.item.section === "wild" ? fixLichenWho(v.clue, v.item.taxon) : v.clue,
+      clue: v.item.section === "wild" ? fixLichenWho(clueOf(v), v.item.taxon) : clueOf(v),
       lookWhere: v.lookWhere,
       difficulty: v.difficulty,
       evidence: v.item.evidence,
@@ -635,6 +694,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       ...(v.item.section === "park" && v.item.id.startsWith("osm-") ? { feature: v.item.id.slice(4).replace(/-/g, "_") } : {}),
       ref: v.item.id,
     }));
+  if (framesRewritten > 0) log("pass_frames_rewritten", { park: f.park.id, n: framesRewritten });
   const dropped = best.drops as Record<DropReason, number | undefined>;
   const other = Object.entries(dropped)
     .filter(([k]) => k !== "not_grounded")

@@ -61,5 +61,9 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
     kind: "always",
     plain: "It starts with the same first word as another clue (a stock start like \"Can you find\" only goes first when a spare exists).",
   },
+  stock_frame: {
+    kind: "preference",
+    plain: "It starts with a worn-out frame we tell the model not to use (\"Somewhere you will see a\"). If no spare replaces it, code swaps the frame for a plain word (\"Spot a ...\").",
+  },
   over_section_max: { kind: "always", plain: "Its section already has as many finds as the mix allows." },
 };

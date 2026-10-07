@@ -31,14 +31,15 @@ const SECTIONS: Section[] = ["park", "wild", "lucky"];
  * Mix limits from pool sizes. Returns null when the pool can't fill MIN_PASS_ITEMS
  * (the "all empty" path: no model call).
  */
-export function computeMix(counts: Record<Section, number>, band: AgeBand): Mix | null {
+export function computeMix(counts: Record<Section, number>, band: AgeBand, target?: number): Mix | null {
   const cap: Record<Section, number> = {
     park: Math.max(0, counts.park),
     wild: Math.max(0, counts.wild),
     lucky: Math.min(LUCKY_MAX, Math.max(0, counts.lucky)),
   };
   const available = cap.park + cap.wild + cap.lucky;
-  const n = Math.min(AGE_BAND_INFO[band].items, available);
+  // Slow provider: a whole retry may ask for fewer items than the band's pass (`shortRetryPlan`).
+  const n = Math.min(AGE_BAND_INFO[band].items, target ?? Number.POSITIVE_INFINITY, available);
   if (n < MIN_PASS_ITEMS) return null;
 
   const min = {} as Record<Section, number>;
@@ -155,6 +156,21 @@ export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed =
   // leaves the promised number (validate.ts fitToMix keeps hard items last to go).
   const ask = mix.hardMin > 0 ? { ...asked, hardMin: Math.min(asked.n, mix.hardMin + HARD_EXTRA) } : asked;
   return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData, band } };
+}
+
+/**
+ * Slow provider (eval run 2026-10-06-8): the whole retry after a failed first call, cut to `n` items with no spares
+ * so its answer fits the time left (src/lib/pass/budget.ts `wholeRetrySize`). The plan itself when `n` is not
+ * smaller than what it asks; null when the pool can't fill a mix of `n`. The pass still promises `plan.mix`: a
+ * shorter answer makes a short pass, which a refill may top up.
+ */
+export function shortRetryPlan(plan: RequestPlan, n: number, band: AgeBand): RequestPlan | null {
+  if (n >= plan.ask.n) return plan;
+  const count = (s: Section) => plan.pool.filter((p) => p.section === s).length;
+  const mix = computeMix({ park: count("park"), wild: count("wild"), lucky: count("lucky") }, band, n);
+  if (!mix) return null;
+  const ask = mix.hardMin > 0 ? { ...mix, hardMin: Math.min(mix.n, plan.ask.hardMin) } : mix;
+  return { ...plan, mix, ask, openers: plan.openers.slice(0, Math.max(1, ask.n)), validate: { ...plan.validate, ask } };
 }
 
 /**

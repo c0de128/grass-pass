@@ -3,11 +3,17 @@
  * saved eval run, answering each model call with the raw answer that run recorded, in order. Every check,
  * refill plan and merge is today's code; only the model's words are the saved ones.
  *
- * - The clock is virtual: data steps take the recorded run's wall time minus its model time, and each
- *   replayed call takes its recorded latency, so the deadline logic sees the same time budget.
- * - A recorded timeout is replayed as a timeout (the fake call waits for the app's abort signal; the
- *   replay sets MODEL_TIMEOUT_MS to 5 s so this takes 5 real seconds) and a recorded HTTP error as that
- *   status.
+ * - The clock is virtual: data steps take the recorded run's wall time minus its model time (before the first model
+ *   call), and each
+ *   replayed call takes its recorded latency, so the deadline logic sees the same time budget. The app's own
+ *   time limits apply (src/lib/pass/budget.ts), on the virtual clock (BuildDeps.modelDeadline): no real waiting.
+ * - A recorded timeout is replayed as a timeout at TODAY's limit for that call (the recording only says the answer
+ *   took longer than the old limit, so this is the pessimistic reading: it never answers), and a recorded HTTP error
+ *   as that status.
+ * - Slow clock (slow-provider fix, EVAL_REPLAY_TPS): every answered call takes at least
+ *   SLOW_CLOCK_OVERHEAD_MS + its answer tokens at that speed. A call slower than today's limit for it times out.
+ * - Old budget (EVAL_REPLAY_OLD_BUDGET=1): the fixed limits before the slow-provider fix (30 s a call, 20 s a refill,
+ *   the same whole request on a retry), to compare on the same clock.
  * - A call today's code makes that the saved run never made (a second refill, a retry after a timeout)
  *   has no recorded answer. Nothing is invented for it: it is answered with HTTP 400 (so it keeps
  *   nothing) and counted in `unrecorded`, with the size of what it asked for. The replay's M3 is then a
@@ -31,8 +37,23 @@ import { caseContext, isComplete, scoreModel, type CallRecord, type CaseContext,
 /** Assumed latency of a call the saved run never made (run 2026-10-06-5: refill p50 6.3 s, first call p50 13.7 s). */
 export const UNRECORDED_REFILL_MS = 6_300;
 export const UNRECORDED_FIRST_MS = 13_700;
-/** The replay's model timeout (real seconds waited for a recorded timeout). */
-export const REPLAY_TIMEOUT_MS = 5_000;
+/** Slow clock: time before the first answer token (run 2026-10-06-8 fit: 0.6-1.1 s). */
+export const SLOW_CLOCK_OVERHEAD_MS = 1_000;
+/** The fixed limits before the slow-provider fix (EVAL_REPLAY_OLD_BUDGET=1). */
+export const OLD_BUDGET = { passDeadlineMs: 85_000, modelTimeoutMs: 30_000, refillTimeoutMs: 20_000 } as const;
+
+export type ReplayOptions = {
+  /** Slow clock: answer tokens per second (null = the recorded latencies). */
+  tps?: number | null;
+  /** Use the old fixed limits (OLD_BUDGET) instead of the app's budget. */
+  oldBudget?: boolean;
+};
+
+/** Latency of a recorded answered call on the slow clock (never faster than recorded). */
+export function slowLatencyMs(c: CallRecord, tps: number | null | undefined): number {
+  if (!tps || !(tps > 0) || typeof c.completionTokens !== "number") return c.latencyMs;
+  return Math.max(c.latencyMs, Math.round(SLOW_CLOCK_OVERHEAD_MS + (c.completionTokens / tps) * 1000));
+}
 
 export type UnrecordedCall = { caseN: number; run: number; callIndex: number; asked: number | null; poolIds: number | null };
 
@@ -44,6 +65,10 @@ export type ReplayRun = RunRecord & {
   dropLog: { reason: DropReason; itemId: string | null; clue: string | null; call: number }[];
   /** r7 follow-ups (M8): the size of every prompt today's code built, so a prompt change can be priced before a paid run. */
   promptSizes?: PromptSize[];
+  /** Slow-provider fix: per model call today's code made, the items it asked for, its time limit and its max_tokens. */
+  budget?: { asked: number | null; timeoutMs: number | null; maxTokens: number | null }[];
+  /** Virtual time from the start of the pass to its end (the deadline check: never above PASS_DEADLINE_MS). */
+  virtualMs?: number;
 };
 
 /** System and user message lengths of a chat-completions request body (0 when it is not one). */
@@ -69,6 +94,16 @@ export function completionBodyOf(c: CallRecord, model: string): string {
   });
 }
 
+function maxTokensOf(body: unknown): number | null {
+  if (typeof body !== "string") return null;
+  try {
+    const n = (JSON.parse(body) as { max_tokens?: unknown }).max_tokens;
+    return typeof n === "number" ? n : null;
+  } catch {
+    return null;
+  }
+}
+
 function askedOf(body: unknown): { n: number | null; poolIds: number | null } {
   if (typeof body !== "string") return { n: null, poolIds: null };
   try {
@@ -81,9 +116,23 @@ function askedOf(body: unknown): { n: number | null; poolIds: number | null } {
 }
 
 /** One saved run replayed through today's buildPass. */
-export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData["band"]): Promise<ReplayRun> {
+export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData["band"], opts: ReplayOptions = {}): Promise<ReplayRun> {
   const replay = createReplayFetch(fx);
   let virtual = 0;
+  /** The current call's timeout on the virtual clock (set by the app through BuildDeps.modelDeadline). */
+  let deadline: { ac: AbortController; ms: number } | null = null;
+  const modelDeadline = (ms: number): AbortSignal => {
+    deadline = { ac: new AbortController(), ms };
+    return deadline.ac.signal;
+  };
+  /** The call ran out of time on the virtual clock: the app's own deadline fires. */
+  const timeOut = (): never => {
+    const d = deadline;
+    virtual += d?.ms ?? 0;
+    const err = new DOMException("replayed timeout", "TimeoutError");
+    d?.ac.abort(err);
+    throw err;
+  };
   const now = () => fx._recording.fetchedAtMs + virtual;
   const recordedModelMs = rec.calls.reduce((a, c) => a + c.latencyMs, 0);
   const dataMs = Math.max(0, rec.wallMs - recordedModelMs);
@@ -91,11 +140,12 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
   const unrecorded: UnrecordedCall[] = [];
   const dropLog: ReplayRun["dropLog"] = [];
   const promptSizes: PromptSize[] = [];
+  const budget: NonNullable<ReplayRun["budget"]> = [];
   let k = 0;
   const modelFetch: FetchLike = async (_url, init) => {
     const i = k++;
     promptSizes.push(promptSizeOf(init?.body, i));
-    if (i === 0) virtual += dataMs;
+    budget.push({ asked: askedOf(init?.body).n, timeoutMs: (deadline as { ms: number } | null)?.ms ?? null, maxTokens: maxTokensOf(init?.body) });
     const saved = rec.calls[i];
     if (!saved) {
       const a = askedOf(init?.body);
@@ -104,29 +154,36 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
       calls.push({ latencyMs: 0, status: null, error: "UNRECORDED", promptTokens: null, completionTokens: null, finishReason: null, answeredModel: null, rawItems: null, poolMatches: null });
       return new Response("{}", { status: 400 });
     }
-    calls.push(saved);
     if (isTimeoutRecord(saved)) {
-      // Wait for the app's own timeout to fire, so callModel classifies it as MODEL_TIMEOUT.
-      await new Promise<void>((resolve) => {
-        const sig = init?.signal;
-        if (!sig) return resolve();
-        if (sig.aborted) return resolve();
-        sig.addEventListener("abort", () => resolve(), { once: true });
-      });
-      virtual += saved.latencyMs;
-      throw new DOMException("replayed timeout", "TimeoutError");
+      calls.push({ ...saved, latencyMs: (deadline as { ms: number } | null)?.ms ?? saved.latencyMs });
+      timeOut();
     }
-    virtual += saved.latencyMs;
-    if (saved.status !== 200) return new Response("{}", { status: saved.status ?? 502 });
+    if (saved.status !== 200) {
+      calls.push(saved);
+      virtual += saved.latencyMs;
+      return new Response("{}", { status: saved.status ?? 502 });
+    }
+    const latency = slowLatencyMs(saved, opts.tps);
+    const limit = (deadline as { ms: number } | null)?.ms ?? Number.POSITIVE_INFINITY;
+    if (latency > limit) {
+      calls.push({ ...saved, latencyMs: limit, status: null, error: "TimeoutError", completionTokens: null, rawItems: null, finishReason: null });
+      timeOut();
+    }
+    calls.push(latency === saved.latencyMs ? saved : { ...saved, latencyMs: latency });
+    virtual += latency;
     return new Response(completionBodyOf(saved, rec.model), { status: 200, headers: { "content-type": "application/json" } });
   };
   const ref = parseParkId(fx._recording.parkId);
   if (!ref) throw new Error("bad park id");
   const day = localDay(now());
+  const startedAt = now();
+  // The data steps (replayed at once) take the recorded data time BEFORE the first model call, as in a real pass, so
+  // the app sizes the first call to the time really left.
+  virtual += dataMs;
   let callNo = 0;
   const deps: BuildDeps = {
     store: new MemoryStore(),
-    env: { DO_INFERENCE_API_KEY: "replay-no-network", MODEL_ID: rec.model, MODEL_TIMEOUT_MS: String(REPLAY_TIMEOUT_MS) },
+    env: { DO_INFERENCE_API_KEY: "replay-no-network", MODEL_ID: rec.model, ...(rec.model.toLowerCase().includes("llama") ? { MODEL_TIMEOUT_MS: "60000" } : {}) },
     now,
     fetchImpl: replay.fetch,
     modelFetch,
@@ -137,13 +194,15 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
     pin: () => undefined,
     onUpstream: () => undefined,
     reserveAiCall: async () => ({ commit: () => undefined, release: async () => undefined, committed: true }),
-    startedAt: now(),
+    startedAt,
     modelLogger: () => undefined,
     validateTrace: (d) => dropLog.push({ ...d, call: callNo }),
+    modelDeadline,
+    ...(opts.oldBudget ? { clock: { ...OLD_BUDGET, modelTimeoutMs: rec.model.toLowerCase().includes("llama") ? 60_000 : OLD_BUDGET.modelTimeoutMs } } : {}),
   };
   const base = { caseN: rec.caseN, slug: rec.slug, model: rec.model, run: rec.run, n: rec.n, dataRich: rec.dataRich, wallMs: 0 };
   const out = await buildPass({ ref, band, day, variant: rec.run, id: passIdFor(fx._recording.parkId, band, day, rec.run) }, deps);
-  const extra = { calls, unrecorded, dropLog, promptSizes };
+  const extra = { calls, unrecorded, dropLog, promptSizes, budget, virtualMs: now() - startedAt };
   if (replay.misses.length > 0) return { ...base, ...extra, parkName: rec.parkName, kind: "error", errorCode: "FIXTURE_MISS", sections: {}, items: [] };
   if (out.kind === "pass") {
     const p = out.pass;
@@ -174,6 +233,7 @@ export type ReplaySummary = {
 export async function replayResults(
   results: EvalResults,
   models: readonly string[],
+  opts: ReplayOptions = {},
 ): Promise<{ summaries: ReplaySummary[]; skipped: string[]; contexts: ReadonlyMap<number, CaseContext> }> {
   const band = results.meta.ageBand;
   const casesFile = loadCases();
@@ -210,7 +270,7 @@ export async function replayResults(
       const fx = fixtures.get(rec.caseN);
       if (!fx) continue;
       // A run that never reached the model (no pass possible) replays to the same empty answer.
-      runs.push(await replayRun(rec, fx, band));
+      runs.push(await replayRun(rec, fx, band, opts));
     }
     const unrecorded = runs.flatMap((r) => r.unrecorded);
     const optimisticComplete = runs.filter((r) => r.dataRich && (isComplete(r) || r.unrecorded.length > 0)).length;

@@ -211,8 +211,11 @@ function shapeOfSystemLine(line: string): string | null {
   return edited ?? line;
 }
 
-/** Round-6 C4: the water kinds whose fact banks gained sight facts (their recorded sources are the older facts). */
-const WATER_FACT_IDS = /^(?:osm-creek|osm-fountain)$/;
+/**
+ * Round-6 C4: the water kinds whose fact banks gained sight facts (their recorded sources are the older facts).
+ * Slow-provider fix (run 2026-10-06-8, M10): the bridge bank changed too.
+ */
+const WATER_FACT_IDS = /^(?:osm-creek|osm-fountain|osm-bridge)$/;
 
 const unescapeSource = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 

@@ -27,7 +27,7 @@ import type { AgeBand } from "@/lib/pass/constants";
 import { jargonProblem, triviaKind, wrongKindWord } from "./jargon";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
-import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, STOCK_PHRASES, type Mix } from "./prompt";
+import { PROMPT_EXAMPLE_TEXTS, STOCK_FRAMES, STOCK_OPENINGS, STOCK_PHRASES, type Mix } from "./prompt";
 import { PARENT_NOTE_MAX, PassItemDraft, SpotDraft, type PassDraftEnvelope } from "./schema";
 
 /**
@@ -62,6 +62,7 @@ export const DROP_REASONS = [
   "copies_source",
   "repeats_clue",
   "repeats_opening",
+  "stock_frame",
   "over_section_max",
 ] as const;
 
@@ -89,7 +90,7 @@ const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
  * Checks about style, not truth or safety: preferences on a low-data pass (and repeats_opening and
  * name_trait on every pass).
  */
-export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait" | "trivia">;
+export type StyleReason = Extract<DropReason, "copies_source" | "repeats_clue" | "repeats_opening" | "name_trait" | "trivia" | "stock_frame">;
 
 export type ValidationResult = {
   items: ValidItem[];
@@ -619,6 +620,11 @@ export function validateDraft(
       drop("riddle_frame");
       continue;
     }
+    // M10 (run 2026-10-06-8): "Somewhere you will see a" opened printed clues on 5 parks although the prompt names it as
+    // a start to avoid. A frame the prompt names (STOCK_FRAMES) goes first when a spare can take its place; one that is
+    // still printed gets a plain first word on the finished pass (build-pass.ts, `rewriteStockFrame`). A hard drop was
+    // tried first: on run -8's answers it made 8 more passes short, each needing a refill call (M3, M8).
+    if (stockFrame(d.clue) !== null) style ??= "stock_frame";
     // A stock opening ("Can you find ..."): only a preference.
     if (style === undefined && stockOpening(d.clue) !== null) {
       style = "repeats_opening";
@@ -1087,6 +1093,46 @@ export function isCutOff(clue: string): boolean {
 
 /** The first words of a clue (lower case, letters and digits). */
 const firstWords = (clue: string, k: number) => (sentencesOf(clue)[0] ?? []).slice(0, k).join(" ");
+
+/** The banned frame a clue starts with ("somewhere you will see"; prompt.ts STOCK_FRAMES), or null. */
+export function stockFrame(clue: string): string | null {
+  const start = `${firstWords(clue, 5)} `;
+  return STOCK_FRAMES.map((f) => f.toLowerCase()).find((f) => start.startsWith(`${f} `)) ?? null;
+}
+
+/** Frames that are a question or a "there is" (they become a plain command); "Hunt for a tree" already is one. */
+const REWRITABLE_FRAMES = STOCK_FRAMES.filter((f) => !f.startsWith("Hunt")).map((f) => f.toLowerCase());
+/** Plain first words for a rewritten frame, in order of preference (the first one not used on the pass wins). */
+export const FRAME_VERBS = ["Spot", "Notice", "Peek at", "Watch for", "Check for"] as const;
+
+/**
+ * M10 (run 2026-10-06-8): a printed clue that starts with a banned frame gets a plain first word instead:
+ * "Somewhere you will see a low dirt hill in the center." -> "Spot a low dirt hill in the center."; "Where can you see
+ * a spray of water bob up from a spout?" -> "Notice a spray of water bob up from a spout." (a frame that hears becomes
+ * "Listen for"). Only the frame words change: the rest of the clue is the model's own, already checked. `taken` holds
+ * the first words of the pass's other clues (lower case), so the new word does not repeat one; a verb that starts
+ * like a word of the answer ("Spot" for Spotted Sandpiper) is skipped. Returns the clue unchanged when no frame or no
+ * word fits.
+ */
+export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answer: string): string {
+  const frame = stockFrame(clue);
+  if (frame === null || !REWRITABLE_FRAMES.includes(frame)) return clue;
+  const words = frame.split(" ").length;
+  const m = clue.trim().match(new RegExp(`^(?:\\S+\\s+){${words}}`));
+  if (!m) return clue;
+  let rest = clue.trim().slice(m[0].length);
+  if (!rest) return clue;
+  const firstEnd = rest.search(/[.?!]/);
+  if (firstEnd >= 0 && rest[firstEnd] === "?") rest = `${rest.slice(0, firstEnd)}.${rest.slice(firstEnd + 1)}`;
+  else if (firstEnd < 0) rest = `${rest}.`;
+  const ans = answer.toLowerCase();
+  const candidates = frame.includes("hear") ? ["Listen for"] : [...FRAME_VERBS];
+  const verb = candidates.find((v) => {
+    const w = v.split(" ")[0].toLowerCase();
+    return !taken.has(w) && !ans.includes(w.slice(0, 4));
+  });
+  return verb ? `${verb} ${rest}` : clue;
+}
 
 /** The stock opening a clue starts with ("can you find"), or null (prompt.ts STOCK_OPENINGS). */
 export function stockOpening(clue: string): string | null {

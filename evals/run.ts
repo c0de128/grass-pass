@@ -56,7 +56,11 @@ export const RESULTS_DIR = path.join(APP_ROOT, "evals", "results");
 export type ModelSpec = {
   id: string;
   runs: number;
-  timeoutMs: number;
+  /**
+   * MODEL_TIMEOUT_MS for this lane (a cap on every model call), or null for the app's own sized limits
+   * (src/lib/pass/budget.ts; slow-provider fix after run 2026-10-06-8, which ran Gemma with a fixed 30 s).
+   */
+  timeoutMs: number | null;
   licence: string;
   where: string;
   /**
@@ -71,7 +75,7 @@ export const LOCAL_BASE_URL = "http://localhost:11434/v1";
 
 /** SPEC 6.4 runs (K4 = B: open models only + the no-AI template). */
 export const MODEL_SPECS: Record<string, ModelSpec> = {
-  "gemma-4-31B-it": { id: "gemma-4-31B-it", runs: 3, timeoutMs: 30_000, licence: "Apache-2.0", where: "DigitalOcean serverless (US); park name + public facts only" },
+  "gemma-4-31B-it": { id: "gemma-4-31B-it", runs: 3, timeoutMs: null, licence: "Apache-2.0", where: "DigitalOcean serverless (US); park name + public facts only" },
   // The app's documented Llama setting: MODEL_TIMEOUT_MS=60000 (measured 47 s on 2026-10-05).
   "llama-4-maverick": { id: "llama-4-maverick", runs: 1, timeoutMs: 60_000, licence: "Llama 4 Community Licence", where: "DigitalOcean serverless (US); park name + public facts only" },
   // Self-host row (judge G1, 2026-10-06): Gemma 4 E2B (QAT Q4_0, `gemma4:e2b-it-qat`) on this laptop's CPU through Ollama,
@@ -96,7 +100,7 @@ export function modelEnv(spec: ModelSpec, env: Record<string, string | undefined
     return {
       MODEL_BASE_URL: env.EVAL_LOCAL_BASE_URL?.trim() || spec.local.defaultBaseUrl,
       MODEL_ID: spec.id,
-      MODEL_TIMEOUT_MS: String(spec.timeoutMs),
+      ...(spec.timeoutMs !== null ? { MODEL_TIMEOUT_MS: String(spec.timeoutMs) } : {}),
       MODEL_REASONING_EFFORT: spec.local.reasoningEffort,
       APP_CONTACT_URL: env.APP_CONTACT_URL,
     };
@@ -104,7 +108,7 @@ export function modelEnv(spec: ModelSpec, env: Record<string, string | undefined
   return {
     DO_INFERENCE_API_KEY: env.DO_INFERENCE_API_KEY,
     MODEL_ID: spec.id,
-    MODEL_TIMEOUT_MS: String(spec.timeoutMs),
+    ...(spec.timeoutMs !== null ? { MODEL_TIMEOUT_MS: String(spec.timeoutMs) } : {}),
     APP_CONTACT_URL: env.APP_CONTACT_URL,
   };
 }
@@ -510,7 +514,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
         `Self-hosted lane ${spec.id}: served by Ollama at ${modelEnv(spec, env).MODEL_BASE_URL} on the machine that ran the eval (CPU only), thinking off (MODEL_REASONING_EFFORT=${spec.local?.reasoningEffort ?? "unset"}). Cost $0 (no paid call); electricity not counted.`,
         settings.localPatient
           ? `PATIENT CLOCK (EVAL_LOCAL_PATIENT=1, eval only): model calls up to ${PATIENT_CLOCK.modelTimeoutMs / 1000} s, refills up to ${PATIENT_CLOCK.refillTimeoutMs / 1000} s, whole pass up to ${PATIENT_CLOCK.passDeadlineMs / 1000} s. The app itself stops a model call at 70 s and a pass at 85 s, so these passes show what the model writes when not cut off, not what the app would print.`
-          : `App clock: the app's own limits (model call up to ${spec.timeoutMs / 1000} s, refill up to 20 s, whole pass 85 s), exactly what a person running the app with these settings gets.`,
+          : `App clock: the app's own limits (each model call sized to what it asks${spec.timeoutMs !== null ? `, at most ${spec.timeoutMs / 1000} s` : ""}; whole pass 85 s), exactly what a person running the app with these settings gets.`,
       );
     }
     if (ready.length > 0) {

@@ -6,7 +6,9 @@
  * - Strict `json_schema` output, validated again with zod. `finish_reason: length`,
  *   empty content, non-JSON and schema mismatches are all MODEL_BAD_OUTPUT.
  * - 30 s timeout: ~3x the slowest measured Gemma 4 31B answer (9.3 s, 2026-10-05).
- * - One retry on a network error or 5xx, after 500 ms, only if a normal answer still fits.
+ * - One retry on a network error or 5xx, after 500 ms, or an HTTP 403, after 1 s, only if a normal answer still fits.
+ *   DigitalOcean answers a bad key with 401 ("Unable to authenticate you", checked 2026-10-06), so a 403 with a working
+ *   key is a short-lived refusal (runs -3 to -8: 0.2-0.4 s or about 5.1 s; a retry after one answered in run -6).
  * - Distinct error codes for not configured / network / provider / rate limit / quota / timeout / bad output.
  * - One JSON log line per attempt (model, latency, tokens, finish_reason, outcome). Never the key, never prompt text.
  * - Key-to-host rule (SEC-F-01): DO_INFERENCE_API_KEY goes ONLY to https://inference.do-ai.run.
@@ -36,6 +38,8 @@ export const ROUTE_MAX_DURATION_SEC = 90;
 export const MAX_MODEL_TIMEOUT_MS = (ROUTE_MAX_DURATION_SEC - 20) * 1000;
 export const MIN_MODEL_TIMEOUT_MS = 5_000;
 export const RETRY_BACKOFF_MS = 500;
+/** Wait before the one retry after an HTTP 403 (a short-lived refusal; see above). */
+export const FORBIDDEN_BACKOFF_MS = 1_000;
 /** A retry starts only when at least this share of the timeout is left (12 s at 30 s). */
 export const RETRY_BUDGET_SHARE = 0.4;
 
@@ -122,8 +126,16 @@ export function configuredModelId(env: Env = process.env): string {
 
 /** Timeout from MODEL_TIMEOUT_MS (e.g. 60000 for the slower Llama fallback), clamped to 5-70 s. */
 export function modelTimeoutMs(env: Env = process.env): number {
+  return modelTimeoutCapMs(env) ?? MODEL_TIMEOUT_MS;
+}
+
+/**
+ * MODEL_TIMEOUT_MS when it is set (clamped to 5-70 s), else null. The pass builder sizes each call from what it asks
+ * for (src/lib/pass/budget.ts); a set MODEL_TIMEOUT_MS caps every one of its calls.
+ */
+export function modelTimeoutCapMs(env: Env = process.env): number | null {
   const n = Number(env.MODEL_TIMEOUT_MS?.trim());
-  if (!Number.isFinite(n) || n <= 0) return MODEL_TIMEOUT_MS;
+  if (!Number.isFinite(n) || n <= 0) return null;
   return Math.min(MAX_MODEL_TIMEOUT_MS, Math.max(MIN_MODEL_TIMEOUT_MS, Math.round(n)));
 }
 
@@ -328,6 +340,8 @@ export type ModelLogLine = {
   outcome: "ok" | "network" | "provider_error" | "rate_limited" | "quota" | "timeout" | "bad_output" | "aborted";
   latencyMs: number;
   upstreamStatus?: number;
+  /** A short error id from the provider's error body (e.g. "Unauthorized"), letters/digits/._- only, at most 40. */
+  upstreamErrorId?: string;
   finishReason?: string | null;
   promptTokens?: number;
   completionTokens?: number;
@@ -355,6 +369,8 @@ export type CallOptions = {
   minRetryBudgetMs?: number;
   logger?: ModelLogger;
   now?: () => number;
+  /** The timeout signal for `ms` (default AbortSignal.timeout). Eval replay only: a virtual clock. */
+  deadlineSignal?: (ms: number) => AbortSignal;
 };
 
 export type ModelResult<T> = {
@@ -381,6 +397,28 @@ function sleep(ms: number, signal: AbortSignal): Promise<void> {
   });
 }
 
+const ERROR_ID_RE = /^[\w.-]{1,40}$/;
+
+/**
+ * The provider's short error id from an error body ({"id": "Unauthorized", ...} on DigitalOcean; {"error": {"code"}}
+ * or {"error": {"type"}} on OpenAI-compatible servers), read from at most 2 KB. Never the message text: only a token
+ * of letters, digits, dot, dash or underscore is kept, so nothing the provider echoes from the prompt reaches the log.
+ */
+export async function errorIdOf(res: Response): Promise<string | undefined> {
+  try {
+    const text = (await res.text()).slice(0, 2_048);
+    const j = JSON.parse(text) as { id?: unknown; code?: unknown; error?: { code?: unknown; type?: unknown } | unknown };
+    const err = j.error && typeof j.error === "object" ? (j.error as { code?: unknown; type?: unknown }) : null;
+    for (const v of [j.id, j.code, err?.code, err?.type]) {
+      const t = typeof v === "number" ? String(v) : v;
+      if (typeof t === "string" && ERROR_ID_RE.test(t)) return t;
+    }
+  } catch {
+    /* not JSON, or the body could not be read */
+  }
+  return undefined;
+}
+
 function retryAfterSeconds(res: Response): number | undefined {
   const n = Number(res.headers.get("retry-after"));
   return Number.isFinite(n) && n > 0 ? Math.ceil(n) : undefined;
@@ -400,7 +438,7 @@ export async function callModel<T>(req: ModelRequest<T>, opts: CallOptions = {})
   const backoffMs = opts.backoffMs ?? RETRY_BACKOFF_MS;
   const minRetryBudgetMs = opts.minRetryBudgetMs ?? Math.round(timeoutMs * RETRY_BUDGET_SHARE);
 
-  const deadline = AbortSignal.timeout(timeoutMs);
+  const deadline = (opts.deadlineSignal ?? ((ms: number) => AbortSignal.timeout(ms)))(timeoutMs);
   const signal = opts.signal ? AbortSignal.any([deadline, opts.signal]) : deadline;
   const body = JSON.stringify(buildRequestBody(req, model, { reasoningEffort: reasoningEffort(env) }));
   const started = now();
@@ -459,6 +497,7 @@ export async function callModel<T>(req: ModelRequest<T>, opts: CallOptions = {})
     }
 
     if (!res.ok) {
+      const upstreamErrorId = res.status === 403 || res.status >= 500 ? await errorIdOf(res) : undefined;
       await res.body?.cancel().catch(() => undefined);
       const latencyMs = now() - t0;
       const upstreamStatus = res.status;
@@ -470,10 +509,10 @@ export async function callModel<T>(req: ModelRequest<T>, opts: CallOptions = {})
         logLine({ ...base, attempt, outcome: "quota", latencyMs, upstreamStatus });
         throw new ModelError("MODEL_QUOTA", { upstreamStatus });
       }
-      logLine({ ...base, attempt, outcome: "provider_error", latencyMs, upstreamStatus });
-      if (res.status >= 500 && attempt === 1 && canRetry()) {
+      logLine({ ...base, attempt, outcome: "provider_error", latencyMs, upstreamStatus, ...(upstreamErrorId ? { upstreamErrorId } : {}) });
+      if ((res.status >= 500 || res.status === 403) && attempt === 1 && canRetry()) {
         try {
-          await sleep(backoffMs, signal);
+          await sleep(res.status === 403 ? (opts.backoffMs ?? FORBIDDEN_BACKOFF_MS) : backoffMs, signal);
         } catch (sleepErr) {
           throw fail(attempt, t0, sleepErr, res.status);
         }

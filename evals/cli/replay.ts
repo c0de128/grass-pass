@@ -11,7 +11,8 @@ import { dangerClueWord } from "@/lib/safety/danger-taxa";
 
 /**
  * `pnpm eval:replay` (free: no model, no network). EVAL_FROM=<results JSON name> (required),
- * EVAL_REPLAY_MODELS (default gemma-4-31B-it), EVAL_REPLAY_OUT (optional JSON path for the details).
+ * EVAL_REPLAY_MODELS (default gemma-4-31B-it), EVAL_REPLAY_OUT (optional JSON path for the details),
+ * EVAL_REPLAY_TPS (slow clock: answer tokens/s), EVAL_REPLAY_OLD_BUDGET=1 (the fixed limits before the slow-provider fix).
  * Prints M3 / M10 / M6 / drops of the saved run's own answers through today's code.
  */
 test("replay a saved eval run through today's checks (pnpm eval:replay)", async () => {
@@ -22,8 +23,11 @@ test("replay a saved eval run through today's checks (pnpm eval:replay)", async 
   const models = (process.env.EVAL_REPLAY_MODELS?.trim() || "gemma-4-31B-it").split(",").map((s) => s.trim()).filter(Boolean);
   const restore = setLogSink(() => undefined);
   try {
-    const { summaries, skipped, contexts } = await replayResults(results, models);
+    const tps = Number(process.env.EVAL_REPLAY_TPS?.trim());
+    const opts = { tps: Number.isFinite(tps) && tps > 0 ? tps : null, oldBudget: process.env.EVAL_REPLAY_OLD_BUDGET?.trim() === "1" };
+    const { summaries, skipped, contexts } = await replayResults(results, models, opts);
     const say = (s: string) => process.stdout.write(`${s}\n`);
+    say(`clock: ${opts.tps ? `slow, every answered call at most ${opts.tps} answer tokens/s` : "recorded latencies"}; limits: ${opts.oldBudget ? "OLD fixed (30 s / 20 s refill / same whole retry)" : "today's budget (src/lib/pass/budget.ts)"}`);
     for (const s of skipped) say(`skipped ${s}`);
     for (const { model, score, runs, unrecorded, optimisticComplete } of summaries) {
       const pct = (r: number | null) => (r === null ? "n/a" : `${(r * 100).toFixed(1)}%`);
@@ -49,6 +53,8 @@ test("replay a saved eval run through today's checks (pnpm eval:replay)", async 
       for (const { r, i } of [...jargon, ...trivia, ...kind, ...danger]) say(`  weak: case ${r.caseN} r${r.run}: "${i.clue}" (${i.answer})`);
       const s = score.sound;
       if (s) say(`sound clues: ${s.withSound}/${s.passes} passes have one; water-by-ear ${s.waterSound}/${s.passes} passes on ${s.waterSoundParks} parks; passes with 2+ sound clues ${s.twoOrMore}`);
+      const timedOut = runs.flatMap((r) => r.calls).filter((c) => c.error === "TimeoutError").length;
+      say(`model calls: ${runs.reduce((a, r) => a + r.calls.length, 0)}; timed out: ${timedOut}; lost runs (no pass): ${runs.filter((r) => r.dataRich && r.kind === "error").length}`);
       say(`unrecorded calls today's code would make: ${unrecorded.length} (${unrecorded.map((u) => `case ${u.caseN} r${u.run} call ${u.callIndex + 1} asks ${u.asked}`).join("; ")})`);
       const drops: Record<string, number> = {};
       for (const r of runs) for (const d of r.dropLog) drops[d.reason] = (drops[d.reason] ?? 0) + 1;

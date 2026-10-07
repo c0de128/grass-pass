@@ -20,7 +20,8 @@ import {
   validateDraft,
   voiceSwitch,
 } from "@/lib/ai/validate";
-import { MAX_MODEL_CALLS, REFILL_TIMEOUT_MS, retryableModelError, retryText, WHOLE_RETRY_MIN_LEFT_MS } from "@/lib/ai/build-pass";
+import { MAX_MODEL_CALLS, retryableModelError, retryText, WHOLE_RETRY_MIN_LEFT_MS } from "@/lib/ai/build-pass";
+import { REFILL_MAX_MS, REFILL_MIN_MS } from "@/lib/pass/budget";
 import { resetStores } from "@/lib/cache/store";
 import { setLogSink } from "@/lib/log";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
@@ -79,10 +80,11 @@ describe("refills ask for 2 spares and say which first words are taken", () => {
     expect(refillRules({ copied: [], generic: false })).toHaveLength(1);
   });
 
-  it("calls are bounded: at most MAX_MODEL_CALLS, a short refill timeout, and a whole retry only with a first call's time left", () => {
+  it("calls are bounded: at most MAX_MODEL_CALLS, a sized refill limit (15-30 s), and a whole retry only when 3 clues fit", () => {
     expect(MAX_MODEL_CALLS).toBe(3);
-    expect(REFILL_TIMEOUT_MS).toBe(20_000);
-    expect(WHOLE_RETRY_MIN_LEFT_MS).toBe(25_000);
+    expect([REFILL_MIN_MS, REFILL_MAX_MS]).toEqual([15_000, 30_000]);
+    // Slow provider (run -8): 3 clues at the budgeted retry speed (20 answer tokens/s) + 3 s margin (was a fixed 25 s).
+    expect(WHOLE_RETRY_MIN_LEFT_MS).toBe(16_250);
   });
 });
 
@@ -280,11 +282,11 @@ describe("buildPass calls (built failures; every other answer is a real recordin
     expect(steps.join("\n")).not.toContain(retryText("refill"));
   }, 30_000);
 
-  it("Q-5-04: no whole retry starts with less than WHOLE_RETRY_MIN_LEFT_MS left (first call fails at 62 s on the virtual clock)", async () => {
+  it("Q-5-04: no whole retry starts with less than WHOLE_RETRY_MIN_LEFT_MS left (first call fails at 70 s on the virtual clock)", async () => {
     let skew = 0;
     const r = passReplay({
       model: () => {
-        skew += 62_000; // built: the first call 'took' 62 s of the 85 s pass deadline, then failed with a retryable 403
+        skew += 70_000; // built: the first call 'took' 70 s of the 85 s pass deadline, then failed with a retryable 403
         return new Response("forbidden", { status: 403 });
       },
     });
@@ -293,8 +295,29 @@ describe("buildPass calls (built failures; every other answer is a real recordin
       { ip: "192.0.2.94", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, now: () => Date.now() + skew },
     );
     expect(out.kind).toBe("error");
+    // 15 s left < 16.25 s; and the in-call 403 retry sees the same clock (no time left in the call either).
     expect(modelCalls(r.calls)).toHaveLength(1);
-    expect(WHOLE_RETRY_MIN_LEFT_MS).toBe(25_000);
+  }, 30_000);
+
+  it("slow provider: with about 25 s left the whole retry asks for fewer items, sized to fit (first call fails at 60 s)", async () => {
+    let skew = 0;
+    const r = passReplay({
+      model: () => {
+        skew += 60_000; // built: each call 'takes' 60 s on the virtual clock and gets a 403
+        return new Response("forbidden", { status: 403 });
+      },
+    });
+    await makePass(
+      { parkId: PARKS.celebration.id, ageBand: "6-10" },
+      { ip: "192.0.2.89", fetchImpl: r.fetchImpl, modelFetch: r.fetchImpl, env, now: () => Date.now() + skew },
+    );
+    const asked = modelCalls(r.calls).map((c) => (JSON.parse(c.body!) as { response_format: { json_schema: { schema: { properties: { items: { minItems: number } } } } } }).response_format.json_schema.schema.properties.items.minItems);
+    expect(asked).toHaveLength(2);
+    // 25 s (less the real seconds this test takes) - 3 s margin at 20 answer tokens/s carries 5 clues (4 if the test
+    // machine is slow; budget.ts itemsThatFit), not the whole pass.
+    expect(asked[1]).toBeGreaterThanOrEqual(4);
+    expect(asked[1]).toBeLessThanOrEqual(5);
+    expect(asked[0]).toBeGreaterThan(asked[1]);
   }, 30_000);
 
   it.each([400, 401, 404])("Q-5-04: a %i from the provider is never retried (it would fail the same way)", async (status) => {
@@ -318,8 +341,8 @@ describe("buildPass calls (built failures; every other answer is a real recordin
   });
 
   it("Q-5-03: each retry reason has its own progress line", () => {
-    const lines = (["timeout", "failed", "none_kept", "refill", "last_refill"] as const).map(retryText);
-    expect(new Set(lines).size).toBe(5);
+    const lines = (["timeout", "timeout_short", "failed", "failed_short", "none_kept", "refill", "last_refill"] as const).map(retryText);
+    expect(new Set(lines).size).toBe(7);
     expect(retryText("timeout")).toMatch(/didn't answer in time/);
     expect(lines.filter((l) => /once more/.test(l))).toHaveLength(0);
   });

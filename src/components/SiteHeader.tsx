@@ -58,7 +58,6 @@ export function SiteHeader() {
         </nav>
         <div className="ml-auto flex items-center gap-2 max-[359px]:gap-1 sm:ml-0 sm:gap-3">
           <AccountMenu />
-          <ThemeToggle />
           <Link
             href="/#find"
             prefetch={false}
@@ -67,6 +66,7 @@ export function SiteHeader() {
             Make a pass
             <ArrowRight className="size-4 transition-transform motion-safe:group-hover:translate-x-0.5" aria-hidden="true" />
           </Link>
+          <ThemeToggle />
         </div>
       </div>
     </header>

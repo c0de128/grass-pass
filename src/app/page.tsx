@@ -56,8 +56,9 @@ export default async function Home() {
         <RestingNotice state={resting} />
         <PassMaker account={account} />
       </HomeHero>
-      <TwoParks />
+      {/* Kevin 2026-10-07: How it works comes before The problem. */}
       <HowItWorks />
+      <TwoParks />
       <PassAnatomy spot={spotQuote(statuses)} />
       <SampleParks statuses={statuses} enabled={enabled} />
       <FinalCta />

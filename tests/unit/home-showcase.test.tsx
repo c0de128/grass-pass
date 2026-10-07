@@ -170,7 +170,7 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("the live pill only claims what is true, and pulses only about today", () => {
     const pass = realPass();
-    expect(liveStatement([readyStatus("oak-point", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "2 example passes made today from live data", live: true });
+    expect(liveStatement([readyStatus("oak-point", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "Example passes made today from live data", live: true });
     expect(liveStatement([readyStatus("oak-point", pass, false)], true)).toEqual({ text: "1 example pass ready (made on an earlier day)", live: false });
     expect(liveStatement([missingStatus("oak-point", "x", true)], true)).toEqual({ text: "Making today's example passes", live: true });
     expect(liveStatement([missingStatus("oak-point", "x")], true)).toEqual({ text: "Example passes not ready yet", live: false });

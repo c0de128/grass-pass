@@ -142,7 +142,8 @@ export function liveStatement(statuses: readonly ExampleStatus[], enabled: boole
   const readyOnes = statuses.filter((s) => s.pass);
   // Judge R7 T1: "made today" counts only passes shown from today (an older complete one is not today's).
   const today = statuses.filter((s) => s.pass && s.today).length;
-  if (today > 0) return { text: `${today} example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
+  // Kevin 2026-10-07: no count in the pill.
+  if (today > 0) return { text: `Example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
   if (statuses.some((s) => s.refreshing)) return { text: "Making today's example passes", live: true };
   if (readyOnes.length > 0) {
     return { text: `${readyOnes.length} example ${readyOnes.length === 1 ? "pass" : "passes"} ready (made on an earlier day)`, live: false };

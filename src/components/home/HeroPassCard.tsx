@@ -77,12 +77,13 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
       </div>
 
       <figcaption className="flex items-center justify-between gap-2 bg-muted px-4 py-1.5 text-[11px] font-medium text-muted-foreground">
-        <span>Grown-up&apos;s stub · answers &amp; safety</span>
+        <span className="min-w-0">Grown-up&apos;s stub · answers &amp; safety</span>
         {card?.kind === "ready" ? (
           <Link
             href={card.ex.href}
             prefetch={false}
-            className="inline-flex min-h-8 items-center gap-1 rounded-md font-bold text-link underline-offset-2 hover:underline"
+            className="inline-flex min-h-8 shrink-0 items-center gap-1 rounded-md font-bold whitespace-nowrap text-link underline-offset-2 hover:underline"
+            data-testid="hero-view-pass"
           >
             View pass
             <ArrowUpRight className="size-3.5" aria-hidden="true" />

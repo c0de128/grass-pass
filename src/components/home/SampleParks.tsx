@@ -6,6 +6,7 @@ import {
   exampleState,
   liveStatement,
   madeLine,
+  noExamplesText,
   placeLabel,
   readyExample,
 } from "@/lib/home/showcase";
@@ -86,8 +87,7 @@ export function SampleParks({
             className="max-w-2xl rounded-2xl bg-card p-5 text-base leading-relaxed text-ink ring-1 ring-border"
             data-testid="examples-none"
           >
-            No data available: no example pass is ready right now. They are made
-            from live park data; try again in a minute.
+            {noExamplesText(statuses, enabled)}
           </p>
         ) : (
           <ul
@@ -131,7 +131,7 @@ export function SampleParks({
                   <Link
                     href={ex.href}
                     prefetch={false}
-                    className="group flex h-full flex-col overflow-hidden rounded-3xl bg-card ring-1 ring-border transition-all hover:shadow-xl hover:shadow-shadow motion-safe:hover:-translate-y-1"
+                    className="group flex h-full scroll-mt-28 flex-col overflow-hidden rounded-3xl sm:scroll-mt-24 bg-card ring-1 ring-border transition-all hover:shadow-xl hover:shadow-shadow motion-safe:hover:-translate-y-1"
                   >
                     {picture}
                     <div className="flex flex-1 flex-col gap-3 p-5">

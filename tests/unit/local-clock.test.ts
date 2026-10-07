@@ -3,10 +3,20 @@
  * on a Vercel deploy; and the page is told how long to wait.
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
-import { isLocalModel, LOCAL_MODEL_TIMEOUT_MAX_MS, LOCAL_PASS_DEADLINE_MAX_MS, localModelClock } from "@/lib/pass/local-clock";
+import {
+  isLocalModel,
+  LOCAL_BUSY_RETRY_SEC,
+  LOCAL_MODEL_TIMEOUT_MAX_MS,
+  LOCAL_PASS_DEADLINE_MAX_MS,
+  localMaxPasses,
+  localModelClock,
+  localPassesRunning,
+  resetLocalPassSlots,
+  takeLocalPassSlot,
+} from "@/lib/pass/local-clock";
 import { MAX_MODEL_TIMEOUT_MS } from "@/lib/model";
 import { LOCAL_WAIT_COPY, localTimeoutCopy } from "@/components/pass/usePassRequest";
-import { PassLineSchema, type PassLine } from "@/lib/pass/schema";
+import { PASS_COPY, PassLineSchema, type PassLine } from "@/lib/pass/schema";
 import { resetStores } from "@/lib/cache/store";
 import { resetPassMaking } from "@/lib/pass/make";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
@@ -124,10 +134,60 @@ describe("POST /api/pass with a model on this computer", () => {
     expect(ls.at(-1)?.type).toBe("result");
   });
 
+  it("SEC-7-04: while another local pass is building, a new one is refused with 503 LOCAL_MODEL_BUSY (no model call)", async () => {
+    vi.stubEnv("LOCAL_MODEL_TIMEOUT_MS", "270000");
+    const other = takeLocalPassSlot(); // a pass for another park, still building on the CPU
+    expect(other.ok).toBe(true);
+    const res = await route.POST(post());
+    expect(res.status).toBe(503);
+    expect(res.headers.get("Retry-After")).toBe(String(LOCAL_BUSY_RETRY_SEC));
+    const body = (await res.json()) as { error: { code: string; message: string } };
+    expect(body.error).toMatchObject({ code: "LOCAL_MODEL_BUSY", message: PASS_COPY.localBusy });
+    expect(replay.calls.filter((c) => c.host === "inference.do-ai.run")).toHaveLength(0);
+    if (other.ok) other.release();
+    // Once it is done, the pass builds, and its own slot is given back at the end.
+    const ls = await lines(await route.POST(post()));
+    expect(ls.at(-1)?.type).toBe("result");
+    expect(localPassesRunning()).toBe(0);
+  });
+
   it("not switched on: no clock line (the page keeps its normal 95 s wait)", async () => {
     vi.stubEnv("LOCAL_MODEL_TIMEOUT_MS", "");
     const ls = await lines(await route.POST(post()));
     expect(ls.some((l) => l.type === "clock")).toBe(false);
     expect(ls[0].type).toBe("step");
+  });
+});
+
+describe("SEC-7-04: at most 1-2 local-clock passes at once", () => {
+  const LOCAL = { MODEL_BASE_URL: OLLAMA, LOCAL_MODEL_TIMEOUT_MS: "270000" };
+  beforeEach(() => resetLocalPassSlots());
+
+  it("1 by default, LOCAL_MAX_PASSES may raise it to 2, never more", () => {
+    expect(localMaxPasses({})).toBe(1);
+    expect(localMaxPasses({ LOCAL_MAX_PASSES: "2" })).toBe(2);
+    expect(localMaxPasses({ LOCAL_MAX_PASSES: "50" })).toBe(2);
+    expect(localMaxPasses({ LOCAL_MAX_PASSES: "zero" })).toBe(1);
+  });
+
+  it("with the local clock: the second pass waits until the first gives its slot back (release is idempotent)", () => {
+    const a = takeLocalPassSlot(LOCAL);
+    expect(a.ok).toBe(true);
+    expect(takeLocalPassSlot(LOCAL)).toEqual({ ok: false, limit: 1, retryAfter: LOCAL_BUSY_RETRY_SEC });
+    if (a.ok) {
+      a.release();
+      a.release();
+    }
+    expect(localPassesRunning()).toBe(0);
+    const b = takeLocalPassSlot({ ...LOCAL, LOCAL_MAX_PASSES: "2" });
+    const c = takeLocalPassSlot({ ...LOCAL, LOCAL_MAX_PASSES: "2" });
+    expect([b.ok, c.ok]).toEqual([true, true]);
+    expect(takeLocalPassSlot({ ...LOCAL, LOCAL_MAX_PASSES: "2" }).ok).toBe(false);
+  });
+
+  it("never limits the normal clock (hosted model, or Vercel)", () => {
+    for (let i = 0; i < 5; i++) expect(takeLocalPassSlot({ MODEL_BASE_URL: "https://inference.do-ai.run/v1" }).ok).toBe(true);
+    for (let i = 0; i < 5; i++) expect(takeLocalPassSlot({ ...LOCAL, VERCEL: "1" }).ok).toBe(true);
+    expect(localPassesRunning()).toBe(0);
   });
 });

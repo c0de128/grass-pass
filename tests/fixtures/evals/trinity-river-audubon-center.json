@@ -296,6 +296,65 @@
      {"count":3,"taxon":{"id":170070,"name":"Ungnadia speciosa","rank":"species","preferred_common_name":"Mexican buckeye","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47729,58321,155712,170070]}}
     ]
    }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C194109&term_id=12&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T04:43:16.636Z",
+   "latencyMs": 337,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":18,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C194109&term_id=12&term_value_id=13&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T04:43:18.675Z",
+   "latencyMs": 111,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 1,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":14,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}}
+    ]
+   }
+  },
+  {
+   "source": "inaturalist",
+   "what": "phenology",
+   "method": "GET",
+   "url": "https://api.inaturalist.org/v1/observations/species_counts?lat=32.70549&lng=-96.70428&radius=50&verifiable=true&month=10&taxon_id=52763%2C194109&term_id=12&term_value_id=14&per_page=30&locale=en",
+   "status": 200,
+   "contentType": "application/json; charset=utf-8",
+   "fetchedAt": "2026-10-07T04:43:21.479Z",
+   "latencyMs": 106,
+   "failedAttempts": [],
+   "body": {
+    "total_results": 2,
+    "page": 1,
+    "per_page": 30,
+    "results": [
+     {"count":5,"taxon":{"id":194109,"name":"Grindelia ciliata","rank":"species","preferred_common_name":"Spanish Gold","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47605,47604,632790,461542,972893,55365,194109]}},
+     {"count":3,"taxon":{"id":52763,"name":"Cephalanthus occidentalis","rank":"species","preferred_common_name":"buttonbush","iconic_taxon_name":"Plantae","ancestor_ids":[48460,47126,211194,47125,47124,47363,47693,788062,777272,52728,52763]}}
+    ]
+   }
   }
  ]
 }

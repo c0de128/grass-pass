@@ -89,7 +89,8 @@ describe("blocklist: every new group stops a real species through its real ances
     });
   }
   it("covers every new group with a real species", () => {
-    const fresh = BLOCKED_TAXA.slice(BLOCKED_TAXA.findIndex((t) => t.name === "Euphorbia")).map((t) => t.name);
+    // Round-7 SEC-7-01's 8 groups after Rhinella have their own real species in sec7-safety.test.ts.
+    const fresh = BLOCKED_TAXA.slice(BLOCKED_TAXA.findIndex((t) => t.name === "Euphorbia"), BLOCKED_TAXA.findIndex((t) => t.name === "Rhinella") + 1).map((t) => t.name);
     expect(fresh).toHaveLength(31);
     for (const g of fresh) expect(cases.some(([, c]) => c === g), g).toBe(true);
   });
@@ -117,7 +118,8 @@ describe("danger words: one list for source and model text (SEC-6-02, Q-6-01)", 
   it("source text: the sentences round 6 found missing", () => {
     expect(dangerSourceWord("The plant is harmless-looking, but ingestion can cause death.")).toBe("death");
     expect(dangerSourceWord("Its seeds can kill livestock.")).toBe("kill");
-    expect(dangerSourceWord("The bite can cause severe necrosis.")).toBe("necrosis");
+    expect(dangerSourceWord("The wound can cause severe necrosis.")).toBe("necrosis");
+    expect(dangerSourceWord("The bite can cause severe necrosis.")).toBe("bite"); // round 7: "bite" is a source word too
     expect(dangerSourceWord("Contact causes painful skin welts and severe itching.")).toBe("painful");
     expect(dangerSourceWord("It can cause an allergic reaction and anaphylaxis.")).toBe("allergic");
     expect(dangerSourceWord("The hairs are urticating.")).toBe("urticating");

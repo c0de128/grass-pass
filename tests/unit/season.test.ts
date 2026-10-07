@@ -70,12 +70,15 @@ describe("R1-M4 season check: iNaturalist 'Flowers and Fruits' annotations (live
     const ids = plantCandidateIds(list);
     // r7 follow-ups: Virginia creeper (50278, Parthenocissus) is blocked now, so green antelopehorns (60946) takes its
     // place. The 3 queries for today's list were recorded live 2026-10-07 00:43 UTC and appended (`taxonIdsR7`).
-    const rr = phenologyRec(CON.slug)._recording as { taxonIds: number[]; taxonIdsR7?: number[] };
-    expect([...ids].sort((a, b) => a - b)).toEqual(rr.taxonIdsR7 ?? []);
+    // Round-7 SEC-7-01: western soapberry (286324, Sapindus) is blocked too, so pecan (67593) takes its place; those 3
+    // queries were recorded live 2026-10-07 04:42-04:43 UTC and appended (`taxonIdsSec7`, exchanges 7-9).
+    const rr = phenologyRec(CON.slug)._recording as { taxonIds: number[]; taxonIdsR7?: number[]; taxonIdsSec7?: number[] };
+    expect([...ids].sort((a, b) => a - b)).toEqual(rr.taxonIdsSec7 ?? []);
     expect(rr.taxonIdsR7).toEqual([...rr.taxonIds.filter((id) => id !== 50278), 60946].sort((a, b) => a - b));
+    expect(rr.taxonIdsSec7).toEqual([...(rr.taxonIdsR7 ?? []).filter((id) => id !== 286324), 67593].sort((a, b) => a - b));
     const f = parseFeatures(rec(`overpass-features-${CON.slug}`).body, parseParkId(CON.id)!)!;
     const sorted = [...ids].sort((a, b) => a - b);
-    expect(phenologyRec(CON.slug).exchanges.slice(3).map((e) => e.url)).toEqual([
+    expect(phenologyRec(CON.slug).exchanges.slice(6).map((e) => e.url)).toEqual([
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, null),
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, 13),
       phenologyUrl({ lat: f.park.lat, lng: f.park.lng }, OCT, sorted, 14),

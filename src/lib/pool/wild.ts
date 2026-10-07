@@ -3,7 +3,7 @@
  * last 14 days, minus every hard-blocked taxon (ADR 0003), each with its Wikipedia summary as the only
  * text a clue may quote. Counts, dates and safety lines are code-written.
  */
-import { blockedBy, dangerSourceWord, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
+import { blockedBy, blockedWordIn, dangerSourceWord, isStationary, safetyLineFor } from "@/lib/safety/danger-taxa";
 import type { Species, SpeciesList, TaxonSummary } from "@/lib/sources/inat";
 import { seasonFrom, seasonSentence, type PhenologyCount } from "./season";
 import { distinctiveWords, type PoolItem, type SectionState } from "./types";
@@ -303,6 +303,13 @@ export function wildPool(
     const ancestors = [...new Set([...s.ancestorIds, ...(sum?.ancestorIds ?? [])])];
     const taxon = { taxonId: s.taxonId, ancestorIds: ancestors };
     if (blockedBy(taxon)) {
+      blocked++;
+      continue;
+    }
+    // Round-7 SEC-7-02: a species whose own name holds a blocked word ("Southern Devil Scorpion", "Mexican buckeye")
+    // is left off even when its group is not blocked: the answer key would print that name. Harmless false hits
+    // ("false nettle", "rattlesnake master", wasp moths) are accepted for a kids' list.
+    if (blockedWordIn([s.commonName ?? "", s.name].join(". "))) {
       blocked++;
       continue;
     }

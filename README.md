@@ -156,6 +156,10 @@ EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 pnpm eval                      
 EVAL_MODELS=gemma4-e2b-8k EVAL_CASES=1,2,3,13,15 EVAL_LOCAL_PATIENT=1 pnpm eval   # eval-only longer clock
 ```
 
+Only for a server that you alone use: don't put it on the public internet with `LOCAL_MODEL_TIMEOUT_MS` set (one
+pass can hold the model for up to 20 minutes). With it on, the app builds one new pass at a time (`LOCAL_MAX_PASSES`,
+at most 2) and asks anyone else to try again in a minute.
+
 The eval runs the app's own pass builder and checks. The browser flow was clicked through once with
 `LOCAL_MODEL_TIMEOUT_MS=270000` (above). The eval's "app clock" row is the normal clock, without that setting.
 

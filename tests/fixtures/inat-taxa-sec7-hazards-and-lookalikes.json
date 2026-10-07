@@ -1,0 +1,430 @@
+{
+  "_recording": {
+    "what": "Real iNaturalist taxa for round-7 security SEC-7-01/02 (2026-10-06): a real species under every group added to or widened in the blocklist (assassin bugs: wheel bug, eastern bloodsucking conenose (a kissing bug), Zelus; Chinese tallow; pigeonberry; harvester ants; ticks: lone star, American dog, black-legged; Solenopsis fire ants: red imported and the geminata group; scorpions: striped bark scorpion and Southern Devil Scorpion; tree-of-heaven; western soapberry; Mexican buckeye), and look-alikes that must stay allowed by taxon (large milkweed bug, eastern black carpenter ant, rattlesnake master; the last is left off by its own name, an accepted false hit).",
+    "live": true,
+    "urls": [
+      "https://api.inaturalist.org/v1/taxa/48957,322394,1580612,79388,133291,1340200,83744,52155,60598,67598,1373017,119056,60912,57278,55556,129902,128695,286324,170070?per_page=30&locale=en"
+    ],
+    "method": "GET",
+    "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+    "status": 200,
+    "fetchedAt": "2026-10-07T04:29:39.933Z",
+    "trimmed": "Fields the app never reads (photos, listed_taxa...) were removed; ids, names, ranks, ancestor_ids and summaries are exactly as received."
+  },
+  "body": {
+    "total_results": 19,
+    "results": [
+      {
+        "id": 48957,
+        "name": "Arilus cristatus",
+        "rank": "species",
+        "preferred_common_name": "North American Wheel Bug",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47744,
+          61267,
+          372850,
+          133754,
+          48959,
+          320199,
+          482431,
+          48960
+        ],
+        "wikipedia_summary": "The <b>wheel bug</b> (<i>Arilus cristatus)</i> is in the family Reduviidae (literally, \"hangnail\"), which consists of assassin bugs. The species is one of the largest terrestrial true bugs in North America, reaching up to 1.5 inches (38 mm) in length in their adult stage. However, males are smaller in terms of their length and width when compared to females. A characteristic structure is the wheel-shaped pronotal armor. They are predators upon soft-bodied insects such as caterpillars, Japanese beetles,..."
+      },
+      {
+        "id": 322394,
+        "name": "Triatoma sanguisuga",
+        "rank": "species",
+        "preferred_common_name": "Eastern Bloodsucking Conenose",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47744,
+          61267,
+          372850,
+          133754,
+          48959,
+          472290,
+          1413905,
+          252908
+        ],
+        "wikipedia_summary": "<i><b>Triatoma sanguisuga</b></i>, also known as the <b>Eastern Bloodsucking Conenose</b> or the <b>Mexican Bed Bug</b>, is an insect of the Triatominae subfamily, known as kissing bugs. Like other species in this subfamily, <i>T. sanguisuga</i> is known to bite and feed off of humans at the mouth during sleep. This bite is painful and can cause adverse effects such as swelling, feelings of faintness, nausea, and vomiting."
+      },
+      {
+        "id": 1580612,
+        "name": "Zelus longipes",
+        "rank": "complex",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47744,
+          61267,
+          372850,
+          133754,
+          48959,
+          320199,
+          482431,
+          129424
+        ],
+        "wikipedia_summary": null
+      },
+      {
+        "id": 79388,
+        "name": "Triadica sebifera",
+        "rank": "species",
+        "preferred_common_name": "Chinese Tallow",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          51820,
+          51821,
+          779191,
+          1244658,
+          72408
+        ],
+        "wikipedia_summary": "<i><b>Triadica sebifera</b></i>, also known as <i><b>Sapium sebiferum</b></i>, is commonly known as the <b>Chinese tallow</b>, <b>Chinese tallowtree</b>, <b>Florida aspen</b>, <b>chicken tree</b>, <b>gray popcorn tree</b>, and <b>candleberry tree</b>. The tree is native to eastern Asia, and is most commonly associated with eastern China, Taiwan, and Japan. In these regions, the waxy coating of the seeds is used for candle and soap making, and the leaves are used as herbal medicine to treat boils. The plant sap and leaves..."
+      },
+      {
+        "id": 133291,
+        "name": "Rivina humilis",
+        "rank": "species",
+        "preferred_common_name": "pigeonberry",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          47366,
+          576365,
+          133292
+        ],
+        "wikipedia_summary": "<i><b>Rivina humilis</b></i> is a species of flowering plant in the family Petiveriaceae. It was formerly placed in the pokeweed family, Phytolaccaceae. It can be found in the southern United States, the Caribbean, Central America, and tropical South America. Common names include <b>pigeonberry</b>, <b>rougeplant</b>, <b>baby peppers</b>, <b>bloodberry</b>, and <b>coralito</b>. The specific epithet means \"dwarfish\" or \"lowly\" in Latin, referring to the plant's short stature."
+      },
+      {
+        "id": 1340200,
+        "name": "Pogonomyrmex barbatus",
+        "rank": "complex",
+        "preferred_common_name": "Barbatus-group Harvester Ants",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47201,
+          124417,
+          326777,
+          1269340,
+          47336,
+          69143,
+          469104,
+          69114
+        ],
+        "wikipedia_summary": "<i><b>Pogonomyrmex barbatus</b></i> is a species of harvester ant from the genus <i>Pogonomyrmex</i>. Its common names include <b>red ant</b> and <b>red harvester ant</b>. These large (5– to 7-mm) ants prefer arid chaparral habitats and are native to the Southwestern United States. Nests are made underground (up to 2.5 m deep) in exposed areas. Their diets consist primarily of seeds, and they consequently participate in myrmecochory, an ant-plant interaction through which the ants gain nutrients and the plants..."
+      },
+      {
+        "id": 83744,
+        "name": "Amblyomma americanum",
+        "rank": "species",
+        "preferred_common_name": "Lone Star Tick",
+        "iconic_taxon_name": "Arachnida",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          245097,
+          47119,
+          52788,
+          129762,
+          51672,
+          51673,
+          83745
+        ],
+        "wikipedia_summary": "<i><b>Amblyomma americanum</b></i>, also known as the <i><b>Lone Star Tick</b></i>, the <i><b>Northeastern Water Tick</b></i>, or the <i><b>Turkey Tick</b></i>, is a type of tick indigenous to much of the eastern United States and Mexico, that bites painlessly and commonly goes unnoticed, remaining attached to its host for as long as seven days until it is fully engorged with blood. It is a member of the phylum <i>Arthropoda</i>, class <i>Arachnida</i>. The adult lone star tick is sexually dimorphic, named..."
+      },
+      {
+        "id": 52155,
+        "name": "Dermacentor variabilis",
+        "rank": "species",
+        "preferred_common_name": "American Dog Tick",
+        "iconic_taxon_name": "Arachnida",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          245097,
+          47119,
+          52788,
+          129762,
+          51672,
+          51673,
+          52156
+        ],
+        "wikipedia_summary": "<i><b>Dermacentor variabilis</b></i>, also known as the <b>American dog tick</b> or <b>wood tick</b>, is a species of tick that is known to carry bacteria responsible for several diseases in humans, including Rocky Mountain spotted fever and tularemia (<i>Francisella tularensis</i>). It is one of the most well-known hard ticks. Diseases are spread when it sucks blood from the host, which could take several days for the host to experience some symptoms."
+      },
+      {
+        "id": 60598,
+        "name": "Ixodes scapularis",
+        "rank": "species",
+        "preferred_common_name": "Eastern Black-legged Tick",
+        "iconic_taxon_name": "Arachnida",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          245097,
+          47119,
+          52788,
+          129762,
+          51672,
+          51673,
+          51674
+        ],
+        "wikipedia_summary": "<i><b>Ixodes scapularis</b></i> is commonly known as the <b>deer tick</b> or <b>black-legged tick</b> (although some people reserve the latter term for <i>Ixodes pacificus</i>, which is found on the West Coast of the USA), and in some parts of the USA as the <b>bear tick</b>. It is a hard-bodied tick (family Ixodidae) of the eastern and northern Midwestern United States. It is a vector for several diseases of animals, including humans (Lyme disease, babesiosis, anaplasmosis, Powassan virus disease,..."
+      },
+      {
+        "id": 67598,
+        "name": "Solenopsis invicta",
+        "rank": "species",
+        "preferred_common_name": "Red Imported Fire Ant",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47201,
+          124417,
+          326777,
+          1269340,
+          47336,
+          69143,
+          469106,
+          67597,
+          1373022
+        ],
+        "wikipedia_summary": "The <b>red imported fire ant</b> (<i>Solenopsis invicta</i>), also known as the <b>fire ant</b> or <b>RIFA</b>, is a species of ant native to South America. A member of the genus <i>Solenopsis</i> in the subfamily Myrmicinae, it was described by Swiss entomologist Felix Santschi as a variant in 1916. Its current name <i>invicta</i> was given to the ant in 1972 as a separate species. However, the variant and species were the same ant, and the name was preserved..."
+      },
+      {
+        "id": 1373017,
+        "name": "Solenopsis geminata",
+        "rank": "complex",
+        "preferred_common_name": "Geminata-group Fire Ants",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47201,
+          124417,
+          326777,
+          1269340,
+          47336,
+          69143,
+          469106,
+          67597
+        ],
+        "wikipedia_summary": null
+      },
+      {
+        "id": 119056,
+        "name": "Centruroides vittatus",
+        "rank": "species",
+        "preferred_common_name": "Striped Bark Scorpion",
+        "iconic_taxon_name": "Arachnida",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          245097,
+          47119,
+          48894,
+          1323567,
+          1323568,
+          1323569,
+          119057,
+          119058,
+          119059
+        ],
+        "wikipedia_summary": "The <b>striped bark scorpion</b> (<i>Centruroides vittatus</i>) is an extremely common scorpion found throughout the midsection of the United States and northern Mexico. It is perhaps the most frequently encountered scorpion in the U.S."
+      },
+      {
+        "id": 60912,
+        "name": "Vaejovis carolinianus",
+        "rank": "species",
+        "preferred_common_name": "Southern Devil Scorpion",
+        "iconic_taxon_name": "Arachnida",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          245097,
+          47119,
+          48894,
+          1323567,
+          1323568,
+          1323570,
+          1373186,
+          52572,
+          1323560,
+          60906
+        ],
+        "wikipedia_summary": "<i><b>Vaejovis carolinianus</b></i>, the <b>southern unstriped scorpion</b>, is a species of scorpion in the family Vaejovidae."
+      },
+      {
+        "id": 57278,
+        "name": "Ailanthus altissima",
+        "rank": "species",
+        "preferred_common_name": "tree-of-heaven",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          47729,
+          57279,
+          57280
+        ],
+        "wikipedia_summary": "<i><b>Ailanthus altissima</b></i> (/eɪˈlænθəs ælˈtɪsɪmə/ <i title=\"English pronunciation respelling\">ay-LAN-thəss al-TIH-sim-ə</i>), commonly known as <b>tree of heaven</b> or <b>ailanthus tree</b>, is a deciduous tree in the quassia family. It is native to northeast, central China, and Taiwan. Unlike other members of the genus <i>Ailanthus</i>, it is found in temperate climates rather than the tropics."
+      },
+      {
+        "id": 55556,
+        "name": "Oncopeltus fasciatus",
+        "rank": "species",
+        "preferred_common_name": "Large Milkweed Bug",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47744,
+          61267,
+          372868,
+          466233,
+          55558,
+          130314,
+          55559,
+          888838
+        ],
+        "wikipedia_summary": "<i><b>Oncopeltus fasciatus</b></i>, known as the <b>large milkweed bug</b>, is a medium-sized hemipteran (true bug) of the family Lygaeidae. It is distributed throughout North America. It ranges from Central America through Mexico and the Caribbean to southern areas in Canada. Costa Rica represents this insects southern limit. It inhabits disturbed areas, roadsides and open pastures. Due to this widespread geographic distribution this insect exhibits varying life history trade-offs depending on the population location."
+      },
+      {
+        "id": 129902,
+        "name": "Camponotus pennsylvanicus",
+        "rank": "species",
+        "preferred_common_name": "Eastern Black Carpenter Ant",
+        "iconic_taxon_name": "Insecta",
+        "ancestor_ids": [
+          48460,
+          1,
+          47120,
+          372739,
+          47158,
+          184884,
+          47201,
+          124417,
+          326777,
+          1269340,
+          47336,
+          244834,
+          334375,
+          62781,
+          519191
+        ],
+        "wikipedia_summary": "The <b>black carpenter ant</b> (<i>Camponotus pennsylvanicus</i>) is a species of carpenter ant."
+      },
+      {
+        "id": 128695,
+        "name": "Eryngium yuccifolium",
+        "rank": "species",
+        "preferred_common_name": "rattlesnake master",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          48700,
+          48699,
+          525432,
+          790556,
+          57628,
+          1679645
+        ],
+        "wikipedia_summary": "<i><b>Eryngium yuccifolium</b></i> (<b>button eryngo</b>, <b>button snake-root</b>, or <b>rattlesnake master</b>) is a herbaceous perennial plant of the parsley family native to the tallgrass prairies of central and eastern North America, from Minnesota east to Ohio and south to Texas and Florida, including a few spots in Connecticut, New Jersey, Maryland, and Delaware."
+      },
+      {
+        "id": 286324,
+        "name": "Sapindus drummondii",
+        "rank": "species",
+        "preferred_common_name": "Western Soapberry",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          47729,
+          58321,
+          62832
+        ],
+        "wikipedia_summary": "<i><b>Sapindus saponaria</b></i> is a small to medium-sized deciduous tree native to the Americas. Common names include <b>wingleaf soapberry</b>, <b>western soapberry</b>, <b>jaboncillo</b>, <b>sulluku</b> and <i><b>manele</b></i> and <i><b>a'e</b></i> (Hawaiian). Its genus name, \"<i>Sapindus</i>\", comes from the Latin, meaning Indian soap, and its specific epithet means \"soapy.\""
+      },
+      {
+        "id": 170070,
+        "name": "Ungnadia speciosa",
+        "rank": "species",
+        "preferred_common_name": "Mexican buckeye",
+        "iconic_taxon_name": "Plantae",
+        "ancestor_ids": [
+          48460,
+          47126,
+          211194,
+          47125,
+          47124,
+          47729,
+          58321,
+          155712
+        ],
+        "wikipedia_summary": "<i><b>Ungnadia</b></i> is a genus of flowering plants in the family Sapindaceae containing one species, <i><b>Ungnadia speciosa</b></i>, the <b>Mexican buckeye</b>, a shrub or small tree native to northern Mexico as well as Texas and southern New Mexico in the United States. The name honours David Baron von Ungnad (d. 1600), who first brought the horse chestnut to Vienna."
+      }
+    ]
+  }
+}

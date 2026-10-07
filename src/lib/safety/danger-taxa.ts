@@ -19,7 +19,10 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   { id: 30692, name: "Crotalus", common: "rattlesnakes", why: "venomous snake" },
   { id: 30979, name: "Sistrurus", common: "massasaugas", why: "venomous snake" },
   { id: 30493, name: "Micrurus", common: "coralsnakes", why: "venomous snake" },
-  { id: 67598, name: "Solenopsis invicta", common: "red imported fire ant", why: "painful stings, mounds" },
+  // Round-7 SEC-7-01: widened from the species (Solenopsis invicta 67598) to the genus. iNat 67597 = genus Solenopsis,
+  // "Solenopsis Fire Ants and Thief Ants" (the insect; the plant genus Solenopsis is 181095). The tropical fire ants
+  // (geminata group 1373017) have no summary to catch.
+  { id: 67597, name: "Solenopsis", common: "fire ants (red imported fire ant, tropical fire ant)", why: "painful stings, mounds" },
   { id: 51079, name: "Toxicodendron", common: "poison ivy, oak and sumac", why: "rash on touch" },
   // Audit R5-S1 (2026-10-06): widened from the species (Phytolacca americana 48599) to the genus. iNat 48601 = genus Phytolacca, "Pokeweeds".
   { id: 48601, name: "Phytolacca", common: "pokeweeds", why: "poisonous berries" },
@@ -28,7 +31,9 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   { id: 52747, name: "Vespidae", common: "hornets, paper wasps and yellowjackets", why: "stings" },
   { id: 133074, name: "Cnidoscolus texanus", common: "Texas bull nettle", why: "stinging hairs" },
   { id: 53765, name: "Scolopendra", common: "giant centipedes", why: "venomous bite" },
-  { id: 119059, name: "Centruroides", common: "bark scorpions", why: "venomous sting" },
+  // Round-7 SEC-7-01/02: widened from the bark scorpions (Centruroides 119059) to the order. iNat 48894 = order
+  // Scorpiones, "Scorpions" (Southern Devil Scorpion, Vaejovis carolinianus 60912, had a neutral summary).
+  { id: 48894, name: "Scorpiones", common: "scorpions (striped bark scorpion, devil scorpions)", why: "venomous sting" },
   // Builder-resolved (ADR 0003 asked for Urtica via `taxa?q=Urtica&rank=genus`): iNat 51886 = genus Urtica, "nettles".
   { id: 51886, name: "Urtica", common: "nettles", why: "stinging hairs" },
   // Builder addition (live Connemara list 2026-10-05 had western horsenettle and buffalo-bur):
@@ -101,6 +106,18 @@ export const BLOCKED_TAXA: readonly BlockedTaxon[] = [
   { id: 82145, name: "Hemileuca", common: "buck moths", why: "stinging caterpillars" }, // genus Hemileuca, "Sheepmoths"
   { id: 64819, name: "Rhinella", common: "cane toad", why: "poisonous skin" }, // genus Rhinella, "Beaked Toads"
   // Velvet ants (Mutillidae 48511, "cow killer" Dasymutilla occidentalis 117221) are inside Pompiloidea 1269342 above.
+  // Round-7 security SEC-7-01 (2026-10-06): a second sweep of common DFW species found touch/bite/eat hazards that
+  // passed every filter (iNat's own summary is cut off before the danger sentence, e.g. Chinese tallow "The plant sap
+  // and leaves..."). Ids resolved live on iNaturalist 2026-10-06 (`/v1/taxa?q=<name>&rank=<rank>`, exact name match);
+  // a real species under each is in tests/fixtures/inat-taxa-sec7-hazards-and-lookalikes.json.
+  { id: 48959, name: "Reduviidae", common: "assassin bugs (wheel bug, kissing bugs)", why: "very painful bite; kissing bugs carry Chagas disease" }, // family Reduviidae, "Assassin Bugs"
+  { id: 69114, name: "Pogonomyrmex", common: "harvester ants (red harvester ant)", why: "very painful venomous sting" }, // genus Pogonomyrmex, "Typical American Harvester Ants"
+  { id: 51672, name: "Ixodida", common: "ticks (lone star tick, American dog tick)", why: "bites that spread disease" }, // order Ixodida, "Ticks"
+  { id: 72408, name: "Triadica", common: "Chinese tallow", why: "poisonous sap, leaves and berries" }, // genus Triadica (no common name on iNat)
+  { id: 133292, name: "Rivina", common: "pigeonberry (rougeplant)", why: "poisonous berries" }, // genus Rivina (no common name on iNat)
+  { id: 57280, name: "Ailanthus", common: "tree-of-heaven", why: "sap irritates skin" }, // genus Ailanthus, "Trees-of-Heaven"
+  { id: 62832, name: "Sapindus", common: "soapberries (western soapberry)", why: "poisonous berries" }, // genus Sapindus, "Soapberry"
+  { id: 155712, name: "Ungnadia", common: "Mexican buckeye", why: "poisonous seeds" }, // genus Ungnadia, "Mexican buckeyes"
 ];
 
 const BLOCKED_IDS = new Map(BLOCKED_TAXA.map((t) => [t.id, t]));
@@ -217,6 +234,29 @@ export const BLOCKED_WORDS: readonly string[] = [
   "io moth",
   "buck moth",
   "cane toad",
+  // Round-7 SEC-7-01 (common names of the new blocked groups). Ticks are named in full: a bare "tick" would also hit
+  // the harmless tick-trefoils and beggar-ticks, which are only checked by their own words.
+  "assassin bug",
+  "wheel bug",
+  "kissing bug",
+  "conenose",
+  "harvester ant",
+  "lone star tick",
+  "dog tick",
+  "deer tick",
+  "wood tick",
+  "black-legged tick",
+  "blacklegged tick",
+  "seed tick",
+  "chinese tallow",
+  "tallowtree",
+  "tallow tree",
+  "popcorn tree",
+  "pigeonberry",
+  "rougeplant",
+  "tree-of-heaven",
+  "tree of heaven",
+  "soapberry",
 ];
 
 const escapeRe = (s: string) => s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
@@ -235,18 +275,33 @@ const CONFUSABLES: Readonly<Record<string, string>> = {
   "\u03C5": "u", "\u03B5": "e", "\u0391": "A", "\u0392": "B", "\u0395": "E", "\u0396": "Z", "\u0397": "H", "\u0399": "I",
   "\u039A": "K", "\u039C": "M", "\u039D": "N", "\u039F": "O", "\u03A1": "P", "\u03A4": "T", "\u03A5": "Y", "\u03A7": "X",
 };
-const CONFUSABLE_RE = new RegExp(`[${Object.keys(CONFUSABLES).join("")}]`, "gu");
+/** Round-7 SEC-7-03: Latin small capitals ("\u1D1B\u1D0Fx\u026A\u1D04" reads "toxic") are letters that NFKC keeps. */
+const SMALL_CAPITALS: Readonly<Record<string, string>> = {
+  "\u1D00": "a", "\u0299": "b", "\u1D04": "c", "\u1D05": "d", "\u1D07": "e", "\uA730": "f", "\u0262": "g", "\u029C": "h",
+  "\u026A": "i", "\u1D0A": "j", "\u1D0B": "k", "\u029F": "l", "\u1D0D": "m", "\u0274": "n", "\u1D0F": "o", "\u1D18": "p",
+  "\uA7AF": "q", "\u0280": "r", "\uA731": "s", "\u1D1B": "t", "\u1D1C": "u", "\u1D20": "v", "\u1D21": "w", "\u028F": "y",
+  "\u1D22": "z",
+};
+const FOLD: Readonly<Record<string, string>> = { ...CONFUSABLES, ...SMALL_CAPITALS };
+const CONFUSABLE_RE = new RegExp(`[${Object.keys(FOLD).join("")}]`, "gu");
+/** Round-7 SEC-7-03: invisible letters that are neither format characters (Cf) nor marks: the Hangul fillers. */
+const INVISIBLE_LETTERS_RE = /[\u115F\u1160\u3164\uFFA0]/gu;
 
 /**
- * Text as the safety checks read it (round-6 SEC-6-02): NFKC, invisible format characters removed (soft hyphen,
- * zero-width space and joiners, word joiner, BOM: "p\u00ADoisonous" is "poisonous"), Cyrillic/Greek look-alikes
- * folded to Latin, curly apostrophes made straight, one space between words.
+ * Text as the safety checks read it (round-6 SEC-6-02, round-7 SEC-7-03): split into letters and marks (NFKD) and
+ * every combining mark removed ("to\u0308xic", "poi\u034Fsonous" with a combining grapheme joiner, "pois\u0336onous"
+ * struck through, variation selectors), then NFKC; invisible format characters removed (soft hyphen, zero-width
+ * space and joiners, word joiner, BOM: "p\u00ADoisonous" is "poisonous") and the Hangul fillers; Cyrillic/Greek
+ * look-alikes and Latin small capitals folded to Latin, curly apostrophes made straight, one space between words.
  */
 export function safetyText(s: string): string {
   return s
+    .normalize("NFKD")
+    .replace(/\p{M}/gu, "")
     .normalize("NFKC")
     .replace(/\p{Cf}/gu, "")
-    .replace(CONFUSABLE_RE, (c) => CONFUSABLES[c] ?? c)
+    .replace(INVISIBLE_LETTERS_RE, "")
+    .replace(CONFUSABLE_RE, (c) => FOLD[c] ?? c)
     .replace(/[‘’]/g, "'")
     .replace(/\s+/g, " ");
 }
@@ -330,9 +385,14 @@ export function isStationary(t: TaxonLike): boolean {
  * lists had drifted: "can kill livestock" passed the source check, "itch" and "bite" passed both). Added: death,
  * kill(s), necrosis, itch/itchy/itching, irritate(s), allergic, anaphylaxis, urticating, painful, unsafe to eat,
  * inedible. Checked against the 231 recorded summaries of the 20 eval parks (r7-followups report).
+ *
+ * Round-7 SEC-7-01/03: "bite(s)/biting" moved here from the model-text list (the Lone Star tick "bites painlessly";
+ * "bite-sized" is still fine), plus cyanide, seizures, carcinogen, rabies, Chagas, Lyme, hospitalization, medical
+ * attention, emetic, purgative, severe pain, swelling, and any "...dermatitis" ("phytodermatitis"). Checked against
+ * the 308 distinct recorded summaries in tests/fixtures (safety-r7 report).
  */
 const DANGER_WORDS =
-  String.raw`\w*poison\w*|\w*toxi[cn]\w*|\w*venom\w*|deadly|fatal\w*|lethal\w*|irrita\w*|itch|itches|itchy|itching|rash(?:es)?|dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|deaths?|kills?|killing|necros\w*|necrotic|allerg\w*|anaphyla\w*|urticat\w*|painful(?:ly)?|do not eat|don't eat|should not be eaten|not be eaten|not edible|inedible|unsafe to eat|causes? burns?|burns? the skin`;
+  String.raw`\w*poison\w*|\w*toxi[cn]\w*|\w*venom\w*|deadly|fatal\w*|lethal\w*|irrita\w*|itch|itches|itchy|itching|rash(?:es)?|\w*dermatitis|blister\w*|stings?|stinging|stinger\w*|hallucinogen\w*|psychoactive|dangerous|harmful|vomit\w*|caustic|deaths?|kills?|killing|necros\w*|necrotic|allerg\w*|anaphyla\w*|urticat\w*|painful(?:ly)?|do not eat|don't eat|should not be eaten|not be eaten|not edible|inedible|unsafe to eat|causes? burns?|burns? the skin|bites?(?!-)|biting|cyanide\w*|seizures?|carcinogen\w*|rabies|chagas|lyme|hospitali[sz]\w*|medical attention|emetic|purgative|severe pain|swelling`;
 const DANGER_SOURCE_RE = new RegExp(String.raw`\b(?:${DANGER_WORDS})\b`, "i");
 
 /** Words about stings: bees are "look, don't touch: it can sting" by design (ADR 0003), so for them only these are ignored. */
@@ -343,21 +403,30 @@ const STING_ONLY_RE = /^(?:stings?|stinging|stinger\w*|painful(?:ly)?)$/i;
  * dangerous") say the opposite and are taken out before the check. "Mildly venomous" is not a negation.
  */
 const NEGATED_RE =
-  /\b(?:non-?|not\s+(?:considered\s+|known\s+to\s+be\s+|thought\s+to\s+be\s+)?|no\s+|never\s+|nor\s+)(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|dangerous|harmful|deadly)\b|\bharmless\b/gi;
+  /\b(?:non-?|not\s+(?:considered\s+|known\s+to\s+be\s+|thought\s+to\s+be\s+)?|no\s+|never\s+|nor\s+)(?:\w*poison\w*|\w*toxi[cn]\w*|venom\w*|dangerous|harmful|deadly)\b|\bharmless\b|\b(?:does\s+not|do\s+not|doesn't|don't|will\s+not|won't|cannot|can't|never|seldom|rarely|not\s+known\s+to|unlikely\s+to)\s+bites?\b/gi;
 
 const normalizeText = safetyText;
+
+const BITE_ONLY_RE = /^(?:bites?|biting)$/i;
+/** "harmless", "nonvenomous", "non-venomous", "no venom", "not venomous" (the sentence says the bite is no danger). */
+const HARMLESS_SENTENCE_RE = /\b(?:harmless|non-?venomous|no\s+venom|not\s+venomous)\b/i;
 
 /**
  * The first danger word in a Wild Find's SOURCE text (names + summary), or null when it reads safe.
  * `taxon` (optional) lets the bees' own sting words through (ADR 0003 keeps bees with a sting line).
  */
 export function dangerSourceWord(text: string, taxon?: TaxonLike): string | null {
-  const t = normalizeText(text).replace(NEGATED_RE, " ");
   const bee = taxon ? has(taxon, TAXA.honeyBees) || has(taxon, TAXA.bumbleBees) : false;
   const re = new RegExp(DANGER_SOURCE_RE.source, "gi");
-  for (const m of t.matchAll(re)) {
-    if (bee && STING_ONLY_RE.test(m[0])) continue;
-    return m[0];
+  for (const sentence of normalizeText(text).split(/(?<=[.!?;])\s+/)) {
+    // Round-7 SEC-7-01: a bite in a sentence that also says the animal is harmless or has no venom (rough greensnake:
+    // "Even when bites occur, they have no venom and are harmless") is not a danger. Any other danger word still is.
+    const harmlessSentence = HARMLESS_SENTENCE_RE.test(sentence);
+    for (const m of sentence.replace(NEGATED_RE, " ").matchAll(re)) {
+      if (bee && STING_ONLY_RE.test(m[0])) continue;
+      if (harmlessSentence && BITE_ONLY_RE.test(m[0])) continue;
+      return m[0];
+    }
   }
   return null;
 }
@@ -366,8 +435,8 @@ export function dangerSourceWord(text: string, taxon?: TaxonLike): string | null
  * Danger words that must never be printed in a clue, hint or riddle (audit R5-S1, post-model check).
  * No negation is allowed here: "a snake that is not venomous" is no sentence for a kids' pass either.
  */
-/** The shared list plus "bite(s)/biting" (Q-6-01: "a big hairy spider that can bite"; "bite-sized" is fine). */
-const DANGER_CLUE_RE = new RegExp(String.raw`\b(?:${DANGER_WORDS}|bites?(?!-)|biting)\b`, "i");
+/** The shared list (since round 7 it holds "bite(s)/biting" too: Q-6-01 "a big hairy spider that can bite"; "bite-sized" is fine). */
+const DANGER_CLUE_RE = new RegExp(String.raw`\b(?:${DANGER_WORDS})\b`, "i");
 
 /** The first danger word in a model-written clue / hint / riddle, or null. */
 export function dangerClueWord(text: string): string | null {

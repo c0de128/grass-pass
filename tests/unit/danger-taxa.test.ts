@@ -28,12 +28,19 @@ describe("hard-blocked taxa (ADR 0003): one test per entry", () => {
     });
   }
 
-  it("has the 15 ADR ids (pokeweed widened to genus 48601 in R5), Urtica (51886), Solanum (50641), the 15 R5-S1 groups, the 9 r7 and the 22 round-6 groups, no duplicates", () => {
+  it("has the 15 ADR ids (pokeweed widened to genus 48601 in R5; fire ant and bark scorpions widened in round 7), Urtica (51886), Solanum (50641), the 15 R5-S1 groups, the 9 r7, the 22 round-6 and the 8 round-7 groups, no duplicates", () => {
     const ids = BLOCKED_TAXA.map((t) => t.id);
     expect(new Set(ids).size).toBe(ids.length);
+    // Round-7 SEC-7-01: Solenopsis invicta 67598 -> genus Solenopsis 67597; Centruroides 119059 -> order Scorpiones 48894.
     expect(ids).toEqual(
-      expect.arrayContaining([48137, 47370, 30668, 30692, 30979, 30493, 67598, 51079, 48601, 84185, 48943, 52747, 133074, 53765, 119059, 51886, 50641]),
+      expect.arrayContaining([48137, 47370, 30668, 30692, 30979, 30493, 67597, 51079, 48601, 84185, 48943, 52747, 133074, 53765, 48894, 51886, 50641]),
     );
+    expect(ids).not.toContain(67598);
+    expect(ids).not.toContain(119059);
+    expect(blockedBy({ taxonId: 67598, ancestorIds: [48460, 1, 47120, 67597] })?.name).toBe("Solenopsis");
+    expect(blockedBy({ taxonId: 119059, ancestorIds: [48460, 1, 245097, 48894] })?.name).toBe("Scorpiones");
+    // Round-7 SEC-7-01: assassin bugs, harvester ants, ticks, Chinese tallow, pigeonberry, tree-of-heaven, soapberries, Mexican buckeye.
+    expect(ids).toEqual(expect.arrayContaining([48959, 69114, 51672, 72408, 133292, 57280, 62832, 155712]));
     expect(ids).toEqual(
       expect.arrayContaining([64116, 60126, 52999, 54899, 53095, 53725, 47564, 56740, 47555, 468609, 50334, 50311, 48419, 118297, 117308]),
     );
@@ -46,7 +53,7 @@ describe("hard-blocked taxa (ADR 0003): one test per entry", () => {
         82145, 64819,
       ]),
     );
-    expect(ids).toHaveLength(63);
+    expect(ids).toHaveLength(71);
   });
 
   it("SPEC 6.4 planted cases, REAL iNat records: Copperhead, Brown Recluse, Poison Ivy, Fire Ant, Pokeweed are all blocked", () => {

@@ -42,6 +42,9 @@ function legacyPool(d: CaseData): PoolItem[] {
   return [...park, ...wild];
 }
 
+/** Glued quotes the saved run has for the Mexican buckeye (Trinity), blocked since round-7 SEC-7-01. */
+const BUCKEYE_GLUED = 3;
+
 const source = (caseN: number, id: string) => {
   const p = legacyPool(data.get(caseN)!).find((i) => i.id === id);
   if (!p) throw new Error(`no pool item ${id} in case ${caseN}`);
@@ -53,13 +56,15 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
     const cases: [number, string, string, string][] = [
       // [case, item id, the model's quote exactly as returned, what is kept]
       [16, "osm-viewpoint", "A viewpoint is a spot with a good view across the park.专项parentNote: Help the child find a scenic overlook.", "a viewpoint is a spot with a good view across the park"],
-      [16, "inat-170070", "a shrub or small tree native to northern Mexico as well as TexasparentNote: This is a native woody plant.", "a shrub or small tree native to northern mexico as well as texas"],
       [16, "inat-194109", "flowering plant in the daisy family known by the common names Spanish gold house parentNote: Look for bright yellow petals.", "flowering plant in the daisy family known by the common names spanish gold"],
       [16, "osm-picnic-table", "outdoor table with benches attached. parentNote: Great spot for a snack break.", "outdoor table with benches attached"],
       [16, "osm-viewpoint", "a spot with a good view across the park. periodontalNote: Watch for scenic vistas together.", "a spot with a good view across the park"],
       [15, "osm-bench", "A bench is a long outdoor seat for resting.`, ", "a bench is a long outdoor seat for resting"],
       [17, "osm-bench", "a long outdoor seat for resting.一件-bench-sourceQuote: a long outdoor seat for resting.一件-bench-sourceQuote: a long outdoor seat for", "a long outdoor seat for resting"],
     ];
+    // Round-7 SEC-7-01: the Mexican buckeye (inat-170070, Ungnadia: poisonous seeds) Gemma quoted here is blocked now,
+    // so it is no longer in the pool and its glued quote ("...as well as TexasparentNote: ...") cannot be checked.
+    expect(legacyPool(data.get(16)!).some((i) => i.id === "inat-170070")).toBe(false);
     for (const [n, id, quote, kept] of cases) {
       const src = source(n, id);
       expect(isGrounded(quote, src), quote).toBe(true);
@@ -73,11 +78,18 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
   it("every glued quote in the saved run is either repaired to a real substring or still dropped", () => {
     let glued = 0;
     let repaired = 0;
+    let blockedSince = 0;
     for (const r of results.runs.filter((x) => x.model.startsWith("gemma") && data.has(x.caseN))) {
       for (const c of r.calls) {
         for (const it of c.rawItems ?? []) {
           if (!/parentNote|sourceQuote/.test(it.sourceQuote)) continue;
           glued++;
+          // Round-7 SEC-7-01: the Mexican buckeye is blocked now and left the pool (its quote can't be re-checked).
+          if (it.itemId === "inat-170070") {
+            expect(legacyPool(data.get(r.caseN)!).some((i) => i.id === it.itemId)).toBe(false);
+            blockedSince++;
+            continue;
+          }
           const src = source(r.caseN, it.itemId);
           const g = groundedQuote(it.sourceQuote, src);
           if (g === null) continue;
@@ -88,7 +100,8 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
       }
     }
     expect(glued).toBe(24); // 23 Trinity quotes + the Zilker bench
-    expect(repaired).toBe(24);
+    expect(blockedSince).toBe(BUCKEYE_GLUED);
+    expect(repaired).toBe(24 - BUCKEYE_GLUED);
   });
 
   it("the Trinity run-1 answers now keep their clues instead of an error pass", () => {
@@ -97,7 +110,9 @@ describe("glued-field quotes (real Gemma answers, 2026-10-05-2)", () => {
     for (const c of r.calls) {
       const v = validateDraft({ items: c.rawItems ?? [] }, legacyPool(d), d.mix!);
       expect(v.drops.not_grounded ?? 0).toBe(0);
-      expect(v.quotesRepaired).toBe(8);
+      // 8 glued quotes; the Mexican buckeye's is not checked since round-7 SEC-7-01 blocked it (an unknown_id drop).
+      expect(v.quotesRepaired).toBe(7);
+      expect(v.drops.unknown_id ?? 0).toBeGreaterThanOrEqual(1);
       // R2-M5's stricter clue checks (generic clue, wrong count) may drop some of these old clues; none is ungrounded.
       expect(v.items.length + (v.drops.generic_clue ?? 0) + (v.drops.wrong_count ?? 0) + (v.drops.copies_example ?? 0) + (v.drops.repeats_clue ?? 0) +
         // Audit R4-C2: the old opener bank ("Wander to find ...") and the "I am" voice are drops now too.

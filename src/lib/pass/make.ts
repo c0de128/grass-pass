@@ -24,7 +24,7 @@ import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
 import { localDay } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
-import { localModelClock } from "./local-clock";
+import { localModelClock, resetLocalPassSlots, takeLocalPassSlot } from "./local-clock";
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
@@ -214,6 +214,7 @@ function inflight() {
 /** Tests: drop in-flight builds. */
 export function resetPassMaking(): void {
   inflight().clear();
+  resetLocalPassSlots();
   resetPassReads();
 }
 
@@ -332,12 +333,28 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
       }
     }
 
-    const out = await inflight().run(
-      flightKey,
-      (signal, emit, pin) => build({ req, ref, id, day, variant, key, signal, emit, pin, store, env, now, startedAt, cfg, deps, rebuildOf: fallback }),
-      deps.signal,
-      deps.onStep,
-    );
+    // SEC-7-04: with the local clock (a CPU model on this computer) only 1-2 NEW passes build at once; joining is free.
+    const slot = inflight().has(flightKey) ? { ok: true as const, release: () => {} } : takeLocalPassSlot(env);
+    if (!slot.ok) {
+      log("pass_local_busy", { limit: slot.limit }, "warn");
+      return orFallback({ kind: "error", status: 503, error: { code: "LOCAL_MODEL_BUSY", message: PASS_COPY.localBusy, retryAfter: slot.retryAfter } });
+    }
+    let building = false;
+    let out: BuildOutcome;
+    try {
+      out = await inflight().run(
+        flightKey,
+        (signal, emit, pin) => {
+          building = true;
+          // The slot is held until the BUILD ends (it keeps going for the cache when the page leaves).
+          return build({ req, ref, id, day, variant, key, signal, emit, pin, store, env, now, startedAt, cfg, deps, rebuildOf: fallback }).finally(slot.release);
+        },
+        deps.signal,
+        deps.onStep,
+      );
+    } finally {
+      if (!building) slot.release();
+    }
     if (out.kind === "pass") return { kind: "pass", pass: out.pass, cached: false };
     return orFallback(out);
   } catch (err) {

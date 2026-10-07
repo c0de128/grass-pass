@@ -58,3 +58,55 @@ export function localModelClock(env: Env = process.env): LocalClock | null {
   const refillTimeoutMs = Math.round((modelTimeoutMs * 2) / 3);
   return { modelTimeoutMs, passDeadlineMs, refillTimeoutMs, clientWaitMs: passDeadlineMs + LOCAL_CLIENT_MARGIN_MS };
 }
+
+// ---------- round-7 SEC-7-04: how many long local passes may run at once ----------
+
+/**
+ * With the local clock on, one pass can hold the (single-threaded, CPU-only) local model for up to 20 minutes, so a
+ * queue of passes would make real visitors wait hours. Only this many NEW local-clock passes build at once in one
+ * server process (LOCAL_MAX_PASSES, 1 by default, at most 2); joining a build that is already running for the same
+ * pass is free. The normal clock (hosted model, Vercel) is never limited here.
+ */
+export const LOCAL_MAX_PASSES_DEFAULT = 1;
+export const LOCAL_MAX_PASSES_CAP = 2;
+/** Retry-After for a full local queue: a CPU pass takes minutes. */
+export const LOCAL_BUSY_RETRY_SEC = 60;
+
+export function localMaxPasses(env: Env = process.env): number {
+  return Math.min(LOCAL_MAX_PASSES_CAP, num(env.LOCAL_MAX_PASSES) ?? LOCAL_MAX_PASSES_DEFAULT);
+}
+
+type Slots = { used: number };
+const SLOTS_KEY = Symbol.for("grass-pass.local-pass-slots");
+const slots = (): Slots => {
+  const g = globalThis as unknown as Record<symbol, Slots | undefined>;
+  return (g[SLOTS_KEY] ??= { used: 0 });
+};
+
+export type LocalPassSlot = { ok: true; release: () => void } | { ok: false; limit: number; retryAfter: number };
+
+/** A slot for one new pass: always free with the normal clock; with the local clock, at most localMaxPasses() at once. */
+export function takeLocalPassSlot(env: Env = process.env): LocalPassSlot {
+  if (!localModelClock(env)) return { ok: true, release: () => {} };
+  const s = slots();
+  const limit = localMaxPasses(env);
+  if (s.used >= limit) return { ok: false, limit, retryAfter: LOCAL_BUSY_RETRY_SEC };
+  s.used++;
+  let done = false;
+  return {
+    ok: true,
+    release: () => {
+      if (done) return;
+      done = true;
+      s.used = Math.max(0, s.used - 1);
+    },
+  };
+}
+
+/** Local passes building now (tests and logs). */
+export const localPassesRunning = (): number => slots().used;
+
+/** Tests: forget every slot. */
+export function resetLocalPassSlots(): void {
+  slots().used = 0;
+}

@@ -106,3 +106,10 @@ Builder Y (eval r7, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 4
 | 2026-10-07T02:21:23.253Z | 2026-10-06-partial-2121.md | 6 | 18224 | 2224 | $0.0044 |
 
 Builder AB (eval r8, 2026-10-06 CDT): speed probe 1 call (about $0.0001; 3.7 s, 45.7 answer tokens/s) + full run `2026-10-06-8` 126 calls $0.0897 + 10-13 smoke `partial-2121` 6 calls $0.0044 + re-making the 4 example passes on a local server (not an eval; 6 Gemma calls, 17,265 prompt + 2,443 completion tokens, about $0.0043) = **139 calls, about $0.0985**. SerpApi: 0 searches.
+| 2026-10-07T03:42:00.170Z | 2026-10-06-partial-2242.md | 2 | 4863 | 821 | $0.0013 |
+| 2026-10-07T03:42:44.371Z | 2026-10-06-partial-2242-2.md | 2 | 4623 | 778 | $0.0012 |
+| 2026-10-07T03:43:11.472Z | 2026-10-06-partial-2243.md | 1 | 3245 | 495 | $0.0008 |
+| 2026-10-07T03:43:25.793Z | 2026-10-06-partial-2243-2.md | 1 | 3835 | 498 | $0.0009 |
+| 2026-10-07T03:43:40.354Z | 2026-10-06-partial-2243-3.md | 1 | 2879 | 437 | $0.0007 |
+
+Builder AC (slow provider, 2026-10-06 CDT, branch `slow-provider`): live check after the time-budget change, 5 partial runs `partial-2242`, `partial-2242-2`, `partial-2243`, `partial-2243-2`, `partial-2243-3` (Connemara, Klyde Warren, Arbor Hills, White Rock 6-10; Cedar Ridge 10-13), capped with EVAL_MAX_CALLS = **7 calls, $0.0049**. Replays (`pnpm eval:replay`) are free. SerpApi: 0 searches.

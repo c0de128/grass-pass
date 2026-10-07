@@ -36,6 +36,7 @@ import { setLogSink } from "@/lib/log";
 import { caseDataOrNull, loadFixture, type CaseData } from "../../evals/fixture";
 import { replayRun, type ReplayRun } from "../../evals/replay";
 import type { CallRecord, RunRecord } from "../../evals/score";
+import { settingsFromEnv, SpendMeter } from "../../evals/run";
 import recording from "../fixtures/do-gemma-4-31b-it-celebration-two-items.json";
 
 const RESULTS = path.join(process.cwd(), "evals", "results");
@@ -145,6 +146,16 @@ describe("the rules, on a fake clock (pure functions of the time left)", () => {
     expect(refillTimeoutMs(85_000, 7, false, 15, null)).toBe(REFILL_MAX_MS);
     expect(refillTimeoutMs(20_000, 4, false, 15, null)).toBe(17_000);
     expect(refillTimeoutMs(85_000, 4, false, 15, 5_000)).toBe(5_000);
+  });
+
+  it("eval only: EVAL_MAX_CALLS stops new model calls once reached (the small live check)", () => {
+    const m = new SpendMeter(1, 2);
+    expect(m.canStart()).toBe(true);
+    m.add("gemma-4-31B-it", 10, 10);
+    m.add("gemma-4-31B-it", 10, 10);
+    expect(m.canStart()).toBe(false);
+    expect(settingsFromEnv({ EVAL_MAX_CALLS: "8" }).maxCalls).toBe(8);
+    expect(settingsFromEnv({}).maxCalls).toBeNull();
   });
 
   it("MODEL_TIMEOUT_MS is a cap only when set", () => {

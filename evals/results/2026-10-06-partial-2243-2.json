@@ -1,0 +1,316 @@
+{
+ "meta": {
+  "startedAt": "2026-10-07T03:43:25.793Z",
+  "finishedAt": "2026-10-07T03:43:38.160Z",
+  "day": "2026-10-06",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    13
+   ],
+   "budgetUsd": 0.02
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": null,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 13,
+   "slug": "white-rock-lake-park",
+   "name": "White Rock Lake Park",
+   "parkId": "way/460905359",
+   "note": "",
+   "fixture": "tests/fixtures/evals/white-rock-lake-park.json",
+   "fetchedAt": "2026-10-05T23:53:44.698Z",
+   "pool": {
+    "park": 19,
+    "wild": 13
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":9775,"status":200,"error":null,"poolMatches":true,"promptTokens":3835,"completionTokens":498,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Notice the metal cooker on a stand that is dark from smoke?","difficulty":"easy","itemId":"osm-bbq","lookWhere":"","sourceQuote":"dark from smoke and old fires"},{"clue":"Which water bowl makes a splish-splashing sound?","difficulty":"medium","itemId":"osm-fountain","lookWhere":"","sourceQuote":"water splish-splashing as you get close"},{"clue":"Count the 3 areas where teams wait in sunken dugouts!","difficulty":"medium","itemId":"osm-baseball","lookWhere":"","sourceQuote":"3 baseball fields"},{"clue":"Peek at the outdoor table with bench seats attached?","difficulty":"easy","itemId":"osm-picnic-table","lookWhere":"","sourceQuote":"table with bench seats attached"},{"clue":"Where is the bug with a chunky white body and checkered wings?","difficulty":"hard","itemId":"inat-84549","lookWhere":"by the water","sourceQuote":"chunky white body"},{"clue":"Hunt for the vine with flowers that look like stars?","difficulty":"medium","itemId":"inat-135262","lookWhere":"on bushes","sourceQuote":"show it with flowers"},{"clue":"Watch for a tiny flyer that mimics a wasp?","difficulty":"hard","itemId":"inat-59776","lookWhere":"by the path","sourceQuote":"mimics a wasp"},{"clue":"Somewhere you will see a bug that is green with blue on its tail?","difficulty":"hard","itemId":"inat-70191","lookWhere":"near the water","sourceQuote":"green with blue on abdominal segments"}]}
+   ],
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Notice the metal cooker on a stand that is dark from smoke.","lookWhere":"","answer":"Barbecue grills","difficulty":"easy"},
+    {"section":"park","clue":"Which water bowl makes a splish-splashing sound?","lookWhere":"","answer":"Fountains (Fogelson Fountain)","difficulty":"medium"},
+    {"section":"park","clue":"Count the 3 areas where teams wait in sunken dugouts!","lookWhere":"","answer":"Baseball fields","difficulty":"medium"},
+    {"section":"park","clue":"Peek at the outdoor table with bench seats attached.","lookWhere":"","answer":"Picnic tables","difficulty":"easy"},
+    {"section":"wild","clue":"Where is the bug with a chunky white body and checkered wings?","lookWhere":"by the water","answer":"Common Whitetail (Plathemis lydia)","difficulty":"hard","taxonId":84549},
+    {"section":"wild","clue":"Spot a bug that is green with blue on its tail.","lookWhere":"near the water","answer":"Rambur's Forktail (Ischnura ramburii)","difficulty":"hard","taxonId":70191}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 2
+   },
+   "wallMs": 10896
+  },
+  {
+   "caseN": 13,
+   "slug": "white-rock-lake-park",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-tennis","section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","sourceQuote":"Painted lines on its ground make big boxes and short boxes.","difficulty":"medium"},{"itemId":"osm-baseball","section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","sourceQuote":"Teams wait their turn on long benches in sunken dugouts beside it.","difficulty":"medium"},{"itemId":"inat-3892","section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","sourceQuote":"The greater yellowlegs (Tringa melanoleuca) is a large North American shorebird.","difficulty":"medium"},{"itemId":"inat-84549","section":"wild","clue":"The ____ or ____ ____ (____) is a common dragonfly across much of North America, with a striking and unusual appearance.","lookWhere":"","sourceQuote":"The common whitetail or long-tailed skimmer (Plathemis lydia) is a common dragonfly across much of North America, with a striking and unusual appearance.","difficulty":"medium"},{"itemId":"inat-59776","section":"wild","clue":"The ____ (____) is a species of dragonfly.","lookWhere":"","sourceQuote":"The eastern amberwing (Perithemis tenera) is a species of dragonfly.","difficulty":"medium"},{"itemId":"osm-playground","section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","sourceQuote":"Each one is a play spot with things to swing on, climb and slide down.","difficulty":"medium"},{"itemId":"inat-70191","section":"wild","clue":"____ (____).","lookWhere":"","sourceQuote":"Rambur's forktail (Ischnura ramburii).","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","sourceQuote":"Some seats are flat, and some are a big round nest you can lie in.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "White Rock Lake Park",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Painted lines on its ground make big boxes and short boxes.","lookWhere":"","answer":"Tennis court","difficulty":"medium"},
+    {"section":"park","clue":"Teams wait their turn on long benches in sunken dugouts beside it.","lookWhere":"","answer":"Baseball fields","difficulty":"medium"},
+    {"section":"wild","clue":"The ____ (____) is a large North American shorebird.","lookWhere":"","answer":"Greater Yellowlegs (Tringa melanoleuca)","difficulty":"medium","taxonId":3892},
+    {"section":"wild","clue":"The ____ or ____ ____ (____) is a common dragonfly across much of North America, with a striking and unusual appearance.","lookWhere":"","answer":"Common Whitetail (Plathemis lydia)","difficulty":"medium","taxonId":84549},
+    {"section":"park","clue":"Each one is a play spot with things to swing on, climb and slide down.","lookWhere":"","answer":"Playgrounds","difficulty":"medium"},
+    {"section":"park","clue":"Some seats are flat, and some are a big round nest you can lie in.","lookWhere":"","answer":"Swing","difficulty":"medium"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 3.746666666666668,
+    "clues": 6,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 8,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": 9775,
+    "p95Ms": 9775,
+    "passP50": true,
+    "passP95": true,
+    "perPassP50Ms": 9775
+   },
+   "m8": {
+    "costPerPass": 0.0009392999999999999,
+    "costPerPassHigh": 0.0009392999999999999,
+    "unansweredCalls": 0,
+    "totalUsd": 0.0009392999999999999,
+    "promptTokens": 3835,
+    "completionTokens": 498,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 6,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 1,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 1,
+    "waterSound": 1,
+    "waterSoundParks": 1,
+    "twoOrMore": 0
+   },
+   "drops": {
+    "all": {"generic_clue":1,"danger":1},
+    "incomplete": {"generic_clue":1,"danger":1},
+    "byRun": [{"caseN":13,"run":1,"kept":6,"n":8,"drops":{"generic_clue":1,"danger":1}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.950000000000001,
+    "clues": 6,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 8,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "costPerPassHigh": 0,
+    "unansweredCalls": 1,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 6,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 0,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.0009392999999999999,
+  "modelCalls": 1,
+  "promptTokens": 3835,
+  "completionTokens": 498
+ }
+}

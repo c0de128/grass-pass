@@ -1,0 +1,314 @@
+{
+ "meta": {
+  "startedAt": "2026-10-07T03:43:11.472Z",
+  "finishedAt": "2026-10-07T03:43:23.625Z",
+  "day": "2026-10-06",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    3
+   ],
+   "budgetUsd": 0.02
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": null,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "name": "Arbor Hills Nature Preserve",
+   "parkId": "way/38113837",
+   "note": "",
+   "fixture": "tests/fixtures/evals/arbor-hills-nature-preserve.json",
+   "fetchedAt": "2026-10-05T23:47:26.795Z",
+   "pool": {
+    "park": 10,
+    "wild": 8
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":9681,"status":200,"error":null,"poolMatches":true,"promptTokens":3245,"completionTokens":495,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Count the 4 roofed spots where people have picnics.","difficulty":"easy","itemId":"osm-shelter","lookWhere":"","sourceQuote":"4 picnic shelters"},{"clue":"Notice a low metal box on a stand for cooking.","difficulty":"medium","itemId":"osm-bbq","lookWhere":"","sourceQuote":"low metal box set on a stand"},{"clue":"What rushing sound does the running water make?","difficulty":"medium","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"gentle rushing sound"},{"clue":"Point to the 2 long seats for a rest.","difficulty":"easy","itemId":"osm-bench","lookWhere":"","sourceQuote":"2 benches"},{"clue":"Check for a green back with brown marks.","difficulty":"hard","itemId":"inat-65979","lookWhere":"near the water","sourceQuote":"olive green back and sides blotched with brownish markings"},{"clue":"Peek at a vine with large, intricate blooms.","difficulty":"medium","itemId":"inat-51453","lookWhere":"on bushes","sourceQuote":"large, intricate flowers"},{"clue":"Who has a belly that is whitish with yellow or grey spots?","difficulty":"hard","itemId":"inat-65979","lookWhere":"near the water","sourceQuote":"whitish belly spotted with yellow or grey"},{"clue":"Somewhere you will see a tree with fruit or seeds in October.","difficulty":"easy","itemId":"inat-54781","lookWhere":"on tree trunks","sourceQuote":"with fruit or seeds, not flowers"}]}
+   ],
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Count the 4 roofed spots where people have picnics.","lookWhere":"","answer":"Picnic shelters","difficulty":"easy"},
+    {"section":"park","clue":"Notice a low metal box on a stand for cooking.","lookWhere":"","answer":"Barbecue grill","difficulty":"medium"},
+    {"section":"park","clue":"What rushing sound does the running water make?","lookWhere":"","answer":"Creek or stream","difficulty":"medium"},
+    {"section":"park","clue":"Point to the 2 long seats for a rest.","lookWhere":"","answer":"Benches","difficulty":"easy"},
+    {"section":"wild","clue":"Check for a green back with brown marks.","lookWhere":"near the water","answer":"American Bullfrog (Lithobates catesbeianus)","difficulty":"hard","taxonId":65979},
+    {"section":"wild","clue":"Peek at a vine with large, intricate blooms.","lookWhere":"on bushes","answer":"Purple passionflower (Passiflora incarnata)","difficulty":"medium","taxonId":51453}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 2
+   },
+   "wallMs": 10788
+  },
+  {
+   "caseN": 3,
+   "slug": "arbor-hills-nature-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-playground","section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","sourceQuote":"It usually has a low fence or a border round it.","difficulty":"medium"},{"itemId":"osm-swing","section":"park","clue":"A tall bar frame holds it up from above.","lookWhere":"","sourceQuote":"A tall bar frame holds it up from above.","difficulty":"medium"},{"itemId":"inat-65979","section":"wild","clue":"The ____ (____ or Rana catesbeiana), often simply known as the ____ in Canada and the United States, is an amphibious","lookWhere":"","sourceQuote":"The American bullfrog (Lithobates catesbeianus or Rana catesbeiana), often simply known as the bullfrog in Canada and the United States, is an amphibious frog, or “true frogs”.","difficulty":"medium"},{"itemId":"inat-5212","section":"wild","clue":"The ____ (____) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern","lookWhere":"","sourceQuote":"The red-tailed hawk (Buteo jamaicensis) is a bird of prey that breeds throughout most of North America, from the interior of Alaska and northern Canada to as far south as Panama and the West Indies.","difficulty":"medium"},{"itemId":"inat-204420","section":"wild","clue":"____ (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names ____","lookWhere":"","sourceQuote":"Strophostyles helvola (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names amberique-bean, trailing wild bean, and trailing fuzzy-bean.","difficulty":"medium"},{"itemId":"osm-shelter","section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","sourceQuote":"Each one gives cool shade from the sun and cover in the rain.","difficulty":"medium"},{"itemId":"inat-4765","section":"wild","clue":"The ____ (____), also known as the American ____, is a bird in the New World ____ family whose range extends from the","lookWhere":"","sourceQuote":"The black vulture (Coragyps atratus), also known as the American black vulture, is a bird in the New World vulture family whose range extends from the southeastern United States to Peru, Central Chile and Uruguay in South America.","difficulty":"medium"},{"itemId":"osm-picnic-table","section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","sourceQuote":"People sit on both sides of it to share food outside.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Arbor Hills Nature Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"It usually has a low fence or a border round it.","lookWhere":"","answer":"Playground","difficulty":"medium"},
+    {"section":"park","clue":"A tall bar frame holds it up from above.","lookWhere":"","answer":"Swing","difficulty":"medium"},
+    {"section":"park","clue":"Each one gives cool shade from the sun and cover in the rain.","lookWhere":"","answer":"Picnic shelters","difficulty":"medium"},
+    {"section":"park","clue":"People sit on both sides of it to share food outside.","lookWhere":"","answer":"Picnic tables","difficulty":"medium"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.280000000000001,
+    "clues": 6,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 8,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": 9681,
+    "p95Ms": 9681,
+    "passP50": true,
+    "passP95": true,
+    "perPassP50Ms": 9681
+   },
+   "m8": {
+    "costPerPass": 0.0008316,
+    "costPerPassHigh": 0.0008316,
+    "unansweredCalls": 0,
+    "totalUsd": 0.0008316,
+    "promptTokens": 3245,
+    "completionTokens": 495,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 6,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 2,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 1,
+    "waterSound": 1,
+    "waterSoundParks": 1,
+    "twoOrMore": 0
+   },
+   "drops": {
+    "all": {"duplicate_id":1,"generic_clue":1},
+    "incomplete": {"duplicate_id":1,"generic_clue":1},
+    "byRun": [{"caseN":3,"run":1,"kept":6,"n":8,"drops":{"duplicate_id":1,"generic_clue":1}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.4165734265734287,
+    "clues": 4,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 1,
+    "clueLeaks": 1,
+    "returned": 8,
+    "rate": 0.125,
+    "clueRate": 0.125,
+    "pass": false
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "costPerPassHigh": 0,
+    "unansweredCalls": 1,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 4,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 0,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.0008316,
+  "modelCalls": 1,
+  "promptTokens": 3245,
+  "completionTokens": 495
+ }
+}

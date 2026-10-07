@@ -122,6 +122,8 @@ export type EvalSettings = {
   ageBand?: AgeBand | null;
   /** EVAL_LOCAL_PATIENT=1: self-hosted lanes get PATIENT_CLOCK instead of the app's own limits (never hosted lanes). */
   localPatient?: boolean;
+  /** EVAL_MAX_CALLS: no model call starts once this many were made (a small live check); null = no call cap. */
+  maxCalls?: number | null;
 };
 
 /**
@@ -138,6 +140,7 @@ export function settingsFromEnv(env: Record<string, string | undefined>): EvalSe
   if (unknown.length > 0) throw new Error(`EVAL_MODELS has models without a price/spec: ${unknown.join(", ")}`);
   const runs = Number(env.EVAL_RUNS);
   const budget = Number(env.EVAL_BUDGET_USD);
+  const maxCalls = Number(env.EVAL_MAX_CALLS);
   return {
     models: ids.map((m) => MODEL_SPECS[m]),
     runsOverride: Number.isInteger(runs) && runs > 0 ? runs : null,
@@ -145,6 +148,7 @@ export function settingsFromEnv(env: Record<string, string | undefined>): EvalSe
     budgetUsd: Number.isFinite(budget) && budget > 0 ? budget : 1,
     ageBand: ageBandFromEnv(env.EVAL_AGE_BAND),
     localPatient: env.EVAL_LOCAL_PATIENT?.trim() === "1",
+    maxCalls: Number.isInteger(maxCalls) && maxCalls > 0 ? maxCalls : null,
   };
 }
 
@@ -162,13 +166,16 @@ export function ageBandFromEnv(v: string | undefined): AgeBand | null {
 export class SpendMeter {
   spentUsd = 0;
   calls = 0;
-  constructor(readonly budgetUsd: number) {}
+  constructor(
+    readonly budgetUsd: number,
+    readonly maxCalls: number | null = null,
+  ) {}
   add(model: string, promptTokens: number | null, completionTokens: number | null) {
     this.calls++;
     this.spentUsd += callCost(model, promptTokens ?? 0, completionTokens ?? 0);
   }
   canStart(): boolean {
-    return this.spentUsd < this.budgetUsd;
+    return this.spentUsd < this.budgetUsd && (this.maxCalls === null || this.calls < this.maxCalls);
   }
 }
 
@@ -497,7 +504,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
     say(`template baseline: ${runs.filter((r) => r.kind === "pass").length} passes from ${usable.length} cases`);
 
     const keyPresent = resolveModelTarget({ DO_INFERENCE_API_KEY: env.DO_INFERENCE_API_KEY }).ok;
-    const meter = new SpendMeter(settings.budgetUsd);
+    const meter = new SpendMeter(settings.budgetUsd, settings.maxCalls ?? null);
     const runsPer: Record<string, number> = {};
     // A hosted lane needs the DO key; a self-hosted lane needs only a valid local MODEL_BASE_URL.
     const ready = settings.models.filter((spec) => (spec.local ? resolveModelTarget(modelEnv(spec, env)).ok : keyPresent));

@@ -19,6 +19,7 @@ Settings (environment variables; the DO key is read from `.env.local` and never 
 | `EVAL_RUNS` | per model (3 / 1) | Override runs per model (makes a partial run). |
 | `EVAL_CASES` | all 20 | Comma list of case numbers (makes a partial run). |
 | `EVAL_BUDGET_USD` | `1` | No new model call starts once measured spend reaches this. |
+| `EVAL_MAX_CALLS` | unset | No new model call starts once this many were made (a small live check). |
 | `EVAL_LOCAL_BASE_URL` | `http://localhost:11434/v1` | Where the self-hosted lane (`EVAL_MODELS=gemma4-e2b-8k`) finds Ollama. Plain http only for localhost / 127.0.0.1. |
 | `EVAL_LOCAL_PATIENT` | off | `1` = self-hosted lanes get a longer, eval-only clock (calls up to 270 s, refills 180 s, pass 600 s) instead of the app's 70 s / 20 s / 85 s. Results are named `<date>-selfhost-patient-<HHMM>`. |
 

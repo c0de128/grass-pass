@@ -1,0 +1,312 @@
+{
+ "meta": {
+  "startedAt": "2026-10-07T03:42:00.170Z",
+  "finishedAt": "2026-10-07T03:42:42.217Z",
+  "day": "2026-10-06",
+  "ageBand": "6-10",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    1
+   ],
+   "budgetUsd": 0.02
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": null,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 1,
+   "slug": "connemara-meadow-preserve",
+   "name": "Connemara Meadow Preserve",
+   "parkId": "way/306191453",
+   "note": "",
+   "fixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+   "fetchedAt": "2026-10-05T23:46:35.238Z",
+   "pool": {
+    "park": 1,
+    "wild": 11
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":33694,"status":200,"error":null,"poolMatches":true,"promptTokens":2933,"completionTokens":585,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Which water has leaves drifting on top?","difficulty":"easy","itemId":"osm-creek","lookWhere":"near the water","sourceQuote":"Leaves drift along on top"},{"clue":"Hunt for a tree with bright yellow-green fruit that looks bumpy and round.","difficulty":"medium","itemId":"inat-58205","lookWhere":"on the ground","sourceQuote":"bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green"},{"clue":"Notice a tree with thick corky lumps on the bark that have spines.","difficulty":"hard","itemId":"inat-119986","lookWhere":"on tree trunks","sourceQuote":"spined thick, corky lumps 2–3 cm long on the bark"},{"clue":"Who has a pale color on the bottom of its oval leaves?","difficulty":"medium","itemId":"inat-119793","lookWhere":"on bushes","sourceQuote":"leaves are oval, 4 to 8 cm (1.6 to 3.1 in) long, glossy dark green above, and slightly pal"},{"clue":"Watch for a vine with pale flowers.","difficulty":"medium","itemId":"inat-135262","lookWhere":"on a fence","sourceQuote":"show it with flowers"},{"clue":"Spot a lichen with bright-orange parts that have spikes around the rim.","difficulty":"hard","itemId":"inat-55553","lookWhere":"on tree trunks","sourceQuote":"bright-orange with spiny projections (cilia) situated around the rim"},{"clue":"Somewhere you will see a tree with fruit in the fall.","difficulty":"medium","itemId":"inat-54504","lookWhere":"near the water","sourceQuote":"show it with fruit or seeds"},{"clue":"Where can you see a plant with fruit or seeds in October?","difficulty":"medium","itemId":"inat-51450","lookWhere":"in tall grass","sourceQuote":"show it with fruit or seeds"},{"clue":"Point to the tree with a crown that is rounded or conic.","difficulty":"medium","itemId":"inat-119793","lookWhere":"by the path","sourceQuote":"often with a conic to rounded crown"}]},
+    {"latencyMs":5274,"status":200,"error":null,"poolMatches":true,"promptTokens":1930,"completionTokens":236,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"Somewhere a medium-sized bird of prey flies?","difficulty":"medium","itemId":"inat-5206","lookWhere":"up in the sky","sourceQuote":"is a medium-sized hawk"},{"clue":"Point to a tree with a name that sounds like a water color?","difficulty":"hard","itemId":"inat-53547","lookWhere":"by the path","sourceQuote":"less commonly, as the white elm"},{"clue":"Where is a tiny shell shaped like a ball?","difficulty":"hard","itemId":"inat-126257","lookWhere":"on the ground","sourceQuote":"Globular Drop Snail"},{"clue":"Watch for a grass moth with a hollow spot?","difficulty":"medium","itemId":"inat-143484","lookWhere":"in tall grass","sourceQuote":"hollow-spotted blepharomastix moth"}]}
+   ],
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"Which water has leaves drifting on top?","lookWhere":"","answer":"Creek or stream (Rowlett Creek)","difficulty":"easy"},
+    {"section":"wild","clue":"Hunt for a tree with bright yellow-green fruit that looks bumpy and round.","lookWhere":"on the ground","answer":"Osage-orange (Maclura pomifera)","difficulty":"medium","taxonId":58205},
+    {"section":"wild","clue":"Notice a tree with thick corky lumps on the bark that have spines.","lookWhere":"on tree trunks","answer":"Hercules' club (Zanthoxylum clava-herculis)","difficulty":"hard","taxonId":119986},
+    {"section":"wild","clue":"Who has a pale color on the bottom of its oval leaves?","lookWhere":"on bushes","answer":"Callery pear (Pyrus calleryana)","difficulty":"medium","taxonId":119793},
+    {"section":"wild","clue":"Spot a lichen with bright-orange parts that have spikes around the rim.","lookWhere":"on tree trunks","answer":"Golden-eye Lichen (Teloschistes chrysophthalmus)","difficulty":"hard","taxonId":55553}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 8
+   },
+   "wallMs": 40097
+  },
+  {
+   "caseN": 1,
+   "slug": "connemara-meadow-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-creek","section":"park","clue":"Leaves drift along on top of its water.","lookWhere":"","sourceQuote":"Leaves drift along on top of its water.","difficulty":"medium"},{"itemId":"inat-55553","section":"wild","clue":"____, often referred to as the ____ lichen or golden-eye, is a fruticose lichen with branching lobes.","lookWhere":"","sourceQuote":"Teloschistes chrysophthalmus, often referred to as the gold-eye lichen or golden-eye, is a fruticose lichen with branching lobes.","difficulty":"medium"},{"itemId":"inat-58205","section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","sourceQuote":"Maclura pomifera, commonly known as the Osage orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres (30–50 ft) tall.","difficulty":"medium"},{"itemId":"inat-119793","section":"wild","clue":"____, the ____, is a species of ____ native to China and Vietnam.","lookWhere":"","sourceQuote":"Pyrus calleryana, the Callery pear, is a species of pear native to China and Vietnam.","difficulty":"medium"},{"itemId":"inat-119986","section":"wild","clue":"____ (____, ____, ____, or southern ____ ____) is a spiny tree or shrub native to the southeastern United States.","lookWhere":"","sourceQuote":"Zanthoxylum clava-herculis (Hercules' club, Hercules-club, pepperwood, or southern prickly ash) is a spiny tree or shrub native to the southeastern United States.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (____) ____ and as ____ ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk.","difficulty":"medium"},{"itemId":"inat-51450","section":"wild","clue":"____, the ____, is a flowering plant, native North America, in the eastern and south-central parts of the United States","lookWhere":"","sourceQuote":"Passiflora lutea, the yellow passionflower, is a flowering plant, native North America, in the eastern and south-central parts of the United States from Pennsylvania west to Kansas, and south to Florida and Texas.","difficulty":"medium"},{"itemId":"inat-135262","section":"wild","clue":"____, the ____, ____ or ____ ____, is a species that belongs to the ____ genus.","lookWhere":"","sourceQuote":"Ipomoea lacunosa, the whitestar, white morning-glory or pitted morningglory, is a species that belongs to the Ipomoea genus.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Connemara Meadow Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Leaves drift along on top of its water.","lookWhere":"","answer":"Creek or stream (Rowlett Creek)","difficulty":"medium"},
+    {"section":"wild","clue":"____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres","lookWhere":"","answer":"Osage-orange (Maclura pomifera)","difficulty":"medium","taxonId":58205}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 13,
+    "returned": 13,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 4.003076923076925,
+    "clues": 5,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 2,
+    "clueLeaks": 2,
+    "returned": 13,
+    "rate": 0.15384615384615385,
+    "clueRate": 0.15384615384615385,
+    "pass": false
+   },
+   "m7": {
+    "calls": 2,
+    "p50Ms": 19484,
+    "p95Ms": 32273,
+    "passP50": false,
+    "passP95": false,
+    "perPassP50Ms": 38968
+   },
+   "m8": {
+    "costPerPass": 0.00128584,
+    "costPerPassHigh": 0.00128584,
+    "unansweredCalls": 0,
+    "totalUsd": 0.00128584,
+    "promptTokens": 4863,
+    "completionTokens": 821,
+    "pass": false
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 5,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 0,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 13,
+    "pass": true
+   },
+   "retries": 1,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   },
+   "drops": {
+    "all": {"generic_clue":5,"duplicate_id":1,"name_leak":2},
+    "incomplete": {"generic_clue":5,"duplicate_id":1,"name_leak":2},
+    "byRun": [{"caseN":1,"run":1,"kept":5,"n":8,"drops":{"generic_clue":5,"duplicate_id":1,"name_leak":2}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 6.032777777777779,
+    "clues": 2,
+    "pass": false
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 8,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "costPerPassHigh": 0,
+    "unansweredCalls": 1,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 2,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 1,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 0,
+    "met": 0,
+    "hardMin": null,
+    "rate": null
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.00128584,
+  "modelCalls": 2,
+  "promptTokens": 4863,
+  "completionTokens": 821
+ }
+}

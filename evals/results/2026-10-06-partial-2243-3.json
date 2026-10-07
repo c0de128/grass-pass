@@ -1,0 +1,315 @@
+{
+ "meta": {
+  "startedAt": "2026-10-07T03:43:40.354Z",
+  "finishedAt": "2026-10-07T03:43:54.611Z",
+  "day": "2026-10-06",
+  "ageBand": "10-13",
+  "partial": true,
+  "settings": {
+   "models": [
+    "gemma-4-31B-it"
+   ],
+   "runs": {
+    "gemma-4-31B-it": 1
+   },
+   "cases": [
+    15
+   ],
+   "budgetUsd": 0.02
+  },
+  "modelSpecs": [
+   {
+    "id": "gemma-4-31B-it",
+    "runs": 3,
+    "timeoutMs": null,
+    "licence": "Apache-2.0",
+    "where": "DigitalOcean serverless (US); park name + public facts only"
+   }
+  ],
+  "keyPresent": true,
+  "notes": [
+   "Kevin chose K4 = B: open models only plus a no-AI template baseline. No closed model was run.",
+   "Park data: recorded live fixtures (tests/fixtures/evals), replayed into the app's own source code. Model calls: live, DigitalOcean serverless inference.",
+   "Find This Spot (the X-marks-the-spot map and riddle) is not in this eval: its map geometry was not recorded for these parks, so every pass here is made without a SPOT, like the first run. On the live site a park with a landmark also gets a riddle in the same model call (a few dozen more answer tokens)."
+  ]
+ },
+ "cases": [
+  {
+   "n": 15,
+   "slug": "cedar-ridge-preserve",
+   "name": "Cedar Ridge Preserve",
+   "parkId": "way/310790501",
+   "note": "",
+   "fixture": "tests/fixtures/evals/cedar-ridge-preserve.json",
+   "fetchedAt": "2026-10-05T23:54:30.847Z",
+   "pool": {
+    "park": 8,
+    "wild": 6
+   },
+   "n_items": 8,
+   "dataRich": true,
+   "problem": null
+  }
+ ],
+ "runs": [
+  {
+   "caseN": 15,
+   "slug": "cedar-ridge-preserve",
+   "model": "gemma-4-31B-it",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":11875,"status":200,"error":null,"poolMatches":true,"promptTokens":2879,"completionTokens":437,"finishReason":"stop","answeredModel":"gemma-4-31B-it","rawItems":[{"clue":"What can you spot as a short stream of water that bobs up from a spout?","difficulty":"easy","itemId":"osm-drinking-water","lookWhere":"","sourceQuote":"short stream of water bobs up"},{"clue":"Notice the 2 tall, narrow structures that you can see from far away.","difficulty":"medium","itemId":"osm-tower","lookWhere":"","sourceQuote":"2 towers on the map"},{"clue":"Spot the 2 crossings with wooden boards laid side by side on top.","difficulty":"medium","itemId":"osm-bridge","lookWhere":"","sourceQuote":"2 bridges on the map"},{"clue":"Which seat has a tall back to lean on and armrests at each end?","difficulty":"easy","itemId":"osm-bench","lookWhere":"","sourceQuote":"tall back to lean on"},{"clue":"Hunt for a small, dark colored frog by the water.","difficulty":"hard","itemId":"inat-70421","lookWhere":"near the water","sourceQuote":"small, dark colored frog"},{"clue":"Somewhere you will see a plant with scarlet flowers in the grass.","difficulty":"hard","itemId":"inat-75833","lookWhere":"in tall grass","sourceQuote":"with flowers"},{"clue":"Watch for a plant that has fuzzy seeds in October.","difficulty":"hard","itemId":"inat-204420","lookWhere":"on the ground","sourceQuote":"with fruit or seeds"},{"clue":"Point to the still water where you can see ducks or turtles.","difficulty":"easy","itemId":"osm-water","lookWhere":"near the water","sourceQuote":"still water where you may see"}]}
+   ],
+   "parkName": "Cedar Ridge Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"},
+    "lucky": {"status":"off","message":"Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."}
+   },
+   "items": [
+    {"section":"park","clue":"What can you spot as a short stream of water that bobs up from a spout?","lookWhere":"","answer":"Drinking fountain","difficulty":"easy"},
+    {"section":"park","clue":"Notice the 2 tall, narrow structures that you can see from far away.","lookWhere":"","answer":"Towers","difficulty":"medium"},
+    {"section":"park","clue":"Spot the 2 crossings with wooden boards laid side by side on top.","lookWhere":"","answer":"Bridges (Escarpment Trail, Cattail Pond Trail)","difficulty":"medium"},
+    {"section":"park","clue":"Which seat has a tall back to lean on and armrests at each end?","lookWhere":"","answer":"Bench","difficulty":"easy"},
+    {"section":"park","clue":"Point to the still water where you can see ducks or turtles.","lookWhere":"","answer":"Ponds or lakes (Cattail Pond)","difficulty":"easy"},
+    {"section":"wild","clue":"Hunt for a small, dark colored frog by the water.","lookWhere":"near the water","answer":"Blanchard's Cricket Frog (Acris blanchardi)","difficulty":"hard","taxonId":70421},
+    {"section":"wild","clue":"Peek at a plant with scarlet flowers in the grass.","lookWhere":"in tall grass","answer":"Scarlet spiderling (Boerhavia coccinea)","difficulty":"hard","taxonId":75833}
+   ],
+   "removed": {
+    "notGrounded": 0,
+    "other": 1
+   },
+   "wallMs": 12984
+  },
+  {
+   "caseN": 15,
+   "slug": "cedar-ridge-preserve",
+   "model": "no-AI template",
+   "run": 1,
+   "n": 8,
+   "dataRich": true,
+   "calls": [
+    {"latencyMs":0,"status":null,"error":null,"promptTokens":0,"completionTokens":0,"finishReason":null,"answeredModel":"no-AI template","rawItems":[{"itemId":"osm-shelter","section":"park","clue":"Neighbours and groups sometimes meet under it for parties and picnics.","lookWhere":"","sourceQuote":"Neighbours and groups sometimes meet under it for parties and picnics.","difficulty":"medium"},{"itemId":"osm-bench","section":"park","clue":"Some have a tall back to lean on and armrests at each end.","lookWhere":"","sourceQuote":"Some have a tall back to lean on and armrests at each end.","difficulty":"medium"},{"itemId":"inat-70421","section":"wild","clue":"____ (____) is a species of frog.","lookWhere":"","sourceQuote":"Blanchard's cricket frog (Acris blanchardi) is a species of frog.","difficulty":"medium"},{"itemId":"inat-126257","section":"wild","clue":"____, also known as ____ (____) ____ and as ____ ____, is a species of land snail with an operculum, a terrestrial","lookWhere":"","sourceQuote":"Helicina orbiculata, also known as Helicina (Oligyra) orbiculata and as Oligyra orbiculata, is a species of land snail with an operculum, a terrestrial gastropod mollusk.","difficulty":"medium"},{"itemId":"inat-75833","section":"wild","clue":"____ is a species of flowering plant in the four o'clock family which is known by many common names, including ____, red","lookWhere":"","sourceQuote":"Boerhavia coccinea is a species of flowering plant in the four o'clock family which is known by many common names, including scarlet spiderling, red boerhavia, hogweed, and in Spanish, hierba del cancer and hierba de la hormiga.","difficulty":"medium"},{"itemId":"osm-drinking-water","section":"park","clue":"Some have a short spout for kids or a bowl for dogs.","lookWhere":"","sourceQuote":"Some have a short spout for kids or a bowl for dogs.","difficulty":"medium"},{"itemId":"inat-204420","section":"wild","clue":"____ (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names ____","lookWhere":"","sourceQuote":"Strophostyles helvola (sometimes spelled S. helvula) is a species of flowering plant in the legume family known by the common names amberique-bean, trailing wild bean, and trailing fuzzy-bean.","difficulty":"medium"},{"itemId":"osm-viewpoint","section":"park","clue":"It is often higher up than the land round it.","lookWhere":"","sourceQuote":"It is often higher up than the land round it.","difficulty":"medium"}],"poolMatches":true}
+   ],
+   "wallMs": 0,
+   "parkName": "Cedar Ridge Preserve",
+   "kind": "pass",
+   "sections": {
+    "park": {"status":"ok"},
+    "wild": {"status":"ok"}
+   },
+   "items": [
+    {"section":"park","clue":"Neighbours and groups sometimes meet under it for parties and picnics.","lookWhere":"","answer":"Picnic shelter","difficulty":"medium"},
+    {"section":"park","clue":"Some have a tall back to lean on and armrests at each end.","lookWhere":"","answer":"Bench","difficulty":"medium"},
+    {"section":"park","clue":"Some have a short spout for kids or a bowl for dogs.","lookWhere":"","answer":"Drinking fountain","difficulty":"medium"},
+    {"section":"park","clue":"It is often higher up than the land round it.","lookWhere":"","answer":"Viewpoint","difficulty":"medium"}
+   ]
+  }
+ ],
+ "scores": [
+  {
+   "model": "gemma-4-31B-it",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 1,
+    "dataRichRuns": 1,
+    "rate": 1,
+    "pass": true
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.8566666666666656,
+    "clues": 7,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 1,
+    "clueLeaks": 1,
+    "returned": 8,
+    "rate": 0.125,
+    "clueRate": 0.125,
+    "pass": false
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": 11875,
+    "p95Ms": 11875,
+    "passP50": false,
+    "passP95": true,
+    "perPassP50Ms": 11875
+   },
+   "m8": {
+    "costPerPass": 0.0007367200000000001,
+    "costPerPassHigh": 0.0007367200000000001,
+    "unansweredCalls": 0,
+    "totalUsd": 0.0007367200000000001,
+    "promptTokens": 2879,
+    "completionTokens": 437,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 7,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 2,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 1,
+    "met": 1,
+    "hardMin": 2,
+    "rate": 1
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   },
+   "drops": {
+    "all": {"name_leak":1},
+    "incomplete": {},
+    "byRun": [{"caseN":15,"run":1,"kept":7,"n":8,"drops":{"name_leak":1}}]
+   }
+  },
+  {
+   "model": "no-AI template",
+   "runs": 1,
+   "passes": 1,
+   "errors": {},
+   "skipped": 0,
+   "m1": {
+    "violations": 0,
+    "details": [],
+    "pass": true
+   },
+   "m2": {
+    "grounded": 8,
+    "returned": 8,
+    "rate": 1,
+    "pass": true
+   },
+   "m3": {
+    "complete": 0,
+    "dataRichRuns": 1,
+    "rate": 0,
+    "pass": false
+   },
+   "m4": {
+    "ok": 0,
+    "checked": 0,
+    "rate": null,
+    "pass": null,
+    "problems": []
+   },
+   "m5": {
+    "medianGrade": 2.328846153846156,
+    "clues": 4,
+    "pass": true
+   },
+   "m6": {
+    "leaks": 0,
+    "clueLeaks": 0,
+    "returned": 8,
+    "rate": 0,
+    "clueRate": 0,
+    "pass": true
+   },
+   "m7": {
+    "calls": 1,
+    "p50Ms": null,
+    "p95Ms": null,
+    "passP50": null,
+    "passP95": null,
+    "perPassP50Ms": null
+   },
+   "m8": {
+    "costPerPass": 0,
+    "costPerPassHigh": 0,
+    "unansweredCalls": 1,
+    "totalUsd": 0,
+    "promptTokens": 0,
+    "completionTokens": 0,
+    "pass": true
+   },
+   "m10": {
+    "repeated": 0,
+    "clues": 4,
+    "rate": 0,
+    "top": [],
+    "pass": true
+   },
+   "m11": {
+    "printedWrong": 0,
+    "printedCountClues": 0,
+    "rawWrong": 0,
+    "details": [],
+    "returned": 8,
+    "pass": true
+   },
+   "retries": 0,
+   "hard": {
+    "checked": 1,
+    "met": 0,
+    "hardMin": 2,
+    "rate": 0
+   },
+   "lucky": {
+    "printed": 0,
+    "problems": [],
+    "pass": true
+   },
+   "sound": {
+    "passes": 1,
+    "withSound": 0,
+    "waterSound": 0,
+    "waterSoundParks": 0,
+    "twoOrMore": 0
+   }
+  }
+ ],
+ "spend": {
+  "usd": 0.0007367200000000001,
+  "modelCalls": 1,
+  "promptTokens": 2879,
+  "completionTokens": 437
+ }
+}

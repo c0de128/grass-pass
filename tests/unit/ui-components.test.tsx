@@ -210,7 +210,7 @@ describe("v3 logo, header and footer", () => {
     for (const h of ["Learn", "Explore", "Resources"]) expect(out).toMatch(new RegExp(`<h2 id="footer-${h.toLowerCase()}"[^>]*uppercase[^>]*>${h}</h2>`));
     const closing = out.match(/<p[^>]*data-testid="footer-closing"[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? "";
     expect(closing.replace(/<[^>]+>/g, "").replace(/\s+/g, " ").trim()).toBe(
-      "© 2026 Grass Pass. An AI-powered service dedicated to real-world family exploration. Pocket the pencil. Leave the phone.",
+      "© 2026 Grass Pass. An AI-powered service dedicated to real-world family exploration. Pocket the pencil. Leave the phone. Touch Grass",
     );
     expect(out).toMatch(/<svg aria-hidden="true" focusable="false" data-testid="footer-landscape"/);
     expect(out).not.toContain("<img");

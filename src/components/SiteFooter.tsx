@@ -138,11 +138,12 @@ export function SiteFooter() {
           <div className="mt-12 flex flex-col items-center gap-5 border-t-2 border-dashed border-footer-foreground/20 pt-9 text-center">
             {/* Not a link: the header's logo is the one "Grass Pass home" link on every page. */}
             <Logo inverted notchClassName="bg-footer" className="shrink-0" />
-            {/* Kevin's closing line, word for word; his last two sentences set large as the sign-off. */}
+            {/* Kevin's closing line, word for word; the sign-off ("Touch Grass" added 2026-10-07) set large, each sentence kept whole. */}
             <p className="flex flex-col items-center gap-2 text-base leading-relaxed text-footer-foreground/90 sm:text-lg" data-testid="footer-closing">
               <span>© 2026 Grass Pass. An AI-powered service dedicated to real-world family exploration.</span>{" "}
-              <span className="font-heading text-[1.75rem] leading-[1.05] font-extrabold tracking-tight text-balance sm:text-4xl lg:text-[2.75rem]">
-                <span className="text-footer-heading">Pocket the pencil.</span> <span className="text-footer-foreground">Leave the phone.</span>
+              <span className="font-heading text-[1.75rem] leading-[1.05] font-extrabold tracking-tight sm:text-4xl lg:text-[2.75rem]">
+                <span className="whitespace-nowrap text-footer-heading">Pocket the pencil.</span> <span className="whitespace-nowrap text-footer-foreground">Leave the phone.</span>{" "}
+                <span className="whitespace-nowrap text-footer-heading">Touch Grass</span>
               </span>
             </p>
           </div>

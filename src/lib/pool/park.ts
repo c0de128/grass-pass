@@ -12,11 +12,17 @@
 import { FEATURE_KINDS, FEATURE_KIND_IDS, type FeatureKind, type ParkFeatures } from "@/lib/sources/overpass-features";
 import { hasUrlOrMarkup, singularWord as singular } from "@/lib/ai/validate";
 import { distinctiveWords, kindLabelWords, type PoolItem, type SectionState } from "./types";
+import { SAFETY_LINES } from "@/lib/safety/danger-taxa";
 
 /** SPEC §5.4, Park Finds empty copy. */
 export function parkFindsEmptyCopy(parkName: string): string {
   return `No data available: OpenStreetMap has no mapped playgrounds, courts or shelters inside ${parkName}.`;
 }
+
+/** The code-written water line (ADR 0003 safety lines). */
+export const WATER_SAFETY = SAFETY_LINES.water;
+/** Park Finds that are water (round-6 Q-6-02 added fountain and pool). */
+const WATER_KINDS: ReadonlySet<FeatureKind> = new Set(["water", "creek", "fountain", "pool"]);
 
 /** Kinds where a count is misleading (one creek is often mapped as several pieces). */
 const NO_COUNT: ReadonlySet<FeatureKind> = new Set(["creek"]);
@@ -158,9 +164,13 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "They can be made of {wood, metal or stone|stone, wood or metal|metal, stone or wood}.",
   ],
   fountain: [
+    // Round-6 judge C4: every example pass had a "listen for the water" clue. The sound fact is now 1 of 5 (it was
+    // 1 of 3, so 2 of every 3 fountains had it), and the others are things to see.
     "It {sprays|spurts|pours} water into a {pool|bowl|basin}.",
-    "You can hear its water {splashing|splish-splashing|gurgling} as you get {close|near}.",
+    "You can hear its water {splashing|splish-splashing|gurgling|pattering} as you get {close|near}.",
     "Some shoot water up {high|into the air}, and some let it {trickle|dribble|run} down.",
+    "Its water {sparkles|glitters|shines} in the sun as it {falls|drops|tumbles}.",
+    "Its {bowl|basin} is {often|usually} made of {stone|concrete|metal}, with a {rim|ledge|wide edge} around it.",
   ],
   drinking_water: [
     // Audit R4 (M10): "gives you a sip of water" and "a little arc of water" were printed on 3 parks each.
@@ -227,8 +237,13 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   creek: [
     // Audit R4 (M10): "a narrow ribbon of moving" and "a thin line of moving" were printed on 3 parks each.
     "It is a {narrow|thin|slim|small|skinny} {line|ribbon|strip|band|thread} of {moving|running|flowing|sliding} water with a {muddy or rocky|rocky or muddy} bank on {each side|both sides}.",
-    "{Running|Flowing} water in it can make a {soft|gentle|quiet} {rushing|bubbling|gurgling} sound.",
+    // Round-6 judge C4: "Where is the water that makes a gentle rushing sound?" (hero card) and other water-by-ear
+    // clues on every example. The sound fact is now 1 of 6 (2 of every 6 creeks get it; it was 2 of 3), with more words.
+    "{Running|Flowing|Moving} water in it can make a {soft|gentle|quiet|low} {rushing|bubbling|gurgling|trickling} sound.",
     "After rain it runs fast, and in dry weather it may be just puddles.",
+    "{Rocks|Stones|Pebbles} and {sticks|twigs|fallen branches} {poke up|stick out|peek out} of its water where it is {shallow|low}.",
+    "{Leaves|Twigs|Bits of bark} {float|drift|ride} along on top of its water.",
+    "{Trees|Bushes|Tall weeds} {lean over|hang over|shade} its {banks|edges|sides}.",
   ],
   bridge: [
     // Audit R4 (M10): "paths that cross over water" was printed on 4 parks.
@@ -317,6 +332,17 @@ export function seedHash(s: string): number {
   return h >>> 0;
 }
 
+/**
+ * Tests only (round-6 C4): the live model recordings in tests/fixtures were answered for the creek and fountain
+ * fact sheets of their day; those banks have changed since. The replay (tests/unit/support/pass-replay.ts) hands
+ * the recorded fact text back for exactly those park + kind pairs, so a recorded answer is judged against the sheet
+ * the model saw. Never set in the app.
+ */
+let recordedFacts: ReadonlyMap<string, string> | null = null;
+export function setRecordedFactsForTests(facts: ReadonlyMap<string, string> | null): void {
+  recordedFacts = facts;
+}
+
 /** How many facts each Park Find gets. */
 export const FACTS_PER_ITEM = 2;
 
@@ -325,6 +351,8 @@ export const FACTS_PER_ITEM = 2;
  * place picked by hash(park id + kind). "It is ..." becomes "Each one is ..." for a count of 2 or more.
  */
 export function factsFor(kind: FeatureKind, parkId: string, count: number): string[] {
+  const recorded = recordedFacts?.get(`${parkId}|${kind}`);
+  if (recorded) return [recorded];
   const bank = KIND_FACTS[kind];
   const start = seedHash(`${parkId}|${kind}`) % bank.length;
   const picked: string[] = [];
@@ -392,7 +420,9 @@ export function parkPool(f: ParkFeatures): { items: PoolItem[]; state: SectionSt
           ...names.flatMap((nm) => distinctiveWords(nm, { place: true, allowed: kindLabelWords(info) })),
         ]),
       ],
-      safety: kind === "water" || kind === "creek" ? "Stay with your grown-up near water." : null,
+      // Round-6 quality Q-6-02: fountains and swimming pools are water too (bridges and any find whose clue or hint
+      // says water get the line in validate.ts `withWaterSafety`).
+      safety: WATER_KINDS.has(kind) ? WATER_SAFETY : null,
       stationary: true,
       count: { of: [...countNouns(kind)], n: sourceCount(kind, entry.count) },
     });

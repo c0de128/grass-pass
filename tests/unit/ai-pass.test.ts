@@ -20,7 +20,7 @@ import { wildPool } from "@/lib/pool/wild";
 import { parseSpeciesCounts, parseTaxa } from "@/lib/sources/inat";
 import { parseFeatures, parseParkId } from "@/lib/sources/overpass-features";
 import { parsePhenology } from "@/lib/sources/inat-phenology";
-import { modelRec, PARKS, phenologyRec, rec, recordedDraft, recordedShape } from "./support/pass-replay";
+import { modelRec, PARKS, phenologyRec, rec, recordedDraft, recordedShape, withRecordedWaterFacts } from "./support/pass-replay";
 
 /** The live phenology answers (all annotated, flowers, fruits) for Connemara, parsed by the app's code (R1-M4). */
 function connemaraPhenology() {
@@ -37,7 +37,10 @@ function connemaraPhenology() {
 function poolFor(p: (typeof PARKS)[keyof typeof PARKS]) {
   const ref = parseParkId(p.id)!;
   const f = parseFeatures(rec(`overpass-features-${p.slug}`).body, ref)!;
-  const park = parkPool(f);
+  const built = parkPool(f);
+  // Round-6 C4: the creek and fountain facts gained sight facts after these answers were recorded; the answers are
+  // judged against the fact sheets in their own recorded request (pass-replay `withRecordedWaterFacts`).
+  const park = { ...built, items: withRecordedWaterFacts(built.items, p.slug) };
   const list = parseSpeciesCounts(rec(`inat-species-${p.slug}`).body);
   const summaries = p === PARKS.connemara ? parseTaxa(rec(`inat-taxa-${p.slug}`).body) : [];
   const wild = wildPool(list, summaries, "2026-09-21", { month: 10, phenology: p === PARKS.connemara ? connemaraPhenology() : { taxa: {} } });
@@ -204,7 +207,7 @@ describe("prompt (SPEC 6.1)", () => {
 });
 
 describe("validation of the model's answer (SPEC 6.2)", () => {
-  it("the real recorded Gemma answers (re-recorded for completeness): Celebration 8 of 8, Connemara 6, a refill and a second refill that keep none", () => {
+  it("the real recorded Gemma answers (re-recorded for completeness; judged against their recorded creek and fountain facts): Celebration 8 of 8, Connemara 6, a refill and a second refill that keep none", () => {
     const results = [PARKS.connemara, PARKS.celebration].map((p) => {
       const { target, plan } = poolFor(p);
       const draft = PassDraftEnvelope.parse(recordedDraft(p.slug));
@@ -233,7 +236,9 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(cel.items.find((i) => i.item.id === "osm-water")?.lookWhere).toBe("");
     expect(cel.items.map((i) => brokenCountQuestion(i.clue))).toEqual(Array(8).fill(null));
     expect([cel.openersTrimmed, cel.questionsFixed, cel.trailersTrimmed]).toEqual([0, 0, 0]);
-    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Find 7 is near water: stay close.");
+    // Round-6 Q-6-02: the fountain and the bridge "high over water" are by the water too (they carry the water line now).
+    expect(cel.parentNote).toBe("Start with find 1: it's easy and it stays put. Finds 6, 7 and 8 are near water: stay close.");
+    expect(cel.items.find((i) => i.item.id === "osm-bridge")?.item.safety).toBe("Stay with your grown-up near water.");
     // Every clue starts with a different first word (the per-park openers). Honest note: the fountain clue still
     // starts with a worn-out frame the prompt names ("Somewhere you can hear"): a style preference, kept (no spare).
     expect(new Set(cel.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(8);

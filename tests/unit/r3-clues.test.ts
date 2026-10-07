@@ -143,8 +143,12 @@ describe("C1: 'listen' only for things that make a sound", () => {
     const playground = item("bethany-lakes-park", "osm-playground");
     expect(silentSoundProblem(realClue("bethany-lakes-park", "Listen for kids on ladders as they reach the top of the play set.").clue, playground)).toMatch(/names no sound/);
     const fountain = item("celebration-park", "osm-fountain");
-    expect(fountain.sourceText).toMatch(/hear its water/);
-    expect(silentSoundProblem("Can you hear water splashing?", fountain)).toBeNull();
+    // Round-6 C4: Celebration's fountain facts are things to see now (the sound fact is 1 of 5 in the bank) ...
+    expect(fountain.sourceText).not.toMatch(/\bhear\b/);
+    expect(silentSoundProblem("Can you hear water splashing?", fountain)).toMatch(/names no sound/);
+    // ... and a fountain whose facts hold the sound fact (built: the bank's own sentence added) may still ask for it.
+    const heard = { ...fountain, sourceText: `${fountain.sourceText} You can hear its water splashing as you get close.` };
+    expect(silentSoundProblem("Can you hear water splashing?", heard)).toBeNull();
   });
 
   it("a bird whose source names its song may get a listening clue; one whose source doesn't may not", () => {
@@ -214,8 +218,10 @@ describe("C1: the prompt no longer hands the model filler openers", () => {
   it("the system prompt states the filler, sound and 'how many' rules", () => {
     const sys = systemPrompt("10-13", computeMix({ park: 10, wild: 8, lucky: 0 }, "10-13")!, null, { month: 10, openers: ["Peek"] });
     expect(sys).toContain("Never open with a filler word");
-    expect(sys).toContain("Ask the child to listen or hear ONLY when that item's SOURCE says it makes a sound.");
-    expect(sys).toContain('it never asks "how many"');
+    // r7 follow-ups (M8) shortened these lines; round-6 C4 added "at most ONE" listening clue and "what the child can see" for water.
+    expect(sys).toContain("Ask the child to listen ONLY when the item's SOURCE says it makes a sound");
+    expect(sys).toContain("in at most ONE clue per pass. For water, say what the child can see.");
+    expect(sys).toContain('never a "How many", "Which" or "What" question with the number in it');
   });
 
   it("a real 10-13 request for Arbor Hills plans 8 finds with 2 hard ones", () => {

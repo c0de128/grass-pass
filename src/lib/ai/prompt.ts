@@ -256,7 +256,25 @@ export const STOCK_FRAMES = [
  * Audit R5 Q-5-01: "for a bird that is" was the #2 cross-park repeat of run 2026-10-06-6 (4 parks), mid-clue
  * ("Watch for a bird that is black."). A clue holding one of these phrases anywhere is a stock opening too.
  */
-export const STOCK_PHRASES = ["for a bird that is", "a bird that is", "a bug that is", "a plant that is"] as const;
+export const STOCK_PHRASES = [
+  "for a bird that is", "a bird that is", "a bug that is", "a plant that is",
+  // Round-6 judge C4: one water-by-ear shape on every example pass ("Hunt for the water that you can hear splashing" on
+  // Celebration AND White Rock, "Where is the water that makes a gentle rushing sound?", "Point to the water that can
+  // make a quiet gurgling sound."). These go first when a spare exists.
+  "the water that", "water that you can hear", "water that makes a", "water that can make", "hear splashing", "hear it splashing",
+  "hear the water", "rushing sound", "gurgling sound", "splashing sound", "bubbling sound",
+] as const;
+
+/**
+ * r7 follow-ups (M8): the prompt names STOCK_FRAMES in a short form (one quoted stem with its alternatives,
+ * about 160 characters less than eleven quoted frames). Every frame of STOCK_FRAMES is one reading of these
+ * (tested); the code check still uses the full list.
+ */
+export const STOCK_FRAMES_PROMPT = [
+  '"Somewhere you will/can see/hear/find"', '"Somewhere there is"', '"Where can you hear/find/see/spot"', '"Hunt for a tree"',
+  // Round-6 judge C4 (the water-by-ear shape on every example pass).
+  '"Where is the water that"',
+] as const;
 
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
 export const STOCK_OPENINGS = [
@@ -338,7 +356,8 @@ export function refillRules(notes: RefillNotes): string[] {
     out.push(`- The first try copied these words from a SOURCE. Never use them in a clue: ${notes.copied.slice(0, 6).map((c) => `"${c}"`).join(", ")}.`);
   }
   if (notes.jargon) {
-    out.push("- Some first-try clues used field-guide words (a family or Latin group name, a body-part term, measurements). Use the words a kid uses on a walk.");
+    // r7 follow-ups (M8): shorter; the kid-words rule above says what field-guide words are.
+    out.push("- Some first-try clues used field-guide words or measurements: use a kid's words.");
   }
   if (notes.generic) out.push("- Some first-try clues were generic. Each Wild Find clue needs a colour, shape, size or part written in its SOURCE; if its SOURCE has none, choose another item.");
   const taken = [...new Set((notes.taken ?? []).filter(Boolean))];
@@ -439,9 +458,10 @@ export function voiceFor(seed: string, band?: AgeBand): string {
  * them (`jargon`, `trivia`).
  */
 export const JARGON_BAD_EXAMPLES = [
-  { clue: "Where is a moth of the Crambidae family?", why: "a family name is nothing to see" },
-  { clue: "Hunt for a lizard native to Texas and Oklahoma.", why: "where it lives on a map is nothing to see" },
-  { clue: "Who has a typical length of 16 cm and a mass of 24-39.5 g?", why: "a field guide's numbers, and no child can weigh a bird" },
+  // r7 follow-ups (M8, run 2026-10-06-7): three full BAD clues with reasons cost about 60 prompt tokens a call; the
+  // rule now quotes the two phrases (the weight example is covered by "a weight" in the rule itself).
+  { clue: "a moth of the Crambidae family" },
+  { clue: "a lizard native to Texas and Oklahoma" },
 ] as const;
 
 /** Every full example clue in any prompt variant (for the copy check in validate.ts). */
@@ -451,10 +471,15 @@ export const PROMPT_EXAMPLE_TEXTS: readonly string[] = [
   ...JARGON_BAD_EXAMPLES.map((b) => b.clue),
 ];
 
-/** Audit R5-C3: the kid-words rule (every band). */
+/**
+ * Audit R5-C3: the kid-words rule (every band). r7 follow-ups (M8): run 2026-10-06-7's version (774 characters,
+ * three full BAD clues with reasons) took answered first-call prompts from 2,836 to 3,084 tokens and the cost
+ * per pass over $0.001. Same rules, fewer words: what to say, the five kinds of words never to use, the bare
+ * colour, and two quoted BAD phrases. Code still drops every clue like them (jargon.ts).
+ */
 export function kidWordsRule(): string {
-  const bad = JARGON_BAD_EXAMPLES.map((b) => `"${b.clue}" (${b.why})`).join(", ");
-  return `- Say each clue the way you would say it to a kid on a walk: what it looks like (colour plus the part it is on), its shape or what it does. Never use a family, genus or species word, a Latin group name, a weight, a field-guide word (such as operculum, pterostigma, tarsomere, arboreal, perennial) or where in the world it lives. Never say it is poisonous, toxic, venomous or that it stings. One colour alone is not a clue ("a bird that is black"): add the part or what it does. Bad: ${bad}.`;
+  const bad = JARGON_BAD_EXAMPLES.map((b) => `"${b.clue}"`).join(", ");
+  return `- Use a kid's words: what it looks like (a colour plus the part it is on), its shape or what it does. Never a family, genus or species word, a Latin group name, a weight, a field-guide word (operculum, tarsomere, arboreal) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}.`;
 }
 
 export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null, ctx: PromptContext | null = null): string {
@@ -468,26 +493,28 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     "Rules:",
     `- Exactly ${mix.n} items, each id at most once: ${mixRules(mix)}. An item's section is the section of its source.`,
     `- Mix easy, medium and hard${hard}.`,
-    "- Prefer things that stay put (plants, fungi, landmarks, resident animals) over birds that fly away.",
+    "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
     "- A good clue gives the child ONE thing to check with their eyes or ears that is special to that item and written in its SOURCE: a colour, shape, mark, size, sound, what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.",
     // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
     ...(ctx?.openers && ctx.openers.length > 0
       ? [
-          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see", and never with these worn-out starts: ${STOCK_FRAMES.map((f) => `"${f}"`).join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
+          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you", "Do you see" or these worn-out starts: ${STOCK_FRAMES_PROMPT.join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
         ]
       : ["- Start each clue with a different first word."]),
     // Audit R3-C1: filler openers and sound clues for silent things.
-    '- Never open with a filler word or cry such as Quick, Psst, Shh, Wow, Hmm, Hey, Ooh, Ready or Stop: start with the clue itself.',
-    "- Ask the child to listen or hear ONLY when that item's SOURCE says it makes a sound. Plants, fungi, spiders, snails, butterflies, moths, dragonflies and damselflies make no sound.",
+    '- Never open with a filler word (Quick, Psst, Wow, Hmm, Ready): start with the clue itself.',
+    // Round-6 judge C4: at most one listening clue a pass, and water is described by what the child sees.
+    "- Ask the child to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the child can see.",
     '- Never write "a place with", "a place where" or "a spot where": say what the child will see.',
     // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
-    "- Write every clue to the child. At most ONE clue on the pass may be a riddle in which the thing talks as itself (I, me, my).",
-    '- A count clue is a task ("Count the ..."), never a "Which ...?" or "What ...?" question with the number in it, and never a question followed by "Count ...".',
+    // r7 follow-ups (M8): merged with the voice-switch rule below (one line, same two rules).
+    "- Write every clue to the child: a clue never switches to the thing talking (I, me, my) in a later sentence. At most ONE clue on the pass may be a riddle in which the thing talks as itself.",
+    // r7 follow-ups (M8): "How many" joins this line; the Park Finds count line no longer repeats it.
+    '- A count clue is a task ("Count the ..."), never a "How many", "Which" or "What" question with the number in it, and never a question followed by "Count ...".',
     // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." on 4 parks.
     '- Put a count inside the clue\'s own sentence, with its number and what to count. Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".',
-    // Quick win (run 2026-10-06-5): "Watch for a plant with white blooms. I am poisonous!" switched voice mid-clue.
-    "- A clue that talks to the child never switches to the thing talking (I, me, my) in a later sentence.",
+    // Quick win (run 2026-10-06-5): "Watch for a plant with white blooms. I am poisonous!" switched voice mid-clue (now in the "Write every clue to the child" line).
     ...(ctx?.refill ? refillRules(ctx.refill) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),
     // S6: Lucky Finds come and go (a dog out for a walk), so the clue says it is a maybe.
@@ -497,30 +524,30 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
     ...(mix.max.wild > 0
       ? [
-          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for a green anole never say green, for an amberwing never say amber), and never the describing phrase its name is made of (for a red-tailed hawk never say a red tail). Bad: ${bad(0)}, ${bad(1)}.`,
+          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for an amberwing never say amber), and never the describing phrase its name is made of (for a red-tailed hawk never say a red tail). Bad: ${bad(0)}, ${bad(1)}.`,
         ]
       : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.
     ...(month && ctx?.hasSeasonNotes
       ? [
-          `- Plants: write about flowers, blooms, petals, fruit, berries, seeds or pods ONLY when that plant's SOURCE says "iNaturalist photos from this area show it with flowers" (or "with fruit or seeds") in ${month}. Otherwise describe leaves, bark, stems, shape or size. Flowers or fruit alone are not a special trait: give their colour, shape or size only when the SOURCE says it. Never write a clue whose only fact is that it has flowers, fruit or seeds now: that fits every plant in ${month}. If the SOURCE gives nothing else, choose another item.`,
+          `- Plants: write about flowers, blooms, petals, fruit, berries, seeds or pods ONLY when that plant's SOURCE says "iNaturalist photos from this area show it with flowers" (or "with fruit or seeds") in ${month}. Otherwise describe leaves, bark, stems, shape or size. Having flowers, fruit or seeds is never a clue's only fact (that fits every plant in ${month}): add their colour, shape or size from the SOURCE, or choose another item.`,
         ]
       : []),
     // R1-m10 + R2-M5: Park Finds the child looks closely at; a count must be the map's own count of the whole thing.
     ...(LOOK_CLOSELY_BANDS.has(band) && mix.max.park > 0
       ? [
           `- Park Finds: make the child look closely at a fact in that SOURCE: a detail to find, or a count to check. Bad: ${bad(2)}.`,
-          `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. A count clue tells the child to count and says the number to check; it never asks "how many" (a question that also says the number answers itself). Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
+          `- A count clue is allowed ONLY when the SOURCE says the park has a number of 2 or more of it. It counts the WHOLE thing the SOURCE counts, described without its name, and gives that exact number. Never count a part of it, and never count something the SOURCE has only one of. Bad: ${bad(3)}, ${bad(4)}, ${bad(5)}.`,
         ]
       : []),
     // R1-m4: a pass with no Find This Spot map must not send the child to one.
     ...(spot ? [] : ['- This pass has NO map. Never write map, mapped or "on the map" in a clue or lookWhere.']),
-    "- Never name the thing in the clue or in lookWhere: no common name, no scientific name, no family name, not even one word of its name or of its kind (for a honey bee, never say honey or bee; for a pond or lake, never say pond or lake). Describe what it looks like or what it does.",
+    "- Never name the thing in the clue or in lookWhere: no common or scientific name, not even one word of its name or of its kind (for a honey bee, never say honey or bee; for a pond or lake, never say pond or lake). Describe what it looks like or what it does.",
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
-    `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider, "climbing on plants" for a climbing vine. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
+    `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
     ...readingRules(band, info.grade),
     kidWordsRule(),
-    `- Each clue is at most ${CLUE_MAX} characters. lookWhere is at most ${LOOK_WHERE_MAX} characters (where in a park to look).`,
+    `- Each clue is at most ${CLUE_MAX} characters; lookWhere at most ${LOOK_WHERE_MAX}.`,
     "- Never tell the child to touch, pick, eat, catch or chase anything. Looking is the game.",
     "- Do not write numbers unless that number is in the item's SOURCE. No links.",
     // S8c: short quotes (answer tokens are the latency) and nothing after the copied words (a glued "parentNote: ..." failed grounding).

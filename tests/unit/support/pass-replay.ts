@@ -7,6 +7,7 @@
  * on demand (a hung model, a 5xx) are built inside the tests that need them, and say so.
  */
 import { kidWordsRule } from "@/lib/ai/prompt";
+import { setRecordedFactsForTests } from "@/lib/pool/park";
 import { PARK_FILTER } from "@/lib/sources/overpass-features";
 import { withoutMaxsize } from "@/lib/sources/overpass";
 import { fixture } from "./osm-replay";
@@ -36,7 +37,7 @@ export const REFILL_MARK = "- This is a second try:";
 export const rec = (name: string) => fixture(name) as unknown as Rec;
 
 type PhenologyRec = {
-  _recording: { month: number; taxonIds: number[]; recordedAt: string };
+  _recording: { month: number; taxonIds: number[]; recordedAt: string; taxonIdsR7?: number[] };
   exchanges: { url: string; status: number; body: unknown }[];
 };
 /** The live phenology answers for a park (R1-M4 season check). */
@@ -62,6 +63,8 @@ const json = (body: unknown, status = 200) =>
  * 5xx built in a test); by default the recorded answer for the park named in the prompt is returned.
  */
 export function passReplay(opts: { model?: (call: Call) => Response | undefined | Promise<Response | undefined> } = {}) {
+  // Round-6 C4: the recorded answers were written for the creek and fountain facts in their own requests.
+  setRecordedFactsForTests(recordedParkFacts());
   const calls: Call[] = [];
   const fetchImpl = async (url: string, init?: RequestInit): Promise<Response> => {
     const u = new URL(url);
@@ -177,13 +180,91 @@ export function withoutKidWordsRule<T extends { role: string; content: string }>
 }
 
 /**
+ * r7 follow-ups (M8, round-6 C4; 2026-10-06): rule lines shortened or merged since the recordings were made. They are
+ * compared by their first words only (both sides), so the dynamic parts that matter stay byte-for-byte: the mix line,
+ * the openers named for the park (the "Start each clue" line up to its first "."), the voice, the refill notes, the
+ * Park Finds and SPOT sources. The recorded answers are answers to the older wording of these lines (said in the
+ * r7-followups report). Lines whose rule did not change are still compared exactly.
+ */
+const EDITED_RULE_PREFIXES = [
+  "- Prefer things that stay put",
+  "- Never open with a filler word",
+  "- Ask the child to listen",
+  "- Write every clue to the child",
+  "- A count clue is a task",
+  "- A clue that talks to the child never switches",
+  "- Wild Finds: the clue must hold a trait",
+  "- Plants: write about flowers",
+  "- A count clue is allowed ONLY",
+  "- Never name the thing",
+  "- lookWhere is a plain place",
+  "- Each clue is at most",
+  "- Some first-try clues used field-guide words",
+] as const;
+
+function shapeOfSystemLine(line: string): string | null {
+  if (line === kidWordsRule()) return null;
+  if (line.startsWith("- Start each clue with a different first word.")) return line.split(". Never start with")[0];
+  const edited = EDITED_RULE_PREFIXES.find((p) => line.startsWith(p));
+  // The voice-switch rule was merged into the "Write every clue" line: compared as one rule.
+  if (edited === "- A clue that talks to the child never switches") return null;
+  return edited ?? line;
+}
+
+/** Round-6 C4: the water kinds whose fact banks gained sight facts (their recorded sources are the older facts). */
+const WATER_FACT_IDS = /^(?:osm-creek|osm-fountain)$/;
+
+const unescapeSource = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
+
+/**
+ * Round-6 C4: the creek and fountain fact sheets each recorded answer was written for, read from the recorded
+ * request itself (the first call's POOL). Tests that check a recorded answer item by item give those two items
+ * their recorded text (`withRecordedWaterFacts`), so the answer is judged against the sheet the model really saw.
+ */
+export function recordedWaterFacts(slug: string): Map<string, string> {
+  const user = modelRec(slug).request.messages.find((m) => m.role === "user")?.content ?? "";
+  const out = new Map<string, string>();
+  for (const m of user.matchAll(/<source id="([^"]*)" section="park" kind="[^"]*">([^<]*)<\/source>/g)) {
+    if (WATER_FACT_IDS.test(m[1])) out.set(m[1], unescapeSource(m[2]));
+  }
+  return out;
+}
+
+/**
+ * The recorded creek / fountain facts of both recorded parks, keyed "<park id>|<kind>" (the facts part of the
+ * recorded fact sheet: what follows "(OpenStreetMap)." and any "Mapped name: ..." sentence).
+ */
+export function recordedParkFacts(): Map<string, string> {
+  const out = new Map<string, string>();
+  for (const p of Object.values(PARKS)) {
+    for (const [id, text] of recordedWaterFacts(p.slug)) {
+      const facts = text.replace(/^.*?\(OpenStreetMap\)\.(?: Mapped names?: [^.]*\.)?\s*/, "");
+      out.set(`${p.id}|${id.replace(/^osm-/, "").replace(/-/g, "_")}`, facts);
+    }
+  }
+  return out;
+}
+
+export function withRecordedWaterFacts<T extends { id: string; sourceText: string }>(items: readonly T[], slug: string): T[] {
+  const facts = recordedWaterFacts(slug);
+  return items.map((i) => (facts.has(i.id) ? { ...i, sourceText: facts.get(i.id)! } : i));
+}
+
+/**
  * Audit R5-C3 (2026-10-06): Wild Finds source text now loses taxonomy and weights (wild.ts `kidSourceText`),
  * so the recorded requests' Wild Finds texts are the pre-R5 ones. This keeps everything else byte-for-byte
  * comparable: the system prompt without the kid-words line, every Park Find and SPOT source exactly, and
  * the Wild Finds sources by id, section and kind (their text blanked on both sides).
  */
 export function recordedShape<T extends { role: string; content: string }>(messages: readonly T[]): T[] {
-  return withoutKidWordsRule(messages).map((m) =>
-    m.role === "user" ? { ...m, content: m.content.replace(/(<source id="inat-[^"]*" section="wild" kind="[^"]*">)[^<]*(<\/source>)/g, "$1$2") } : m,
-  );
+  return withoutKidWordsRule(messages).map((m) => {
+    if (m.role === "system") {
+      const lines = m.content.split("\n").map(shapeOfSystemLine).filter((l): l is string => l !== null);
+      return { ...m, content: lines.join("\n") };
+    }
+    if (m.role !== "user") return m;
+    const wildBlank = m.content.replace(/(<source id="inat-[^"]*" section="wild" kind="[^"]*">)[^<]*(<\/source>)/g, "$1$2");
+    // Round-6 C4: creek and fountain fact sheets are compared by id, section and kind (their text blanked on both sides).
+    return { ...m, content: wildBlank.replace(/(<source id="([^"]*)" section="park" kind="[^"]*">)[^<]*(<\/source>)/g, (all, open: string, id: string, close: string) => (WATER_FACT_IDS.test(id) ? `${open}${close}` : all)) };
+  });
 }

@@ -22,9 +22,9 @@
  */
 import { seasonProblem } from "@/lib/pool/season";
 import { hasUrlOrMarkup } from "@/lib/safety/contact";
-import { blockedBy, blockedWordIn, dangerClueWord } from "@/lib/safety/danger-taxa";
+import { blockedBy, blockedWordIn, dangerClueWord, SAFETY_LINES } from "@/lib/safety/danger-taxa";
 import type { AgeBand } from "@/lib/pass/constants";
-import { jargonProblem, triviaProblem } from "./jargon";
+import { jargonProblem, triviaKind, wrongKindWord } from "./jargon";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
 import { PROMPT_EXAMPLE_TEXTS, STOCK_OPENINGS, STOCK_PHRASES, type Mix } from "./prompt";
@@ -57,6 +57,7 @@ export const DROP_REASONS = [
   "generic_clue",
   "jargon",
   "trivia",
+  "wrong_kind",
   "copies_example",
   "copies_source",
   "repeats_clue",
@@ -80,6 +81,8 @@ export type ValidItem = {
 const CONTENT_FAILS: ReadonlySet<DropReason> = new Set<DropReason>([
   "cut_off", "url_or_markup", "danger", "not_grounded", "name_leak", "mentions_map", "out_of_season", "number_not_in_source",
   "wrong_count", "broken_count", "silent_sound", "filler_only", "generic_clue", "jargon", "copies_example", "repeats_clue",
+  // r7 follow-ups: a wrong kind word ("a big bug" for a tarantula) and nothing-to-see trivia dropped on a pool with spares.
+  "wrong_kind", "trivia",
 ]);
 
 /**
@@ -519,13 +522,21 @@ export function validateDraft(
     }
     // Audit R5-C3 / Q-5-01: Wikipedia jargon ("a moth of the Crambidae family", "pale yellow hindtarsomere",
     // "a mass of 24-39.5 g") gives a child nothing to look for: always removed. A hint with jargon is left out.
-    if (jargonProblem(d.clue, opts.band) !== null) {
+    if (jargonProblem(d.clue, opts.band, item.section) !== null) {
       drop("jargon");
       continue;
     }
-    if (lookWhere && jargonProblem(lookWhere, opts.band) !== null) {
+    // Round-6 Q-6-03: a hint that contradicts its clue ("a tree ..." with "Look: on bushes", leaves or fruit with
+    // "Look: on tree trunks") is left out, like a jargon hint.
+    if (lookWhere && (jargonProblem(lookWhere, opts.band, item.section) !== null || hintContradicts(d.clue, lookWhere))) {
       lookWhere = "";
       lookWhereCleared++;
+    }
+    // r7 follow-ups (run 2026-10-06-7): "Watch for a big bug with a dark brown body." (a tarantula), "a bug that is
+    // black and gold" (a garden spider), "a water pet" (a wild sunfish), "a small fly" (a damselfly). Wrong facts.
+    if (item.section === "wild" && wrongKindWord(d.clue, item.taxon) !== null) {
+      drop("wrong_kind");
+      continue;
     }
     // R2-M5: the prompt's example sentences came back word for word on every park.
     if (copiesPromptExample(d.clue) !== null) {
@@ -541,7 +552,15 @@ export function validateDraft(
     let style: StyleReason | undefined = traitHit ? "name_trait" : undefined;
     // Audit R5-C3 / Q-5-01: range trivia ("native to Texas and Oklahoma"), field-guide words ("an operculum",
     // "arboreal") and a bare colour ("a bird that is black"): the first to go when a spare can replace it.
-    if (item.section === "wild" && triviaProblem(d.clue, opts.band) !== null) style ??= "trivia";
+    // r7 follow-ups (run 2026-10-06-7): a range or habitat fact ("resident in the central United States", "grows in
+    // riparian zones") or a bare colour ("a flying animal that is red") gives nothing to look for. Unless the pool is
+    // low-data it is dropped, so a spare or the refill (which offers other items first) takes its place.
+    const trivia = item.section === "wild" ? triviaKind(d.clue, opts.band) : null;
+    if (trivia?.kind === "nothing_to_see" && !opts.lowData) {
+      drop("trivia");
+      continue;
+    }
+    if (trivia) style ??= "trivia";
     const run = opts.allowSourceCopies ? null : copiedRun(d.clue, item.sourceText);
     if (run !== null) {
       copied.add(run);
@@ -561,6 +580,15 @@ export function validateDraft(
     if (!opts.allowRepeatedOpenings && earlier.some((k) => sameOpening(k.clue, d.clue) || sameFirstWord(k.clue, d.clue))) {
       drop("repeats_opening");
       continue;
+    }
+    // Round-6 judge C4: every example pass had a "listen for the water" clue. One sound clue per pass: a second one
+    // goes like a near-repeat (dropped, a preference on a low-data pool).
+    if (isSoundClue(d.clue) && earlier.some((k) => isSoundClue(k.clue))) {
+      if (!opts.lowData) {
+        drop("repeats_clue");
+        continue;
+      }
+      style ??= "repeats_clue";
     }
     // Audit R4-C2: "Point to me; I am a board ...", "Scan for me; I am a metal cooker ..." on 6 of 8 clues.
     // One clue in which the thing talks as "I" is a riddle; a second one on the same pass is a tic.
@@ -596,7 +624,8 @@ export function validateDraft(
   // printed items keep the answer's order. A style item left out counts as a drop for its reason.
   const preferred = [...asked.filter((v) => !v.style), ...asked.filter((v) => v.style)];
   const chosen = new Set(fitToMix(preferred, mix).items);
-  const items = asked.filter((v) => chosen.has(v));
+  // Round-6 Q-6-02: a printed find whose clue or hint says water gets the water line (and counts in the tip).
+  const items = asked.filter((v) => chosen.has(v)).map(withWaterSafety);
   let spares = 0;
   let styleKept = 0;
   for (const v of asked) {
@@ -1288,6 +1317,9 @@ export function isSilentTaxon(item: Pick<PoolItem, "taxon" | "kind">): boolean {
   return false;
 }
 
+/** Round-6 judge C4: a clue that asks the child to listen (at most one per pass). */
+export const isSoundClue = (clue: string) => SOUND_ASK_RE.test(clue);
+
 /** A clue that asks the child to listen ("Listen for ...", "Can you hear ...", "makes a sound"). */
 const SOUND_ASK_RE =
   /\b(?:listen\w*|hear|hears|heard|hearing|sounds?|noises?|noisy|buzz\w*|sing|sings|singing|songs?|chirp\w*|croak\w*|whistl\w*|quack\w*|hoot\w*|squawk\w*|honk\w*|trill\w*|hum|hums|humming)\b/iu;
@@ -1327,6 +1359,34 @@ const listOf = (nums: number[]) => (nums.length === 1 ? `${nums[0]}` : `${nums.s
  * easy one that stays put), and which finds are near water (or, if none, which ones can move away).
  * Numbers are the find numbers printed on the pass. Empty when no tip applies.
  */
+/**
+ * Round-6 quality Q-6-03 (Connemara example): "Which tree has bumpy, round fruit ...?" with "Look: on bushes" and
+ * "Notice a tree with oval leaves ..." with "Look: on tree trunks". True when the hint sends the child to the wrong place.
+ */
+export function hintContradicts(clue: string, lookWhere: string): boolean {
+  const c = clue.toLowerCase();
+  const h = lookWhere.toLowerCase();
+  if (/\btrees?\b/.test(c) && /\b(?:on|in|under)\s+(?:the\s+)?(?:bushes|bush|shrubs?)\b/.test(h)) return true;
+  if (/\b(?:leaf|leaves|fruits?|berr(?:y|ies)|flowers?|blooms?|petals?|seeds?|pods?|nuts?|acorns?|cones?)\b/.test(c) && /\b(?:tree\s+)?trunks?\b/.test(h)) return true;
+  return false;
+}
+
+/** Words that put a find by the water ("Look: near the water", "a walkway that goes high over water"). */
+const WATER_WORD_RE = /\b(?:water|waters|pond|ponds|lake|lakes|creek|creeks|stream|streams|river|rivers|shore|shoreline|marsh|swamp)\b/i;
+
+/**
+ * Round-6 quality Q-6-02: the water line came only from water and creek Park Finds, so a bridge "high over water",
+ * a bullfrog with "Look: near the water" or a lake-park find printed without it, and the grown-up's tip left them out.
+ * Any printed find whose clue or hint names water now carries the line after its own (at most 120 characters).
+ */
+export function withWaterSafety<T extends Pick<ValidItem, "item" | "clue" | "lookWhere">>(v: T): T {
+  if (!WATER_WORD_RE.test(`${v.clue} ${v.lookWhere}`)) return v;
+  const own = v.item.safety;
+  if (own && /water/i.test(own)) return v;
+  const safety = own ? `${own} ${SAFETY_LINES.water}` : SAFETY_LINES.water;
+  return { ...v, item: { ...v.item, safety: safety.length <= 120 ? safety : SAFETY_LINES.water } };
+}
+
 export function parentNoteFor(items: readonly Pick<ValidItem, "item" | "difficulty">[]): string {
   const ordered = items.map((v, i) => ({ v, i })).sort((a, b) => PRINT_ORDER[a.v.item.section] - PRINT_ORDER[b.v.item.section] || a.i - b.i);
   const tips: string[] = [];

@@ -9,7 +9,7 @@ import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vite
 import { caseDataOrNull, loadFixture, type CaseData } from "../../evals/fixture";
 import { templateDraft, templatePass } from "../../evals/baseline";
 import { ASK_EXTRA, REFILL_SPARES } from "@/lib/ai/schema";
-import { planRequest, refillPlan, refillRules, refillSparesFor, STOCK_FRAMES, systemPrompt, type Mix } from "@/lib/ai/prompt";
+import { planRequest, refillPlan, refillRules, refillSparesFor, STOCK_FRAMES, STOCK_FRAMES_PROMPT, systemPrompt, type Mix } from "@/lib/ai/prompt";
 import {
   countProblem,
   isGenericClue,
@@ -96,7 +96,15 @@ describe("M10: worn-out clue frames and the bolted-on count sentence (run 2026-1
     expect(stockOpening("Where is the way that goes high over water with railings on the sides?")).toBeNull();
     const mix: Mix = { n: 8, min: { park: 2, wild: 2, lucky: 0 }, max: { park: 6, wild: 6, lucky: 0 }, hardMin: 0 };
     const sys = systemPrompt("6-10", mix, null, { month: 10, openers: ["Spot", "Where", "Somewhere"] });
-    for (const f of STOCK_FRAMES) expect(sys).toContain(`"${f}"`);
+    // r7 follow-ups (M8): the prompt names the frames in a short form; every frame is one reading of it.
+    for (const f of STOCK_FRAMES_PROMPT) expect(sys).toContain(f);
+    const readings = (form: string): string[] =>
+      form
+        .replace(/"/g, "")
+        .split(" ")
+        .reduce<string[]>((acc, w) => acc.flatMap((a) => w.split("/").map((alt) => (a ? `${a} ${alt}` : alt))), [""]);
+    const all = new Set(STOCK_FRAMES_PROMPT.flatMap(readings));
+    for (const f of STOCK_FRAMES) expect(all.has(f), f).toBe(true);
     expect(sys).toContain('After "Somewhere" or "Where", go straight to the thing\'s own detail.');
     expect(sys).toContain("never switches to the thing talking (I, me, my) in a later sentence");
   });

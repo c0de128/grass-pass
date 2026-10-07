@@ -245,7 +245,7 @@ describe("C3 / Q-5-01: jargon (always dropped) and trivia (a preference), real p
     expect(stockOpening("Spot a grey bird with a long tail.")).toBeNull();
   });
 
-  it("in validateDraft: jargon is dropped, trivia is kept only when no spare can replace it", () => {
+  it("in validateDraft: jargon is dropped; a range fact is dropped (r7 follow-ups), kept as a preference only on a low-data pool", () => {
     const pool = wildPool(listOf(["Passer domesticus", "Verbena hastata", "Danaus plexippus", "Opheodrys aestivus", "Anolis carolinensis"]), summaries, "2026-09-22", undefined, { describableOnly: false }).items;
     const sparrow = pool.find((p) => p.answer.startsWith("House Sparrow"))!;
     const vervain = pool.find((p) => p.answer.startsWith("Blue vervain"))!;
@@ -263,9 +263,19 @@ describe("C3 / Q-5-01: jargon (always dropped) and trivia (a preference), real p
       { hasMap: false, band: "6-10", ask },
     );
     expect(out.drops.jargon).toBe(1);
-    // The trivia clue is the only one left, so it is printed (a preference, never a lost find).
-    expect(out.items.map((i) => i.item.id)).toEqual([sparrow.id]);
-    expect(out.items[0].style).toBe("trivia");
+    // r7 follow-ups: "native to Europe" gives nothing to look for. On a pool with spares it is dropped (the refill
+    // offers other items first) ...
+    expect(out.drops.trivia).toBe(1);
+    expect(out.items).toEqual([]);
+    // ... and on a low-data pool it stays a preference: printed when nothing can replace it, never a lost find.
+    const low = validateDraft(
+      { items: [{ itemId: sparrow.id, section: "wild", clue: "Spot a pale brown and grey bird native to Europe.", lookWhere: "", sourceQuote: "coloured pale brown and grey", difficulty: "easy" }] },
+      pool,
+      mix,
+      { hasMap: false, band: "6-10", ask, lowData: true },
+    );
+    expect(low.items.map((i) => i.item.id)).toEqual([sparrow.id]);
+    expect(low.items[0].style).toBe("trivia");
   });
 
   it("the prompt asks for kid words and quotes the bad examples (copying one is dropped)", () => {
@@ -273,6 +283,8 @@ describe("C3 / Q-5-01: jargon (always dropped) and trivia (a preference), real p
     const p = systemPrompt("10-13", mix, null, { month: 10 });
     expect(p).toContain(kidWordsRule());
     expect(p).not.toMatch(/Use the exact describing words/);
-    expect(PROMPT_EXAMPLE_TEXTS).toContain("Where is a moth of the Crambidae family?");
+    // r7 follow-ups (M8): the rule quotes two short BAD phrases now (the weight example is "a weight" in the rule).
+    expect(PROMPT_EXAMPLE_TEXTS).toContain("a moth of the Crambidae family");
+    expect(PROMPT_EXAMPLE_TEXTS).toContain("a lizard native to Texas and Oklahoma");
   });
 });

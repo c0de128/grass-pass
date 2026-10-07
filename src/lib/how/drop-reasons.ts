@@ -50,12 +50,13 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
     plain: "It reads like a field guide, not a walk: a family or Latin group name (\"a moth of the Crambidae family\"), a weight or a pile of measurements, or a word like \"pterostigma\".",
   },
   trivia: {
-    kind: "preference",
-    plain: "Where it lives on a map (\"native to Texas and Oklahoma\"), a field-guide word (\"operculum\", \"arboreal\") or one bare colour (\"a bird that is black\").",
+    kind: "low-data",
+    plain: "Nothing to look at: where it lives on a map (\"native to Texas and Oklahoma\") or one bare colour (\"a bird that is black\"). A field-guide word (\"operculum\") only goes first when a spare exists.",
   },
+  wrong_kind: { kind: "always", plain: "It calls the find the wrong kind of thing (\"a bug\" for a spider, \"a pet\" for a wild fish)." },
   copies_example: { kind: "always", plain: "It copies an example sentence from our instructions." },
   copies_source: { kind: "preference", plain: "It copies 4+ words in a row from its facts instead of using kid words." },
-  repeats_clue: { kind: "low-data", plain: "It nearly repeats another clue on the pass, or its sentence pattern." },
+  repeats_clue: { kind: "low-data", plain: "It nearly repeats another clue on the pass or its sentence pattern, or is a second \"listen for\" clue." },
   repeats_opening: {
     kind: "always",
     plain: "It starts with the same first word as another clue (a stock start like \"Can you find\" only goes first when a spare exists).",

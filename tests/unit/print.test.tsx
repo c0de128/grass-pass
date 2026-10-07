@@ -189,10 +189,11 @@ describe("ParentStub (bottom of the printed sheet)", () => {
     expect(t).toContain("Not on this pass");
     expect(t).toContain("No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist.");
     expect(t).not.toContain(SAFETY_FOOTNOTE);
-    // The completeness live answer prints the pond (a water find) as find 7, so that find carries a safety
-    // line and the stub points to it; nothing was filtered, so there is still no safety footnote.
-    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(6);
-    expect(pass.items.filter((it) => it.safety !== null)).toHaveLength(1);
+    // The completeness live answer prints the fountain, the pond and the bridge "high over water" as finds 6-8. Round-6
+    // Q-6-02: all three carry the water line now (it was the pond only), and the stub points to them; nothing was
+    // filtered, so there is still no safety footnote.
+    expect(pass.items.findIndex((it) => it.safety !== null)).toBe(5);
+    expect(pass.items.filter((it) => it.safety !== null).map((it) => it.safety)).toEqual(Array(3).fill("Stay with your grown-up near water."));
     expect(t).toContain(`${STUB_LOOK_ONLY} ${STUB_EACH_LINE}`);
   });
 

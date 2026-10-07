@@ -108,9 +108,10 @@ describe("openers (M10: 'I dare you to find' on 16 clues, 'Find a place with a' 
   it("the prompt asks for them, bans the stock openings and 'a place with', and has no 'dares' voice", () => {
     const sys = buildMessages("Celebration Park", celebration, "6-10", planRequest(celebration, "6-10", "Celebration Park")!.ask, null, { month: 10 })[0].content;
     expect(sys).toContain(`For this park use these, one per clue, in any order: ${openersFor("Celebration Park", 8).join(", ")}.`);
-    expect(sys).toContain('Never start with "Can you find", "Find a", "Look for", "I dare you" or "Do you see", and never with these worn-out starts: "Somewhere you will see"');
+    // r7 follow-ups (M8): the worn-out starts are named in a short form (STOCK_FRAMES_PROMPT), plus the round-6 water shape.
+    expect(sys).toContain('Never start with "Can you find", "Find a", "Look for", "I dare you", "Do you see" or these worn-out starts: "Somewhere you will/can see/hear/find"');
     // Completeness + M10 (run 2026-10-06-5): the frames Gemma repeated across parks are named, and so is the count trailer.
-    for (const f of ["Where can you hear", "Where can you find", "Somewhere you can hear", "Hunt for a tree"]) expect(sys).toContain(`"${f}"`);
+    for (const f of ["Where can you hear/find/see/spot", "Somewhere you will/can see/hear/find", "Hunt for a tree", "Where is the water that"]) expect(sys).toContain(`"${f}"`);
     expect(sys).toContain('Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".');
     expect(sys).toContain('Never write "a place with", "a place where" or "a spot where"');
     expect(sys).toContain("never copy 3 or more words in a row from the SOURCE");
@@ -191,7 +192,8 @@ describe("the checks (style is a preference, truth and safety are not)", () => {
     const fountain = byId("osm-fountain");
     const bridge = byId("osm-bridge");
     const copy = draftItem(bench, "Psst, find a long seat outdoors for resting.", "a long seat outdoors for resting");
-    const items = [copy, draftItem(fountain, "Listen! Do you hear water splashing?", "water"), draftItem(bridge, "Wander over a path that crosses a dip.", "cross over water")];
+    // Round-6 C4: Celebration's fountain facts are things to see now (the sound fact is 1 of 5), so its clue is a sight clue.
+    const items = [copy, draftItem(fountain, "Peek at a basin where water pours down.", "water"), draftItem(bridge, "Wander over a path that crosses a dip.", "cross over water")];
     // test input: the fountain/bridge quotes are checked like any other (short ones fail grounding), so use real source text
     items[1].sourceQuote = fountain.sourceText.slice(-30);
     items[2].sourceQuote = bridge.sourceText.slice(-30);

@@ -69,7 +69,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">{HERO_ILLUSTRATION.caption}</p>
             {/* Phones: in the flow, overlapping the picture's lower part (a real pass is taller than v0's sample, so an
                 absolute card would cover the search card). From 640 px: v0's absolute, tilted placement. */}
-            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-12 sm:-left-10 sm:mt-0 sm:w-72 lg:-left-2 lg:w-80">
+            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:-bottom-32 lg:-left-8 lg:w-64">
               <HeroPassCard card={card} />
             </div>
             <p className="absolute top-8 -right-1 rotate-6 rounded-full bg-sun px-4 py-2 font-heading text-sm font-extrabold text-sun-foreground shadow-lg sm:-right-6">

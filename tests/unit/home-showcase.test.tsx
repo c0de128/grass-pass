@@ -76,12 +76,11 @@ describe("home showcase (v0 slots filled with real data)", () => {
   it("hero card (judge R6): leads with a counted Park Find, then real finds in pass order, the listening clue left out", () => {
     const pass = realPass();
     // The recorded Arbor Hills pass: "Hunt for 4 roofs…", "Track 2 long outdoor seats…", the grill, the vine; its
-    // "Stop and listen for running water…" clue is the 4th item but goes last, so it is not among the 4 shown.
+    // "Stop and listen for running water…" clue is the 4th item but goes last, so it is not among the 3 shown (Kevin 2026-10-07: 3 finds so the picture shows).
     expect(heroFinds(pass).map((f) => f.clue)).toEqual([
       "Hunt for 4 roofs held up by poles with tables below them.",
       "Track 2 long outdoor seats for taking a break.",
       "Ready to find a metal box on a post used for cooking?",
-      "What about a vine with large, intricate flowers?",
     ]);
     // Judge R7 T1: that recorded pass has 7 of 8 finds, so it is never the hero card; a complete one is. (These tests
     // check the choice made WITHOUT a pinned hero pass: `null`; the pinned one is tested in pinned-examples.test.tsx.)

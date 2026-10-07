@@ -18,7 +18,7 @@ import { heroPinned } from "@/lib/pinned";
  */
 export const HERO_EXAMPLE_ORDER: readonly string[] = ["white-rock", "arbor-hills", "celebration", "oak-point"];
 /** How many finds the hero card lists (v0 shows 4). */
-export const HERO_FINDS = 4;
+export const HERO_FINDS = 3;
 
 const SECTION_NAME: Record<SectionId, string> = { park: "Park Finds", wild: "Wild Finds", lucky: "Lucky Finds" };
 

@@ -302,8 +302,9 @@ describe("/about", () => {
     expect(html.match(/<summary/g)?.length).toBe(details.length);
     // What a judge sees before opening anything: everything outside the folded bodies.
     const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
-    // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity).
-    expect(visible.split(" ").length).toBeLessThanOrEqual(660);
+    // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity), +20 for the 5th photo credit (judge R7
+    // T1: Oak Point is an example now; Connemara's photo stays in the "two parks" band, and every photo is credited).
+    expect(visible.split(" ").length).toBeLessThanOrEqual(680);
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {

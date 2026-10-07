@@ -62,8 +62,12 @@ test.describe("example parks", () => {
     test.setTimeout(300_000);
     await page.goto("/");
     const list = page.getByRole("list", { name: "Example parks" });
-    await expect(list.locator(":scope > li").first()).toContainText("Arbor Hills Nature Preserve");
-    await expect(list.locator(":scope > li").last()).toContainText("Connemara Meadow Preserve");
+    // Judge R7 T1: Oak Point replaced Connemara, and parks with a complete pass come first (ready cards before the rest).
+    await expect(list.locator(":scope > li")).toHaveCount(4);
+    await expect(list).toContainText("Oak Point Park and Nature Preserve");
+    const order = await list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));
+    const readyFirst = [...order].sort((a, b) => (a === "ready" ? 0 : 1) - (b === "ready" ? 0 : 1));
+    expect(order, "ready (complete) examples come first").toEqual(readyFirst);
     // Let the warm-up finish (cards say "making" while a pass is being made), so every example that CAN be
     // made is checked, not just the first one ready.
     const states = async () => list.locator(":scope > li").evaluateAll((els) => els.map((e) => e.getAttribute("data-state") ?? ""));

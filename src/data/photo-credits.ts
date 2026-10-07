@@ -62,6 +62,21 @@ export const PARK_PHOTOS: Record<string, ParkPhoto> = {
     sourceUrl: "https://www.flickr.com/photos/46183897@N00/6369488567/",
     taken: "November 2011",
   },
+  // Judge R7 T1: the 4th example since 2026-10-06 (src/lib/prewarm.ts). Checked on its source page on 2026-10-06: CC0,
+  // author Jackilometresan, title and description name Oak Point Park & Nature Preserve, Plano.
+  "oak-point": {
+    src: "/photos/oak-point.webp",
+    width: 1024,
+    height: 768,
+    alt: "Rowlett Creek in Oak Point Park, Plano: a calm green creek between steep muddy banks, framed by tree trunks and spring leaves",
+    title: "Rowlett Creek in Oak Point Park, Plano, Texas, USA",
+    author: "Jackilometresan",
+    licence: "CC0 1.0",
+    licenceUrl: CC0,
+    sourceUrl: "https://commons.wikimedia.org/wiki/File:Rowlett_Creek_in_Oak_Point_Park,_Plano,_Texas,_USA.jpg",
+    taken: "April 2021",
+  },
+  // Still used by the "two parks" band (a measurement, not an example pass).
   connemara: {
     src: "/photos/connemara-meadow.webp",
     width: 1024,

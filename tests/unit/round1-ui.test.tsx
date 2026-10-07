@@ -13,11 +13,14 @@ const ready: ExampleStatus = {
   example: EXAMPLE_PARKS[0],
   pass: { passId: "w306191453-6to10-20261005-1", day: "2026-10-05", generatedAt: "2026-10-05T23:00:00.000Z" },
   fresh: true,
+  today: true,
+  latest: { passId: "w306191453-6to10-20261005-1", day: "2026-10-05", generatedAt: "2026-10-05T23:00:00.000Z" },
+  short: null,
   refreshing: false,
   missing: null,
 };
-const making: ExampleStatus = { example: EXAMPLE_PARKS[1], pass: null, fresh: false, refreshing: true, missing: "It is being made right now." };
-const waiting: ExampleStatus = { example: EXAMPLE_PARKS[2], pass: null, fresh: false, refreshing: false, missing: "The last try didn't work." };
+const making: ExampleStatus = { example: EXAMPLE_PARKS[1], pass: null, fresh: false, today: false, latest: null, short: null, refreshing: true, missing: "It is being made right now." };
+const waiting: ExampleStatus = { example: EXAMPLE_PARKS[2], pass: null, fresh: false, today: false, latest: null, short: null, refreshing: false, missing: "The last try didn't work." };
 
 describe("example cards (R1-B2 data-state, UX m8 phone row)", () => {
   it("each card says its state for tests: ready / off / making / waiting", () => {

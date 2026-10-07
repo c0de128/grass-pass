@@ -6,6 +6,8 @@
  */
 import { formatTime } from "@/lib/pass/format";
 import { AGE_BAND_INFO, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
+import { isCompletePass } from "@/lib/pass/complete";
+import { nothingToSee } from "@/lib/ai/validate";
 import type { ExamplePark, ExampleStatus } from "@/lib/prewarm";
 
 /**
@@ -13,7 +15,7 @@ import type { ExamplePark, ExampleStatus } from "@/lib/prewarm";
  * not a listening riddle. The examples are tried in this order; the first whose real pass has a counted Park Find
  * wins, else the first ready one in this order. Deterministic: the same saved passes always give the same card.
  */
-export const HERO_EXAMPLE_ORDER: readonly string[] = ["white-rock", "arbor-hills", "celebration", "connemara"];
+export const HERO_EXAMPLE_ORDER: readonly string[] = ["white-rock", "arbor-hills", "celebration", "oak-point"];
 /** How many finds the hero card lists (v0 shows 4). */
 export const HERO_FINDS = 4;
 
@@ -44,7 +46,8 @@ const COUNT_LEAD = /^\s*(count|how many)\b/i;
 
 /** A Park Find that asks to count something real ("Count the 4 roofed areas…", "Hunt for 4 roofs…"). */
 export function isCountedParkFind(item: PassItem): boolean {
-  return item.section === "park" && (COUNT_LEAD.test(item.clue) || /\b([2-9]|[1-9]\d)\b/.test(item.clue));
+  // Judge R7 T1: and it names a thing to see ("Spot 2 spots" does not).
+  return item.section === "park" && (COUNT_LEAD.test(item.clue) || /\b([2-9]|[1-9]\d)\b/.test(item.clue)) && !nothingToSee(item.clue);
 }
 
 /** A find you hear rather than see (judge C4: the water-sound clue on every pass); last choice on the hero card. */
@@ -72,8 +75,17 @@ export function heroCard(statuses: readonly ExampleStatus[], order: readonly str
     return i < 0 ? order.length : i;
   };
   const sorted = [...statuses].sort((a, b) => rank(a) - rank(b));
-  const readyOnes = sorted.map(ready).filter((r): r is ReadyExample => r !== null);
-  const ex = readyOnes.find((r) => r.pass.items.some(isCountedParkFind)) ?? readyOnes[0];
+  // Judge R7 T1: only complete passes (all finds, a riddle when the park has a map); the first whose hero list opens
+  // with a counted, concrete Park Find, else the first complete one.
+  const readyOnes = sorted
+    .map(ready)
+    .filter((r): r is ReadyExample => r !== null)
+    .filter((r) => isCompletePass(r.pass));
+  const ex =
+    readyOnes.find((r) => {
+      const lead = heroFinds(r.pass)[0];
+      return lead !== undefined && isCountedParkFind(lead);
+    }) ?? readyOnes[0];
   if (ex) return { kind: "ready", ex, finds: heroFinds(ex.pass) };
   const first = sorted[0];
   if (!first) return null;
@@ -116,7 +128,8 @@ export type LiveStatement = { text: string; live: boolean };
  */
 export function liveStatement(statuses: readonly ExampleStatus[], enabled: boolean): LiveStatement {
   const readyOnes = statuses.filter((s) => s.pass);
-  const today = statuses.filter((s) => s.pass && s.fresh).length;
+  // Judge R7 T1: "made today" counts only passes shown from today (an older complete one is not today's).
+  const today = statuses.filter((s) => s.pass && s.today).length;
   if (today > 0) return { text: `${today} example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
   if (statuses.some((s) => s.refreshing)) return { text: "Making today's example passes", live: true };
   if (readyOnes.length > 0) {
@@ -124,6 +137,20 @@ export function liveStatement(statuses: readonly ExampleStatus[], enabled: boole
   }
   if (!enabled) return { text: "Example passes are turned off", live: false };
   return { text: "Example passes not ready yet", live: false };
+}
+
+/**
+ * Judge R7 T1: the "Made …" line under an example card. Today's pass: its time. An older complete pass (today's came
+ * out short, or isn't made yet): its real date, that it was made from that day's data, and why it is shown.
+ */
+export function madeLine(s: Pick<ExampleStatus, "today" | "short" | "refreshing">, madeAt: string): string {
+  if (s.today) return `Made ${madeAt}`;
+  const why = s.short
+    ? ` Today's pass had ${s.short.items} of ${s.short.target} finds${s.short.riddle === "code" ? " and no riddle" : ""}, so this complete one is shown.`
+    : s.refreshing
+      ? " Today's is being made."
+      : "";
+  return `Made ${madeAt} from that day's data.${why}`;
 }
 
 export type SpotQuote = { riddle: string; park: string; madeAt: string };

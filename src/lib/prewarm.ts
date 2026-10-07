@@ -32,6 +32,7 @@ import { DEGRADED_RETRY_SEC, isDegraded, loadPass, makePass, mayRebuildDegraded,
 import { osmRefreshIdle } from "@/lib/sources/osm-refresh";
 import type { ExampleLink } from "@/lib/parks/schema";
 import { DEFAULT_AGE_BAND, type AgeBand, type Pass } from "@/lib/pass/schema";
+import { completeness, isCompletePass } from "@/lib/pass/complete";
 
 export type ExamplePark = {
   slug: string;
@@ -45,15 +46,21 @@ export type ExamplePark = {
 
 /**
  * Parks with good real data in the 2026-10-05 eval recordings (evals/cases.json). R2-m9: shown (and
- * offered as "a ready example") in this order, a COMPLETE pass first: Arbor Hills has Park Finds, Wild
- * Finds and a Find This Spot map (judge + UX round 2); Connemara (no single map landmark, few mapped
- * features) is last.
+ * offered as "a ready example") in this order, a COMPLETE pass first (exampleStatuses also puts parks with a
+ * complete pass ahead of the rest).
+ *
+ * Judge R7 T1: Connemara Meadow Preserve was the 4th example, but its pass was 5 of 8 in every run of eval -8
+ * (1 mapped feature kind; its iNaturalist species have thin Wikipedia summaries, so clues failed the generic
+ * check). Oak Point Park and Nature Preserve (Plano) replaced it: in the same recordings 67 species nearby (23 of 25
+ * with a full summary), 6 mapped feature kinds with one picnic shelter for Find This Spot, and eval -8 passes of
+ * 8, 8 and 7 of 8. The home page's "two parks" band still shows Connemara's Oct 5 measurement (a measurement,
+ * not an example pass). Details: reports/examples-curation-2026-10-06.md in the factory repo.
  */
 export const EXAMPLE_PARKS: readonly ExamplePark[] = [
   { slug: "arbor-hills", parkId: "way/38113837", name: "Arbor Hills Nature Preserve", place: "Plano TX", blurb: "trails, a creek, wildlife and a Find This Spot map" },
   { slug: "white-rock", parkId: "way/460905359", name: "White Rock Lake Park", place: "Dallas TX", blurb: "a big lake park" },
   { slug: "celebration", parkId: "way/188145317", name: "Celebration Park", place: "Allen TX", blurb: "playgrounds, courts and a Find This Spot map" },
-  { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "a wild meadow: lots of plants and bugs" },
+  { slug: "oak-point", parkId: "way/556800335", name: "Oak Point Park and Nature Preserve", place: "Plano TX", blurb: "a creek preserve: lots of plants, birds and bugs" },
 ];
 
 export const EXAMPLE_BAND: AgeBand = DEFAULT_AGE_BAND;
@@ -69,7 +76,16 @@ const SAVED_TTL_SEC = 60 * 24 * 3600;
 
 const SavedSchema = z.object({ passId: z.string(), day: z.string(), generatedAt: z.string() });
 type Saved = z.infer<typeof SavedSchema>;
-const savedCache = createJsonCache({ name: "example-pass", schema: SavedSchema, ttlSec: SAVED_TTL_SEC, maxEntries: 50 });
+/**
+ * One store key per example (SEC-3-02: the home page and the search fallback read 1 GET per example): the last pass
+ * made, plus (judge R7 T1) the last COMPLETE pass (src/lib/pass/complete.ts), kept with it for 60 days (the pass itself
+ * stays readable 30 days). When today's re-made pass is short, the home page keeps showing the complete one with its
+ * real date.
+ */
+const EntrySchema = SavedSchema.extend({ complete: SavedSchema.optional() });
+type Entry = z.infer<typeof EntrySchema>;
+const savedCache = createJsonCache({ name: "example-pass", schema: EntrySchema, ttlSec: SAVED_TTL_SEC, maxEntries: 50 });
+const savedOf = (e: Entry): Saved => ({ passId: e.passId, day: e.day, generatedAt: e.generatedAt });
 
 type Env = Record<string, string | undefined>;
 
@@ -149,15 +165,27 @@ export function failureReason(code: string): string {
 
 export type ExampleStatus = {
   example: ExamplePark;
-  /** The last good pass (link target), or null when none was made yet. */
+  /**
+   * The pass the home page shows (link target): today's when it is complete, else the last complete one (judge R7
+   * T1, with its real date), or null when no complete pass was made yet. Never a short pass.
+   */
   pass: Saved | null;
+  /** The last pass made for this example (today's or older), complete or not (logs, refresh logic, tests). */
+  latest: Saved | null;
   /**
    * That pass itself (already read for the link check, so no extra store read): the home page shows its real
    * park facts, sections and first finds. Absent when there is no pass.
    */
   passData?: Pass | null;
-  /** True when that pass is from today (Chicago day) and not a degraded one that may be rebuilt now. */
+  /**
+   * True when today's pass (Chicago day) was made and is not a degraded one that may be rebuilt now (so no refresh
+   * is due), whether or not it is the one shown.
+   */
   fresh: boolean;
+  /** True when the pass shown is today's (false: an older complete pass, shown with its real date). */
+  today: boolean;
+  /** Today's pass when it came out short and is NOT shown (judge R7 T1): its finds, its target, and whether its map lost the riddle. */
+  short: { items: number; target: number; riddle: "model" | "code" | "none" } | null;
   /** True when this server is making a new one right now. */
   refreshing: boolean;
   /**
@@ -202,12 +230,19 @@ async function refreshOne(ex: ExamplePark, day: string, deps: WarmDeps): Promise
       { ip: "server-prewarm", internal: true, env: deps.env, now, fetchImpl: deps.fetchImpl, modelFetch: deps.modelFetch },
     );
     if (out.kind === "pass") {
-      await savedCache.set(ex.slug, { passId: out.pass.id, day: out.pass.day, generatedAt: out.pass.generatedAt }, { now: now() });
+      const saved = { passId: out.pass.id, day: out.pass.day, generatedAt: out.pass.generatedAt };
+      // Judge R7 T1: only a complete pass replaces the one the home page shows; a short one keeps the old complete one.
+      const c = completeness(out.pass);
+      const before = c.complete ? null : await savedCache.get(ex.slug, now());
+      // An entry saved before this record existed: its own pass, when complete, is the last complete one.
+      const oldPass = before && !before.value.complete && before.value.passId !== saved.passId ? await loadPass(before.value.passId, now()) : null;
+      const complete = c.complete ? saved : (before?.value.complete ?? (before && oldPass && isCompletePass(oldPass) ? savedOf(before.value) : undefined));
+      await savedCache.set(ex.slug, { ...saved, ...(complete ? { complete } : {}) }, { now: now() });
       holder().lastError.delete(ex.slug);
       const degraded = isDegraded(out.pass);
       // R1-m2: a pass made while a source was down gets another try after DEGRADED_RETRY_SEC, not 2 h.
       if (degraded) await shortenLock(ex.slug, day, deps, DEGRADED_RETRY_SEC);
-      log("prewarm_ok", { example: ex.slug, id: out.pass.id, items: out.pass.items.length, cached: out.cached, degraded, ms: now() - started });
+      log("prewarm_ok", { example: ex.slug, id: out.pass.id, items: c.items, target: c.target, riddle: c.riddle, complete: c.complete, cached: out.cached, degraded, ms: now() - started });
     } else {
       const code = out.kind === "error" ? out.error.code : "EMPTY";
       holder().lastError.set(ex.slug, { at: now(), code });
@@ -257,25 +292,47 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
     // The link must still open: the pass itself lives 30 days in the pass cache.
-    const pass = hit ? await loadPass(hit.value.passId, now()) : null;
-    const saved = hit && pass ? hit.value : null;
-    const fresh = saved !== null && pass !== null && saved.day === today && !(await rebuildDue(ex, pass, now()));
+    const latestPass = hit ? await loadPass(hit.value.passId, now()) : null;
+    const latest = hit && latestPass ? savedOf(hit.value) : null;
+    const fresh = latest !== null && latestPass !== null && latest.day === today && !(await rebuildDue(ex, latestPass, now()));
+    const latestC = latestPass ? completeness(latestPass) : null;
+
+    // Judge R7 T1: show the latest pass only when it is complete; else the last complete one (with its real date).
+    let shown: Saved | null = null;
+    let shownPass: Pass | null = null;
+    if (latest && latestPass && latestC?.complete) {
+      shown = latest;
+      shownPass = latestPass;
+    } else {
+      // The last complete pass saved with this entry (an older pass, shown with its real date).
+      const c = hit?.value.complete;
+      const cPass = c ? await loadPass(c.passId, now()) : null;
+      if (c && cPass && isCompletePass(cPass)) {
+        shown = c;
+        shownPass = cPass;
+      }
+    }
+    const short = latest && latestC && !latestC.complete && latest.day === today ? { items: latestC.items, target: latestC.target, riddle: latestC.riddle } : null;
+
     let refreshing = holder().running.has(ex.slug);
     if (!fresh && enabled && !refreshing) refreshing = await maybeRefresh(ex, today, deps);
     const err = holder().lastError.get(ex.slug);
     const missing =
-      saved !== null
+      shown !== null
         ? null
-        : !enabled
-          ? "No data available yet: example passes are switched off on this server."
-          : refreshing
-            ? "No data available yet: it is being made right now (about 15-30 seconds)."
-            : err
-              ? `No data available yet: the last try didn't work because ${failureReason(err.code)}.`
-              : "No data available yet: no pass has been made for it today.";
-    out.push({ example: ex, pass: saved, passData: saved ? pass : null, fresh, refreshing, missing });
+        : short
+          ? `No data available yet: today's pass came out with ${short.items} of ${short.target} finds${short.riddle === "code" ? " and no Find This Spot riddle" : ""}, and this page only shows complete example passes.`
+          : !enabled
+            ? "No data available yet: example passes are switched off on this server."
+            : refreshing
+              ? "No data available yet: it is being made right now (about 15-30 seconds)."
+              : err
+                ? `No data available yet: the last try didn't work because ${failureReason(err.code)}.`
+                : "No data available yet: no pass has been made for it today.";
+    out.push({ example: ex, pass: shown, latest, passData: shownPass, fresh, today: shown !== null && shown.day === today, short, refreshing, missing });
   }
-  return out;
+  // Judge R7 top-5 #3: complete examples first (config order kept within each group).
+  return [...out.filter((s) => s.pass !== null), ...out.filter((s) => s.pass === null)];
 }
 
 /**
@@ -296,10 +353,17 @@ export async function readyExample(deps: Pick<WarmDeps, "now" | "examples"> = {}
 
 async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promise<ExampleLink | null> {
   const now = deps.now ?? (() => Date.now());
+  // Judge R7 T1: a complete example pass first, else any saved one (an error page may still offer a short real pass).
+  // One GET per example, as before.
+  const latest: { ex: ExamplePark; id: string }[] = [];
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
     const hit = await savedCache.get(ex.slug, now());
-    if (hit && (await loadPass(hit.value.passId, now()))) return { name: ex.name, href: `/pass/${hit.value.passId}?example=1` };
+    if (!hit) continue;
+    const complete = hit.value.complete;
+    if (complete && (await loadPass(complete.passId, now()))) return { name: ex.name, href: `/pass/${complete.passId}?example=1` };
+    latest.push({ ex, id: hit.value.passId });
   }
+  for (const { ex, id } of latest) if (await loadPass(id, now())) return { name: ex.name, href: `/pass/${id}?example=1` };
   return null;
 }
 

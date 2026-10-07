@@ -1,10 +1,15 @@
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { SampleParks } from "@/components/home/SampleParks";
+import { z } from "zod";
+import { createJsonCache } from "@/lib/cache";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
+import { completeness, isCompletePass } from "@/lib/pass/complete";
 import { setLogSink } from "@/lib/log";
 import { loadPass, resetPassMaking } from "@/lib/pass/make";
-import { EXAMPLE_PARKS, exampleStatuses, prewarmEnabled, prewarmIdle, resetPrewarm, warmExamples, REFRESH_LOCK_SEC, RETRY_NO_MODEL_SEC, type ExamplePark } from "@/lib/prewarm";
+import { EXAMPLE_PARKS, exampleStatuses, prewarmEnabled, prewarmIdle, readyExample, resetPrewarm, warmExamples, REFRESH_LOCK_SEC, RETRY_NO_MODEL_SEC, type ExamplePark, type ExampleStatus } from "@/lib/prewarm";
+import { PassSchema } from "@/lib/pass/schema";
 import { localDay } from "@/lib/time";
 import { searchParks } from "@/lib/parks/search";
 import { ExampleLinkSchema } from "@/lib/parks/schema";
@@ -14,7 +19,10 @@ import { PARKS, passReplay, type Call } from "./support/pass-replay";
 // Park data and model answers are the LIVE recordings in tests/fixtures (see support/pass-replay.ts).
 // The only built responses are the model 500s in the "failed refresh" tests, which say so.
 
-const EXAMPLES: ExamplePark[] = ["connemara", "celebration"].map((slug) => EXAMPLE_PARKS.find((e) => e.slug === slug)!);
+// Judge R7 T1: Connemara is no longer a home-page example (Oak Point replaced it), but its live recordings still drive
+// these tests (the warm-up code is the same for any park).
+const CONNEMARA_EXAMPLE: ExamplePark = { slug: "connemara", parkId: "way/306191453", name: "Connemara Meadow Preserve", place: "Allen TX", blurb: "recorded test park" };
+const EXAMPLES: ExamplePark[] = [CONNEMARA_EXAMPLE, EXAMPLE_PARKS.find((e) => e.slug === "celebration")!];
 const DAY_MS = 24 * 3600 * 1000;
 
 let replay: ReturnType<typeof passReplay>;
@@ -48,10 +56,57 @@ afterEach(async () => {
   restoreLog();
 });
 
+describe("judge R7 T1: the examples are not a daily lottery", { timeout: 90_000 }, () => {
+  it("a short re-make keeps the last complete pass on the home page, with its real date and why", async () => {
+    // Seed the store the way a server that already showed a complete pass leaves it: the real complete Oak Point pass
+    // (tests/fixtures/pass-oak-point-complete-live.json) as this example's last pass, saved before the `complete`
+    // record existed. The example then re-makes from the Connemara recordings, which come out short (6 of 8). Only the
+    // keep-or-replace rule is under test here, so mixing the two parks' recordings under one test example is fine.
+    const full = PassSchema.parse((JSON.parse(readFileSync(new URL("../fixtures/pass-oak-point-complete-live.json", import.meta.url), "utf8")) as { pass: unknown }).pass);
+    const passes = createJsonCache({ name: "pass", schema: PassSchema, ttlSec: 30 * 24 * 3600, maxEntries: 10 });
+    const entries = createJsonCache({ name: "example-pass", schema: z.object({ passId: z.string(), day: z.string(), generatedAt: z.string() }), ttlSec: 60 * 24 * 3600, maxEntries: 10 });
+    const t0 = Date.parse(full.generatedAt);
+    await passes.set(full.id, full, { now: t0 });
+    await entries.set("seeded", { passId: full.id, day: full.day, generatedAt: full.generatedAt }, { now: t0 });
+    const ex: ExamplePark = { ...CONNEMARA_EXAMPLE, slug: "seeded" };
+    const day2 = t0 + DAY_MS;
+    await warmExamples({ examples: [ex], now: () => day2 });
+    const [s] = await exampleStatuses({ examples: [ex], now: () => day2 + 1000 });
+    const latest = await loadPass(s.latest!.passId, day2);
+    expect(latest!.items.length).toBeLessThan(latest!.target); // today's re-make is short ...
+    expect(s.pass).toEqual({ passId: full.id, day: full.day, generatedAt: full.generatedAt }); // ... so the complete one stays
+    expect(s.passData?.id).toBe(full.id);
+    expect(s.fresh).toBe(true); // today's attempt is done: no refresh loop
+    expect(s.today).toBe(false);
+    expect(s.short).toEqual({ items: latest!.items.length, target: 8, riddle: latest!.spot?.status === "ok" ? latest!.spot.riddleBy : "none" });
+    expect(s.missing).toBeNull();
+    const html = renderToStaticMarkup(<SampleParks statuses={[s]} enabled />);
+    expect(html).toContain(`href="/pass/${full.id}?example=1"`);
+    expect(html).toContain(`from that day&#x27;s data. Today&#x27;s pass had ${latest!.items.length} of 8 finds`);
+    // A second short re-make (next day) still keeps it: the record is carried forward with every new entry.
+    const day3 = day2 + DAY_MS;
+    await warmExamples({ examples: [ex], now: () => day3 });
+    const [s3] = await exampleStatuses({ examples: [ex], now: () => day3 + 1000 });
+    expect(s3.pass?.passId).toBe(full.id);
+    // The search fallback offers the complete one too.
+    expect(await readyExample({ now: () => day3 + 2000, examples: [ex] })).toEqual({ name: ex.name, href: `/pass/${full.id}?example=1` });
+  });
+
+  it("completeness: every find and, with a map, the model's riddle", () => {
+    const full = PassSchema.parse((JSON.parse(readFileSync(new URL("../fixtures/pass-oak-point-complete-live.json", import.meta.url), "utf8")) as { pass: unknown }).pass);
+    expect(completeness(full)).toEqual({ complete: true, items: 8, target: 8, riddle: "model" });
+    expect(isCompletePass({ ...full, items: full.items.slice(0, 7) })).toBe(false);
+    if (full.spot?.status !== "ok") throw new Error("fixture has a map");
+    expect(isCompletePass({ ...full, spot: { ...full.spot, riddleBy: "code" } })).toBe(false);
+    expect(isCompletePass({ ...full, spot: { status: "none", message: "No Find This Spot today: this park has no single landmark on the map (OpenStreetMap)." } })).toBe(true);
+  });
+});
+
 describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
   it("the examples are real eval parks with confirmed OSM ids", () => {
     // R2-m9: a complete pass (Arbor Hills: Park + Wild Finds + map) first, thin Connemara last.
-    expect(EXAMPLE_PARKS.map((e) => e.parkId)).toEqual(["way/38113837", "way/460905359", "way/188145317", "way/306191453"]);
+    // Judge R7 T1: Oak Point Park and Nature Preserve (eval case 4) replaced Connemara as the 4th example.
+    expect(EXAMPLE_PARKS.map((e) => e.parkId)).toEqual(["way/38113837", "way/460905359", "way/188145317", "way/556800335"]);
     expect(PARKS.connemara.id).toBe(EXAMPLES[0].parkId);
     expect(PARKS.celebration.id).toBe(EXAMPLES[1].parkId);
   });
@@ -72,14 +127,19 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const statuses = await exampleStatuses({ examples: EXAMPLES, now: () => now + 1000 });
     expect(modelCalls()).toBe(4); // the page never calls upstream for a fresh example
     for (const s of statuses) {
-      expect(s.pass).not.toBeNull();
+      expect(s.latest).not.toBeNull();
       expect(s.fresh).toBe(true);
       expect(s.refreshing).toBe(false);
-      expect(s.missing).toBeNull();
-      const pass = await loadPass(s.pass!.passId, now);
+      const pass = await loadPass(s.latest!.passId, now);
       expect(pass?.park.id).toBe(s.example.parkId);
-      expect(s.pass!.generatedAt).toBe(pass!.generatedAt);
-      expect(s.pass!.day).toBe(localDay(now));
+      expect(s.latest!.generatedAt).toBe(pass!.generatedAt);
+      expect(s.latest!.day).toBe(localDay(now));
+      // Judge R7 T1: shown only when complete; a short pass is explained, never shown (these recordings are short).
+      if (pass!.items.length < pass!.target) {
+        expect(s.pass).toBeNull();
+        expect(s.short).toEqual({ items: pass!.items.length, target: pass!.target, riddle: pass!.spot?.status === "ok" ? pass!.spot.riddleBy : "none" });
+        expect(s.missing).toBe(`No data available yet: today's pass came out with ${pass!.items.length} of ${pass!.target} finds${s.short!.riddle === "code" ? " and no Find This Spot riddle" : ""}, and this page only shows complete example passes.`);
+      } else expect(s.missing).toBeNull();
     }
     // A second warm-up the same day makes nothing new.
     await warmExamples({ examples: EXAMPLES, now: () => now + 2000 });
@@ -97,7 +157,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     ]);
     for (const list of [a, b]) {
       list.forEach((s, i) => {
-        expect(s.pass).toEqual(before[i].pass); // still linked, never hidden
+        expect(s.latest).toEqual(before[i].latest); // still the last pass made, never dropped
         expect(s.fresh).toBe(false);
         expect(s.refreshing).toBe(true);
       });
@@ -107,7 +167,7 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const after = await exampleStatuses({ examples: EXAMPLES, now: () => day2 + 1000 });
     for (const s of after) {
       expect(s.fresh).toBe(true);
-      expect(s.pass!.day).toBe(localDay(day2));
+      expect(s.latest!.day).toBe(localDay(day2));
     }
   });
 
@@ -126,8 +186,9 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const failedCalls = modelCalls();
     expect(failedCalls).toBeGreaterThan(0);
     const s = await exampleStatuses({ examples: EXAMPLES, now: () => day2 + 60_000, store });
+    expect(s.map((x) => x.latest)).toEqual(old.map((x) => x.latest));
     expect(s.map((x) => x.pass)).toEqual(old.map((x) => x.pass));
-    expect(s.every((x) => !x.fresh && !x.refreshing && x.missing === null)).toBe(true);
+    expect(s.every((x) => !x.fresh && !x.refreshing)).toBe(true);
     // A new instance (in-process state gone) still respects the shared lock.
     resetPrewarm();
     await exampleStatuses({ examples: EXAMPLES, now: () => day2 + 120_000, store });
@@ -195,11 +256,13 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     expect(before).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE" } });
     expect(!before.ok && before.error.example).toBeUndefined();
     const now = Date.now();
-    await warmExamples({ examples: EXAMPLES.slice(0, 1), now: () => now });
-    const [s] = await exampleStatuses({ examples: EXAMPLES.slice(0, 1), now: () => now });
-    expect(s.pass).not.toBeNull();
+    // The search offers a park from EXAMPLE_PARKS (Celebration; Connemara is no longer one).
+    await warmExamples({ examples: EXAMPLES.slice(1), now: () => now });
+    const [s] = await exampleStatuses({ examples: EXAMPLES.slice(1), now: () => now });
+    expect(s.latest).not.toBeNull();
     const after = await searchParks({ kind: "text", q: "Plano TX" }, { ip: "203.0.113.78", store: new MemoryStore(), fetchImpl: down, env: {} });
-    expect(after).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE", example: { name: EXAMPLES[0].name, href: `/pass/${s.pass!.passId}?example=1` } } });
+    // Judge R7 T1: a complete example first; with none (this recording is short), the last pass made is still offered.
+    expect(after).toMatchObject({ ok: false, error: { code: "GEOCODER_UNAVAILABLE", example: { name: EXAMPLES[1].name, href: `/pass/${s.latest!.passId}?example=1` } } });
     expect(!after.ok && ExampleLinkSchema.safeParse(after.error.example).success).toBe(true);
   });
 
@@ -215,13 +278,27 @@ describe("pre-warmed example parks (S8, SWR)", { timeout: 90_000 }, () => {
     const now = Date.now();
     await warmExamples({ examples: EXAMPLES.slice(0, 1), now: () => now });
     vi.stubEnv("PREWARM_EXAMPLES", "0");
-    const statuses = await exampleStatuses({ examples: EXAMPLES, now: () => now });
+    const warmed = await exampleStatuses({ examples: EXAMPLES, now: () => now });
+    // Judge R7 T1: the recorded Connemara pass is short, so its card explains that instead of linking it.
+    const short = warmed.find((s) => s.example.slug === "connemara")!;
+    expect(short.pass).toBeNull();
+    expect(short.latest).not.toBeNull();
+    expect(short.missing).toMatch(/^No data available yet: today's pass came out with \d of 8 finds/);
+    // A complete real pass (tests/fixtures/pass-oak-point-complete-live.json) is linked with its real time.
+    const full = PassSchema.parse((JSON.parse(readFileSync(new URL("../fixtures/pass-oak-point-complete-live.json", import.meta.url), "utf8")) as { pass: unknown }).pass);
+    const saved = { passId: full.id, day: full.day, generatedAt: full.generatedAt };
+    const ready: ExampleStatus = { example: EXAMPLE_PARKS.find((e) => e.slug === "oak-point")!, pass: saved, latest: saved, passData: full, fresh: true, today: true, short: null, refreshing: false, missing: null };
+    const statuses = [ready, ...warmed.filter((s) => s.example.slug !== "connemara")];
     const html = renderToStaticMarkup(<SampleParks statuses={statuses} enabled={false} />);
-    expect(html).toContain(`href="/pass/${statuses[0].pass!.passId}?example=1"`);
+    expect(html).toContain(`href="/pass/${full.id}?example=1"`);
     expect(html).toMatch(/Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T/);
+    // An older complete pass says it was made from that day's data, and why it is shown.
+    expect(renderToStaticMarkup(<SampleParks statuses={[{ ...ready, fresh: true, today: false, short: { items: 7, target: 8, riddle: "model" } }]} enabled />)).toMatch(
+      /Made [A-Z][a-z]{2} \d{1,2}, \d{1,2}:\d{2} [AP]M C[DS]T from that day&#x27;s data\. Today&#x27;s pass had 7 of 8 finds, so this complete one is shown\./,
+    );
     // R1-B1 / ux M1: no dashed failure cards; one sentence per missing example, in the same card style.
     expect(html).toContain("No data available yet: example passes are switched off on this server.");
-    expect(html.match(/No data available yet/g)).toHaveLength(EXAMPLES.length - 1);
+    expect(html.match(/No data available yet/g)).toHaveLength(statuses.length - 1);
     for (const card of html.split("<li data-testid=").slice(1)) {
       if (!card.includes("<a ")) expect(card).not.toContain("border-dashed");
     }

@@ -101,7 +101,7 @@ describe("R1-B1 saved OpenStreetMap answers (real recordings with their fetch ti
         expect(Number.isFinite(a.fetchedAt)).toBe(true);
         expect(a.fetchedAt).toBeGreaterThan(Date.UTC(2026, 9, 5));
         expect(a.endpoint).toMatch(/\./);
-        expect(a.from === "live" || a.from.startsWith("tests/fixtures/")).toBe(true);
+        expect(a.from.startsWith("live") || a.from.startsWith("tests/fixtures/")).toBe(true);
       }
     }
   });

@@ -2,8 +2,9 @@ import { ArrowUpRight } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { buttonClassName } from "@/components/ui/Button";
-import { cardFacts, exampleState, liveStatement, placeLabel, readyExample } from "@/lib/home/showcase";
+import { cardFacts, exampleState, liveStatement, madeLine, placeLabel, readyExample } from "@/lib/home/showcase";
 import { PhotoCredits } from "@/components/home/PhotoCredits";
+import { TWO_PARKS } from "@/components/home/TwoParks";
 import { PARK_PHOTOS, photoCredit } from "@/data/photo-credits";
 import { AGE_BAND_INFO } from "@/lib/pass/schema";
 import { EXAMPLE_BAND, type ExampleStatus } from "@/lib/prewarm";
@@ -101,9 +102,8 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
                           ))}
                         </ul>
                       ) : null}
-                      <p className="text-xs text-muted-foreground">
-                        Made {ex.madeAt}
-                        {s.fresh ? "" : s.refreshing ? " (an older pass; today's is being made)" : " (an older pass)"}
+                      <p className="text-xs text-muted-foreground" data-testid="made-line">
+                        {madeLine(s, ex.madeAt)}
                       </p>
                       <span className="mt-auto flex items-center justify-between border-t border-dashed border-line pt-4 font-heading text-sm font-extrabold text-primary">
                         See the pass
@@ -127,7 +127,7 @@ export function SampleParks({ statuses, enabled = true }: { statuses: readonly E
           })}
         </ul>
         {/* Linked photo credits (the cards themselves are links, so the per-photo credit there is plain text). */}
-        <PhotoCredits slugs={statuses.map((s) => s.example.slug)} className="-mt-6 text-xs text-muted-foreground" />
+        <PhotoCredits slugs={[...new Set([...statuses.map((s) => s.example.slug), ...TWO_PARKS.map((p) => p.slug)])]} className="-mt-6 text-xs text-muted-foreground" />
         {states.some((st) => st === "waiting" || st === "making") ? (
           <form action="/" method="get" className="-mt-6">
             <button type="submit" className={buttonClassName("secondary")}>

@@ -36,12 +36,23 @@ function findPass(v: unknown): Pass | null {
   return null;
 }
 
+// Judge R7 T1: a COMPLETE real pass (8 of 8, a model riddle), made by the live builder on 2026-10-06 (Oak Point).
+const recordedComplete = JSON.parse(
+  readFileSync(new URL("../fixtures/pass-oak-point-complete-live.json", import.meta.url), "utf8"),
+) as { pass: unknown };
+function completePass(): Pass {
+  return PassSchema.parse(recordedComplete.pass);
+}
+
 const byslug = (slug: string) => EXAMPLE_PARKS.find((e) => e.slug === slug)!;
 const readyStatus = (slug: string, pass: Pass, fresh = true): ExampleStatus => ({
   example: byslug(slug),
   pass: { passId: pass.id, day: pass.day, generatedAt: pass.generatedAt },
   passData: pass,
   fresh,
+  today: fresh,
+  latest: { passId: pass.id, day: pass.day, generatedAt: pass.generatedAt },
+  short: null,
   refreshing: false,
   missing: null,
 });
@@ -50,6 +61,9 @@ const missingStatus = (slug: string, missing: string, refreshing = false): Examp
   pass: null,
   passData: null,
   fresh: false,
+  today: false,
+  latest: null,
+  short: null,
   refreshing,
   missing,
 });
@@ -61,26 +75,30 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("hero card (judge R6): leads with a counted Park Find, then real finds in pass order, the listening clue left out", () => {
     const pass = realPass();
-    const card = heroCard([missingStatus("arbor-hills", "No data available yet: x."), readyStatus("connemara", pass)]);
-    expect(card?.kind).toBe("ready");
-    if (card?.kind !== "ready") throw new Error("not ready");
     // The recorded Arbor Hills pass: "Hunt for 4 roofs…", "Track 2 long outdoor seats…", the grill, the vine; its
     // "Stop and listen for running water…" clue is the 4th item but goes last, so it is not among the 4 shown.
-    expect(card.finds.map((f) => f.clue)).toEqual([
+    expect(heroFinds(pass).map((f) => f.clue)).toEqual([
       "Hunt for 4 roofs held up by poles with tables below them.",
       "Track 2 long outdoor seats for taking a break.",
       "Ready to find a metal box on a post used for cooking?",
       "What about a vine with large, intricate flowers?",
     ]);
-    expect(card.finds.every((f) => pass.items.includes(f))).toBe(true); // never invented, never edited
+    // Judge R7 T1: that recorded pass has 7 of 8 finds, so it is never the hero card; a complete one is.
+    expect(heroCard([readyStatus("arbor-hills", pass)])?.kind).toBe("missing");
+    const full = completePass();
+    const card = heroCard([missingStatus("white-rock", "No data available yet: x."), readyStatus("arbor-hills", pass), readyStatus("oak-point", full)]);
+    expect(card?.kind).toBe("ready");
+    if (card?.kind !== "ready") throw new Error("not ready");
+    expect(card.ex.example.slug).toBe("oak-point");
+    expect(card.finds[0].clue).toBe("Count the 2 cold water spots that bubble up from a spout.");
+    expect(card.finds.every((f) => full.items.includes(f))).toBe(true); // never invented, never edited
     const html = renderToStaticMarkup(<HeroPassCard card={card} />);
     for (const it of card.finds) {
       expect(html).toContain(renderToStaticMarkup(<>{it.clue}</>));
       expect(html).toContain(renderToStaticMarkup(<>{it.evidence}</>));
     }
-    expect(html).not.toContain("Stop and listen for running water");
-    expect(html).toContain(`href="/pass/${pass.id}?example=1"`);
-    expect(html).toContain("Allen, TX");
+    expect(html).toContain(`href="/pass/${full.id}?example=1"`);
+    expect(html).toContain("Plano, TX");
     expect(html).toContain("Ages 6–10");
     // None of the v0 sample clues.
     for (const fake of ["Spot a monarch on the milkweed", "red-winged blackbird", "Count the trail benches", "9 seen", "14 seen"]) {
@@ -98,27 +116,29 @@ describe("home showcase (v0 slots filled with real data)", () => {
     // The listening clue was first on this pass; it goes last, so with 6 other finds it is not among the 4 shown.
     expect(finds.some((f) => /listen/.test(f.clue))).toBe(false);
     expect(isCountedParkFind(finds[0])).toBe(true);
-    // An example with no counted Park Find loses to one that has it, in either order.
-    const noCount: Pass = { ...pass, items: pass.items.filter((i) => i.section !== "park") };
+    // Judge R7 T1: a short pass (7 of 8) never wins, even with a counted lead and first in HERO_EXAMPLE_ORDER; a complete one does.
+    const full = completePass();
     for (const order of [
-      [readyStatus("white-rock", noCount), readyStatus("celebration", counted)],
-      [readyStatus("celebration", counted), readyStatus("white-rock", noCount)],
+      [readyStatus("white-rock", counted), readyStatus("celebration", full)],
+      [readyStatus("celebration", full), readyStatus("white-rock", counted)],
     ]) {
       const c = heroCard(order);
       expect(c?.kind === "ready" && c.ex.example.slug).toBe("celebration");
     }
-    // None has a counted find: the first ready one in HERO_EXAMPLE_ORDER (White Rock first).
+    // Two complete ones: the first in HERO_EXAMPLE_ORDER (White Rock first), whatever the input order.
     expect(HERO_EXAMPLE_ORDER[0]).toBe("white-rock");
-    const plain = heroCard([readyStatus("connemara", noCount), readyStatus("white-rock", noCount)]);
+    const plain = heroCard([readyStatus("oak-point", full), readyStatus("white-rock", full)]);
     expect(plain?.kind === "ready" && plain.ex.example.slug).toBe("white-rock");
+    // A counted lead must name a thing to see ("Spot 2 spots" does not).
+    expect(isCountedParkFind({ ...shelter, clue: "Spot 2 spots with metal bars for stretching." })).toBe(false);
   });
 
   it("hero card: falls back to another ready example, else says why (no link, no clues)", () => {
-    const pass = realPass();
-    const other = heroCard([readyStatus("white-rock", pass), missingStatus("connemara", "No data available yet: it is being made right now (about 15-30 seconds).", true)]);
+    const pass = completePass();
+    const other = heroCard([readyStatus("white-rock", pass), missingStatus("oak-point", "No data available yet: it is being made right now (about 15-30 seconds).", true)]);
     expect(other?.kind === "ready" && other.ex.example.slug).toBe("white-rock");
-    const none = heroCard([missingStatus("connemara", "No data available yet: the last try didn't work because OpenStreetMap was busy.")]);
-    expect(none).toEqual({ kind: "missing", name: byslug("connemara").name, place: "Allen, TX", reason: "the last try didn't work because OpenStreetMap was busy." });
+    const none = heroCard([missingStatus("oak-point", "No data available yet: the last try didn't work because OpenStreetMap was busy.")]);
+    expect(none).toEqual({ kind: "missing", name: byslug("oak-point").name, place: "Plano, TX", reason: "the last try didn't work because OpenStreetMap was busy." });
     const html = renderToStaticMarkup(<HeroPassCard card={none} />);
     expect(html).toContain("Example pass not ready yet: the last try didn&#x27;t work because OpenStreetMap was busy.");
     expect(html).not.toContain("<a ");
@@ -140,7 +160,7 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("A2 (Kevin 2026-10-06): the card shows only the real number of finds, no Wild / Mixed / Built label", () => {
     const pass = realPass();
-    const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("connemara", pass)]} enabled />);
+    const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("oak-point", pass)]} enabled />);
     expect(html).toContain(`${pass.items.length} finds to spot`);
     for (const label of ["Wild Pass", "Mixed Pass", "Built Pass"]) expect(html).not.toContain(label);
     for (const fake of ["50+", "30+", "20+", "40+", "google.com"]) expect(html).not.toContain(fake);
@@ -148,12 +168,12 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("the live pill only claims what is true, and pulses only about today", () => {
     const pass = realPass();
-    expect(liveStatement([readyStatus("connemara", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "2 example passes made today from live data", live: true });
-    expect(liveStatement([readyStatus("connemara", pass, false)], true)).toEqual({ text: "1 example pass ready (made on an earlier day)", live: false });
-    expect(liveStatement([missingStatus("connemara", "x", true)], true)).toEqual({ text: "Making today's example passes", live: true });
-    expect(liveStatement([missingStatus("connemara", "x")], true)).toEqual({ text: "Example passes not ready yet", live: false });
-    expect(liveStatement([missingStatus("connemara", "x")], false)).toEqual({ text: "Example passes are turned off", live: false });
-    const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("connemara", "No data available yet: no pass has been made for it today.")]} enabled />);
+    expect(liveStatement([readyStatus("oak-point", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "2 example passes made today from live data", live: true });
+    expect(liveStatement([readyStatus("oak-point", pass, false)], true)).toEqual({ text: "1 example pass ready (made on an earlier day)", live: false });
+    expect(liveStatement([missingStatus("oak-point", "x", true)], true)).toEqual({ text: "Making today's example passes", live: true });
+    expect(liveStatement([missingStatus("oak-point", "x")], true)).toEqual({ text: "Example passes not ready yet", live: false });
+    expect(liveStatement([missingStatus("oak-point", "x")], false)).toEqual({ text: "Example passes are turned off", live: false });
+    const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("oak-point", "No data available yet: no pass has been made for it today.")]} enabled />);
     expect(html).toContain('data-live="false"');
     expect(html).not.toContain("animate-ping");
     expect(html).not.toContain("Live park feeds");
@@ -161,7 +181,7 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("sample cards: See the pass for a ready pass, real place, no distances, no v0 blurbs", () => {
     const pass = realPass();
-    const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("connemara", pass)]} enabled />);
+    const html = renderToStaticMarkup(<SampleParks statuses={[readyStatus("oak-point", pass)]} enabled />);
     expect(html).toContain("See the pass");
     expect(html).not.toContain("Generate pass");
     expect(html).toContain(`href="/pass/${pass.id}?example=1"`);
@@ -170,10 +190,10 @@ describe("home showcase (v0 slots filled with real data)", () => {
 
   it("Find This Spot quote: only a riddle the model really wrote for a ready example", () => {
     const pass = realPass();
-    const q = spotQuote([readyStatus("connemara", pass)]);
+    const q = spotQuote([readyStatus("oak-point", pass)]);
     if (pass.spot?.status === "ok" && pass.spot.riddleBy === "model") expect(q?.riddle).toBe(pass.spot.riddle);
     else expect(q).toBeNull();
-    expect(spotQuote([missingStatus("connemara", "x")])).toBeNull();
+    expect(spotQuote([missingStatus("oak-point", "x")])).toBeNull();
     const html = renderToStaticMarkup(<PassAnatomy spot={null} />);
     expect(html).not.toContain("Something with a roof where people eat lunch");
     expect(html).toContain("No proof? The pass leaves them off and says why.");
@@ -221,8 +241,8 @@ describe("home copy checked against the app", () => {
       const word = ex.name.split(" ")[0];
       expect(`${p.title} ${p.alt}`).toContain(word);
     }
-    const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("connemara", "No data available yet: x.")]} enabled />);
-    expect(html).toContain(photoCredit(PARK_PHOTOS.connemara));
+    const html = renderToStaticMarkup(<SampleParks statuses={[missingStatus("oak-point", "No data available yet: x.")]} enabled />);
+    expect(html).toContain(photoCredit(PARK_PHOTOS["oak-point"]));
     // UX-6-04: the source page and licence links live in the full list on /about (one link from here).
     expect(html).toContain(`${PARK_PHOTOS.connemara.title} by ${PARK_PHOTOS.connemara.author}`);
     expect(html).toContain('href="/about#credits"');

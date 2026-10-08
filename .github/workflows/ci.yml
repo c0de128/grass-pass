@@ -43,6 +43,21 @@ jobs:
           E2E_LIMITS_BASE_URL: http://localhost:3124
           PREWARM_EXAMPLES: "0"
 
+  # RULES-10-01 / SEC-10-02 (round 10): every commit's author and committer must be a GitHub noreply address (public
+  # repo; gitleaks does not look at commit metadata). Checks all history reachable from the pushed commit, which covers
+  # the pushed range. Prints shas only, never the address.
+  commit-emails:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      # On a pull request, the PR head (not the synthetic merge commit GitHub builds for the run).
+      - run: node scripts/check-commit-emails.mjs "${{ github.event.pull_request.head.sha || github.sha }}"
+
   gitleaks:
     runs-on: ubuntu-latest
     steps:

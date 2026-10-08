@@ -1,0 +1,26 @@
+{
+  "_recording": {
+    "what": "api.weather.gov alerts/active?point (alertsUrl())",
+    "park": {
+      "slug": "forest-park-st-louis-mo",
+      "name": "Forest Park",
+      "osm": "relation/18497650",
+      "lat": 38.6381922,
+      "lng": -90.2847033
+    },
+    "url": "https://api.weather.gov/alerts/active?point=38.64,-90.28",
+    "status": 200,
+    "fetchedAt": "2026-10-08T14:21:35.098Z",
+    "latencyMs": 134,
+    "by": "builder (weather slice)"
+  },
+  "body": {
+    "@context": {
+      "@version": "1.1"
+    },
+    "type": "FeatureCollection",
+    "features": [],
+    "title": "Current watches, warnings, and advisories for 38.64 N, 90.28 W",
+    "updated": "2026-10-08T14:17:28+00:00"
+  }
+}

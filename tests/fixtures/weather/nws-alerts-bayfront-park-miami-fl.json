@@ -1,0 +1,126 @@
+{
+  "_recording": {
+    "what": "api.weather.gov alerts/active?point (alertsUrl())",
+    "park": {
+      "slug": "bayfront-park-miami-fl",
+      "name": "Bayfront Park",
+      "osm": "relation/17832054",
+      "lat": 25.7753796,
+      "lng": -80.1861658
+    },
+    "url": "https://api.weather.gov/alerts/active?point=25.78,-80.19",
+    "status": 200,
+    "fetchedAt": "2026-10-08T14:20:57.859Z",
+    "latencyMs": 103,
+    "by": "builder (weather slice)"
+  },
+  "body": {
+    "@context": [
+      "https://geojson.org/geojson-ld/geojson-context.jsonld",
+      {
+        "@version": "1.1",
+        "wx": "https://api.weather.gov/ontology#",
+        "@vocab": "https://api.weather.gov/ontology#"
+      }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.49229713b893d0d2339d807a3b37744b2782ad08.002.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.49229713b893d0d2339d807a3b37744b2782ad08.002.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.49229713b893d0d2339d807a3b37744b2782ad08.002.1",
+          "areaDesc": "Coastal Palm Beach County; Coastal Broward County; Coastal Miami Dade County; Far South Miami-Dade County",
+          "geocode": {
+            "SAME": [
+              "012099",
+              "012011",
+              "012086"
+            ],
+            "UGC": [
+              "FLZ168",
+              "FLZ172",
+              "FLZ173",
+              "FLZ174"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/FLZ168",
+            "https://api.weather.gov/zones/forecast/FLZ172",
+            "https://api.weather.gov/zones/forecast/FLZ173",
+            "https://api.weather.gov/zones/forecast/FLZ174"
+          ],
+          "references": [
+            {
+              "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.c84a7570060c90de95d1f110801d6f0cec3a2264.001.1",
+              "identifier": "urn:oid:2.49.0.1.840.0.c84a7570060c90de95d1f110801d6f0cec3a2264.001.1",
+              "sender": "w-nws.webmaster@noaa.gov",
+              "sent": "2026-10-07T19:59:00-04:00"
+            }
+          ],
+          "sent": "2026-10-08T01:36:00-04:00",
+          "effective": "2026-10-08T01:36:00-04:00",
+          "onset": "2026-10-08T01:36:00-04:00",
+          "expires": "2026-10-08T17:00:00-04:00",
+          "ends": "2026-10-09T22:00:00-04:00",
+          "status": "Actual",
+          "messageType": "Update",
+          "category": "Met",
+          "severity": "Minor",
+          "certainty": "Likely",
+          "urgency": "Expected",
+          "event": "Coastal Flood Statement",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Miami FL",
+          "headline": "Coastal Flood Statement issued October 8 at 1:36AM EDT until October 9 at 10:00PM EDT by NWS Miami FL",
+          "description": "* WHAT...Isolated minor coastal flooding.\n\n* WHERE...Coastal Palm Beach County, Coastal Broward County,\nCoastal Miami Dade County and Far South Miami-Dade County.\n\n* WHEN...Through Friday evening.\n\n* IMPACTS...Some water on low lying roads and property.",
+          "instruction": "Do not drive through flooded roadways.",
+          "response": "Monitor",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "CFWMFL"
+            ],
+            "WMOidentifier": [
+              "WHUS42 KMFL 080536"
+            ],
+            "NWSheadline": [
+              "COASTAL FLOOD STATEMENT NOW IN EFFECT THROUGH FRIDAY EVENING"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "VTEC": [
+              "/O.EXT.KMFL.CF.S.0005.000000T0000Z-261010T0200Z/"
+            ],
+            "eventEndingTime": [
+              "2026-10-09T22:00:00-04:00"
+            ],
+            "expiredReferences": [
+              "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.10af6cd096aa59d531600eef1f3086bb369bc5a0.001.1,2026-10-07T08:26:00-04:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "NWS"
+            ],
+            "NationalWeatherService": [
+              "CFS"
+            ]
+          }
+        }
+      }
+    ],
+    "title": "Current watches, warnings, and advisories for 25.78 N, 80.19 W",
+    "updated": "2026-10-08T14:17:28+00:00"
+  }
+}

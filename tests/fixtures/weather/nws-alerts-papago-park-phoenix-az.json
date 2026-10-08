@@ -1,0 +1,26 @@
+{
+  "_recording": {
+    "what": "api.weather.gov alerts/active?point (alertsUrl())",
+    "park": {
+      "slug": "papago-park-phoenix-az",
+      "name": "Papago Park",
+      "osm": "way/102017885",
+      "lat": 33.4564958,
+      "lng": -111.9536854
+    },
+    "url": "https://api.weather.gov/alerts/active?point=33.46,-111.95",
+    "status": 200,
+    "fetchedAt": "2026-10-08T14:20:58.092Z",
+    "latencyMs": 86,
+    "by": "builder (weather slice)"
+  },
+  "body": {
+    "@context": {
+      "@version": "1.1"
+    },
+    "type": "FeatureCollection",
+    "features": [],
+    "title": "Current watches, warnings, and advisories for 33.46 N, 111.95 W",
+    "updated": "2026-10-08T14:17:28+00:00"
+  }
+}

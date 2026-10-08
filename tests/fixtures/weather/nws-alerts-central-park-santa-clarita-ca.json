@@ -1,0 +1,155 @@
+{
+  "_recording": {
+    "what": "api.weather.gov alerts/active?point (alertsUrl())",
+    "park": {
+      "slug": "central-park-santa-clarita-ca",
+      "name": "Central Park",
+      "osm": "way/180712998",
+      "lat": 34.4314501,
+      "lng": -118.5208621
+    },
+    "url": "https://api.weather.gov/alerts/active?point=34.43,-118.52",
+    "status": 200,
+    "fetchedAt": "2026-10-08T14:20:58.657Z",
+    "latencyMs": 121,
+    "by": "builder (weather slice)"
+  },
+  "body": {
+    "@context": [
+      "https://geojson.org/geojson-ld/geojson-context.jsonld",
+      {
+        "@version": "1.1",
+        "wx": "https://api.weather.gov/ontology#",
+        "@vocab": "https://api.weather.gov/ontology#"
+      }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.0d2b73ba1f932ef8e0de256e9536ac6e68783bd9.002.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.0d2b73ba1f932ef8e0de256e9536ac6e68783bd9.002.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.0d2b73ba1f932ef8e0de256e9536ac6e68783bd9.002.1",
+          "areaDesc": "Catalina and Santa Barbara Islands; Santa Clarita Valley; Ventura County Beaches; Ventura County Inland Coast; Lake Casitas; Ojai Valley; Central Ventura County Valleys; Malibu Coast; Los Angeles County Beaches; Palos Verdes Hills; Los Angeles County Inland Coast including Downtown Los Angeles; Western Santa Monica Mountains Recreational Area; Eastern Santa Monica Mountains Recreational Area; Calabasas and Agoura Hills; Western San Fernando Valley; Eastern San Fernando Valley; Southeastern Ventura County Valleys; Santa Susana Mountains; Los Angeles County San Gabriel Valley",
+          "geocode": {
+            "SAME": [
+              "006037",
+              "006111"
+            ],
+            "UGC": [
+              "CAZ087",
+              "CAZ088",
+              "CAZ354",
+              "CAZ355",
+              "CAZ356",
+              "CAZ357",
+              "CAZ358",
+              "CAZ362",
+              "CAZ366",
+              "CAZ367",
+              "CAZ368",
+              "CAZ369",
+              "CAZ370",
+              "CAZ371",
+              "CAZ372",
+              "CAZ373",
+              "CAZ374",
+              "CAZ375",
+              "CAZ548"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/CAZ087",
+            "https://api.weather.gov/zones/forecast/CAZ088",
+            "https://api.weather.gov/zones/forecast/CAZ354",
+            "https://api.weather.gov/zones/forecast/CAZ355",
+            "https://api.weather.gov/zones/forecast/CAZ356",
+            "https://api.weather.gov/zones/forecast/CAZ357",
+            "https://api.weather.gov/zones/forecast/CAZ358",
+            "https://api.weather.gov/zones/forecast/CAZ362",
+            "https://api.weather.gov/zones/forecast/CAZ366",
+            "https://api.weather.gov/zones/forecast/CAZ367",
+            "https://api.weather.gov/zones/forecast/CAZ368",
+            "https://api.weather.gov/zones/forecast/CAZ369",
+            "https://api.weather.gov/zones/forecast/CAZ370",
+            "https://api.weather.gov/zones/forecast/CAZ371",
+            "https://api.weather.gov/zones/forecast/CAZ372",
+            "https://api.weather.gov/zones/forecast/CAZ373",
+            "https://api.weather.gov/zones/forecast/CAZ374",
+            "https://api.weather.gov/zones/forecast/CAZ375",
+            "https://api.weather.gov/zones/forecast/CAZ548"
+          ],
+          "references": [
+            {
+              "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.85edb88b3060b5b4d774dbc76e5e6c8378074775.002.1",
+              "identifier": "urn:oid:2.49.0.1.840.0.85edb88b3060b5b4d774dbc76e5e6c8378074775.002.1",
+              "sender": "w-nws.webmaster@noaa.gov",
+              "sent": "2026-10-07T20:31:00-07:00"
+            }
+          ],
+          "sent": "2026-10-08T04:57:00-07:00",
+          "effective": "2026-10-08T04:57:00-07:00",
+          "onset": "2026-10-08T04:57:00-07:00",
+          "expires": "2026-10-08T20:00:00-07:00",
+          "ends": "2026-10-08T20:00:00-07:00",
+          "status": "Actual",
+          "messageType": "Update",
+          "category": "Met",
+          "severity": "Severe",
+          "certainty": "Likely",
+          "urgency": "Expected",
+          "event": "Extreme Heat Warning",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Los Angeles/Oxnard CA",
+          "headline": "Extreme Heat Warning issued October 8 at 4:57AM PDT until October 8 at 8:00PM PDT by NWS Los Angeles/Oxnard CA",
+          "description": "* WHAT...Dangerously hot conditions with temperatures reaching 90 to\n100 at the coast and 106 in the valleys.\n\n* WHERE...Coast and valleys of Los Angeles and Ventura Counties.\n\n* WHEN...Until 8 PM PDT this evening.\n\n* IMPACTS...Heat related illnesses increase significantly during\nextreme heat events.\n\n* ADDITIONAL DETAILS...Very hot temperatures are likely to continue\ninto the second week of October, possibly requiring an extension of\nthis product.",
+          "instruction": "Drink plenty of fluids, stay in an air-conditioned room, stay out of\nthe sun, and check up on relatives and neighbors.",
+          "response": "Execute",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "NPWLOX"
+            ],
+            "WMOidentifier": [
+              "WWUS76 KLOX 081157"
+            ],
+            "NWSheadline": [
+              "EXTREME HEAT WARNING REMAINS IN EFFECT UNTIL 8 PM PDT THIS EVENING"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "VTEC": [
+              "/O.CON.KLOX.XH.W.0008.000000T0000Z-261009T0300Z/"
+            ],
+            "eventEndingTime": [
+              "2026-10-08T20:00:00-07:00"
+            ],
+            "expiredReferences": [
+              "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a3cd823e6b24409eb1f063ecf66a93bc6e80f7c5.002.1,2026-10-07T09:41:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.469a5488af3dceb8f4d0e41c09f4dbf04bb51c75.002.1,2026-10-03T12:15:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.59caa839a2e6cbc9c2581c4b34028672a2e4a2c4.002.1,2026-10-06T02:56:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.e743d6fcfba924b8a69ce968be357e950d588c80.002.1,2026-10-05T14:47:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.1f7b086a6ad56d044bb16dca148157a534b80015.002.1,2026-10-04T11:04:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.cc114be7184a7472776b632a007d978ec30ad034.002.1,2026-10-02T10:38:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a83e130c2d84400d0abc57e184bd5fa32180bde1.002.2,2026-10-01T12:17:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a98bbc0a1eaa81bcae163ab759e2a71eef120f8e.003.1,2026-10-02T05:38:00-07:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a98bbc0a1eaa81bcae163ab759e2a71eef120f8e.001.2,2026-10-02T05:38:00-07:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "NWS"
+            ],
+            "NationalWeatherService": [
+              "XHW"
+            ]
+          }
+        }
+      }
+    ],
+    "title": "Current watches, warnings, and advisories for 34.43 N, 118.52 W",
+    "updated": "2026-10-08T14:17:28+00:00"
+  }
+}

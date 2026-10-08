@@ -1,0 +1,1028 @@
+{
+  "_recording": {
+    "what": "api.weather.gov alerts/active?point (alertsUrl())",
+    "park": {
+      "slug": "frank-brown-park-panama-city-beach-fl",
+      "name": "Frank Brown Park",
+      "osm": "way/190134313",
+      "lat": 30.2303597,
+      "lng": -85.8762413
+    },
+    "url": "https://api.weather.gov/alerts/active?point=30.23,-85.88",
+    "status": 200,
+    "fetchedAt": "2026-10-08T14:20:58.397Z",
+    "latencyMs": 168,
+    "by": "builder (weather slice)"
+  },
+  "body": {
+    "@context": [
+      "https://geojson.org/geojson-ld/geojson-context.jsonld",
+      {
+        "@version": "1.1",
+        "wx": "https://api.weather.gov/ontology#",
+        "@vocab": "https://api.weather.gov/ontology#"
+      }
+    ],
+    "type": "FeatureCollection",
+    "features": [
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.a55821424042b616cb9075e7ea0ef7efda2ccb50.001.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.a55821424042b616cb9075e7ea0ef7efda2ccb50.001.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.a55821424042b616cb9075e7ea0ef7efda2ccb50.001.1",
+          "areaDesc": "Coffee; Dale; Henry; Geneva; Houston; North Walton; Central Walton; Holmes; Washington; Jackson; Inland Bay; Calhoun; Inland Gulf; Inland Franklin; Inland Wakulla; South Walton; Coastal Bay; Coastal Gulf; Coastal Franklin; Coastal Jefferson; Coastal Wakulla; Coastal Taylor; Coastal Dixie; Northern Liberty; Southern Liberty",
+          "geocode": {
+            "SAME": [
+              "001031",
+              "001045",
+              "001067",
+              "001061",
+              "001069",
+              "012131",
+              "012059",
+              "012133",
+              "012063",
+              "012005",
+              "012013",
+              "012045",
+              "012037",
+              "012129",
+              "012065",
+              "012123",
+              "012029",
+              "012077"
+            ],
+            "UGC": [
+              "ALZ065",
+              "ALZ066",
+              "ALZ067",
+              "ALZ068",
+              "ALZ069",
+              "FLZ007",
+              "FLZ008",
+              "FLZ009",
+              "FLZ010",
+              "FLZ011",
+              "FLZ012",
+              "FLZ013",
+              "FLZ014",
+              "FLZ015",
+              "FLZ027",
+              "FLZ108",
+              "FLZ112",
+              "FLZ114",
+              "FLZ115",
+              "FLZ118",
+              "FLZ127",
+              "FLZ128",
+              "FLZ134",
+              "FLZ326",
+              "FLZ426"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/ALZ065",
+            "https://api.weather.gov/zones/forecast/ALZ066",
+            "https://api.weather.gov/zones/forecast/ALZ067",
+            "https://api.weather.gov/zones/forecast/ALZ068",
+            "https://api.weather.gov/zones/forecast/ALZ069",
+            "https://api.weather.gov/zones/forecast/FLZ007",
+            "https://api.weather.gov/zones/forecast/FLZ008",
+            "https://api.weather.gov/zones/forecast/FLZ009",
+            "https://api.weather.gov/zones/forecast/FLZ010",
+            "https://api.weather.gov/zones/forecast/FLZ011",
+            "https://api.weather.gov/zones/forecast/FLZ012",
+            "https://api.weather.gov/zones/forecast/FLZ013",
+            "https://api.weather.gov/zones/forecast/FLZ014",
+            "https://api.weather.gov/zones/forecast/FLZ015",
+            "https://api.weather.gov/zones/forecast/FLZ027",
+            "https://api.weather.gov/zones/forecast/FLZ108",
+            "https://api.weather.gov/zones/forecast/FLZ112",
+            "https://api.weather.gov/zones/forecast/FLZ114",
+            "https://api.weather.gov/zones/forecast/FLZ115",
+            "https://api.weather.gov/zones/forecast/FLZ118",
+            "https://api.weather.gov/zones/forecast/FLZ127",
+            "https://api.weather.gov/zones/forecast/FLZ128",
+            "https://api.weather.gov/zones/forecast/FLZ134",
+            "https://api.weather.gov/zones/forecast/FLZ326",
+            "https://api.weather.gov/zones/forecast/FLZ426"
+          ],
+          "references": [],
+          "sent": "2026-10-08T08:13:00-04:00",
+          "effective": "2026-10-08T08:13:00-04:00",
+          "onset": "2026-10-08T08:13:00-04:00",
+          "expires": "2026-10-08T16:15:00-04:00",
+          "ends": null,
+          "status": "Actual",
+          "messageType": "Alert",
+          "category": "Met",
+          "severity": "Moderate",
+          "certainty": "Likely",
+          "urgency": "Expected",
+          "event": "Tropical Cyclone Local Statement",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Tropical Cyclone Local Statement issued October 8 at 8:13AM EDT by NWS Tallahassee FL",
+          "description": "HLSTAE\n\nThis product covers eastern Florida panhandle, Florida Big Bend, southeastern Alabama and southwestern Georgia\n\n**TROPICAL STORM WARNINGS ISSUED FOR SOUTHEAST ALABAMA**\n\nNEW INFORMATION\n---------------\n\n* CHANGES TO WATCHES AND WARNINGS:\n- The Tropical Storm Watch has been upgraded to a Tropical Storm\nWarning for Coffee, Dale, Geneva, Henry, and Houston\n\n* CURRENT WATCHES AND WARNINGS:\n- A Storm Surge Warning and Hurricane Warning are in effect for\nCoastal Bay and South Walton\n- A Tropical Storm Warning and Hurricane Watch are in effect for\nCentral Walton and North Walton\n- A Storm Surge Warning and Tropical Storm Warning are in effect\nfor Coastal Franklin, Coastal Gulf, Coastal Jefferson, and\nCoastal Wakulla\n- A Storm Surge Warning is in effect for Coastal Taylor\n- A Tropical Storm Warning is in effect for Calhoun, Coffee,\nDale, Geneva, Henry, Holmes, Houston, Inland Bay, Inland\nFranklin, Inland Gulf, Inland Wakulla, Jackson, Northern\nLiberty, Southern Liberty, and Washington\n- A Storm Surge Watch is in effect for Coastal Dixie\n\n* STORM INFORMATION:\n- About 540 miles southwest of Panama City or about 540 miles\nsouthwest of Apalachicola\n- 23.7N 90.6W\n- Storm Intensity 80 mph\n- Movement East-northeast or 60 degrees at 9 mph\n\nSITUATION OVERVIEW\n------------------\n\nAt 8 AM ET, Hurricane Isaias was located in the southern Gulf with\nmaximum sustained winds of 80 mph and moving ENE at 9 mph. There are\noverall no significant changes in the forecast reasoning from the\nprevious advisory. Isaias is forecast to turn northward in the next day\nor so and accelerate in forward speed towards the central Gulf coast.\nAdditional strengthening is anticipated through tonight, and Isaias may\nbe near major hurricane strength prior to landfall. The wind field is\nexpected to expand considerably and may be lopsided towards the east,\nwhich means impacts are likely well beyond the forecast cone,\nparticularly east of the hurricane's center. Inland AL counties have\nnow been upgraded from a Tropical Storm Watch to Warning Conditions\ncould begin to deteriorate across the Florida Panhandle as early as\nFriday morning. Therefore, residents are urged to finalize their\npreparations today and early tomorrow.\n\nGiven the expected large size of Isaias as it nears northern Gulf\ncoast, the wind threat may extend well into the eastern portions of\nthe Tri-state area. An expected fast forward speed may also lead to\nthe wind threat extending further inland, especially near the core of\nthe storm. A Storm Surge Warning remains in effect from the\nSteinhatchee River west to the Okaloosa/Walton County line. Life-\nthreatening inundation values of 5 to 7 feet above normally dry ground\nare forecast across the coastal Panhandle to Indian Pass, 4 to 6 feet\nfrom Indian Pass to the Steinhatchee River, and 2 to 4 feet from the\nSteinhatchee River to Yankeetown, coincident with the high tide. The\ngreatest surge risk will be Friday through Friday night.\n\nSoggy conditions across the region from recent rainfall will make much\nof the Tri-state area more sensitive to flooding from additional heavy\nrainfall from Isaias. Forecast rainfall totals of 3 to 7 inches is\nexpected across much of the area, with isolated amounts in excess of 10\ninches. If realized, these values are likely to produce isolated to\nscattered flash flooding and some river flooding. Localized\nconsiderable flash flooding is also possible where bands of heavy rain\nmove repeatedly over the same area. Given these factors, a Flood Watch\nwas issued for counties west of the I- 75 corridor and Eastern FL Big\nBend from Friday afternoon until Saturday evening. Isaias will also\nbring an elevated chance for several tornadoes across the Florida\nPanhandle and Western FL Big Bend on Friday into Saturday and Southeast\nAL & Southwest GA late Friday into Saturday.\n\nPOTENTIAL IMPACTS\n-----------------\n\n* FLOODING RAIN:\nProtect against life-threatening rainfall flooding having possible\nextensive impacts across the Florida Panhandle, western Big Bend, and\nSE Alabama. Potential impacts include:\n- Major rainfall flooding may prompt many evacuations and rescues.\n- Rivers and tributaries may rapidly overflow their banks in\nmultiple places. Small streams, creeks, and ditches may become\ndangerous rivers. Flood control systems and barriers may become\nstressed.\n- Flood waters can enter many structures within multiple\ncommunities, some structures becoming uninhabitable or washed\naway. Many places where flood waters may cover escape routes.\nStreets and parking lots become rivers of moving water with\nunderpasses submerged. Driving conditions become dangerous.\nMany road and bridge closures with some weakened or washed out.\n\nProtect against dangerous rainfall flooding having possible limited\nto significant impacts elsewhere across the area.\n\n* SURGE:\nProtect against life-threatening surge having possible extensive\nimpacts across the coastal Florida Panhandle and Big Bend. Potential\nimpacts in this area include:\n- Large areas of deep inundation with storm surge flooding\naccentuated by battering waves. Structural damage to buildings,\nwith several washing away. Damage compounded by floating\ndebris. Locations may be uninhabitable for an extended period.\n- Large sections of near-shore escape routes and secondary roads\nwashed out or severely flooded. Flood control systems and\nbarriers may become stressed.\n- Severe beach erosion with significant dune loss.\n- Major damage to marinas, docks, boardwalks, and piers. Many\nsmall craft broken away from moorings, especially in\nunprotected anchorages with some lifted onshore and stranded.\n\nElsewhere across eastern Florida panhandle, Florida Big Bend,\nsoutheastern Alabama and southwestern Georgia, little to no impact is\nanticipated.\n\n* WIND:\nProtect against dangerous wind having possible significant impacts\nacross the Florida Panhandle. Potential impacts in this area\ninclude:\n- Some damage to roofing and siding materials, along with damage\nto porches, awnings, carports, and sheds. A few buildings\nexperiencing window, door, and garage door failures. Mobile\nhomes damaged, especially if unanchored. Unsecured lightweight\nobjects become dangerous projectiles.\n- Several large trees snapped or uprooted, but with greater\nnumbers in places where trees are shallow rooted. Several\nfences and roadway signs blown over.\n- Some roads impassable from large debris, and more within urban\nor heavily wooded places. A few bridges, causeways, and access\nroutes impassable.\n- Scattered power and communications outages, but more prevalent\nin areas with above ground lines.\n\nAlso, protect against hazardous wind having possible limited impacts\nacross the Florida Big Bend and southeast Alabama.\n\nElsewhere across eastern Florida panhandle, Florida Big Bend,\nsoutheastern Alabama and southwestern Georgia, little to no impact is\nanticipated.\n\n* TORNADOES:\nProtect against a dangerous tornado event having possible significant\nimpacts across the area. Potential impacts\ninclude:\n- The occurrence of scattered tornadoes can hinder the execution\nof emergency plans during tropical events.\n- Several places may experience tornado damage with a few spots\nof considerable damage, power loss, and communications failures.\n- Locations could realize roofs torn off frame houses, mobile\nhomes demolished, boxcars overturned, large trees snapped or\nuprooted, vehicles tumbled, and small boats tossed about.\nDangerous projectiles can add to the toll.\n\n\nPRECAUTIONARY/PREPAREDNESS ACTIONS\n----------------------------------\n\n* EVACUATIONS:\nFollow the advice of local officials\n\n\n* OTHER PREPAREDNESS INFORMATION:\nNow is the time to complete all preparations to protect life and\nproperty in accordance with your emergency plan. Ensure you are in a\nsafe location before the onset of strong winds or possible flooding.\n\nIf you are relocating to safe shelter, leave as early as possible.\nAllow extra time to reach your destination. Many roads and bridges\nwill be closed once strong winds arrive. Check the latest weather\nforecast before departing and drive with caution.\n\nIf heading to a community shelter, become familiar with the shelter\nrules before arrival, especially if you have special needs or have\npets. Take essential items with you from your Emergency Supplies Kit.\n\nKeep cell phones well charged. Cell phone chargers for automobiles\ncan be helpful, but be aware of your risk for deadly carbon monoxide\npoisoning if your car is left idling in a garage or other poorly\nventilated area.\n\nIf you are a visitor, be sure to know the name of the city in which\nyou are staying and the name of the county in which it resides.\nListen for these locations in local news updates. Pay attention for\ninstructions from local authorities.\n\nStorm surge is the leading killer associated with tropical storms and\nhurricanes! Make sure you are in a safe area away from the surge\nzone. Even if you are not in a surge-prone area, you could find\nyourself cutoff by flood waters during and after the storm. Heed\nevacuation orders issued by the local authorities.\n\nRapidly rising flood waters are deadly. If you are in a flood-prone\narea, consider moving to higher ground. Never drive through a flooded\nroadway. Remember, turn around don't drown!\n\nIf a Tornado Warning is issued for your area, be ready to shelter\nquickly, preferably away from windows and in an interior room not\nprone to flooding. If driving, scan the roadside for quick shelter\noptions.\n\nClosely monitor weather.gov, NOAA Weather radio or local news outlets\nfor official storm information. Be ready to adapt to possible changes\nto the forecast. Ensure you have multiple ways to receive weather\nwarnings.\n\n\n* ADDITIONAL SOURCES OF INFORMATION:\n- For information on appropriate preparations see ready.gov\n- For additional disaster preparedness information see redcross.org\n\nNEXT UPDATE\n-----------\n\nThe next local statement will be issued by the National Weather\nService in Tallahassee FL around 11 AM ET, or sooner if conditions\nwarrant.",
+          "instruction": null,
+          "response": "Monitor",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "HLSTAE"
+            ],
+            "WMOidentifier": [
+              "WTUS82 KTAE 081213"
+            ],
+            "NWSheadline": [
+              "TROPICAL STORM WARNINGS ISSUED FOR SOUTHEAST ALABAMA"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "EAS-ORG": [
+              "WXR"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "HLS"
+            ],
+            "NationalWeatherService": [
+              "HLS"
+            ]
+          }
+        }
+      },
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.1",
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -85.768,
+                30.381
+              ],
+              [
+                -85.686,
+                30.332
+              ],
+              [
+                -85.562,
+                30.383
+              ],
+              [
+                -85.464,
+                30.315
+              ],
+              [
+                -85.462,
+                30.247
+              ],
+              [
+                -85.541,
+                30.195
+              ],
+              [
+                -85.49,
+                30.153
+              ],
+              [
+                -85.39,
+                30.096
+              ],
+              [
+                -85.392,
+                30.054
+              ],
+              [
+                -85.391,
+                30.051
+              ],
+              [
+                -85.392,
+                30.016
+              ],
+              [
+                -85.389,
+                29.924
+              ],
+              [
+                -85.406,
+                29.907
+              ],
+              [
+                -85.488,
+                29.961
+              ],
+              [
+                -85.519,
+                29.978
+              ],
+              [
+                -85.558,
+                30.006
+              ],
+              [
+                -85.62,
+                30.06
+              ],
+              [
+                -85.732,
+                30.104
+              ],
+              [
+                -85.824,
+                30.186
+              ],
+              [
+                -85.923,
+                30.238
+              ],
+              [
+                -85.996,
+                30.269
+              ],
+              [
+                -85.994,
+                30.279
+              ],
+              [
+                -85.985,
+                30.267
+              ],
+              [
+                -85.983,
+                30.272
+              ],
+              [
+                -85.958,
+                30.268
+              ],
+              [
+                -85.968,
+                30.277
+              ],
+              [
+                -85.974,
+                30.275
+              ],
+              [
+                -85.994,
+                30.283
+              ],
+              [
+                -85.993,
+                30.39
+              ],
+              [
+                -85.987,
+                30.391
+              ],
+              [
+                -85.768,
+                30.381
+              ]
+            ]
+          ]
+        },
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.1",
+          "areaDesc": "Coastal Bay",
+          "geocode": {
+            "SAME": [
+              "012005"
+            ],
+            "UGC": [
+              "FLZ112"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/FLZ112"
+          ],
+          "references": [
+            {
+              "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.3ab1f660a603191fe8f353f1776d91088de7b5d4.004.1",
+              "identifier": "urn:oid:2.49.0.1.840.0.3ab1f660a603191fe8f353f1776d91088de7b5d4.004.1",
+              "sender": "w-nws.webmaster@noaa.gov",
+              "sent": "2026-10-08T05:03:00-04:00"
+            }
+          ],
+          "sent": "2026-10-08T08:01:00-04:00",
+          "effective": "2026-10-08T08:01:00-04:00",
+          "onset": "2026-10-08T08:01:00-04:00",
+          "expires": "2026-10-08T16:15:00-04:00",
+          "ends": null,
+          "status": "Actual",
+          "messageType": "Update",
+          "category": "Met",
+          "severity": "Extreme",
+          "certainty": "Likely",
+          "urgency": "Immediate",
+          "event": "Hurricane Warning",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Hurricane Warning issued October 8 at 8:01AM EDT by NWS Tallahassee FL",
+          "description": "* LOCATIONS AFFECTED\n- Panama City\n- Panama City Beach\n- Mexico Beach\n- Lynn Haven\n- Bayou George\n\n* WIND\n- LATEST LOCAL FORECAST: Below tropical storm force wind\n- Peak Wind Forecast: 25-35 mph with gusts to 55 mph\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for wind 58\nto 73 mph\n- The wind threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Plan for dangerous wind of equivalent strong tropical\nstorm force.\n- PREPARE: Efforts to protect life and property should now be\nunderway. Prepare for significant wind damage.\n- ACT: Act now to complete preparations before the wind\nbecomes hazardous.\n\n- POTENTIAL IMPACTS: Significant\n- Some damage to roofing and siding materials, along with\ndamage to porches, awnings, carports, and sheds. A few\nbuildings experiencing window, door, and garage door\nfailures. Mobile homes damaged, especially if unanchored.\nUnsecured lightweight objects become dangerous projectiles.\n- Several large trees snapped or uprooted, but with greater\nnumbers in places where trees are shallow rooted. Several\nfences and roadway signs blown over.\n- Some roads impassable from large debris, and more within\nurban or heavily wooded places. A few bridges, causeways,\nand access routes impassable.\n- Scattered power and communications outages, but more\nprevalent in areas with above ground lines.\n\n* STORM SURGE\n- LATEST LOCAL FORECAST: Life-threatening storm surge possible\n- Peak Storm Surge Inundation: The potential for 4-7 feet\nabove ground somewhere within surge prone areas\n- Window of concern: Friday morning until Saturday morning\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for storm\nsurge flooding greater than 6 feet above ground\n- The storm surge threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Plan for life-threatening storm surge flooding of\ngreater than 6 feet above ground.\n- PREPARE: Evacuation efforts should soon be brought to\ncompletion before driving conditions become unsafe.\n- ACT: Leave immediately if evacuation orders are given for\nyour area to avoid being cut off from emergency services or\nneedlessly risk lives.\n\n- POTENTIAL IMPACTS: Extensive\n- Large areas of deep inundation with storm surge flooding\naccentuated by battering waves. Structural damage to\nbuildings, with several washing away. Damage compounded by\nfloating debris. Locations may be uninhabitable for an\nextended period.\n- Large sections of near-shore escape routes and secondary\nroads washed out or severely flooded. Flood control systems\nand barriers may become stressed.\n- Severe beach erosion with significant dune loss.\n- Major damage to marinas, docks, boardwalks, and piers. Many\nsmall craft broken away from moorings, especially in\nunprotected anchorages with some lifted onshore and\nstranded.\n\n* FLOODING RAIN\n- LATEST LOCAL FORECAST: Flood Watch is in effect\n- Peak Rainfall Amounts: 3-6 inches, with locally higher\namounts\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for major\nflooding rain\n- The flooding rain threat has remained nearly steady from\nthe previous assessment.\n- PLAN: Emergency plans should include the potential for\nmajor flooding from heavy rain. Evacuations and rescues are\nlikely.\n- PREPARE: Strongly consider protective actions, especially\nif you are in an area vulnerable to flooding.\n- ACT: Heed any flood watches and warnings. Failure to take\naction will likely result in serious injury or loss of life.\n\n- POTENTIAL IMPACTS: Extensive\n- Major rainfall flooding may prompt many evacuations and\nrescues.\n- Rivers and tributaries may rapidly overflow their banks in\nmultiple places. Small streams, creeks, and ditches may\nbecome dangerous rivers. Flood control systems and barriers\nmay become stressed.\n- Flood waters can enter many structures within multiple\ncommunities, some structures becoming uninhabitable or\nwashed away. Many places where flood waters may cover\nescape routes. Streets and parking lots become rivers of\nmoving water with underpasses submerged. Driving conditions\nbecome dangerous. Many road and bridge closures with some\nweakened or washed out.\n\n* TORNADO\n- LATEST LOCAL FORECAST:\n- Situation is favorable for tornadoes\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for several\ntornadoes\n- The tornado threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Emergency plans should include the potential for\nseveral tornadoes with a few possibly intense having larger\ndamage paths.\n- PREPARE: Those living in manufactured homes or on boats\nshould prepare to relocate to safe shelter before hazardous\nweather arrives.\n- ACT: Listen for tornado watches and warnings. If a tornado\nwarning is issued, be ready to shelter quickly.\n\n- POTENTIAL IMPACTS: Significant\n- The occurrence of scattered tornadoes can hinder the\nexecution of emergency plans during tropical events.\n- Several places may experience tornado damage with a few\nspots of considerable damage, power loss, and\ncommunications failures.\n- Locations could realize roofs torn off frame houses, mobile\nhomes demolished, boxcars overturned, large trees snapped\nor uprooted, vehicles tumbled, and small boats tossed\nabout. Dangerous projectiles can add to the toll.\n\n* FOR MORE INFORMATION:\n- Local Weather Conditions and Forecasts: NWS Tallahassee\n- https://www.weather.gov/tallahassee\n- Information from the Florida Division of Emergency Management\n- https://www.floridadisaster.org\n- Information from Bay County Emergency Management\n- http://www.baycountyfl.gov/EmergencyManagement",
+          "instruction": null,
+          "response": "Avoid",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "TCVTAE"
+            ],
+            "WMOidentifier": [
+              "WTUS82 KTAE 081201"
+            ],
+            "NWSheadline": [
+              "HURRICANE WARNING REMAINS IN EFFECT... ...STORM SURGE WARNING REMAINS IN EFFECT"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "EAS-ORG": [
+              "WXR"
+            ],
+            "VTEC": [
+              "/O.CON.KTAE.HU.W.1009.000000T0000Z-000000T0000Z/"
+            ],
+            "expiredReferences": [
+              "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.ebcdfb3803bf08b13dcabe831150e8e7f312ede1.004.1,2026-10-07T23:00:00-04:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "HUW"
+            ],
+            "NationalWeatherService": [
+              "HUW"
+            ]
+          }
+        }
+      },
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.2",
+        "type": "Feature",
+        "geometry": {
+          "type": "Polygon",
+          "coordinates": [
+            [
+              [
+                -85.887,
+                30.386
+              ],
+              [
+                -85.768,
+                30.381
+              ],
+              [
+                -85.686,
+                30.332
+              ],
+              [
+                -85.562,
+                30.383
+              ],
+              [
+                -85.464,
+                30.315
+              ],
+              [
+                -85.462,
+                30.247
+              ],
+              [
+                -85.541,
+                30.195
+              ],
+              [
+                -85.49,
+                30.153
+              ],
+              [
+                -85.39,
+                30.096
+              ],
+              [
+                -85.392,
+                30.016
+              ],
+              [
+                -85.389,
+                29.924
+              ],
+              [
+                -85.406,
+                29.907
+              ],
+              [
+                -85.488,
+                29.961
+              ],
+              [
+                -85.519,
+                29.978
+              ],
+              [
+                -85.558,
+                30.006
+              ],
+              [
+                -85.62,
+                30.06
+              ],
+              [
+                -85.732,
+                30.104
+              ],
+              [
+                -85.824,
+                30.186
+              ],
+              [
+                -85.923,
+                30.238
+              ],
+              [
+                -85.996,
+                30.269
+              ],
+              [
+                -85.994,
+                30.279
+              ],
+              [
+                -85.985,
+                30.267
+              ],
+              [
+                -85.983,
+                30.272
+              ],
+              [
+                -85.958,
+                30.268
+              ],
+              [
+                -85.968,
+                30.277
+              ],
+              [
+                -85.974,
+                30.275
+              ],
+              [
+                -85.994,
+                30.283
+              ],
+              [
+                -85.993,
+                30.39
+              ],
+              [
+                -85.987,
+                30.391
+              ],
+              [
+                -85.887,
+                30.386
+              ]
+            ]
+          ]
+        },
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.2",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.6c0d1073238a202c114bd38f1482c5c4a80d1d1e.004.2",
+          "areaDesc": "Coastal Bay",
+          "geocode": {
+            "SAME": [
+              "012005"
+            ],
+            "UGC": [
+              "FLZ112"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/FLZ112"
+          ],
+          "references": [
+            {
+              "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.3ab1f660a603191fe8f353f1776d91088de7b5d4.004.2",
+              "identifier": "urn:oid:2.49.0.1.840.0.3ab1f660a603191fe8f353f1776d91088de7b5d4.004.2",
+              "sender": "w-nws.webmaster@noaa.gov",
+              "sent": "2026-10-08T05:03:00-04:00"
+            }
+          ],
+          "sent": "2026-10-08T08:01:00-04:00",
+          "effective": "2026-10-08T08:01:00-04:00",
+          "onset": "2026-10-08T08:01:00-04:00",
+          "expires": "2026-10-08T16:15:00-04:00",
+          "ends": null,
+          "status": "Actual",
+          "messageType": "Update",
+          "category": "Met",
+          "severity": "Extreme",
+          "certainty": "Likely",
+          "urgency": "Immediate",
+          "event": "Storm Surge Warning",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Storm Surge Warning issued October 8 at 8:01AM EDT by NWS Tallahassee FL",
+          "description": "* LOCATIONS AFFECTED\n- Panama City\n- Panama City Beach\n- Mexico Beach\n- Lynn Haven\n- Bayou George\n\n* WIND\n- LATEST LOCAL FORECAST: Below tropical storm force wind\n- Peak Wind Forecast: 25-35 mph with gusts to 55 mph\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for wind 58\nto 73 mph\n- The wind threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Plan for dangerous wind of equivalent strong tropical\nstorm force.\n- PREPARE: Efforts to protect life and property should now be\nunderway. Prepare for significant wind damage.\n- ACT: Act now to complete preparations before the wind\nbecomes hazardous.\n\n- POTENTIAL IMPACTS: Significant\n- Some damage to roofing and siding materials, along with\ndamage to porches, awnings, carports, and sheds. A few\nbuildings experiencing window, door, and garage door\nfailures. Mobile homes damaged, especially if unanchored.\nUnsecured lightweight objects become dangerous projectiles.\n- Several large trees snapped or uprooted, but with greater\nnumbers in places where trees are shallow rooted. Several\nfences and roadway signs blown over.\n- Some roads impassable from large debris, and more within\nurban or heavily wooded places. A few bridges, causeways,\nand access routes impassable.\n- Scattered power and communications outages, but more\nprevalent in areas with above ground lines.\n\n* STORM SURGE\n- LATEST LOCAL FORECAST: Life-threatening storm surge possible\n- Peak Storm Surge Inundation: The potential for 4-7 feet\nabove ground somewhere within surge prone areas\n- Window of concern: Friday morning until Saturday morning\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for storm\nsurge flooding greater than 6 feet above ground\n- The storm surge threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Plan for life-threatening storm surge flooding of\ngreater than 6 feet above ground.\n- PREPARE: Evacuation efforts should soon be brought to\ncompletion before driving conditions become unsafe.\n- ACT: Leave immediately if evacuation orders are given for\nyour area to avoid being cut off from emergency services or\nneedlessly risk lives.\n\n- POTENTIAL IMPACTS: Extensive\n- Large areas of deep inundation with storm surge flooding\naccentuated by battering waves. Structural damage to\nbuildings, with several washing away. Damage compounded by\nfloating debris. Locations may be uninhabitable for an\nextended period.\n- Large sections of near-shore escape routes and secondary\nroads washed out or severely flooded. Flood control systems\nand barriers may become stressed.\n- Severe beach erosion with significant dune loss.\n- Major damage to marinas, docks, boardwalks, and piers. Many\nsmall craft broken away from moorings, especially in\nunprotected anchorages with some lifted onshore and\nstranded.\n\n* FLOODING RAIN\n- LATEST LOCAL FORECAST: Flood Watch is in effect\n- Peak Rainfall Amounts: 3-6 inches, with locally higher\namounts\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for major\nflooding rain\n- The flooding rain threat has remained nearly steady from\nthe previous assessment.\n- PLAN: Emergency plans should include the potential for\nmajor flooding from heavy rain. Evacuations and rescues are\nlikely.\n- PREPARE: Strongly consider protective actions, especially\nif you are in an area vulnerable to flooding.\n- ACT: Heed any flood watches and warnings. Failure to take\naction will likely result in serious injury or loss of life.\n\n- POTENTIAL IMPACTS: Extensive\n- Major rainfall flooding may prompt many evacuations and\nrescues.\n- Rivers and tributaries may rapidly overflow their banks in\nmultiple places. Small streams, creeks, and ditches may\nbecome dangerous rivers. Flood control systems and barriers\nmay become stressed.\n- Flood waters can enter many structures within multiple\ncommunities, some structures becoming uninhabitable or\nwashed away. Many places where flood waters may cover\nescape routes. Streets and parking lots become rivers of\nmoving water with underpasses submerged. Driving conditions\nbecome dangerous. Many road and bridge closures with some\nweakened or washed out.\n\n* TORNADO\n- LATEST LOCAL FORECAST:\n- Situation is favorable for tornadoes\n\n- THREAT TO LIFE AND PROPERTY THAT INCLUDES TYPICAL FORECAST\nUNCERTAINTY IN TRACK, SIZE AND INTENSITY: Potential for several\ntornadoes\n- The tornado threat has remained nearly steady from the\nprevious assessment.\n- PLAN: Emergency plans should include the potential for\nseveral tornadoes with a few possibly intense having larger\ndamage paths.\n- PREPARE: Those living in manufactured homes or on boats\nshould prepare to relocate to safe shelter before hazardous\nweather arrives.\n- ACT: Listen for tornado watches and warnings. If a tornado\nwarning is issued, be ready to shelter quickly.\n\n- POTENTIAL IMPACTS: Significant\n- The occurrence of scattered tornadoes can hinder the\nexecution of emergency plans during tropical events.\n- Several places may experience tornado damage with a few\nspots of considerable damage, power loss, and\ncommunications failures.\n- Locations could realize roofs torn off frame houses, mobile\nhomes demolished, boxcars overturned, large trees snapped\nor uprooted, vehicles tumbled, and small boats tossed\nabout. Dangerous projectiles can add to the toll.\n\n* FOR MORE INFORMATION:\n- Local Weather Conditions and Forecasts: NWS Tallahassee\n- https://www.weather.gov/tallahassee\n- Information from the Florida Division of Emergency Management\n- https://www.floridadisaster.org\n- Information from Bay County Emergency Management\n- http://www.baycountyfl.gov/EmergencyManagement",
+          "instruction": null,
+          "response": "Avoid",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "TCVTAE"
+            ],
+            "WMOidentifier": [
+              "WTUS82 KTAE 081201"
+            ],
+            "NWSheadline": [
+              "HURRICANE WARNING REMAINS IN EFFECT... ...STORM SURGE WARNING REMAINS IN EFFECT"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "EAS-ORG": [
+              "WXR"
+            ],
+            "VTEC": [
+              "/O.CON.KTAE.SS.W.1009.000000T0000Z-000000T0000Z/"
+            ],
+            "expiredReferences": [
+              "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.ebcdfb3803bf08b13dcabe831150e8e7f312ede1.004.2,2026-10-07T23:00:00-04:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "SSW"
+            ],
+            "NationalWeatherService": [
+              "SSW"
+            ]
+          }
+        }
+      },
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.05b40514d5c67c949d2ed32a744f62dbb72f26b1.001.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.05b40514d5c67c949d2ed32a744f62dbb72f26b1.001.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.05b40514d5c67c949d2ed32a744f62dbb72f26b1.001.1",
+          "areaDesc": "Coffee; Dale; Henry; Geneva; Houston; North Walton; Central Walton; Holmes; Washington; Jackson; Inland Bay; Calhoun; Inland Gulf; Inland Franklin; Inland Wakulla; South Walton; Coastal Bay; Coastal Gulf; Coastal Franklin; Coastal Jefferson; Coastal Wakulla; Coastal Taylor; Coastal Dixie; Northern Liberty; Southern Liberty",
+          "geocode": {
+            "SAME": [
+              "001031",
+              "001045",
+              "001067",
+              "001061",
+              "001069",
+              "012131",
+              "012059",
+              "012133",
+              "012063",
+              "012005",
+              "012013",
+              "012045",
+              "012037",
+              "012129",
+              "012065",
+              "012123",
+              "012029",
+              "012077"
+            ],
+            "UGC": [
+              "ALZ065",
+              "ALZ066",
+              "ALZ067",
+              "ALZ068",
+              "ALZ069",
+              "FLZ007",
+              "FLZ008",
+              "FLZ009",
+              "FLZ010",
+              "FLZ011",
+              "FLZ012",
+              "FLZ013",
+              "FLZ014",
+              "FLZ015",
+              "FLZ027",
+              "FLZ108",
+              "FLZ112",
+              "FLZ114",
+              "FLZ115",
+              "FLZ118",
+              "FLZ127",
+              "FLZ128",
+              "FLZ134",
+              "FLZ326",
+              "FLZ426"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/ALZ065",
+            "https://api.weather.gov/zones/forecast/ALZ066",
+            "https://api.weather.gov/zones/forecast/ALZ067",
+            "https://api.weather.gov/zones/forecast/ALZ068",
+            "https://api.weather.gov/zones/forecast/ALZ069",
+            "https://api.weather.gov/zones/forecast/FLZ007",
+            "https://api.weather.gov/zones/forecast/FLZ008",
+            "https://api.weather.gov/zones/forecast/FLZ009",
+            "https://api.weather.gov/zones/forecast/FLZ010",
+            "https://api.weather.gov/zones/forecast/FLZ011",
+            "https://api.weather.gov/zones/forecast/FLZ012",
+            "https://api.weather.gov/zones/forecast/FLZ013",
+            "https://api.weather.gov/zones/forecast/FLZ014",
+            "https://api.weather.gov/zones/forecast/FLZ015",
+            "https://api.weather.gov/zones/forecast/FLZ027",
+            "https://api.weather.gov/zones/forecast/FLZ108",
+            "https://api.weather.gov/zones/forecast/FLZ112",
+            "https://api.weather.gov/zones/forecast/FLZ114",
+            "https://api.weather.gov/zones/forecast/FLZ115",
+            "https://api.weather.gov/zones/forecast/FLZ118",
+            "https://api.weather.gov/zones/forecast/FLZ127",
+            "https://api.weather.gov/zones/forecast/FLZ128",
+            "https://api.weather.gov/zones/forecast/FLZ134",
+            "https://api.weather.gov/zones/forecast/FLZ326",
+            "https://api.weather.gov/zones/forecast/FLZ426"
+          ],
+          "references": [],
+          "sent": "2026-10-08T05:58:00-04:00",
+          "effective": "2026-10-08T05:58:00-04:00",
+          "onset": "2026-10-08T05:58:00-04:00",
+          "expires": "2026-10-08T14:00:00-04:00",
+          "ends": null,
+          "status": "Actual",
+          "messageType": "Alert",
+          "category": "Met",
+          "severity": "Moderate",
+          "certainty": "Likely",
+          "urgency": "Expected",
+          "event": "Tropical Cyclone Local Statement",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Tropical Cyclone Local Statement issued October 8 at 5:58AM EDT by NWS Tallahassee FL",
+          "description": "HLSTAE\n\nThis product covers eastern Florida panhandle, Florida Big Bend, southeastern Alabama and southwestern Georgia\n\n**NEW TROPICAL STORM WARNINGS IN EFFECT FOR INLAND FLORIDA PANHANDLE\nAND LIBERTY, FRANKLIN, WAKULLA COUNTIES. A FLOOD WATCH WAS ISSUED FOR\nMOST OF THE TRI-STATE AREA**\n\nNEW INFORMATION\n---------------\n\n* CHANGES TO WATCHES AND WARNINGS:\n- A Tropical Storm Warning has been issued for Central Walton and\nNorth Walton\n- The Tropical Storm Watch has been upgraded to a Tropical Storm\nWarning for Calhoun, Holmes, Inland Bay, Inland Franklin,\nInland Gulf, Inland Wakulla, Jackson, Northern Liberty,\nSouthern Liberty, and Washington\n\n* CURRENT WATCHES AND WARNINGS:\n- A Tropical Storm Warning and Hurricane Watch are in effect for\nCentral Walton and North Walton\n- A Tropical Storm Warning is in effect for Calhoun, Holmes,\nInland Bay, Inland Franklin, Inland Gulf, Inland Wakulla,\nJackson, Northern Liberty, Southern Liberty, and Washington\n- A Storm Surge Warning and Hurricane Warning are in effect for\nCoastal Bay and South Walton\n- A Storm Surge Warning and Tropical Storm Warning are in effect\nfor Coastal Franklin, Coastal Gulf, Coastal Jefferson, and\nCoastal Wakulla\n- A Storm Surge Warning is in effect for Coastal Taylor\n- A Storm Surge Watch is in effect for Coastal Dixie\n- A Tropical Storm Watch is in effect for Coffee, Dale, Geneva,\nHenry, and Houston\n\n* STORM INFORMATION:\n- About 580 miles southwest of Walton Bay county line or about\n580 miles southwest of Panama City\n- 23.3N 91.2W\n- Storm Intensity 80 mph\n- Movement East-northeast or 60 degrees at 9 mph\n\nSITUATION OVERVIEW\n------------------\n\nAt 5 AM ET, Hurricane Isaias was located in the southern Gulf with\nmaximum sustained winds of 80 mph and moving ENE at 9 mph. There are\noverall no significant changes in the forecast reasoning from the\nprevious advisory. Isaias is forecast to turn northward in the next day\nor so and accelerate in forward speed towards the central Gulf coast.\nAdditional strengthening is anticipated through tonight, and may be\nnear major hurricane strength prior to landfall. The wind field is\nexpected to expand considerably and may be lopsided towards the east,\nwhich means impacts are likely well beyond the forecast cone,\nparticularly east of the hurricane's center. Inland FL counties have\nnow been upgraded from a Tropical Storm Watch to Warning, including\nLiberty, Franklin, and Wakulla Counties. Conditions could begin to\ndeteriorate across the Florida Panhandle as early as Friday morning.\nTherefore, residents are urged to finalize their preparations today and\nearly tomorrow.\n\nGiven the expected large size of Isaias as it nears northern Gulf\ncoast, the wind threat may extend well into the eastern portions of the\nTri-state area. An expected fast forward speed may also lead to the\nwind threat extending further inland, especially near the core of the\nstorm. A Storm Surge Warning remains in effect from the Steinhatchee\nRiver west to the Okaloosa/Walton County line. Life- threatening\ninundation values of 5 to 7 feet above normally dry ground are forecast\nacross the coastal Panhandle to Indian Pass, 4 to 6 feet from Indian\nPass to the Steinhatchee River, and 2 to 4 feet from the Steinhatchee\nRiver to Yankeetown, coincident with the high tide. The greatest surge\nrisk will be Friday through Friday night.\n\nSoggy conditions across the region from recent rainfall will make much\nof the Tri-state area more sensitive to flooding from additional heavy\nrainfall from Isaias. Forecast rainfall totals of 3 to 7 inches is\nexpected across much of the area, with isolated amounts of 10 or more\ninches. If realized, these values are likely to produce isolated to\nscattered flash flooding and some river flooding. Localized\nconsiderable flash flooding is also possible where bands of heavy rain\nmove repeatedly over the same area. Given these factors, a Flood Watch\nwas issued for counties west of the I- 75 corridor and Eastern FL Big\nBend from Friday afternoon until Saturday evening. Isaias will also\nbring an elevated chance for several tornadoes across the Florida\nPanhandle and Western FL Big Bend on Friday into Saturday and Southeast\nAL & Southwest GA late Friday into Saturday.\n\nPOTENTIAL IMPACTS\n-----------------\n\n* FLOODING RAIN:\nProtect against life-threatening rainfall flooding having possible\nextensive impacts across the Florida Panhandle, Southeast Alabama and\nparts of the Western Florida Big Bend & Southwest Georgia. Potential impacts\ninclude:\n- Major rainfall flooding may prompt many evacuations and rescues.\n- Rivers and tributaries may rapidly overflow their banks in\nmultiple places. Small streams, creeks, and ditches may become\ndangerous rivers. Flood control systems and barriers may become\nstressed.\n- Flood waters can enter many structures within multiple\ncommunities, some structures becoming uninhabitable or washed\naway. Many places where flood waters may cover escape routes.\nStreets and parking lots become rivers of moving water with\nunderpasses submerged. Driving conditions become dangerous.\nMany road and bridge closures with some weakened or washed out.\n\nProtect against dangerous rainfall flooding having possible limited to\nsignificant impacts across the Eastern Florida Big Bend and parts of\nSouth Central Georgia.\n\n* WIND:\nProtect against dangerous wind having possible significant impacts\nacross the Florida Panhandle, Southwestern Florida Big Bend, and\nSoutheast Alabama. Potential impacts in this area include:\n- Some damage to roofing and siding materials, along with damage\nto porches, awnings, carports, and sheds. A few buildings\nexperiencing window, door, and garage door failures. Mobile\nhomes damaged, especially if unanchored. Unsecured lightweight\nobjects become dangerous projectiles.\n- Several large trees snapped or uprooted, but with greater\nnumbers in places where trees are shallow rooted. Several\nfences and roadway signs blown over.\n- Some roads impassable from large debris, and more within urban\nor heavily wooded places. A few bridges, causeways, and access\nroutes impassable.\n- Scattered power and communications outages, but more prevalent\nin areas with above ground lines.\n\nAlso, protect against hazardous wind having possible limited impacts\nacross the Western Florida Big Bend and portions of far Southwestern Georgia.\n\nElsewhere across eastern Florida panhandle, Florida Big Bend,\nsoutheastern Alabama and southwestern Georgia, little to no impact is\nanticipated.\n\n* SURGE:\nProtect against life-threatening surge having possible extensive\nimpacts across the coastal Florida Panhandle and Florida Big Bend.\nPotential impacts in this area include:\n- Large areas of deep inundation with storm surge flooding\naccentuated by battering waves. Structural damage to buildings,\nwith several washing away. Damage compounded by floating\ndebris. Locations may be uninhabitable for an extended period.\n- Large sections of near-shore escape routes and secondary roads\nwashed out or severely flooded. Flood control systems and\nbarriers may become stressed.\n- Severe beach erosion with significant dune loss.\n- Major damage to marinas, docks, boardwalks, and piers. Many\nsmall craft broken away from moorings, especially in\nunprotected anchorages with some lifted onshore and stranded.\n\nElsewhere across eastern Florida panhandle, Florida Big Bend,\nsoutheastern Alabama and southwestern Georgia, little to no impact is\nanticipated.\n\n* TORNADOES:\nProtect against a dangerous tornado event having possible significant\nimpacts across the Florida Panhandle, Western Florida Big Bend,\nSoutheast Alabama and most of Southwest Georgia. Potential impacts\ninclude:\n- The occurrence of scattered tornadoes can hinder the execution\nof emergency plans during tropical events.\n- Several places may experience tornado damage with a few spots\nof considerable damage, power loss, and communications failures.\n- Locations could realize roofs torn off frame houses, mobile\nhomes demolished, boxcars overturned, large trees snapped or\nuprooted, vehicles tumbled, and small boats tossed about.\nDangerous projectiles can add to the toll.\n\nProtect against a tornado event having possible limited impacts across\nthe Eastern Florida Big Bend and parts of South Central Georgia.\n\nPRECAUTIONARY/PREPAREDNESS ACTIONS\n----------------------------------\n\n* EVACUATIONS:\nFollow the advice of local officials\n\n* OTHER PREPAREDNESS INFORMATION:\nNow is the time to complete all preparations to protect life and\nproperty in accordance with your emergency plan. Ensure you are in a\nsafe location before the onset of strong winds or possible flooding.\n\nIf you are a visitor, be sure to know the name of the city in which\nyou are staying and the name of the county in which it resides.\nListen for these locations in local news updates. Pay attention for\ninstructions from local authorities.\n\nStorm surge is the leading killer associated with tropical storms and\nhurricanes! Make sure you are in a safe area away from the surge\nzone. Even if you are not in a surge-prone area, you could find\nyourself cutoff by flood waters during and after the storm. Heed\nevacuation orders issued by the local authorities.\n\nRapidly rising flood waters are deadly. If you are in a flood-prone\narea, consider moving to higher ground. Never drive through a flooded\nroadway. Remember, turn around don't drown!\n\nIf a Tornado Warning is issued for your area, be ready to shelter\nquickly, preferably away from windows and in an interior room not\nprone to flooding. If driving, scan the roadside for quick shelter\noptions.\n\nIf in a place that is vulnerable to high wind, such as near large\ntrees, a manufactured home, upper floors of a high-rise building, or\non a boat, consider moving to a safer shelter before the onset of\nstrong winds or flooding.\n\nClosely monitor weather.gov, NOAA Weather radio or local news outlets\nfor official storm information. Be ready to adapt to possible changes\nto the forecast. Ensure you have multiple ways to receive weather\nwarnings.\n\n* ADDITIONAL SOURCES OF INFORMATION:\n- For information on appropriate preparations see ready.gov\n- For additional disaster preparedness information see redcross.org\n\nNEXT UPDATE\n-----------\n\nThe next local statement will be issued by the National Weather\nService in Tallahassee FL around 12 PM EDT, or sooner if conditions\nwarrant.",
+          "instruction": null,
+          "response": "Monitor",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "HLSTAE"
+            ],
+            "WMOidentifier": [
+              "WTUS82 KTAE 080958"
+            ],
+            "NWSheadline": [
+              "NEW TROPICAL STORM WARNINGS IN EFFECT FOR INLAND FLORIDA PANHANDLE\nAND LIBERTY, FRANKLIN, WAKULLA COUNTIES. A FLOOD WATCH WAS ISSUED FOR\nMOST OF THE TRI-STATE AREA"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "EAS-ORG": [
+              "WXR"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "HLS"
+            ],
+            "NationalWeatherService": [
+              "HLS"
+            ]
+          }
+        }
+      },
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.f811a8a3cf0feebb01dc96d59e5005ac12669ed0.001.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.f811a8a3cf0feebb01dc96d59e5005ac12669ed0.001.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.f811a8a3cf0feebb01dc96d59e5005ac12669ed0.001.1",
+          "areaDesc": "South Walton; Coastal Bay; Coastal Gulf; Coastal Franklin",
+          "geocode": {
+            "SAME": [
+              "012131",
+              "012005",
+              "012045",
+              "012037"
+            ],
+            "UGC": [
+              "FLZ108",
+              "FLZ112",
+              "FLZ114",
+              "FLZ115"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/FLZ108",
+            "https://api.weather.gov/zones/forecast/FLZ112",
+            "https://api.weather.gov/zones/forecast/FLZ114",
+            "https://api.weather.gov/zones/forecast/FLZ115"
+          ],
+          "references": [
+            {
+              "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.57fe548448cc90272c6236031a0cd89d5d96e6c4.001.1",
+              "identifier": "urn:oid:2.49.0.1.840.0.57fe548448cc90272c6236031a0cd89d5d96e6c4.001.1",
+              "sender": "w-nws.webmaster@noaa.gov",
+              "sent": "2026-10-07T03:21:00-04:00"
+            }
+          ],
+          "sent": "2026-10-08T02:51:00-04:00",
+          "effective": "2026-10-08T02:51:00-04:00",
+          "onset": "2026-10-08T02:51:00-04:00",
+          "expires": "2026-10-12T04:00:00-04:00",
+          "ends": "2026-10-12T04:00:00-04:00",
+          "status": "Actual",
+          "messageType": "Update",
+          "category": "Met",
+          "severity": "Moderate",
+          "certainty": "Likely",
+          "urgency": "Expected",
+          "event": "Rip Current Statement",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Rip Current Statement issued October 8 at 2:51AM EDT until October 12 at 4:00AM EDT by NWS Tallahassee FL",
+          "description": "* WHAT...Dangerous rip currents.\n\n* WHERE...Walton, Bay, Gulf, and Franklin County Beaches.\n\n* WHEN...Through late Sunday night.\n\n* IMPACTS...Rip currents can sweep even the best swimmers away\nfrom shore into deeper water.",
+          "instruction": "Swim near a lifeguard. If caught in a rip current, relax and\nfloat. Don't swim against the current. If able, swim in a\ndirection following the shoreline. If unable to escape, face the\nshore and call or wave for help.",
+          "response": "Avoid",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "CFWTAE"
+            ],
+            "WMOidentifier": [
+              "WHUS42 KTAE 080651"
+            ],
+            "NWSheadline": [
+              "HIGH RIP CURRENT RISK REMAINS IN EFFECT THROUGH LATE SUNDAY NIGHT"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "VTEC": [
+              "/O.CON.KTAE.RP.S.0070.000000T0000Z-261012T0800Z/"
+            ],
+            "eventEndingTime": [
+              "2026-10-12T04:00:00-04:00"
+            ],
+            "expiredReferences": [
+              "w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.83575a9f79022b730c0570fe49ed509b0e16f677.001.1,2026-10-06T03:16:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a36f5b22221c7f6c7be60075a4256bc559aa80bb.001.1,2026-10-05T13:32:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.411ab6801964f67929a526287235a84926a0484d.001.1,2026-10-04T02:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.a9e0b8e67641e90b0c896bbe8cea479887af60b4.001.1,2026-10-03T14:27:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.6cdefb92e86c1a1a9bb1159661e435cc1b5ba372.001.1,2026-10-03T03:34:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.32ecb5bbf878cd0af5e9cedd5f2bfdb242adda06.002.1,2026-10-02T03:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.32ecb5bbf878cd0af5e9cedd5f2bfdb242adda06.001.1,2026-10-02T03:14:00-04:00 w-nws.webmaster@noaa.gov,urn:oid:2.49.0.1.840.0.4f5550fad290770f23915db7ce974593ff5acef4.001.1,2026-10-01T03:30:00-04:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "NWS"
+            ],
+            "NationalWeatherService": [
+              "RPS"
+            ]
+          }
+        }
+      },
+      {
+        "id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.08f3f4596c59b45e9f1cf94a3cce7c8c45fe4b51.001.1",
+        "type": "Feature",
+        "geometry": null,
+        "properties": {
+          "@id": "https://api.weather.gov/alerts/urn:oid:2.49.0.1.840.0.08f3f4596c59b45e9f1cf94a3cce7c8c45fe4b51.001.1",
+          "@type": "wx:Alert",
+          "id": "urn:oid:2.49.0.1.840.0.08f3f4596c59b45e9f1cf94a3cce7c8c45fe4b51.001.1",
+          "areaDesc": "Coffee; Dale; Henry; Geneva; Houston; North Walton; Central Walton; Holmes; Washington; Jackson; Inland Bay; Calhoun; Inland Gulf; Inland Franklin; Gadsden; Leon; Inland Jefferson; Inland Wakulla; South Walton; Coastal Bay; Coastal Gulf; Coastal Franklin; Coastal Jefferson; Coastal Wakulla; Northern Liberty; Southern Liberty; Quitman; Clay; Randolph; Calhoun; Terrell; Dougherty; Lee; Worth; Early; Miller; Baker; Mitchell; Colquitt; Seminole; Decatur; Grady; Thomas",
+          "geocode": {
+            "SAME": [
+              "001031",
+              "001045",
+              "001067",
+              "001061",
+              "001069",
+              "012131",
+              "012059",
+              "012133",
+              "012063",
+              "012005",
+              "012013",
+              "012045",
+              "012037",
+              "012039",
+              "012073",
+              "012065",
+              "012129",
+              "012077",
+              "013239",
+              "013061",
+              "013243",
+              "013037",
+              "013273",
+              "013095",
+              "013177",
+              "013321",
+              "013099",
+              "013201",
+              "013007",
+              "013205",
+              "013071",
+              "013253",
+              "013087",
+              "013131",
+              "013275"
+            ],
+            "UGC": [
+              "ALZ065",
+              "ALZ066",
+              "ALZ067",
+              "ALZ068",
+              "ALZ069",
+              "FLZ007",
+              "FLZ008",
+              "FLZ009",
+              "FLZ010",
+              "FLZ011",
+              "FLZ012",
+              "FLZ013",
+              "FLZ014",
+              "FLZ015",
+              "FLZ016",
+              "FLZ017",
+              "FLZ018",
+              "FLZ027",
+              "FLZ108",
+              "FLZ112",
+              "FLZ114",
+              "FLZ115",
+              "FLZ118",
+              "FLZ127",
+              "FLZ326",
+              "FLZ426",
+              "GAZ120",
+              "GAZ121",
+              "GAZ122",
+              "GAZ123",
+              "GAZ124",
+              "GAZ125",
+              "GAZ126",
+              "GAZ127",
+              "GAZ142",
+              "GAZ143",
+              "GAZ144",
+              "GAZ145",
+              "GAZ146",
+              "GAZ155",
+              "GAZ156",
+              "GAZ157",
+              "GAZ158"
+            ]
+          },
+          "affectedZones": [
+            "https://api.weather.gov/zones/forecast/ALZ065",
+            "https://api.weather.gov/zones/forecast/ALZ066",
+            "https://api.weather.gov/zones/forecast/ALZ067",
+            "https://api.weather.gov/zones/forecast/ALZ068",
+            "https://api.weather.gov/zones/forecast/ALZ069",
+            "https://api.weather.gov/zones/forecast/FLZ007",
+            "https://api.weather.gov/zones/forecast/FLZ008",
+            "https://api.weather.gov/zones/forecast/FLZ009",
+            "https://api.weather.gov/zones/forecast/FLZ010",
+            "https://api.weather.gov/zones/forecast/FLZ011",
+            "https://api.weather.gov/zones/forecast/FLZ012",
+            "https://api.weather.gov/zones/forecast/FLZ013",
+            "https://api.weather.gov/zones/forecast/FLZ014",
+            "https://api.weather.gov/zones/forecast/FLZ015",
+            "https://api.weather.gov/zones/forecast/FLZ016",
+            "https://api.weather.gov/zones/forecast/FLZ017",
+            "https://api.weather.gov/zones/forecast/FLZ018",
+            "https://api.weather.gov/zones/forecast/FLZ027",
+            "https://api.weather.gov/zones/forecast/FLZ108",
+            "https://api.weather.gov/zones/forecast/FLZ112",
+            "https://api.weather.gov/zones/forecast/FLZ114",
+            "https://api.weather.gov/zones/forecast/FLZ115",
+            "https://api.weather.gov/zones/forecast/FLZ118",
+            "https://api.weather.gov/zones/forecast/FLZ127",
+            "https://api.weather.gov/zones/forecast/FLZ326",
+            "https://api.weather.gov/zones/forecast/FLZ426",
+            "https://api.weather.gov/zones/forecast/GAZ120",
+            "https://api.weather.gov/zones/forecast/GAZ121",
+            "https://api.weather.gov/zones/forecast/GAZ122",
+            "https://api.weather.gov/zones/forecast/GAZ123",
+            "https://api.weather.gov/zones/forecast/GAZ124",
+            "https://api.weather.gov/zones/forecast/GAZ125",
+            "https://api.weather.gov/zones/forecast/GAZ126",
+            "https://api.weather.gov/zones/forecast/GAZ127",
+            "https://api.weather.gov/zones/forecast/GAZ142",
+            "https://api.weather.gov/zones/forecast/GAZ143",
+            "https://api.weather.gov/zones/forecast/GAZ144",
+            "https://api.weather.gov/zones/forecast/GAZ145",
+            "https://api.weather.gov/zones/forecast/GAZ146",
+            "https://api.weather.gov/zones/forecast/GAZ155",
+            "https://api.weather.gov/zones/forecast/GAZ156",
+            "https://api.weather.gov/zones/forecast/GAZ157",
+            "https://api.weather.gov/zones/forecast/GAZ158"
+          ],
+          "references": [],
+          "sent": "2026-10-08T02:38:00-04:00",
+          "effective": "2026-10-08T02:38:00-04:00",
+          "onset": "2026-10-09T14:00:00-04:00",
+          "expires": "2026-10-09T06:00:00-04:00",
+          "ends": "2026-10-10T20:00:00-04:00",
+          "status": "Actual",
+          "messageType": "Alert",
+          "category": "Met",
+          "severity": "Severe",
+          "certainty": "Possible",
+          "urgency": "Future",
+          "event": "Flood Watch",
+          "sender": "w-nws.webmaster@noaa.gov",
+          "senderName": "NWS Tallahassee FL",
+          "headline": "Flood Watch issued October 8 at 2:38AM EDT until October 10 at 8:00PM EDT by NWS Tallahassee FL",
+          "description": "* WHAT...Flooding caused by excessive rainfall is possible.\n\n* WHERE...Portions of southeast Alabama, the Florida Panhandle and\nBig Bend, and southwest Georgia.\n\n* WHEN...From Friday afternoon through Saturday evening.\n\n* IMPACTS...Excessive runoff may result in flooding of rivers,\ncreeks, streams, and other low-lying and flood-prone locations.\nFlooding may occur in poor drainage and urban areas.\n\n* ADDITIONAL DETAILS...\n- Hurricane Isaias is expected to bring bands of heavy rainfall to\nthe area. Widespread totals of 3 to 7 inches are expected with\nlocalized amounts of 10 inches. Given saturated soils from recent\nheavy rainfall, flash flooding is expected. Considerable flash\nflooding is possible where bands of heavy rain move repeatedly\nover the same area.\n- http://www.weather.gov/safety/flood",
+          "instruction": "You should monitor later forecasts and be alert for possible Flood\nWarnings. Those living in areas prone to flooding should be prepared\nto take action should flooding develop.",
+          "response": "Prepare",
+          "note": null,
+          "parameters": {
+            "AWIPSidentifier": [
+              "FFATAE"
+            ],
+            "WMOidentifier": [
+              "WGUS62 KTAE 080638"
+            ],
+            "NWSheadline": [
+              "FLOOD WATCH IN EFFECT FROM FRIDAY AFTERNOON THROUGH SATURDAY EVENING"
+            ],
+            "BLOCKCHANNEL": [
+              "EAS",
+              "NWEM",
+              "CMAS"
+            ],
+            "EAS-ORG": [
+              "WXR"
+            ],
+            "VTEC": [
+              "/O.NEW.KTAE.FA.A.0005.261009T1800Z-261011T0000Z/"
+            ],
+            "eventEndingTime": [
+              "2026-10-10T20:00:00-04:00"
+            ]
+          },
+          "scope": "Public",
+          "code": "IPAWSv1.0",
+          "language": "en-US",
+          "web": "http://www.weather.gov",
+          "eventCode": {
+            "SAME": [
+              "FFA"
+            ],
+            "NationalWeatherService": [
+              "FAA"
+            ]
+          }
+        }
+      }
+    ],
+    "title": "Current watches, warnings, and advisories for 30.23 N, 85.88 W",
+    "updated": "2026-10-08T14:17:28+00:00"
+  }
+}

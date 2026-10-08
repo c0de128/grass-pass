@@ -118,7 +118,7 @@ export type TipFactsInput = {
   species: readonly SightedSpecies[] | null;
   /** First day of the iNaturalist window ("2026-09-24"). */
   since: string | null;
-  /** How many finds the pass asks for. */
+  /** How many finds the pass asks for (the target; never printed in a fact, see PASS_FACT_TEXT). */
   finds: number;
 };
 
@@ -321,6 +321,19 @@ function wildlifeFacts(input: TipFactsInput): TipFact[] {
     .map((x) => x.fact);
 }
 
+/** The pass fact, without a count (Q-10-01): the tips are written before the final number of finds is known. */
+export const PASS_FACT_TEXT = "Your pass has a list of finds to check off";
+
+/**
+ * Q-10-01 backstop: a kept tip that still names a number of finds ("Bring a pencil to check off the 6 finds") gets the
+ * pass's FINAL count, so the tips never disagree with the "5 finds" the page shows.
+ */
+export function withFinalFindCount<T extends { items: { tip: string; why: string }[] }>(tips: T, finalCount: number): T {
+  const fix = (s: string) =>
+    s.replace(/\b\d+(\s+)(find|thing|item)s?\b/gi, (_m, sp: string, noun: string) => `${finalCount}${sp}${noun}${finalCount === 1 ? "" : "s"}`);
+  return { ...tips, items: tips.items.map((t) => ({ ...t, tip: fix(t.tip), why: fix(t.why) })) };
+}
+
 /** Every fact for a pass's trip tips (see the file comment). */
 export function tipFacts(input: TipFactsInput): TipFacts {
   const w = weatherFacts(input);
@@ -328,7 +341,9 @@ export function tipFacts(input: TipFactsInput): TipFacts {
     ...w.facts,
     ...parkFacts(input),
     ...wildlifeFacts(input),
-    { id: "x-pass", group: "pass" as const, text: `Your pass has ${input.finds} finds to check off`, tags: ["pass" as const] },
+    // Q-10-01 (round 10): no count here. The tips start with the first clue call, before the final number of finds is
+    // known (a short pass keeps 5 of 6), so a count would be the target, not what the page shows.
+    { id: "x-pass", group: "pass" as const, text: PASS_FACT_TEXT, tags: ["pass" as const] },
   ];
   return { parkName: input.parkName, band: input.band, forDate: w.forDate ?? input.passDay, which: w.which, forecast: w.forDate !== null, facts };
 }

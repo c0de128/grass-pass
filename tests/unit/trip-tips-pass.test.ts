@@ -42,7 +42,7 @@ describe("trip tips in a pass build", () => {
     // The tips request carries the escaped park name and facts, never the clue pool.
     const sent = r.calls.find(isTipsCall)!.body!;
     expect(sent).toContain('"name":"trip_tips"');
-    expect(sent).toContain("<fact id=\\\"x-pass\\\" group=\\\"pass\\\">Your pass has 8 finds to check off</fact>");
+    expect(sent).toContain("<fact id=\\\"x-pass\\\" group=\\\"pass\\\">Your pass has a list of finds to check off</fact>");
     expect(sent).not.toContain("POOL:");
     // The clue call is the recorded one, unchanged.
     expect(r.calls.filter(isClueCall)).toHaveLength(1);

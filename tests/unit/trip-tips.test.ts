@@ -85,7 +85,7 @@ describe("facts from the real inputs", () => {
     expect(byId.get("w-day")?.text).toMatch(/^Clear skies, high 88°F, low \d+°F$/);
     expect(byId.get("w-day")?.tags).toContain("warm");
     expect(byId.get("w-alert-1")?.text).toBe("Official alert: Air Quality Alert (weather.gov)");
-    expect(byId.get("x-pass")?.text).toBe("Your pass has 8 finds to check off");
+    expect(byId.get("x-pass")?.text).toBe("Your pass has a list of finds to check off");
     // The map: Celebration has no mapped drinking fountain and one picnic shelter.
     expect(byId.get("p-no-drinking-water")?.text).toBe("No drinking fountain on the park map");
     expect(byId.get("p-shelter")?.text).toMatch(/^1 picnic shelter for shade/);

@@ -69,7 +69,7 @@ import {
 } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
 import { cachedWeather, type WeatherFetch } from "@/lib/weather/park-weather";
-import { extrasFromElements, type SightedSpecies } from "@/lib/tips/facts";
+import { extrasFromElements, withFinalFindCount, type SightedSpecies } from "@/lib/tips/facts";
 import { settle, startTripTips, type TipsRun, type TipsTrace } from "@/lib/tips/generate";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
@@ -543,6 +543,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let lastCheck: ValidationResult | null = null;
   /** Trip tips (src/lib/tips): started with the first clue call, in parallel, so the pass is not slower. */
   let tips: TipsRun | null = null;
+  /** Q-10-04: every clue call failed (no pass) -> skip or cancel the tips call. */
+  const tipsAbort = new AbortController();
   const startTips = (): TipsRun =>
     startTripTips(
       {
@@ -556,7 +558,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
         finds: mix.n,
         weather,
       },
-      { env: deps.env, now: deps.now, modelFetch: deps.modelFetch, modelLogger: deps.modelLogger, reserveAiCall: deps.reserveAiCall, ...(deps.tipsTrace ? { trace: deps.tipsTrace } : {}) },
+      { env: deps.env, now: deps.now, modelFetch: deps.modelFetch, modelLogger: deps.modelLogger, reserveAiCall: deps.reserveAiCall, signal: tipsAbort.signal, ...(deps.tipsTrace ? { trace: deps.tipsTrace } : {}) },
     );
 
   /** Whole-request retries used (at most one, after a failed first call). */
@@ -705,6 +707,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   }
 
   if (!best || best.items.length === 0) {
+    tipsAbort.abort();
     if (lastError) {
       const m = modelFailure(lastError, modelId);
       return { kind: "error", ...m, parkData };
@@ -775,7 +778,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     .reduce((a, [, v]) => a + (v ?? 0), 0);
 
   // Trip tips: normally ready long before the clues (TIPS_BUDGET_MS); never waited for past the pass deadline.
-  const tripTips = tips ? ((await settle(tips.done, Math.max(0, left() - 2_000))) ?? tips.fallback()) : null;
+  // Q-10-01: the tips started before the final count was known; any count in them is set to the printed one.
+  const settledTips = tips ? ((await settle(tips.done, Math.max(0, left() - 2_000))) ?? tips.fallback()) : null;
+  const tripTips = settledTips ? withFinalFindCount(settledTips, items.length) : null;
 
   const pass: Pass = {
     id: input.id,

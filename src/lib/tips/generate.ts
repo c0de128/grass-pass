@@ -43,6 +43,11 @@ export type TipsDeps = {
   reserveAiCall: () => Promise<QuotaTicket | null>;
   /** Recording and tests only: what was sent and answered. */
   trace?: (t: TipsTrace) => void;
+  /**
+   * Q-10-04 (round 10): fires when every clue call failed and no pass will be made. Before the tips call is sent it
+   * skips the call (no AI_DAILY_CAP slot used); after, it cancels the request (a sent request may still be billed).
+   */
+  signal?: AbortSignal;
 };
 
 export type TipsStart = Omit<TipFactsInput, "forecast" | "alerts" | "nowMs"> & {
@@ -101,7 +106,12 @@ export async function fromModel(facts: TipFacts, deps: TipsDeps, t0: number): Pr
   if (!hasModelKey(deps.env)) return finish(rulesResult(facts, "no_key", deps.now()));
   const left = TIPS_BUDGET_MS - (deps.now() - t0);
   if (left < TIPS_MIN_CALL_MS) return finish(rulesResult(facts, "no_answer", deps.now()), { skipped: "time" });
+  if (deps.signal?.aborted) return finish(rulesResult(facts, "no_answer", deps.now()), { skipped: "no_pass" });
   const ticket = await deps.reserveAiCall();
+  if (deps.signal?.aborted) {
+    await ticket?.release();
+    return finish(rulesResult(facts, "no_answer", deps.now()), { skipped: "no_pass" });
+  }
   if (!ticket) return finish(rulesResult(facts, "budget", deps.now()));
   ticket.commit();
   const ids = facts.facts.map((f) => f.id) as [string, ...string[]];
@@ -111,7 +121,7 @@ export async function fromModel(facts: TipFacts, deps: TipsDeps, t0: number): Pr
   try {
     const r = await callModel(
       { task: "trip-tips", messages, jsonSchema, schemaName: "trip_tips", schema: TipsEnvelope, maxTokens: TIPS_MAX_TOKENS, temperature: TIPS_TEMPERATURE },
-      { env: deps.env, fetch: deps.modelFetch, timeoutMs: TIPS_BUDGET_MS - (deps.now() - t0), logger: deps.modelLogger, now: deps.now },
+      { env: deps.env, fetch: deps.modelFetch, timeoutMs: TIPS_BUDGET_MS - (deps.now() - t0), logger: deps.modelLogger, now: deps.now, ...(deps.signal ? { signal: deps.signal } : {}) },
     );
     trace.response = r.data;
     const check = checkTips(r.data.tips as TipDraft[], facts.facts, facts.band);

@@ -16,8 +16,8 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
   return (
     <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-28 sm:scroll-mt-16 overflow-hidden">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-12 pb-20 sm:pb-32 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-40">
-        <div className="flex min-w-0 flex-col gap-8 lg:col-span-7">
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-6 pb-20 sm:pt-12 sm:pb-32 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-40">
+        <div className="flex min-w-0 flex-col gap-6 sm:gap-8 lg:col-span-7">
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
             <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}
@@ -29,11 +29,18 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             </span>
           </h1>
 
-          <p className="max-w-xl text-lg leading-relaxed text-pretty text-muted-foreground">
-            Grass Pass turns your local park into an interactive adventure. Our AI analyzes real-world maps and actual
-            wildlife sightings to craft a custom scavenger hunt in seconds. Just hit print, grab a pencil, and head
-            outside&mdash;no screens required.
-          </p>
+          {/* Kevin's own words (2026-10-08), two paragraphs. */}
+          <div className="flex max-w-xl flex-col gap-3 text-base leading-relaxed text-pretty text-muted-foreground sm:gap-4 sm:text-lg">
+            <p>
+              Your local park, turned into an adventure. Grass Pass uses AI, real park maps and recent wildlife sightings
+              to write a scavenger hunt made for you or your kids.
+            </p>
+            <p>
+              Pick a park and who&apos;s coming, from little kids to teens and adults. In about 30 seconds you get one
+              printable page, plus today&apos;s weather and tips for the trip. Print it, grab a pencil, and leave the
+              phone at home.
+            </p>
+          </div>
 
           <div className="flex flex-col gap-4">
             {/* Kevin 2026-10-07: a call to action right above the search box. */}

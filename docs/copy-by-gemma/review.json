@@ -269,7 +269,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "'Pick a park. Print a pass. Phone away.' is the README / logo tagline; 'Print.' alone reads cut off.",
-      "shipped": "Pick a park. Print a pass. Phone away."
+      "shipped": "Pick a park. Print a pass. Phone away.",
+      "removedAfterRun": "Kevin removed the 10-second section (the winding path) from /how-it-works on 2026-10-08 as redundant with the step-by-step section; the decision is kept as history."
     },
     {
       "id": "how.quick.1.title",
@@ -343,7 +344,8 @@
       "stage": "agent-review",
       "reason": "Gemma draft, edited: put back 'new' and 'usually' (a pass can take up to about 90 s) and 'it says' -> 'the pass says'. Fact fix (RULES-7-06, Builder AD, not Gemma): the upper bound 'up to about a minute and a half on a slow evening' replaces the missing-shoe aside (the block's 170-character limit).",
       "shipped": "A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing, the pass says \"No data available\" and why.",
-      "factFixAfterRun": true
+      "factFixAfterRun": true,
+      "removedAfterRun": "Kevin removed the 10-second section (the winding path) from /how-it-works on 2026-10-08 as redundant with the step-by-step section; the decision is kept as history."
     },
     {
       "id": "how.steps.title",

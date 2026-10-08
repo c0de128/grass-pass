@@ -25,10 +25,11 @@ const html = renderToStaticMarkup(<HowItWorksPage />);
 const t = text(html);
 
 describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detail, accurate to the code", () => {
-  it("has one h1, the seven sections and an in-page index", () => {
+  it("has one h1, the six sections and an in-page index", () => {
     expect(html.match(/<h1/g)).toHaveLength(1);
     expect(t).toContain("How a park becomes a pass.");
-    for (const id of ["quick", "steps", "ai-role", "why-open", "limits", "privacy", "built"]) {
+    // Kevin 2026-10-08: the 10-second section (#quick) is gone as redundant.
+    for (const id of ["steps", "ai-role", "why-open", "limits", "privacy", "built"]) {
       expect(html, id).toContain(`id="${id}"`);
       expect(html, id).toContain(`href="#${id}"`);
     }
@@ -92,8 +93,8 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     // RULES-7-01: every code edit to a printed clue is listed; no "only two edits".
     expect(t).not.toContain("only two edits");
     expect(t).toContain('swaps a worn-out opening ("Somewhere you will see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen.');
-    // RULES-7-06: the short wait line keeps its upper bound.
-    expect(t).toContain("A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening.");
+    // RULES-7-06: the wait line went with the 10-second section (Kevin 2026-10-08); no shorter claim may replace it.
+    expect(t).not.toContain("usually takes 10-30 seconds.");
     // RULES-7-02: the self-host card says "complete", not "finished in the app's normal time".
     expect(t).toContain("0 of 5 passes complete within the app's limits");
   });

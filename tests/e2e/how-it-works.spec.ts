@@ -46,33 +46,3 @@ test("the page renders every step and links back to About and the footer links t
   await page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Honest limits" }).click();
   await expect(page).toHaveURL(/#limits$/);
 });
-
-// Kevin 2026-10-08: the 10-second winding path at the top of the page (src/components/how/HowPath.tsx).
-for (const width of [360, 768, 1280] as const) {
-  for (const scheme of SCHEMES) {
-    test(`the winding path is an ordered list of 8 tagged stops, axe-clean at every scroll position (${width} px, ${scheme})`, async ({ browser }) => {
-      const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 900 } });
-      const page = await context.newPage();
-      await page.goto("/how-it-works");
-      const path = page.getByRole("list", { name: "How Grass Pass works, in 8 stops" });
-      await expect(path).toBeVisible();
-      const stops = path.locator(":scope > li");
-      await expect(stops).toHaveCount(8);
-      for (let i = 0; i < 8; i++) {
-        await expect(stops.nth(i).getByRole("heading", { level: 3 })).toBeVisible();
-        await expect(stops.nth(i).getByText(/^(Real data|AI · Gemma 4|Code checks|Paper out)$/)).toBeVisible();
-      }
-      await expect(path.getByText("AI · Gemma 4", { exact: true })).toHaveCount(2);
-      await expect(stops.last().getByRole("heading", { name: "Touch grass" })).toBeVisible();
-      const overflow = await page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
-      expect(overflow).toBeLessThanOrEqual(0);
-      const box = await page.locator("#quick").boundingBox();
-      for (let y = 0; box && y < box.y + box.height; y += 600) {
-        await page.evaluate((yy) => window.scrollTo(0, yy), y);
-        const results = await new AxeBuilder({ page }).include("#quick").withTags(AXE_TAGS).analyze();
-        expect(results.violations.map((v) => `${y}px ${v.id}: ${v.nodes.map((n) => n.target.join(" ")).join(", ")}`)).toEqual([]);
-      }
-      await context.close();
-    });
-  }
-}

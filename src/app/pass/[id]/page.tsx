@@ -5,8 +5,8 @@ import { cache, Suspense } from "react";
 import { FocusPassHeading } from "@/components/pass/FocusPassHeading";
 import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
-import { ParkWeather } from "@/components/pass/ParkWeather";
-import { WeatherCardLoading } from "@/components/pass/WeatherCard";
+import { ParkWeather, quickWeather, startParkWeather } from "@/components/pass/ParkWeather";
+import { WeatherCard, WeatherCardLoading } from "@/components/pass/WeatherCard";
 import { TripTips } from "@/components/pass/TripTips";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
@@ -61,6 +61,10 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   // Report counts are shown to signed-in grown-ups (the ones who report); 1 read per park per 5 min.
   const stats = signedIn ? await passItemStats(pass) : {};
   const parkName = safeParkName(pass.park.name).name;
+  // UX-10-01: the forecast is usually cached, so wait a moment for it and put the card in the first HTML (no layout
+  // shift); only a slow lookup streams in behind a loading card of the same size.
+  const weather = startParkWeather({ name: parkName, lat: pass.park.lat, lng: pass.park.lng });
+  const weatherNow = await quickWeather(weather);
 
   return (
     <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 focus:outline-none sm:py-14">
@@ -77,9 +81,13 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
       <FocusPassHeading />
       {/* Weather for the park (Kevin, Oct 8): screen only, streamed in so the pass never waits for it; real Open-Meteo
           forecast + weather.gov alerts, or the honest "No weather data available" line (src/lib/weather). */}
-      <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
-        <ParkWeather park={{ name: parkName, lat: pass.park.lat, lng: pass.park.lng }} />
-      </Suspense>
+      {weatherNow ? (
+        <WeatherCard view={weatherNow} />
+      ) : (
+        <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
+          <ParkWeather view={weather} />
+        </Suspense>
+      )}
       {/* Trip tips (Kevin, Oct 8): made once with the pass from that day's forecast, the park map and the sightings
           (src/lib/tips); screen only. An older pass says it was made before trip tips existed. */}
       <TripTips tips={pass.tripTips} today={today()} />

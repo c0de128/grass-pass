@@ -90,3 +90,29 @@ test("screen only: hidden in print media, and the print sheet has no trip tips",
   await expect(page.locator('[data-testid="trip-tips"]')).toHaveCount(0);
   await expect(page.getByText("How to make this a great trip")).toHaveCount(0);
 });
+
+// UX-10-01 (round 10): Lighthouse measured CLS 0.29 on a pass page, from the trip-tips section being pushed down when
+// the streamed weather card replaced its smaller loading card. The forecast is cached per park, so once it is (the first
+// open below warms it) the card is in the first HTML and nothing below it moves.
+for (const width of [360, 1280]) {
+  test(`UX-10-01: no layout shift on the pass page at ${width}px once the forecast is cached (CLS under 0.1)`, async ({ page }) => {
+    await page.setViewportSize({ width, height: width === 360 ? 740 : 900 });
+    for (const id of [OLD.id, LIVE.id]) await open(page, id);
+    await page.addInitScript(() => {
+      const w = window as unknown as { __cls: number };
+      w.__cls = 0;
+      new PerformanceObserver((list) => {
+        for (const e of list.getEntries() as unknown as { value: number; hadRecentInput: boolean }[]) if (!e.hadRecentInput) w.__cls += e.value;
+      }).observe({ type: "layout-shift", buffered: true });
+    });
+    for (const id of [OLD.id, LIVE.id]) {
+      const sec = await open(page, id);
+      await expect(sec).toBeVisible();
+      // The first HTML already has the final card: no loading card was ever shown.
+      await expect(page.locator('[data-testid="weather-card"][data-state="loading"]')).toHaveCount(0);
+      await page.evaluate(() => new Promise((r) => requestAnimationFrame(() => setTimeout(r, 750))));
+      const cls = await page.evaluate(() => (window as unknown as { __cls: number }).__cls);
+      expect(cls, `CLS on ${id}`).toBeLessThan(0.1);
+    }
+  });
+}

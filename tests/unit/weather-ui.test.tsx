@@ -191,7 +191,10 @@ describe("where the card lives", () => {
   const page = readFileSync(new URL("../../src/app/pass/[id]/page.tsx", import.meta.url), "utf8");
   const print = readFileSync(new URL("../../src/app/pass/[id]/print/page.tsx", import.meta.url), "utf8");
 
-  it("on the pass page, streamed in a Suspense boundary (the pass never waits), above the pass card", () => {
+  it("on the pass page, in the first HTML when the forecast is ready within a moment, else streamed in a Suspense boundary, above the pass card", () => {
+    // UX-10-01 (round 10): the inline card means no layout shift for the trip tips and the pass below it.
+    expect(page).toMatch(/const weatherNow = await quickWeather\(weather\);/);
+    expect(page).toMatch(/\{weatherNow \? \(\s*<WeatherCard view=\{weatherNow\} \/>/);
     expect(page).toMatch(/<Suspense fallback=\{<WeatherCardLoading parkName=\{parkName\} \/>\}>\s*<ParkWeather /);
     expect(page.indexOf("<ParkWeather")).toBeLessThan(page.indexOf("<PassPreview"));
   });

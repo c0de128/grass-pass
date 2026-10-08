@@ -477,6 +477,7 @@ export default function HowItWorksPage() {
               <li>Rate each find easy, medium or hard.</li>
               <li>Copy a proof quote from its facts.</li>
               <li>Write the Find This Spot riddle.</li>
+              <li>Write the trip tips from that day&apos;s forecast and the park map (one more call per pass).</li>
             </ul>
           </div>
           <div className="gp-band flex flex-col gap-3 rounded-3xl bg-band p-6 text-band-foreground">
@@ -491,6 +492,7 @@ export default function HowItWorksPage() {
               <li>Check every clue; remove failures.</li>
               <li>Pick the spot, draw the map, measure the walk.</li>
               <li>Write every number, date, safety line and answer.</li>
+              <li>Write the weather card; drop any trip tip that isn&apos;t safe or based on a real fact.</li>
             </ul>
           </div>
         </div>

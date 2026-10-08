@@ -186,7 +186,7 @@ export default function AboutPage() {
                 Gemma 4 writes the clues
               </h3>
               <p className="leading-relaxed">
-                <code>gemma-4-31B-it</code> on DigitalOcean serverless inference (US). One to three calls per pass.
+                <code>gemma-4-31B-it</code> on DigitalOcean serverless inference (US). One to three calls per pass for the clues, plus one for the trip tips.
               </p>
               <ul aria-label="Model facts" className="flex flex-wrap gap-2">
                 <li>

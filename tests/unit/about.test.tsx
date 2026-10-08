@@ -282,7 +282,7 @@ describe("/about", () => {
     expect(tiles.find((x) => x.value === "9.9 s")?.label).toBe("typical model wait, 27.1 s slow");
     expect(tiles.find((x) => x.value === "90.2%")?.met).toBe(true);
     expect(tiles.find((x) => x.value === "$0.00108")?.met).toBe(false);
-    expect(tiles.find((x) => x.value === "$0.00108")?.label).toBe("per pass (list price; up to $0.00109 if 2 timed-out calls were billed in full)");
+    expect(tiles.find((x) => x.value === "$0.00108")?.label).toBe("per pass for the clues (list price; up to $0.00109 if 2 timed-out calls were billed in full)");
     expect(tiles.filter((x) => x.met === false)).toHaveLength(2);
     expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(true);
     expect(tiles.find((x) => x.value === "99.8%")?.met).toBe(true);
@@ -305,9 +305,10 @@ describe("/about", () => {
     expect(html.match(/<summary/g)?.length).toBe(details.length);
     // What a judge sees before opening anything: everything outside the folded bodies.
     const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
+    // RULES-10-02 (round 10): +10 so the cost tile and the call count can name the trip-tips call.
     // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity), +20 for the 5th photo credit (judge R7
     // T1: Oak Point is an example now; Connemara's photo stays in the "two parks" band, and every photo is credited).
-    expect(visible.split(" ").length).toBeLessThanOrEqual(680);
+    expect(visible.split(" ").length).toBeLessThanOrEqual(690);
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {
@@ -364,7 +365,7 @@ describe("/about", () => {
       "14 of 54 passes (11 of 50 before)",
       "4.1% (16/387)",
       "0 of 97 count clues (11 removed)",
-      "One to three calls per pass.",
+      "One to three calls per pass for the clues, plus one for the trip tips.",
       "and Lucky Finds (the test parks have no recorded Google Maps review counts",
       // RULES-7-02: the 70 s self-host limit is not called the app's normal limit.
       "With a 70 s limit per model call (the most the app allows; the hosted site gives a first call 30-40 s), 0 of 5 passes were complete: 3 ran out of time and the other 2 came out short.",

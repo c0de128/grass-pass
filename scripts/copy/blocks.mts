@@ -622,7 +622,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "step summary, 3 short sentences",
     maxChars: 190,
     text: "Too few clues survive? Code asks the model once more for the missing ones. Still short? The pass says how many are missing. No made-up filler.",
-    facts: ["If too few clues pass, code asks the model again for the missing ones (at most 3 model calls per pass, MAX_MODEL_CALLS).", "If still short, the pass says how many finds are missing.", "Nothing is padded with made-up finds."],
+    facts: ["If too few clues pass, code asks the model again for the missing ones (at most 3 model calls per pass for the clues, MAX_MODEL_CALLS; the trip tips are a separate call).", "If still short, the pass says how many finds are missing.", "Nothing is padded with made-up finds."],
     keep: ["again"],
   },
   {

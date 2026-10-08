@@ -68,7 +68,7 @@ export function aboutStatTiles(): StatTile[] {
   return [
     { value: pct(g.groundedPct), label: "of clues quote their source exactly", target: `${t.groundedPct}% or more`, met: g.groundedPct >= t.groundedPct },
     { value: String(g.blockedPrinted), label: `risky species printed (${g.runs} runs)`, target: "0, always", met: g.blockedPrinted === 0 },
-    { value: usd(g.costPerPass), label: `per pass (list price; ${costHighNote()})`, target: `${usd(t.costPerPass)} or less`, met: g.costPerPass <= t.costPerPass },
+    { value: usd(g.costPerPass), label: `per pass for the clues (list price; ${costHighNote()})`, target: `${usd(t.costPerPass)} or less`, met: g.costPerPass <= t.costPerPass },
     { value: `Grade ${g.fkGrade.toFixed(1)}`, label: "reading level (median)", target: `${t.fkGrade} or lower`, met: g.fkGrade <= t.fkGrade },
     { value: pct(g.completePct), label: "of passes complete", target: `${t.completePct}% or more`, met: g.completePct >= t.completePct },
     {
@@ -287,11 +287,11 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: `Some passes still come out short: ${sh.printedShort} of ${g.dataRichRuns} (${pct(g.completePct)} complete; goal ${t.completePct}%: ${metWord(completeMet)}).`,
-      detail: `${pct(PREVIOUS_RUN.completePct)} in the run before. ${f.lost === 0 ? "Every data-rich test run made a pass." : `${f.lost} test runs made no pass.`} The ${sh.printedShort} short passes are on ${sh.printedShortParks} parks: ${sh.printedShort - sh.refillTimedOut} because the park's wildlife data has little to see (every call answered, the refills found too few good clues), ${sh.refillTimedOut} because a refill ran out of time. A short pass says how many finds are missing. A pass makes 1 to 3 model calls.`,
+      detail: `${pct(PREVIOUS_RUN.completePct)} in the run before. ${f.lost === 0 ? "Every data-rich test run made a pass." : `${f.lost} test runs made no pass.`} The ${sh.printedShort} short passes are on ${sh.printedShortParks} parks: ${sh.printedShort - sh.refillTimedOut} because the park's wildlife data has little to see (every call answered, the refills found too few good clues), ${sh.refillTimedOut} because a refill ran out of time. A short pass says how many finds are missing. A pass makes 1 to 3 model calls for the clues, plus 1 for the trip tips.`,
     },
     {
       title: `Cost missed the goal: Gemma ${usd(g.costPerPass)} a pass.`,
-      detail: `Target ${usd(t.costPerPass)}; ${usd(PREVIOUS_RUN.costPerPass)} in the run before (${PREVIOUS_RUN.id}). Only ${GEMMA_COST_RANGE.timedOutCalls} calls timed out this time, so the miss is the real price of the answered calls: ${usd(GEMMA_COST_RANGE.atZero)} a pass even if those were free. Most of it is the prompt (${GEMMA_FIRST_PROMPT_TOKENS.now.toLocaleString("en-US")} prompt tokens on a first call, ${GEMMA_FIRST_PROMPT_TOKENS.before.toLocaleString("en-US")} before). Each timed-out call is priced at its prompt size, ${costHighNote()}. These numbers are for ages 6-10. Longer passes cost more in their small checks: a ${SMOKE_10_13.ageBand} pass ${usd(SMOKE_10_13.costPerFinishedPass)} and a ${SMOKE_13PLUS.ageBand} pass ${usd(SMOKE_13PLUS.costPerPass)}, both over the goal.`,
+      detail: `Target ${usd(t.costPerPass)}; ${usd(PREVIOUS_RUN.costPerPass)} in the run before (${PREVIOUS_RUN.id}). Only ${GEMMA_COST_RANGE.timedOutCalls} calls timed out this time, so the miss is the real price of the answered calls: ${usd(GEMMA_COST_RANGE.atZero)} a pass even if those were free. Most of it is the prompt (${GEMMA_FIRST_PROMPT_TOKENS.now.toLocaleString("en-US")} prompt tokens on a first call, ${GEMMA_FIRST_PROMPT_TOKENS.before.toLocaleString("en-US")} before). Each timed-out call is priced at its prompt size, ${costHighNote()}. These numbers are for ages 6-10. Longer passes cost more in their small checks: a ${SMOKE_10_13.ageBand} pass ${usd(SMOKE_10_13.costPerFinishedPass)} and a ${SMOKE_13PLUS.ageBand} pass ${usd(SMOKE_13PLUS.costPerPass)}, both over the goal. All of these count the clue calls only, measured before trip tips existed (Oct 7); the trip tips add one more short call per pass.`,
     },
     {
       title: `Some clues are still vague: ${GEMMA_VAGUE_CLUES.flagged} of ${GEMMA_VAGUE_CLUES.wildPrinted} Wild Finds.`,

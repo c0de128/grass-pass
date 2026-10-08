@@ -242,7 +242,7 @@ export default function HowItWorksPage() {
           Code sends the park&apos;s fact list to <code>{modelId}</code>
           {modelId === "gemma-4-31B-it" ? " (Google's Gemma 4, open weights, Apache-2.0)" : ""} on DigitalOcean serverless
           inference. It picks the finds by id and writes a clue and a proof quote for each, plus one riddle. Usually that is
-          one call; step 6 is the exception.
+          one call; step 6 is the exception. The trip tips are one more call.
         </>
       ),
       more: (
@@ -318,11 +318,11 @@ export default function HowItWorksPage() {
       icon: RotateCcw,
       who: "code",
       title: "Refill, or print it short",
-      summary: "Too few clues pass the check? Code asks the AI again for the missing ones (at most 3 calls per pass). Still short? We list how many are missing. No made-up filler.",
+      summary: "Too few clues pass the check? Code asks the AI again for the missing ones (at most 3 clue calls per pass). Still short? We list how many are missing. No made-up filler.",
       more: (
         <>
           <p>
-            Little data: the model is asked for one spare. More than one find lost: code asks <strong>again</strong>, at most 3 model calls per pass:
+            Little data: the model is asked for one spare. More than one find lost: code asks <strong>again</strong>, at most 3 clue calls per pass (plus 1 for the trip tips):
           </p>
           <ul className={bullets}>
             <li>
@@ -409,7 +409,7 @@ export default function HowItWorksPage() {
   ];
 
   const measured: [string, string, string, boolean][] = [
-    ["Cost per pass (DigitalOcean list prices)", `${usd(gemma.costPerPass)} (${costHighNote()})`, `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
+    ["Cost per pass for the clues (DigitalOcean list prices; trip tips add one more short call)", `${usd(gemma.costPerPass)} (${costHighNote()})`, `${usd(EVAL_THRESHOLDS.costPerPass)} or less`, gemma.costPerPass <= EVAL_THRESHOLDS.costPerPass],
     ["Model time per call, typical / slow", `${secs(gemma.p50s)} / ${secs(gemma.p95s)}`, `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`, speedMet],
     ["Complete passes (at most 1 find missing)", `${pct(gemma.completePct)} (${gemma.complete}/${gemma.dataRichRuns})`, `${EVAL_THRESHOLDS.completePct}% or more`, gemma.completePct >= EVAL_THRESHOLDS.completePct],
     ["Reading level (grade, median)", gemma.fkGrade.toFixed(1), `${EVAL_THRESHOLDS.fkGrade} or lower`, gemma.fkGrade <= EVAL_THRESHOLDS.fkGrade],

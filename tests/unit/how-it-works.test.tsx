@@ -79,7 +79,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     // repetition met; the table says so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
     expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
-    expect(rows).toContainEqual(["Cost per pass (DigitalOcean list prices)", "Missed"]);
+    expect(rows).toContainEqual(["Cost per pass for the clues (DigitalOcean list prices; trip tips add one more short call)", "Missed"]);
     expect(t).toContain("$0.00108 (up to $0.00109 if 2 timed-out calls were billed in full)");
     expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Met"]);
     expect(t).toContain("Speed is met for a typical call and missed for the slow ones: the typical call took 9.91 s, first calls alone 12.8 s, with DigitalOcean answering at 39.5 answer tokens a second (28.1 the run before, when speed was missed)");

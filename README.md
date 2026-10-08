@@ -10,7 +10,7 @@ TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with
 Grass Pass turns your local park into a one-page treasure hunt, usually in 10-30 seconds (up to about a minute and a
 half for a big park or a slow model; measured, see [Limitations](#limitations)). Pick a park and your kid's age
 (4-6, 6-10 or 10-13; or 13+ for teens and adults). Code collects what is really in that park. **Gemma 4** (open weights, Apache-2.0, on
-DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3: a retry if the first call fails, refills if too few pass).
+DigitalOcean) picks a fair mix and writes kid-level clues, usually in one call (at most 3 clue calls: a retry if the first call fails, refills if too few pass), plus one more short call for the trip tips.
 Code then fact-checks every clue against its source, drops any that fail, and writes every number, date and safety
 line itself. You print one black-and-white page: the kid ticks boxes with a pencil; you keep a tear-off stub with the
 answers, safety notes and sources. The phone stays in your pocket.
@@ -52,7 +52,7 @@ clue is removed, the refill rules, caching, limits and measured numbers. The sho
 flowchart LR
   S["Real data<br/>OpenStreetMap (Overpass)<br/>iNaturalist + Wikipedia summaries<br/>Google review counts (SerpApi)"] --> P["Pools, by code<br/>what is really in this park"]
   P --> F["Code safety<br/>blocked species removed<br/>by iNaturalist taxon"]
-  F --> AI["Gemma 4 31B<br/>usually one model call<br/>(at most 3 with retry/refills)<br/>strict JSON schema"]
+  F --> AI["Gemma 4 31B<br/>usually one clue call<br/>(at most 3 with retry/refills)<br/>+ 1 trip-tips call<br/>strict JSON schema"]
   AI --> V["Code checks<br/>quote must be in the source,<br/>no answer names, no added numbers"]
   V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
 ```
@@ -75,7 +75,7 @@ flowchart LR
    answer, add a number or contain a link; a "how many" question must not give its own number; a "listen" clue needs a
    source that names a sound. A failing clue is dropped; code never rewrites what a clue says. It makes four small edits: it cuts a
    filler opener ("Quick!"), turns "?" after a command into a full stop, swaps a worn-out opening ("Somewhere you will
-   see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen. Too few left: up to two refill calls (at most 3 model calls per pass).
+   see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen. Too few left: up to two refill calls (at most 3 clue calls per pass; the trip tips are one more call).
 6. **You print it.** Black and white, one Letter page (A4 works too). Code writes every number and date, and the pass
    names the model that actually answered.
 7. **Trip tips (screen only).** Under the weather card, "How to make this a great trip": 4-6 packing and planning tips
@@ -120,7 +120,8 @@ without it, examples, search, shared passes and printing work, but new passes ca
 
 **Stopping spend in an emergency:** `AI_DAILY_CAP=0` pauses new model passes and `JUDGE_DEMO_DAILY_CAP=0` stops new judge
 passes (`SERPAPI_DAILY_CAP=0` does the same for SerpApi); an empty `DO_INFERENCE_API_KEY` stops every model call.
-At the default `AI_DAILY_CAP=400` calls (a pass makes 1-3), a full day costs about $0.28 typical and at most about $0.55
+At the default `AI_DAILY_CAP=400` calls (a pass makes 2-4: 1-3 for the clues plus 1 for the trip tips, so about 100-200
+passes a day), a full day costs about $0.28 typical and at most about $0.55
 at DigitalOcean list prices; the $10 prepaid credit is the hard ceiling.
 
 | Script | What it does |
@@ -200,7 +201,8 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   but those parks' wildlife data has little to see, so the refills found too few good clues) and 1 because a refill
   ran out of time (Connemara Meadow). A short pass says how many finds are missing.
 - **Cost missed the goal: Gemma $0.00108 a pass (target $0.001; up to $0.00109 if the 2 timed-out calls were billed in
-  full; $0.00106 if they were free).** With few timeouts, this is the real price of the answered calls; most of it is
+  full; $0.00106 if they were free).** This counts the clue calls only: it was measured on Oct 7, before trip tips
+  existed. The trip tips add one more short call per pass. With few timeouts, this is the real price of the answered calls; most of it is
   the prompt (2,844 prompt tokens on an answered first call, 2,872 in the run before). Run `-8` looked cheaper at $0
   ($0.00097) only because 15 of its calls never answered. Longer passes cost more in their small checks (see
   [Evals](#evals)): a finished 10-13 pass $0.00145 and a 13+ pass $0.00162, both over the goal.
@@ -220,7 +222,8 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   the live map and sightings: a judge's own pass for Prospect Park (Brooklyn, a big park) took about 57 s plus an
   11.6 s park search on Oct 6, and passes took 58-67 s when the free map servers were slow (measured Oct 6). The page
   waits up to 95 s and the server keeps a pass it started, so "Try again" opens it.
-- **How a pass is made:** 1 to 3 model calls. A failed first call gets one whole retry, a refill asks for the missing
+- **How a pass is made:** 1 to 3 model calls for the clues, plus 1 for the trip tips (2 to 4 in all; the tips call
+  is skipped when today's AI budget is used up, and then code writes the tips). A failed first call gets one whole retry, a refill asks for the missing
   finds + 2 spares, and a pass still short gets one more refill. **Time limits are sized from measured answer sizes**
   (about 60 answer tokens a find) **and slow-evening speeds** ([`src/lib/pass/budget.ts`](src/lib/pass/budget.ts)): the
   first call gets up to 40 s, the retry gets the time left and asks for only as many finds as can come back in it, a
@@ -318,8 +321,8 @@ checked against the results JSON by a unit test).
   passes.
 - **Sticks to the facts:** 99.8% of its clues quoted their source word for word before any filter (code drops the
   rest); 0 blocked species printed in 60 runs.
-- **Cheap enough for a classroom:** about $0.00108 to $0.00109 per pass at DigitalOcean list prices (our goal is
-  $0.001; missed).
+- **Cheap enough for a classroom:** about $0.00108 to $0.00109 per pass for the clue calls at DigitalOcean list prices
+  (our goal is $0.001; missed). The trip tips add one more short call.
 - **Safety rules live in our code, not a vendor's:** the same checks run on any model, switching is one setting
   (`MODEL_ID`), and Llama 4 Maverick ran through the same code in the eval.
 - **You can run it yourself:** the weights are downloadable (Apache-2.0) and the app talks to any OpenAI-compatible

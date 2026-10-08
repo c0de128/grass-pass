@@ -22,7 +22,7 @@ export function capFromEnv(value: string | undefined, fallback: number): number 
 
 export type LimitsConfig = {
   /**
-   * Model calls per Chicago day, all users together (each pass makes 1-3 calls; each call counts). SEC-5-03: at 400
+   * Model calls per Chicago day, all users together (each pass makes 2-4 calls: 1-3 for the clues plus 1 for the trip tips; each call counts, so 400 is about 100-200 passes). SEC-5-03: at 400
    * calls a day that is about $0.28 typical ($0.0004-0.0009 a call) and at most about $0.55 (a ~4,000-token prompt +
    * 1,200 max output at $0.18/$0.50 per million). callModel may send one counted call twice on a network error or
    * 5xx (usually unbilled). The $10 prepaid DigitalOcean credit is the hard ceiling, not this cap.

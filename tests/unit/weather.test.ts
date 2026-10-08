@@ -206,7 +206,7 @@ describe("weather.gov alerts", () => {
     expect(parseAlerts(one({}), now)[0].ends).toBe("2026-10-09T17:00:00-08:00");
     // A real advisory with `ends` removed: the end comes from parameters.eventEndingTime.
     expect(parseAlerts(one({ ends: null }), now)[0].ends).toBe("2026-10-09T17:00:00-08:00");
-    // ...and with neither, there is no end (the card says "no end time given yet"), not the message's expiry.
+    // ...and with neither, there is no end (the card says "until further notice"), not the message's expiry.
     expect(parseAlerts(one({ ends: null, parameters: {} }), now)[0].ends).toBeNull();
     expect(parseAlerts(one({}), Date.parse("2026-10-09T17:00:01-08:00"))).toEqual([]);
     expect(parseAlerts(one({ messageType: "Cancel" }), now)).toEqual([]);
@@ -416,8 +416,8 @@ describe("the card's data (view) and the live lookup", () => {
     if (v.kind !== "forecast") throw new Error(v.kind);
     expect(v).toMatchObject({ highF: 80, lowF: 71, rainPct: 13, wind: "12 mph, gusts 25", sunset: "6:20 PM", updated: "9:20 AM CDT", look: "alert" });
     expect(v.alerts).toEqual([
-      { line: "Hurricane Warning: no end time given yet", sender: "NWS Tallahassee FL", severity: "Extreme", fromNws: true },
-      { line: "Storm Surge Warning: no end time given yet", sender: "NWS Tallahassee FL", severity: "Extreme", fromNws: true },
+      { line: "Hurricane Warning until further notice", sender: "NWS Tallahassee FL", severity: "Extreme", fromNws: true },
+      { line: "Storm Surge Warning until further notice", sender: "NWS Tallahassee FL", severity: "Extreme", fromNws: true },
     ]);
     expect(v.alertsLink).toBe("https://forecast.weather.gov/MapClick.php?lat=30.23&lon=-85.88");
     const heat = viewFor("central-park-santa-clarita-ca");

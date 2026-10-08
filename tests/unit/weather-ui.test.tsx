@@ -72,8 +72,8 @@ describe("weather card markup", () => {
     expect(hot).toContain('aria-label="Weather warning: weather at Papago Park, today"');
     expect(text(hot)).toContain("No official weather alerts here right now (weather.gov).");
     const hurricane = text(html(view("frank-brown-park-panama-city-beach-fl", true)));
-    expect(hurricane).toContain("Hurricane Warning: no end time given yet");
-    expect(hurricane).toContain("Storm Surge Warning: no end time given yet");
+    expect(hurricane).toContain("Hurricane Warning until further notice");
+    expect(hurricane).toContain("Storm Surge Warning until further notice");
     expect(hurricane).not.toContain("Flood Watch"); // at most 2 alerts
     expect(Object.values(MOOD_BADGE)).toEqual(["Perfect day", "Good day", "Heads up", "Weather warning", "Stay safe"]);
   });

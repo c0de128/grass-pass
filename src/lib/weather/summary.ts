@@ -139,9 +139,9 @@ export function alertTimeLabel(iso: string, localNow: string): string {
   return `${clockLabel(local)} ${day}`;
 }
 
-/** "Hurricane Warning until 8 PM tomorrow" / "...: no end time given yet". */
+/** "Hurricane Warning until 8 PM tomorrow" / "... until further notice" (UX-10-04: the NWS gave no end time). */
 export function alertLine(a: WeatherAlert, localNow: string): string {
-  return a.ends ? `${a.event} until ${alertTimeLabel(a.ends, localNow)}` : `${a.event}: no end time given yet`;
+  return a.ends ? `${a.event} until ${alertTimeLabel(a.ends, localNow)}` : `${a.event} until further notice`;
 }
 
 type Issue = { mood: Mood; headline: string; line: string };

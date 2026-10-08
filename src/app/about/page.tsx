@@ -33,6 +33,7 @@ import {
   PRIVACY_POINTS,
   privacyRows,
   WHY_OPEN_POINTS,
+  WEATHER_SOURCES,
   aboutLimitPoints,
   aboutLimits,
   aboutStatTiles,
@@ -387,6 +388,17 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
+            <p className="font-semibold">Weather on the pass page (not pass data; the model never sees it):</p>
+            <ul className="flex flex-col gap-3" data-testid="weather-sources">
+              {WEATHER_SOURCES.map((s) => (
+                <li key={s.name}>
+                  <a className={ext} href={s.url}>
+                    {s.name}
+                  </a>{" "}
+                  <span className="text-sm text-muted-foreground">({s.licence})</span>: {s.detail}
+                </li>
+              ))}
+            </ul>
           </Disclosure>
 
           <Disclosure id="blocked" icon={ShieldCheck} title={`Never on a pass (${BLOCKED_TAXA.length} groups)`} hint="Removed before and after the model">
@@ -446,6 +458,17 @@ export default function AboutPage() {
                 observers (names and counts only, no photos).
               </li>
               <li>Species summaries: Wikipedia (CC BY-SA), through the iNaturalist API.</li>
+              <li data-testid="weather-credit">
+                Weather on the pass page:{" "}
+                <a className={ext} href="https://open-meteo.com/">
+                  Weather data by Open-Meteo.com
+                </a>{" "}
+                (CC BY 4.0); official US alerts from the{" "}
+                <a className={ext} href="https://www.weather.gov/">
+                  National Weather Service
+                </a>{" "}
+                (api.weather.gov, US public domain).
+              </li>
               <li>
                 Lucky Finds: Google Maps review counts via{" "}
                 <a className={ext} href="https://serpapi.com/">

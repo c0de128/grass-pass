@@ -82,6 +82,17 @@ flowchart LR
 Passes are cached per park, age band and day (Chicago time), so the next visitor gets them at once. Per-IP limits and
 daily caps protect the free model budget and the public map servers.
 
+**Weather on the pass page** (screen only, never printed, never sent to the model): code asks
+[Open-Meteo](https://open-meteo.com/) for the park's forecast (today, or tomorrow from 6 PM local time) and, for US
+parks, the [National Weather Service](https://www.weather.gov/) (`api.weather.gov`) for active alerts, then writes the
+words itself (`src/lib/weather/summary.ts`: thresholds for storms, rain, heat, cold and wind; "Rain likely from about
+3 PM" comes from the hourly forecast). Only official alerts with `status: Actual` are shown, with their real sender;
+we never write our own instructions for an alert. The card streams in after the pass (the page never waits for it);
+if the weather service does not answer within 8 s the card says "No weather data available" and why. Cached 30
+minutes per park position (rounded to about 1 km); if a refresh fails, the last good forecast (at most 3 hours old)
+stays, with its own "forecast updated" time. Daily cap `WEATHER_DAILY_CALLS` (default 5,000; Open-Meteo's free API
+allows 10,000 non-commercial calls a day).
+
 ## Quick start
 Needs Node 22 and pnpm.
 
@@ -327,7 +338,7 @@ https). What leaves the device (also on `/about`):
 |---|---|---|
 | Typed place text | our server (in the request body, never the web address), then Nominatim; cached 30 days in Upstash Redis by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
-| The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only) | park map, sightings, monarch counts, review counts |
+| The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only); the pass page sends only the position, rounded to about 1 km, to Open-Meteo and (US parks) api.weather.gov | park map, sightings, monarch counts, review counts, the weather card |
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP, web address, time) | Vercel request logs, about 1 hour on the Hobby plan; searches are POSTs, so the logs never hold the typed place or location | running the site |
@@ -412,6 +423,10 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   visitors only if `MODEL_ID` is switched to it; then the pass and `/about` show "Built with Llama".
 - Lucky Finds: Google Maps review counts via [SerpApi](https://serpapi.com/) (`google_maps` and `google_maps_reviews`;
   counts and months only, never review text or reviewer names).
+- Weather on the pass page: [Weather data by Open-Meteo.com](https://open-meteo.com/)
+  ([CC BY 4.0](https://creativecommons.org/licenses/by/4.0/); free API, non-commercial use). Official US alerts:
+  [National Weather Service](https://www.weather.gov/) via `api.weather.gov` (US public domain). The weather pictures
+  are our own code-drawn SVG.
 
 ## Licence
 The code is [MIT](LICENSE). MIT covers the code only; recorded data keeps its source licence:

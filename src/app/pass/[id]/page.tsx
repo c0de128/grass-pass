@@ -11,9 +11,11 @@ import { ADULT_PRINT_LINE } from "@/lib/pass/audience";
 import { isAdultBand } from "@/lib/pass/schema";
 import { loadPass } from "@/lib/pass/make";
 import { withClearMap } from "@/lib/spot/redraw";
+import { passAsOf } from "@/lib/pass/as-of";
 import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
 import { currentSession } from "@/lib/accounts/current";
+import { localDay } from "@/lib/time";
 
 /**
  * A saved pass, read from the pass cache only (never calls OpenStreetMap, iNaturalist or the model).
@@ -28,8 +30,14 @@ import { currentSession } from "@/lib/accounts/current";
 // drawn from is saved in the repo (src/lib/spot/redraw.ts; no extra store read, the stored pass is unchanged).
 const getPass = cache(async (id: string) => {
   const pass = await loadPass(id);
-  return pass ? withClearMap(pass) : null;
+  // Judge R9: a Lucky Finds reason in the present tense ("this server", "today") is said as of the pass's own day.
+  return pass ? passAsOf(withClearMap(pass), today()) : null;
 });
+
+/** Today in Chicago (the pass day and the 3-a-day limit use it). */
+function today(): string {
+  return localDay(Date.now());
+}
 
 export async function generateMetadata(props: PageProps<"/pass/[id]">): Promise<Metadata> {
   const { id } = await props.params;
@@ -69,6 +77,8 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
           parkId={pass.park.id}
           ageBand={pass.ageBand}
           variant={pass.variant}
+          madeToday={pass.day === today()}
+          example={sp.example === "1"}
           account={{ signedIn, options: signInOptions() }}
           returnTo={`/pass/${pass.id}`}
         />

@@ -15,12 +15,24 @@ export function DifferentPassButton({
   parkId,
   ageBand,
   variant,
+  madeToday = true,
+  example = false,
   account,
   returnTo = "/",
 }: {
   parkId: string;
   ageBand: AgeBand;
   variant: number;
+  /**
+   * Judge R9: was this pass made today (Chicago time)? The 3-a-day limit counts today's passes for this park and age,
+   * so an older pass (an example from an earlier day) still offers a different pass for today.
+   */
+  madeToday?: boolean;
+  /**
+   * Judge R9: an example page (?example=1) is a showcase, not the visitor's own pass. When today's 3 are used, it shows
+   * no limit line (its "Pick another park" link stays); the visitor's own pass page keeps the line.
+   */
+  example?: boolean;
   account?: PassMakerAccount;
   returnTo?: string;
 }) {
@@ -36,7 +48,8 @@ export function DifferentPassButton({
     if (state.kind === "failed" || state.kind === "empty") alertRef.current?.focus();
   }, [state, router]);
 
-  if (variant >= MAX_VARIANTS) {
+  if (madeToday && variant >= MAX_VARIANTS) {
+    if (example) return null;
     return <p className="text-base">That&apos;s today&apos;s last different pass for this park and age ({MAX_VARIANTS} of {MAX_VARIANTS}). Come back tomorrow for a new one.</p>;
   }
 

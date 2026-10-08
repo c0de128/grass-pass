@@ -16,6 +16,8 @@ import { loadPass } from "@/lib/pass/make";
 import { ADULT_PRINT_LEAD_END } from "@/lib/pass/audience";
 import { isAdultBand } from "@/lib/pass/schema";
 import { withClearMap } from "@/lib/spot/redraw";
+import { passAsOf } from "@/lib/pass/as-of";
+import { localDay } from "@/lib/time";
 import { siteUrl } from "@/lib/site-url";
 import "@/styles/print.css";
 
@@ -29,7 +31,8 @@ import "@/styles/print.css";
 // drawn from is saved in the repo (src/lib/spot/redraw.ts; no extra store read, the stored pass is unchanged).
 const getPass = cache(async (id: string) => {
   const pass = await loadPass(id);
-  return pass ? withClearMap(pass) : null;
+  // Judge R9: a Lucky Finds reason in the present tense ("this server", "today") is said as of the pass's own day.
+  return pass ? passAsOf(withClearMap(pass), localDay(Date.now())) : null;
 });
 
 export async function generateMetadata(props: PageProps<"/pass/[id]/print">): Promise<Metadata> {

@@ -1,7 +1,7 @@
 "use client";
 
 /**
- * "Sign in to make this pass" (accounts, Kevin 2026-10-06): GitHub / Google (only the ones set up on this
+ * "Sign in to make this pass" (accounts, Kevin 2026-10-06): "Continue with Google / GitHub" with their logos (2026-10-08; only the ones set up on this
  * server) and the big one-click "Try as a judge". Each button submits a form to a server action, then tells
  * the header to read the session again; `onBeforeSignIn` lets the pass maker remember the park + age so the home
  * page can restore them after the round trip (sessionStorage, this tab only).
@@ -13,7 +13,8 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { signInAction } from "@/app/actions/auth";
 import { buttonClassName } from "@/components/ui/Button";
-import { ACCOUNT_COPY, judgeLeftCopy, PROVIDER_LABELS, type SignInOptions } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, judgeLeftCopy, type SignInOptions } from "@/lib/accounts/config";
+import { OAUTH_ORDER, OAuthButton } from "./SignInPageForms";
 import { announceSessionChange } from "./session-event";
 
 function ProviderButton({ provider, label, judge, onClick }: { provider: string; label: string; judge?: boolean; onClick?: () => void }) {
@@ -26,7 +27,7 @@ function ProviderButton({ provider, label, judge, onClick }: { provider: string;
       value={provider}
       onClick={onClick}
       aria-disabled={pending || undefined}
-      className={buttonClassName(judge ? "primary" : "secondary", "w-full sm:w-auto")}
+      className={buttonClassName(judge ? "primary" : "secondary", "w-full")}
     >
       {judge ? <Gavel className="size-5" aria-hidden="true" /> : <LogIn className="size-5" aria-hidden="true" />}
       {mine ? "Signing in…" : label}
@@ -59,6 +60,15 @@ export function JudgePassesLeft() {
   );
 }
 
+/** Every sign-in button posts to the server action, then the header reads the session again. */
+async function submit(fd: FormData) {
+  try {
+    await signInAction(fd);
+  } finally {
+    announceSessionChange();
+  }
+}
+
 export function SignInCard({
   options,
   returnTo,
@@ -78,6 +88,8 @@ export function SignInCard({
   compact?: boolean;
 }) {
   const H = headingLevel === 2 ? "h2" : "h3";
+  // Google first (its button guidelines), then GitHub; only the ones set up on this server.
+  const providers = OAUTH_ORDER.filter((p) => options.providers.includes(p));
   const headingId = id ? `${id}-heading` : undefined;
   if (!options.configured || (options.providers.length === 0 && !options.judge)) {
     return (
@@ -104,26 +116,28 @@ export function SignInCard({
           </>
         )}
       </p>
-      <form
-        action={async (fd: FormData) => {
-          try {
-            await signInAction(fd);
-          } finally {
-            announceSessionChange();
-          }
-        }}
-        className="flex flex-col gap-3 sm:flex-row sm:flex-wrap" aria-label="Sign in">
-        <input type="hidden" name="returnTo" value={returnTo} />
-        {options.judge ? <ProviderButton provider="judge" label="Try as a judge" judge onClick={onBeforeSignIn} /> : null}
-        {options.providers.map((p) => (
-          <ProviderButton key={p} provider={p} label={`Sign in with ${PROVIDER_LABELS[p]}`} onClick={onBeforeSignIn} />
-        ))}
-      </form>
       {options.judge ? (
-        <>
+        <form action={submit} className="flex flex-col gap-2">
+          <input type="hidden" name="returnTo" value={returnTo} />
+          <ProviderButton provider="judge" label="Try as a judge" judge onClick={onBeforeSignIn} />
           <JudgePassesLeft />
           {compact ? null : <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.judgeNote}</p>}
-        </>
+        </form>
+      ) : null}
+      {options.judge && providers.length > 0 ? (
+        <p aria-hidden="true" className="flex items-center gap-3 text-xs font-bold tracking-widest text-muted-foreground uppercase">
+          <span className="h-px flex-1 bg-line/40" />
+          or
+          <span className="h-px flex-1 bg-line/40" />
+        </p>
+      ) : null}
+      {providers.length > 0 ? (
+        <form action={submit} className="flex flex-col gap-3" aria-label="Sign in with an account">
+          <input type="hidden" name="returnTo" value={returnTo} />
+          {providers.map((p) => (
+            <OAuthButton key={p} provider={p} onClick={onBeforeSignIn} />
+          ))}
+        </form>
       ) : null}
       {compact ? null : <p className="text-sm text-muted-foreground">{ACCOUNT_COPY.privacy}</p>}
     </section>

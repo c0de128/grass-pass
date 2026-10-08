@@ -123,17 +123,6 @@ export function makeTitle(state: PassState): string {
   return WIZARD_STEPS[2].title;
 }
 
-/** Real seconds since the request started, ticking once a second while it runs. */
-function useElapsedSeconds(startedAt: number | null): number {
-  const [now, setNow] = useState(() => clientNow());
-  useEffect(() => {
-    if (startedAt === null) return;
-    const t = setInterval(() => setNow(clientNow()), 1000);
-    return () => clearInterval(t);
-  }, [startedAt]);
-  return startedAt === null ? 0 : Math.max(0, Math.floor((now - startedAt) / 1000));
-}
-
 /** Whole seconds left until `at` (client clock), ticking once a second; null when there is no `at`. */
 function useSecondsUntil(at: number | undefined): number | null {
   const [now, setNow] = useState(() => clientNow());
@@ -246,7 +235,6 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const router = useRouter();
   const { state, run, reset } = usePassRequest();
   const working = state.kind === "working";
-  const elapsed = useElapsedSeconds(state.kind === "working" ? state.startedAt : null);
   const secondsToRetry = useSecondsUntil(state.kind === "failed" ? state.autoRetryAt : undefined);
   // Signed out (or the session ended): show the sign-in card instead of the make button.
   const needsSignIn = account !== undefined && (!account.signedIn || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
@@ -658,9 +646,9 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                       {state.kind === "working" ? (
                         <>
                           <MakingChecklist steps={state.steps} />
-                          {/* Not a live region: a ticking number would be read out every second. */}
+                          {/* Kevin 2026-10-08: no "N s so far" counter; just how long a pass usually takes. */}
                           <p className="text-sm text-muted-foreground" data-testid="pass-elapsed">
-                            {elapsed} s so far. {state.local ? LOCAL_WAIT_COPY : PASS_WAIT_COPY}
+                            {state.local ? LOCAL_WAIT_COPY : PASS_WAIT_COPY}
                           </p>
                         </>
                       ) : (

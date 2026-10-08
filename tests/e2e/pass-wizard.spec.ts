@@ -200,7 +200,9 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
       for (let j = i + 1; j < 4; j++) await expect(rows.nth(j)).toHaveAttribute("data-state", "todo");
       await expect(scene).toHaveAttribute("data-stage", String(i));
     }
-    await expect(dialog.getByTestId("pass-elapsed")).toContainText("s so far. A new pass usually takes 10-30 seconds");
+    // Kevin 2026-10-08: no seconds counter, only the usual-time line.
+    await expect(dialog.getByTestId("pass-elapsed")).toHaveText(/^A new pass usually takes 10-30 seconds/);
+    await expect(dialog.getByText(/s so far/)).toHaveCount(0);
     // No Back while the pass is being made (the close button still works).
     await expect(dialog.getByRole("button", { name: "Back" })).toHaveCount(0);
 

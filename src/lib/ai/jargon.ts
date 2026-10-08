@@ -14,7 +14,7 @@
  *   where it lives on the globe ("native to Texas and Oklahoma", "common to Hawaii and Mexico"), field-guide
  *   words a child may not know (operculum, arboreal, aquatic...), and a bare colour ("a bird that is black").
  * These checks only read the clue; they never rewrite it. (The four small edits code does make to a printed clue, a
- * filler opener, "?" after a command, a stock frame and "Who" for a lichen, are in build-pass.ts and validate.ts.)
+ * filler opener, "?" after a command, a stock frame and "What", not "Who", for a plant, fungus or lichen, are in build-pass.ts and validate.ts.)
  */
 import type { AgeBand } from "@/lib/pass/constants";
 
@@ -174,11 +174,65 @@ const RANGE_RE = new RegExp(
 
 /**
  * Round 8 (Q-8-04): "Peek for a bird of prey that breeds from Alaska to Panama." The PLACE list can never name every
- * place, so a range is also "from <Capitalised place> to/through <Capitalised place>" (case-sensitive: a place name is
- * capitalised; "from the path to the pond" is not a range). START and X are the Find This Spot map's own words.
+ * place, so a range is also "from <Capitalised place> [south/north...] to/through <Capitalised place>" (case-sensitive: a
+ * place name is capitalised; "from the path to the pond" is not a range). START and X are the Find This Spot map's words.
+ *
+ * Round 9 (Q-9-03): a capitalised park feature is not a place on the globe ("Follow the path from the Pond to the
+ * Bridge", "Look from the Rock Garden to the Bridge"). A match counts as range trivia only when it has a compass word
+ * ("from Alaska south to Mexico"), a range verb right before it ("breeds from", "ranges from"), a known place on
+ * either side (GEO_NAMES), or, with no "the" before the first name, neither side ends in a park-feature word.
  */
 const FROM_TO_RE =
-  /\b[Ff]rom\s+(?:the\s+)?(?!START\b|X\b)\p{Lu}[\p{L}.'-]*(?:\s+\p{Lu}[\p{L}.'-]*){0,2}\s+(?:to|through|into|and)\s+(?:the\s+)?(?!START\b|X\b)\p{Lu}[\p{L}.'-]*/u;
+  /\b[Ff]rom\s+(the\s+)?(?!START\b|X\b)(\p{Lu}[\p{L}.'-]*(?:\s+\p{Lu}[\p{L}.'-]*){0,2})\s+(?:((?:north|south|east|west)(?:-?(?:east|west))?(?:ward)?|all\s+the\s+way)\s+)?(?:to|through|into|and)\s+(the\s+)?(?!START\b|X\b)(\p{Lu}[\p{L}.'-]*(?:\s+\p{Lu}[\p{L}.'-]*){0,2})/gu;
+/** Range verbs right before "from" ("breeds from Alaska to Panama"). */
+const RANGE_VERB_BEFORE_RE = /\b(?:breeds?|breeding|ranges?|ranging|lives?|living|winters?|wintering|migrates?|migrating|nests?|nesting|found|native|occurs?|occurring|spread|spreads|extends?|stretches|distributed|grows?|growing)\s+(?:\p{Ll}+\s+){0,2}$/u;
+/** Places on the globe a range names (lower case; a side matches when it is one of these or ends with one). */
+const GEO_NAMES = new Set([
+  "alaska", "canada", "mexico", "panama", "argentina", "brazil", "chile", "peru", "colombia", "venezuela", "ecuador", "bolivia",
+  "guatemala", "honduras", "nicaragua", "costa rica", "belize", "cuba", "texas", "florida", "california", "maine", "oregon",
+  "washington", "montana", "minnesota", "ontario", "quebec", "nova scotia", "new england", "virginia", "georgia", "louisiana",
+  "oklahoma", "kansas", "nebraska", "colorado", "arizona", "nevada", "utah", "idaho", "wyoming", "dakota", "north dakota",
+  "south dakota", "iowa", "missouri", "arkansas", "tennessee", "kentucky", "ohio", "indiana", "illinois", "michigan",
+  "wisconsin", "new york", "new mexico", "carolina", "north carolina", "south carolina", "alabama", "mississippi", "hawaii",
+  "america", "north america", "south america", "central america", "the americas", "americas", "united states", "us", "u.s.",
+  "europe", "asia", "africa", "australia", "eurasia", "siberia", "china", "japan", "india", "russia", "arctic", "antarctica",
+  "atlantic", "pacific", "gulf", "gulf coast", "caribbean", "rockies", "rocky mountains", "appalachians", "great plains",
+  "great lakes", "andes", "tropics", "patagonia", "yukon", "labrador", "newfoundland", "greenland", "iceland", "british columbia",
+  "alberta", "manitoba", "saskatchewan", "midwest", "southwest", "southeast", "northeast", "northwest", "west coast", "east coast",
+  "tierra del fuego", "baja california", "east", "west",
+]);
+/** A capitalised side that ends in one of these is a park feature, not a place on the globe. */
+const FEATURE_WORDS = new Set([
+  "pond", "ponds", "bridge", "bridges", "garden", "gardens", "path", "paths", "trail", "trails", "lake", "creek", "playground",
+  "gate", "bench", "pavilion", "shelter", "fountain", "field", "fields", "meadow", "lot", "entrance", "tower", "dock", "pier",
+  "rock", "rocks", "hill", "grove", "loop", "center", "centre", "court", "courts", "lawn", "plaza", "overlook", "dam",
+  "spillway", "parking", "sign", "kiosk", "statue", "boardwalk", "spring", "falls", "woods", "forest", "point", "island",
+  "tree", "oak", "barn", "house", "hall", "station", "stage", "amphitheater", "garden", "fence", "wall", "restrooms", "pool",
+]);
+const sideWords = (side: string) => side.toLowerCase().replace(/[.']+$/, "");
+const isGeo = (side: string) => {
+  const w = sideWords(side);
+  if (GEO_NAMES.has(w)) return true;
+  const parts = w.split(/\s+/);
+  return parts.some((_, k) => GEO_NAMES.has(parts.slice(k).join(" ")));
+};
+const isFeature = (side: string) => FEATURE_WORDS.has(sideWords(side).split(/\s+/).at(-1) ?? "");
+
+/** Q-9-03: the first "from X to Y" in a clue that is a range on the globe, or null (park directions are not). */
+export function fromToRange(t: string): string | null {
+  for (const m of t.matchAll(FROM_TO_RE)) {
+    const [whole, theA, a, compass, , b] = m;
+    const before = t.slice(0, m.index);
+    const range =
+      compass !== undefined ||
+      RANGE_VERB_BEFORE_RE.test(before) ||
+      isGeo(a) ||
+      isGeo(b) ||
+      (theA === undefined && !isFeature(a) && !isFeature(b));
+    if (range) return whole.replace(/[.']+$/, "");
+  }
+  return null;
+}
 
 const COLOURS = "(?:white|black|brown|grey|gray|red|orange|yellow|green|blue|purple|pink|tan|gold|golden|silver|dark|pale|bright)";
 /**
@@ -203,8 +257,8 @@ export function triviaProblem(clue: string, band: AgeBand | undefined): string |
  */
 export function triviaKind(clue: string, band: AgeBand | undefined): { kind: "nothing_to_see" | "word"; match: string } | null {
   const t = norm(clue).trim();
-  const range = RANGE_RE.exec(t) ?? FROM_TO_RE.exec(t);
-  if (range) return { kind: "nothing_to_see", match: range[0].trim() };
+  const range = RANGE_RE.exec(t)?.[0] ?? fromToRange(t);
+  if (range) return { kind: "nothing_to_see", match: range.trim() };
   if (BARE_COLOUR_RE.test(t)) return { kind: "nothing_to_see", match: "a bare colour" };
   const trivia = TRIVIA_RE.exec(t);
   if (trivia) return { kind: "word", match: trivia[0] };

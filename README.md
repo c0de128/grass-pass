@@ -75,7 +75,7 @@ flowchart LR
    answer, add a number or contain a link; a "how many" question must not give its own number; a "listen" clue needs a
    source that names a sound. A failing clue is dropped; code never rewrites what a clue says. It makes four small edits: it cuts a
    filler opener ("Quick!"), turns "?" after a command into a full stop, swaps a worn-out opening ("Somewhere you will
-   see a") for a plain word ("Spot a"), and says "What", not "Who", for a lichen. Too few left: up to two refill calls (at most 3 model calls per pass).
+   see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen. Too few left: up to two refill calls (at most 3 model calls per pass).
 6. **You print it.** Black and white, one Letter page (A4 works too). Code writes every number and date, and the pass
    names the model that actually answered.
 

@@ -91,7 +91,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(t).toContain(`all ${SMOKE_10_13.hardKept} with their 2 hard finds`);
     // RULES-7-01: every code edit to a printed clue is listed; no "only two edits".
     expect(t).not.toContain("only two edits");
-    expect(t).toContain('swaps a worn-out opening ("Somewhere you will see a") for a plain word ("Spot a"), and says "What", not "Who", for a lichen.');
+    expect(t).toContain('swaps a worn-out opening ("Somewhere you will see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen.');
     // RULES-7-06: the short wait line keeps its upper bound.
     expect(t).toContain("A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening.");
     // RULES-7-02: the self-host card says "complete", not "finished in the app's normal time".

@@ -324,7 +324,7 @@ export default function HowItWorksPage() {
             Code never rewrites what a clue says. It makes four small edits: it cuts a filler opener (&quot;Quick!&quot;,
             &quot;Psst,&quot;), turns &quot;?&quot; after a command (&quot;Track 3 fields?&quot;) into a full stop, swaps a worn-out
             opening (&quot;Somewhere you will see a&quot;) for a plain word (&quot;Spot a&quot;), and says &quot;What&quot;, not
-            &quot;Who&quot;, for a lichen.
+            &quot;Who&quot;, for a plant, fungus or lichen.
           </p>
         </>
       ),

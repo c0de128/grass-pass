@@ -7,6 +7,7 @@ import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { ParkWeather } from "@/components/pass/ParkWeather";
 import { WeatherCardLoading } from "@/components/pass/WeatherCard";
+import { TripTips } from "@/components/pass/TripTips";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
 import { ADULT_PRINT_LINE } from "@/lib/pass/audience";
@@ -79,6 +80,9 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
       <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
         <ParkWeather park={{ name: parkName, lat: pass.park.lat, lng: pass.park.lng }} />
       </Suspense>
+      {/* Trip tips (Kevin, Oct 8): made once with the pass from that day's forecast, the park map and the sightings
+          (src/lib/tips); screen only. An older pass says it was made before trip tips existed. */}
+      <TripTips tips={pass.tripTips} today={today()} />
       <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">
         <DifferentPassButton

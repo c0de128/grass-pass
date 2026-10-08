@@ -715,3 +715,57 @@ dialog.gp-wizard::backdrop {
     animation: gp-wx-fall 3s linear infinite;
   }
 }
+
+/*
+ * Trip tips on the pass page (src/components/pass/TripTips.tsx; screen only, hidden in print): a packing list on a
+ * luggage tag. Text uses the site tokens (contrast-tested in tests/unit/v3-tokens.test.ts); the tag, string and icon
+ * tiles are decoration (the icons are aria-hidden; tests/unit/trip-tips-ui.test.tsx checks the icon tile pair anyway).
+ */
+.gp-tips {
+  --gp-tips-tag: var(--gp-sun);
+  --gp-tips-tag-line: #10291a;
+  --gp-tips-hole: var(--gp-card);
+  --gp-tips-string: var(--gp-line);
+  --gp-tips-check: #137838;
+  --gp-tips-item: var(--gp-muted);
+  --gp-tips-icon-bg: var(--gp-sun);
+  --gp-tips-icon-fg: #10291a;
+}
+.gp-tips-item {
+  background: var(--gp-tips-item);
+}
+.gp-tips-icon {
+  background: var(--gp-tips-icon-bg);
+  color: var(--gp-tips-icon-fg);
+  box-shadow: 0 2px 0 0 color-mix(in oklab, var(--gp-tips-icon-fg) 22%, transparent);
+}
+.gp-tips-badge {
+  background: var(--gp-muted);
+  color: var(--gp-foreground);
+}
+.gp-tips[data-state="model"] .gp-tips-badge {
+  color: var(--gp-link);
+}
+/* The ticket tear line between the tag header and the list: dashed, with a half-circle notch at each edge. */
+.gp-tips-seam {
+  position: relative;
+  height: 0;
+  border-top: 2px dashed color-mix(in oklab, var(--gp-line) 70%, transparent);
+}
+.gp-tips-seam::before,
+.gp-tips-seam::after {
+  content: "";
+  position: absolute;
+  top: -12px;
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: var(--gp-background);
+  box-shadow: inset 0 0 0 1px var(--gp-border);
+}
+.gp-tips-seam::before {
+  left: -11px;
+}
+.gp-tips-seam::after {
+  right: -11px;
+}

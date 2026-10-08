@@ -324,6 +324,8 @@ export async function runModelCase(
   const day = localDay(now());
   const t0 = performance.now();
   const deps: BuildDeps = {
+    // Trip tips are their own model call and not what the evals measure (clues).
+    tripTips: false,
     store: new MemoryStore(),
     env: modelEnv(spec, env),
     now,

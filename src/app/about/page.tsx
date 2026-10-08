@@ -34,6 +34,7 @@ import {
   privacyRows,
   WHY_OPEN_POINTS,
   WEATHER_SOURCES,
+  TRIP_TIPS_ABOUT,
   aboutLimitPoints,
   aboutLimits,
   aboutStatTiles,
@@ -388,7 +389,7 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
-            <p className="font-semibold">Weather on the pass page (not pass data; the model never sees it):</p>
+            <p className="font-semibold">Weather on the pass page (the card&apos;s words are written by code):</p>
             <ul className="flex flex-col gap-3" data-testid="weather-sources">
               {WEATHER_SOURCES.map((s) => (
                 <li key={s.name}>
@@ -399,6 +400,7 @@ export default function AboutPage() {
                 </li>
               ))}
             </ul>
+            <p data-testid="trip-tips-about">{TRIP_TIPS_ABOUT}</p>
           </Disclosure>
 
           <Disclosure id="blocked" icon={ShieldCheck} title={`Never on a pass (${BLOCKED_TAXA.length} groups)`} hint="Removed before and after the model">

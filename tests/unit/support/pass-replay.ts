@@ -55,6 +55,17 @@ export function recordedDraft(slug: string): unknown {
 
 export type Call = { url: string; host: string; init?: RequestInit; body?: string };
 
+
+/**
+ * Trip tips (2026-10-08) add one model call per pass (its own request, `trip_tips` schema) and a forecast lookup
+ * (Open-Meteo, weather.gov). The clue tests count CLUE calls and the pass's data sources, so they filter with these;
+ * tests/unit/trip-tips.test.ts counts the tips calls and weather lookups on their own.
+ */
+export const isTipsCall = (c: Call): boolean => c.host === "inference.do-ai.run" && (c.body ?? "").includes('"name":"trip_tips"');
+export const isClueCall = (c: Call): boolean => c.host === "inference.do-ai.run" && !isTipsCall(c);
+export const WEATHER_HOSTS: readonly string[] = ["api.open-meteo.com", "api.weather.gov"];
+export const isWeatherCall = (c: Call): boolean => WEATHER_HOSTS.includes(c.host);
+
 const json = (body: unknown, status = 200) =>
   new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
 
@@ -72,6 +83,10 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
     const call: Call = { url, host: u.host, init, body };
     calls.push(call);
 
+    // Trip tips never reach a test's built model answer (`opts.model` builds CLUE answers). The replayed parks' data is
+    // from Oct 5-6 and no tips answer was recorded for it, so this call fails like a network error and the pass gets the
+    // rules list, as it would live (tests/unit/trip-tips.test.ts replays the real tips answers recorded on Oct 8).
+    if (isTipsCall(call)) throw new Error("no trip tips recording for this prompt");
     if (u.host === "inference.do-ai.run") {
       const o = await opts.model?.(call);
       if (o) return o;

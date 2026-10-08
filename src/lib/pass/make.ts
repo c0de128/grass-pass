@@ -26,6 +26,7 @@ import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
 import { localDay } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
+import type { TipsTrace } from "@/lib/tips/generate";
 import { localModelClock, resetLocalPassSlots, takeLocalPassSlot } from "./local-clock";
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
@@ -209,6 +210,8 @@ export type MakeDeps = {
    */
   requireAccount?: boolean;
   account?: Account | null;
+  /** Trip tips: recording and tests only (what the tips call was sent and answered, src/lib/tips/generate.ts). */
+  tipsTrace?: (t: TipsTrace) => void;
 };
 
 export type MakeOutcome =
@@ -546,6 +549,7 @@ async function buildCounted(ctx: {
         onPoolsReady: startOctober,
         featuresPlan,
         exclude,
+        ...(ctx.deps.tipsTrace ? { tipsTrace: ctx.deps.tipsTrace } : {}),
         ...(clock ? { clock } : {}),
       },
     );

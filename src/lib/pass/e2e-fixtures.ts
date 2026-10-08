@@ -23,6 +23,9 @@ export const E2E_FIXTURE_FILES = [
   "pass-arbor-hills-lucky-live.json",
   // Round 8: a 13+ pass made by the round-8 code (pass-arbor-hills-13plus-r8-live.json shares its id with the first file).
   "pass-white-rock-13plus-r8-live.json",
+  // Trip tips (2026-10-08): a real pass with the model's tips, and the same pass with the rules list (derived, see the file).
+  "pass-celebration-6to10-tips-live.json",
+  "pass-celebration-6to10-tips-rules.json",
 ] as const;
 
 export const E2E_FIXTURE_ENV = "GP_E2E_FIXTURE_PASSES";

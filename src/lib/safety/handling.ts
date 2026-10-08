@@ -70,6 +70,8 @@ const ANIMAL_FOOD = new Set(["bread", "crumbs", "crumb", "seeds", "seed", "food"
 const TAKE_HOME_SAFE = new Set(["trash", "litter", "rubbish", "garbage", "wrappers", "wrapper", "photo", "photos", "picture", "pictures", "memories", "memory", "pass", "map", "sheet", "paper", "stuff", "things", "bag", "bags", "lunch"]);
 const takeHome = (after: readonly string[]): boolean => {
   const k = after.slice(0, 6).indexOf("home");
+  // Trip tips (2026-10-08): "bring water bottles FROM home" is the opposite direction, never taking a find away.
+  if (k > 0 && after[k - 1] === "from") return false;
   return k >= 0 && !after.slice(0, k).some((w) => TAKE_HOME_SAFE.has(w));
 };
 const CONDITIONAL: Record<string, (after: readonly string[]) => boolean> = {

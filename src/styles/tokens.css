@@ -69,6 +69,11 @@
   --gp-line: #78867c; /* input outlines and control borders: 3.7:1 on white, 3.3:1 on the background */
   --gp-ring: #137838; /* focus ring, 4.9:1 on the background */
   --gp-shadow: rgb(16 41 26 / 0.12);
+  /* Sign-in buttons (Google sign-in branding: neutral light button, #1F1F1F text, #747775 outline; GitHub uses the same). */
+  --gp-oauth: #ffffff;
+  --gp-oauth-foreground: #1f1f1f; /* 16.4:1 */
+  --gp-oauth-border: #747775; /* 4.6:1 on white */
+  --gp-oauth-hover: #f2f2f2;
 }
 
 /* Dark mode: the system preference unless the visitor picked light; or an explicit dark pick. */
@@ -111,6 +116,10 @@
     --gp-line: #7f907c; /* 4.4:1 on the card */
     --gp-ring: #ffc72c;
     --gp-shadow: rgb(0 0 0 / 0.45);
+    --gp-oauth: #131314; /* Google sign-in branding, dark */
+    --gp-oauth-foreground: #e3e3e3;
+    --gp-oauth-border: #8e918f;
+    --gp-oauth-hover: #1f2021;
   }
 }
 
@@ -152,6 +161,10 @@
   --gp-line: #7f907c;
   --gp-ring: #ffc72c;
   --gp-shadow: rgb(0 0 0 / 0.45);
+  --gp-oauth: #131314;
+  --gp-oauth-foreground: #e3e3e3;
+  --gp-oauth-border: #8e918f;
+  --gp-oauth-hover: #1f2021;
 }
 
 /* Inside the dark band and the footer the focus ring is sunflower (green on ink is too faint). */

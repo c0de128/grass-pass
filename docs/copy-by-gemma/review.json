@@ -965,14 +965,16 @@
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Sign in to make new passes and report your finds"
+      "shipped": "Sign in to make new passes and report your finds",
+      "removedAfterRun": "Kevin picked a new /signin layout on 2026-10-08 (option A: one ticket card titled just \"Sign in\"), so this card heading is gone; the decision is kept as history."
     },
     {
       "id": "signin.why.1",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Garbled: 'Sign in to make 2 a day'.",
-      "shipped": "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it."
+      "shipped": "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.",
+      "removedAfterRun": "Kevin picked a new /signin layout on 2026-10-08 (option A): \"Why sign in?\" became three short lines with check marks, so this bullet is gone; the decision is kept as history."
     },
     {
       "id": "signin.privacy.link",

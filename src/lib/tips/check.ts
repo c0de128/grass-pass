@@ -4,7 +4,10 @@
  * SAFETY (drop the tip): a web address, @handle or phone number (src/lib/safety/contact.ts); an instruction to touch,
  * pick, catch, feed or hold something (src/lib/safety/handling.ts, the same check as the clues); going into the water
  * (swim, wade, splash in the creek...); drinking from a creek or pond; leaving the path; medicine or doses; eating
- * anything found in the park.
+ * anything found in the park. Round 10 added pair rules (`riskyTip`): a risky action together with water, ice, a hazard
+ * or an animal in any wording ("Cool off in the creek", "Walk on the frozen pond", "Follow the snake", "Throw bread to
+ * the ducks"), unless the same clause says not to. Tips may still NAME a hazard to warn about it ("Watch for snakes"),
+ * so the clue word lists (blockedWordIn, dangerClueWord) are not used here.
  *
  * GROUNDING (drop the tip): every place, weather or wildlife word in a tip must be backed by a real input fact
  * (`TOPICS`: "creek" needs a mapped creek, "rain" a rain chance of 30% or more, "ticks" a tick sighting...), and every
@@ -82,6 +85,81 @@ const UNSAFE: readonly RegExp[] = [
   /\b(forag\w*|berries|mushrooms|edible|feed(?:ing)? (?:the )?(?:ducks?|birds?|geese|squirrels?|animals?|fish|turtles?)|pet the|hold (?:a|the) (?:snake|frog|toad|turtle|lizard))\b/i,
 ];
 
+/*
+ * Round 10 (SEC-10-01 / Q-10-02): the phrase list above missed most ways of saying "go into the water" ("Cool off in
+ * the creek", "Walk on the frozen pond", "Drink the creek water"). These PAIR rules look for a risky action together
+ * with water, ice, a hazard or an animal, in any wording. A rule is skipped when its match is negated in the same
+ * clause ("Don't let the kids walk on the frozen pond", "Stay away from the fire ant mounds"). The probe list in
+ * tests/unit/trip-tips-safety-r10.test.ts is permanent: every probe there must stay dropped.
+ */
+/** Natural water nobody should drink from or get into. */
+const NAT = String.raw`(?:creeks?|streams?|ponds?|lakes?|rivers?|brooks?|puddles?|bayous?|marsh(?:es)?|swamps?|waterfalls?)`;
+/** Places to get into: natural water, "the water", ice and fountains (a splash pad is not on this list: it is for playing in). */
+const INTO = String.raw`(?:${NAT}|water|ice|fountains?|creek ?beds?|stream ?beds?|river ?beds?|shallows)`;
+/** Words that make the water word a place name or a dry spot next to it ("the creek trail", "the lake shore"). */
+const DRY_AFTER = String.raw`(?!['’]s\b|\s+(?:trails?|paths?|loops?|bridges?|side|banks?|shores?|edge|overlook|walk|park|map|area|bottles?|from|for|fountains?|shoes?|views?))`;
+/** Movement or contact verbs that put a body in or on the water when followed by in/into/on/across ... water. */
+const ENTRY_VERBS = String.raw`(?:get|go|goes|going|went|step|stand|walk|wander|play|cool|splash|sit|jump|put|dip|stick|hop|climb|run|slide|skate|lie|lay|float|soak|reach|explore|venture|wash|rinse|dangle|kick|paddle|stomp|race|ride|bike|stay|cross|tiptoe)\w*`;
+const HAZARDS = String.raw`(?:snakes?|copperheads?|cottonmouths?|rattlesnakes?|rattlers?|water moccasins?|moccasins?|poison (?:ivy|oak|sumac)|fire ants?|ants?|ant ?hills?|ant mounds?|mounds?|wasps?|bees?|hornets?|yellow ?jackets?|nests?|hives?|nettles?|caterpillars?|spiders?|webs?|scorpions?|centipedes?|ticks?|chiggers?|mushrooms?|fung(?:us|i)|toadstools?|berries|coyotes?|bobcats?|alligators?|gators?|holes?|burrows?|dens?)`;
+const ANIMALS = String.raw`(?:ducks?|ducklings?|geese|goose|goslings?|swans?|birds?|herons?|egrets?|squirrels?|rabbits?|bunn(?:y|ies)|turtles?|frogs?|toads?|tadpoles?|lizards?|deer|fawns?|armadillos?|raccoons?|possums?|opossums?|skunks?|foxes|fox|animals?|wildlife|fish|crawdads?|crayfish|minnows?|${HAZARDS})`;
+/** Seeking out a hazard ("Look for snakes"); "watch for" is the warning wording and stays allowed. */
+const SEEK_VERBS = String.raw`(?:look\w* (?:for|under|in(?:side|to)?)|search\w* for|hunt\w* for|find|spot|go see|visit)`;
+/** Verbs that are contact or risk whenever a hazard or an animal is in the same tip. */
+const RISK_VERBS = String.raw`(?:touch\w*|pick\w*|pull\w*|collect\w*|gather\w*|smell\w*|sniff\w*|follow\w*|chas\w+|pok\w+|prod\w*|flip\w*|lift\w*|catch\w*|caught|hold\w*|pet|pets|petting|feed\w*|fed|kick\w*|stomp\w*|step on|grab\w*|disturb\w*|bother\w*|teas\w+|approach\w*|corner\w*|dig\w*|taste\w*|tasting|eat|eats|eating|lick\w*|uproot\w*|play\w* with|get close\w*|get closer|go close\w*|up close|scoop\w*|net|trap\w*|keep (?:one|it|them)|take (?:one|it|them) home|pick\w* up|shake\w*|stir\w*|squish\w*|crush\w*|step\w* (?:in|into|on))`;
+
+type PairRule = { name: string; re: RegExp };
+const PAIR_RULES: readonly PairRule[] = [
+  // Drinking or filling from natural water ("Drink the creek water", "Fill your bottles from the creek", "Sip the lake water").
+  { name: "drink", re: new RegExp(String.raw`\b(?:drink|sip|gulp|fill|refill|filter|scoop)\w*\b(?:\s+[\w']+){0,4}?\s+(?:from|out of|at|in|with)\s+(?:the\s+|a\s+|that\s+|this\s+)?(?:\w+\s+)?${NAT}\b`, "i") },
+  { name: "drink", re: new RegExp(String.raw`\b(?:drink|sip|gulp|fill|refill|filter|tast)\w*\b.*\b(?:${NAT}|untreated|wild)[- ]water\b|\b(?:${NAT}|untreated|wild)[- ]water\b.*\b(?:drink|sip|gulp|safe to|refill|fill)\w*\b`, "i") },
+  // Into or onto the water or the ice ("Cool off in the creek", "Walk on the frozen pond", "Stand in the shallow water").
+  { name: "water", re: new RegExp(String.raw`\b${ENTRY_VERBS}\b(?:\s+[\w']+){0,3}?\s+(?:in|into|on|onto|across|through|under)\s+(?:the\s+|a\s+|that\s+|this\s+|its\s+|their\s+|some\s+)?(?:[\w']+\s+)?${INTO}\b${DRY_AFTER}`, "i") },
+  // A body part in the water ("their feet in the pond", "toes in the creek").
+  { name: "water", re: new RegExp(String.raw`\b(?:feet|foot|toes?|hands?|legs?|fingers?|heads?|faces?|boots|shoes|bodies|body)\s+(?:in|into|under)\s+(?:the\s+|a\s+|some\s+)?(?:[\w']+\s+)?${INTO}\b${DRY_AFTER}`, "i") },
+  // Words that only mean getting wet or handling water life.
+  { name: "water", re: /\b(barefoot\w*|bare feet|water shoes|swim ?suits?|bathing suits?|towels? for the (?:creek|pond|lake|river|water)|creek ?beds?|stream ?beds?|river ?beds?|fishing|fish(?:ing)? (?:poles?|rods?|lines?|hooks?)|fish for|bait|nets?|scoop\w*|tadpoles?|crawdads?|crayfish|minnows?|thin ice|on the ice|frozen (?:creek|stream|pond|lake|river|water|puddle)s?)\b/i },
+  { name: "water", re: new RegExp(String.raw`\b(?:go|get|climb|head|walk|run|scramble)\w*\s+down\s+(?:to|into)\s+(?:the\s+)?(?:${INTO}|water'?s edge|banks?|shores?|edge)\b|\blean\w*\s+(?:over|out)\b|\b(?:sit|stand|play|lean|wait)\w*\s+(?:at|on|by)\s+(?:the\s+)?(?:very\s+)?(?:edge|water's edge|water’s edge)\b`, "i") },
+  // Throwing things in or at wildlife ("Throw bread to the ducks", "Toss rocks into the pond", "Skip stones on the lake").
+  { name: "wildlife", re: /\b(?:throw|toss|skip|chuck|fling|drop)\w*\b(?:\s+[\w']+){0,4}?\s+(?:bread|crumbs?|food|seeds?|snacks?|crackers?|chips|popcorn|rocks?|stones?|pebbles?|sticks?|things|anything)\b/i },
+  { name: "wildlife", re: new RegExp(String.raw`\b(?:bread|crumbs?|crackers?|popcorn|bird ?seed|duck food)\b.*\b${ANIMALS}\b|\b${ANIMALS}\b.*\b(?:bread|crumbs?|crackers?|popcorn|bird ?seed|duck food)\b`, "i") },
+  // Contact or chasing with a hazard or an animal, in any order ("Smell the poison ivy", "Follow the snake", "Poke the snake hole").
+  { name: "hazard", re: new RegExp(String.raw`\b${RISK_VERBS}\b(?:\s+[\w'’]+){0,3}?\s+${ANIMALS}\b`, "i") },
+  { name: "hazard", re: new RegExp(String.raw`\b${SEEK_VERBS}\b(?:\s+[\w'’]+){0,3}?\s+${HAZARDS}\b`, "i") },
+  { name: "hazard", re: new RegExp(String.raw`\b${HAZARDS}\b(?:\s+[\w'’]+){0,4}?\s+(?:to\s+)?(?:touch|pick|pull|collect|smell|sniff|follow|chase|poke|catch|hold|pet|feed|grab|taste|eat|lick|play with)\b`, "i") },
+  // Climbing rocks, trees, banks, walls or anything by the water.
+  { name: "climb", re: new RegExp(String.raw`\bclimb\w*\b(?:\s+(?:on|up|onto|over|down))?(?:\s+(?:the|a|those|these|some|big)\b)?(?:\s+[\w']+)?\s+(?:rocks?|boulders?|stones?|trees?|branch(?:es)?|cliffs?|bluffs?|ledges?|walls?|fences?|dams?|banks?|railings?|rails?|logs?|spillways?)\b|\bclimb\w*\b.*\b${INTO}\b|\b${NAT}\b.*\bclimb\w*\b`, "i") },
+  // Looking or reaching under things where snakes and stinging bugs hide.
+  { name: "hazard", re: /\b(?:under|beneath|underneath)\s+(?:the\s+|a\s+|any\s+|some\s+)?(?:big\s+|old\s+|fallen\s+|loose\s+)?(?:rocks?|stones?|logs?|boards?|leaves|leaf piles?|bark|brush|bushes)\b/i },
+  // Keeping or collecting things from the park ("Bring a jar", "collect caterpillars"); gathering the group is fine.
+  { name: "collect", re: /\b(?:jars?|buckets?|bug catchers?|bug boxes?|specimen\w*)\b|\b(?:collect|gather)\w*\b(?!\s+(?:your\s+|the\s+|all\s+|any\s+)?(?:trash|litter|garbage|wrappers?|rubbish|belongings|things|stuff|bags?|gear|group|kids|everyone|together|at|in|around|by|near|for|before|after)\b)/i },
+  // Smelling, tasting or licking anything out there.
+  { name: "hazard", re: /\b(?:smell|sniff|taste|lick|chew)\w*\b/i },
+];
+
+/** A negation in the same clause before the match ("Don't let the kids walk on the ice", "Stay away from the mounds"). */
+const NEGATED_BEFORE = /\b(?:don't|dont|do not|never|no|not|avoid\w*|stay (?:off|out|away|clear|back)|keep (?:off|out|away|clear|back|\w+ (?:off|out|away|clear|back))|away from|instead of|without|rather than|nobody|steer clear|skip|beware)\b/i;
+
+/** "Don't forget", "never mind": not a negation of what follows. */
+const NOT_A_NEGATION = /\b(?:don't|dont|do not|never)\s+(?:forget|worry|miss|mind|hesitate|wait|be afraid|be shy)\b/gi;
+
+/** The pair rule a tip breaks ("water", "drink", "hazard"...), or null. */
+export function riskyTip(tip: string): string | null {
+  // "catch a glimpse of the herons" is looking, not catching.
+  const text = tip.replace(/[’‘]/g, "'").replace(/\bcatch(?:es|ing)?\s+(?:a\s+)?(?:glimpse|sight|view)\s+of\b/gi, "see");
+  for (const rule of PAIR_RULES) {
+    const re = new RegExp(rule.re.source, `${rule.re.flags.replace("g", "")}g`);
+    for (const m of text.matchAll(re)) {
+      // The clause the match is in: after the last , ; : . ! ? dash, or "and/then/so/but/or" before it.
+      const before = text.slice(0, m.index ?? 0);
+      const cut = Math.max(...[...before.matchAll(/[,;:.!?—]|\s-\s|\b(?:and|then|so|but|or|while)\b/gi)].map((c) => (c.index ?? 0) + c[0].length), 0);
+      const clause = before.slice(cut).replace(NOT_A_NEGATION, " ");
+      if (NEGATED_BEFORE.test(clause)) continue;
+      return rule.name;
+    }
+  }
+  return null;
+}
+
 /** A kid's grown-up is the reader on 4-13 passes; on a 13+ pass the reader holds it alone. */
 const KID_WORDS = /\b(kids?|kiddos?|child(?:ren)?|little ones?|toddlers?|your young\w*|grown-?ups?)\b/i;
 
@@ -102,6 +180,7 @@ export function unsafeTip(tip: string): "contact" | "handling" | "unsafe" | null
   if (hasUrlOrMarkup(tip)) return "contact";
   if (handlingInstruction(tip)) return "handling";
   if (UNSAFE.some((re) => re.test(tip))) return "unsafe";
+  if (riskyTip(tip)) return "unsafe";
   return null;
 }
 

@@ -158,7 +158,7 @@ export function TripTips({ tips, today }: { tips: TripTipsData | undefined; toda
       <p className="text-xs text-muted-foreground" data-testid="trip-tips-credit">
         {tips.source === "model" && tips.model ? (
           <>
-            Written by {modelShortName(tips.model)} (open model) from {fromWhat}. Code checked that every tip is safe and based on a real fact.
+            Written by {modelShortName(tips.model)} (open model) from {fromWhat}. Code dropped any tip that broke a safety rule or wasn&apos;t based on a real fact.
           </>
         ) : (
           <>

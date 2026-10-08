@@ -492,7 +492,7 @@ export default function HowItWorksPage() {
               <li>Check every clue; remove failures.</li>
               <li>Pick the spot, draw the map, measure the walk.</li>
               <li>Write every number, date, safety line and answer.</li>
-              <li>Write the weather card; drop any trip tip that isn&apos;t safe or based on a real fact.</li>
+              <li>Write the weather card; drop any trip tip that breaks a safety rule or isn&apos;t based on a real fact.</li>
             </ul>
           </div>
         </div>

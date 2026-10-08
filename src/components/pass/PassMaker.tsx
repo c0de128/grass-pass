@@ -752,10 +752,11 @@ function ChoiceTicket({ parkName, band, onChangePark, onChangeAge }: { parkName:
           {AGE_BAND_INFO[band].label}
         </span>
       </div>
-      <dl className="grid gap-4 px-5 py-4 sm:grid-cols-[1fr_auto] sm:items-center">
+      {/* Two equal columns: an "auto" column sized to the long age hint squeezed the park name to one letter wide (Kevin 2026-10-08). */}
+      <dl className="grid gap-4 px-5 py-4 sm:grid-cols-2 sm:items-start">
         <div className="flex min-w-0 flex-col gap-0.5">
           <dt className="text-xs font-bold tracking-widest text-muted-foreground uppercase">Park</dt>
-          <dd className="font-heading text-2xl leading-tight font-extrabold">{parkName}</dd>
+          <dd className="font-heading text-2xl leading-tight font-extrabold break-words">{parkName}</dd>
           <dd>
             <button type="button" onClick={onChangePark} className="inline-flex min-h-11 items-center text-sm font-semibold text-link underline underline-offset-4">
               Change park

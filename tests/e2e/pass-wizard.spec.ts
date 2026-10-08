@@ -142,6 +142,9 @@ test("sign-in resume: the park + age come back on step 3; Back walks to Explorer
   await expect(page).toHaveURL(/\/#find$/);
   await expect(dialog.getByTestId("choice-ticket")).toContainText("Celebration Park");
   await expect(dialog.getByTestId("chosen-age")).toHaveText("Ages 6-10");
+  // Kevin 2026-10-08: the park name was squeezed to one letter wide by the age column; both get room.
+  const cols = dialog.getByTestId("choice-ticket").locator("dl > div");
+  for (const i of [0, 1]) expect((await cols.nth(i).boundingBox())?.width ?? 0, `ticket column ${i} width`).toBeGreaterThan(150);
   // Signed out: the sign-in card (GitHub / Google / judge) instead of "Make my pass".
   await expect(dialog.getByTestId("sign-in-card").getByRole("heading", { name: "Sign in to make this pass" })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Make my pass" })).toHaveCount(0);

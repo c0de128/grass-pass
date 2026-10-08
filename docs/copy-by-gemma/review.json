@@ -276,7 +276,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Kevin's own words (his home copy reference); kept.",
-      "shipped": "Pick a park & age"
+      "shipped": "Pick a park & age",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.1.body",
@@ -284,28 +285,32 @@
       "stage": "agent-review",
       "reason": "Drops 'your kid' for 'an age group'; less personal. Fact fix (13+ band, 2026-10-07, builder, not Gemma): Kevin added a fourth age band, Teens & adults (13+), so the list of ages now names it.",
       "shipped": "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13 (or 13+ for teens and adults).",
-      "factFixAfterRun": true
+      "factFixAfterRun": true,
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.2.title",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "'We read the park' is more vivid.",
-      "shipped": "We read the park"
+      "shipped": "We read the park",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.2.body",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Less accurate: we count what reviews mention, we don't use the reviews; drops 'nearby'.",
-      "shipped": "Its map, the last {days} days of wildlife sightings nearby, and what visitor reviews mention."
+      "shipped": "Its map, the last {days} days of wildlife sightings nearby, and what visitor reviews mention.",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.3.title",
       "decision": "unchanged",
       "stage": "gemma",
       "reason": "Gemma returned the current text unchanged.",
-      "shipped": "AI writes, code checks"
+      "shipped": "AI writes, code checks",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.3.body",
@@ -313,21 +318,24 @@
       "stage": "agent-review",
       "reason": "True and simpler; the open-model fact is two lines above. Gemma draft, edited: 'asks once more' -> 'asks again'. Fact fix after the rebase onto main b5a862b (not Gemma): a pass now makes 1-3 model calls (MAX_MODEL_CALLS = 3), so 'once more' / 'one refill' is no longer true.",
       "shipped": "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks again if too many fail.",
-      "factFixAfterRun": true
+      "factFixAfterRun": true,
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.4.title",
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Print and go"
+      "shipped": "Print and go",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.4.body",
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "One page. The kid gets the hunt and you keep the answer key."
+      "shipped": "One page. The kid gets the hunt and you keep the answer key.",
+      "removedAfterRun": "Kevin replaced the four 30-second cards with the winding-path explainer on 2026-10-08 (src/components/how/HowPath.tsx); the decision is kept as history."
     },
     {
       "id": "how.quick.note",

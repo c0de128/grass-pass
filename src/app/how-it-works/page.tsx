@@ -26,6 +26,7 @@ import type { ReactNode } from "react";
 import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
+import { HowPath } from "@/components/how/HowPath";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
@@ -152,21 +153,6 @@ function Steps({ steps }: { steps: readonly Step[] }) {
 }
 
 const bullets = "flex list-disc flex-col gap-1.5 pl-5";
-
-const QUICK: readonly { icon: LucideIcon; title: string; body: string }[] = [
-  { icon: MapPinned, title: "Pick a park & age", body: "A real park near you, plus your kid's age: 4-6, 6-10 or 10-13 (or 13+ for teens and adults)." },
-  {
-    icon: Database,
-    title: "We read the park",
-    body: `Its map, the last ${WILD_WINDOW_DAYS} days of wildlife sightings nearby, and what visitor reviews mention.`,
-  },
-  {
-    icon: Bot,
-    title: "AI writes, code checks",
-    body: "Gemma 4 writes kid-friendly clues. Code checks every one for accuracy and asks again if too many fail.",
-  },
-  { icon: Printer, title: "Print and go", body: "One page. The kid gets the hunt and you keep the answer key." },
-];
 
 export default function HowItWorksPage() {
   const modelId = configuredModelId();
@@ -451,7 +437,7 @@ export default function HowItWorksPage() {
           <nav aria-label="On this page">
             <ul className="flex flex-wrap gap-2">
               {[
-                ["#quick", "The 30-second version"],
+                ["#quick", "The 10-second version"],
                 ["#steps", "Step by step"],
                 ["#ai-role", "What the AI does"],
                 ["#why-open", "Why an open model"],
@@ -473,34 +459,30 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <Band id="quick" eyebrow="The 30-second version" title="Pick a park. Print a pass. Phone away.">
-        <ol className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-          {QUICK.map((q, i) => (
-            <li key={q.title} className="flex flex-col gap-3 rounded-3xl bg-card p-5 ring-1 ring-border">
-              <div className="flex items-center justify-between">
-                <span aria-hidden="true" className="flex size-11 items-center justify-center rounded-2xl bg-primary text-primary-foreground">
-                  <q.icon className="size-5" />
-                </span>
-                <span aria-hidden="true" className="font-heading text-4xl leading-none font-extrabold text-muted">
-                  {i + 1}
-                </span>
-              </div>
-              <h3 className="text-lg font-extrabold text-ink">
-                <span className="sr-only">{i + 1}. </span>
-                {q.title}
-              </h3>
-              <p className="text-sm leading-relaxed text-muted-foreground">{q.body}</p>
-            </li>
-          ))}
-        </ol>
-        <p className="flex items-start gap-2 text-muted-foreground">
-          <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
-          <span>
-            A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing,
-            the pass says &quot;No data available&quot; and why.
-          </span>
-        </p>
-      </Band>
+      {/* Kevin, 2026-10-08: the 10-second version is a winding trail (src/components/how/HowPath.tsx). */}
+      <section id="quick" aria-labelledby="quick-title" className="gp-how-path relative scroll-mt-28 sm:scroll-mt-16">
+        <div className="mx-auto flex max-w-5xl flex-col gap-8 px-5 pt-6 pb-24 md:px-8 md:pb-28 lg:pt-8">
+          <div className="flex max-w-3xl flex-col gap-3">
+            <p className="text-xs font-bold tracking-widest text-primary uppercase">The 10-second version</p>
+            <h2 id="quick-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
+              Pick a park. Print a pass. Phone away.
+            </h2>
+            <p className="flex items-start gap-2 text-muted-foreground">
+              <Smartphone aria-hidden="true" className="mt-1 size-4 shrink-0" />
+              <span>
+                A new pass usually takes 10-30 seconds, up to about a minute and a half on a slow evening. If data is missing,
+                the pass says &quot;No data available&quot; and why.
+              </span>
+            </p>
+          </div>
+          <HowPath />
+        </div>
+        {/* A soft ridge from the dark ending into the next band (decorative). */}
+        <svg aria-hidden="true" focusable="false" viewBox="0 0 1440 64" preserveAspectRatio="none" className="pointer-events-none absolute inset-x-0 bottom-0 h-10 w-full md:h-16">
+          <path d="M0 40 C 180 14 340 10 520 30 C 700 50 860 22 1040 18 C 1220 14 1340 30 1440 24 V64 H0Z" fill="var(--gp-how-road-3)" opacity="0.35" />
+          <path d="M0 52 C 220 30 420 34 640 46 C 860 58 1080 36 1260 38 C 1350 39 1410 44 1440 46 V64 H0Z" fill="color-mix(in oklab, var(--gp-muted) 70%, var(--gp-background))" />
+        </svg>
+      </section>
 
       <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted" width="max-w-4xl">
         <p className="-mt-2 max-w-[65ch]">

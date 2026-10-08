@@ -470,3 +470,248 @@ dialog.gp-wizard::backdrop {
 .gp-wizard-sheet > header :focus-visible {
   outline-color: var(--gp-sun);
 }
+
+/*
+ * Weather card on the pass page (src/components/pass/WeatherCard.tsx; screen only, hidden in print). A sky that matches
+ * the forecast: sky-to-sun for a fair day, grey-blue for rain, amber for heat, storm grey to red for danger. The palette
+ * is below for light and dark; tests/unit/weather-ui.test.tsx reads it and checks every text pair >= 4.5:1 (WCAG AA).
+ */
+:root {
+  --wx-sunny-top: #cdeaf8;
+  --wx-sunny-bottom: #fff1c7;
+  --wx-cloudy-top: #dfe6ea;
+  --wx-cloudy-bottom: #eef2e6;
+  --wx-rain-top: #c7d6e6;
+  --wx-rain-bottom: #e4ebf2;
+  --wx-hot-top: #ffd27a;
+  --wx-hot-bottom: #ffefd0;
+  --wx-cold-top: #d7e8f6;
+  --wx-cold-bottom: #f2f7fb;
+  --wx-storm-top: #c9cfda;
+  --wx-storm-bottom: #fbdcd6;
+  --wx-text: #10291a;
+  --wx-text-muted: #3c4f42;
+  --wx-chip-bg: rgb(255 255 255 / 0.72);
+  --wx-chip-line: rgb(16 41 26 / 0.12);
+  --wx-cloud-fill: #ffffff;
+  --wx-cloud-dark-fill: #8d9aab;
+  --wx-cloud-shade-line: rgb(16 41 26 / 0.08);
+  --wx-rain-fill: #2f9bd0;
+  --wx-snow-line: #5b9ccc;
+  --wx-sun-fill: #ffc72c;
+  --wx-hot-fill: #f08a24;
+  --wx-alert-fill: #b42318;
+  --wx-alert-mark: #ffffff;
+  --wx-alert-icon: #b42318;
+  --wx-dot-fill: #137838;
+  --wx-badge-great: #137838;
+  --wx-badge-great-text: #ffffff;
+  --wx-badge-good: #10291a;
+  --wx-badge-good-text: #eef3e2;
+  --wx-badge-caution: #ffc72c;
+  --wx-badge-caution-text: #10291a;
+  --wx-badge-warning: #9a4a00;
+  --wx-badge-warning-text: #ffffff;
+  --wx-badge-danger: #b42318;
+  --wx-badge-danger-text: #ffffff;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --wx-sunny-top: #0f2a3c;
+    --wx-sunny-bottom: #1b2f1c;
+    --wx-cloudy-top: #1b272b;
+    --wx-cloudy-bottom: #16231a;
+    --wx-rain-top: #12243a;
+    --wx-rain-bottom: #141f29;
+    --wx-hot-top: #3a2708;
+    --wx-hot-bottom: #261f10;
+    --wx-cold-top: #132739;
+    --wx-cold-bottom: #15222d;
+    --wx-storm-top: #1f1d2c;
+    --wx-storm-bottom: #2e1514;
+    --wx-text: #e6eedb;
+    --wx-text-muted: #b9c8b4;
+    --wx-chip-bg: rgb(5 13 7 / 0.4);
+    --wx-chip-line: rgb(230 238 219 / 0.14);
+    --wx-cloud-fill: #dfe7ee;
+    --wx-cloud-dark-fill: #66758a;
+    --wx-cloud-shade-line: rgb(16 41 26 / 0.12);
+    --wx-rain-fill: #5bc0eb;
+    --wx-snow-line: #cfe6f7;
+    --wx-sun-fill: #ffc72c;
+    --wx-hot-fill: #ff9d45;
+    --wx-alert-fill: #ff8a7a;
+    --wx-alert-mark: #2a0b07;
+    --wx-alert-icon: #ff8a7a;
+    --wx-dot-fill: #4cc274;
+    --wx-badge-great: #4cc274;
+    --wx-badge-great-text: #0b1a10;
+    --wx-badge-good: #e6eedb;
+    --wx-badge-good-text: #0d1a11;
+    --wx-badge-caution: #ffc72c;
+    --wx-badge-caution-text: #10291a;
+    --wx-badge-warning: #ffb35c;
+    --wx-badge-warning-text: #1f1300;
+    --wx-badge-danger: #ff8a7a;
+    --wx-badge-danger-text: #2a0b07;
+  }
+}
+:root[data-theme="dark"] {
+  --wx-sunny-top: #0f2a3c;
+  --wx-sunny-bottom: #1b2f1c;
+  --wx-cloudy-top: #1b272b;
+  --wx-cloudy-bottom: #16231a;
+  --wx-rain-top: #12243a;
+  --wx-rain-bottom: #141f29;
+  --wx-hot-top: #3a2708;
+  --wx-hot-bottom: #261f10;
+  --wx-cold-top: #132739;
+  --wx-cold-bottom: #15222d;
+  --wx-storm-top: #1f1d2c;
+  --wx-storm-bottom: #2e1514;
+  --wx-text: #e6eedb;
+  --wx-text-muted: #b9c8b4;
+  --wx-chip-bg: rgb(5 13 7 / 0.4);
+  --wx-chip-line: rgb(230 238 219 / 0.14);
+  --wx-cloud-fill: #dfe7ee;
+  --wx-cloud-dark-fill: #66758a;
+  --wx-cloud-shade-line: rgb(16 41 26 / 0.12);
+  --wx-rain-fill: #5bc0eb;
+  --wx-snow-line: #cfe6f7;
+  --wx-sun-fill: #ffc72c;
+  --wx-hot-fill: #ff9d45;
+  --wx-alert-fill: #ff8a7a;
+  --wx-alert-mark: #2a0b07;
+  --wx-alert-icon: #ff8a7a;
+  --wx-dot-fill: #4cc274;
+  --wx-badge-great: #4cc274;
+  --wx-badge-great-text: #0b1a10;
+  --wx-badge-good: #e6eedb;
+  --wx-badge-good-text: #0d1a11;
+  --wx-badge-caution: #ffc72c;
+  --wx-badge-caution-text: #10291a;
+  --wx-badge-warning: #ffb35c;
+  --wx-badge-warning-text: #1f1300;
+  --wx-badge-danger: #ff8a7a;
+  --wx-badge-danger-text: #2a0b07;
+}
+
+.gp-wx {
+  --wx-top: var(--wx-sunny-top);
+  --wx-bottom: var(--wx-sunny-bottom);
+  --wx-fg: var(--wx-text);
+  --wx-muted: var(--wx-text-muted);
+  --wx-chip: var(--wx-chip-bg);
+  --wx-chip-ring: var(--wx-chip-line);
+  --wx-cloud: var(--wx-cloud-fill);
+  --wx-cloud-dark: var(--wx-cloud-dark-fill);
+  --wx-cloud-shade: var(--wx-cloud-shade-line);
+  --wx-rain: var(--wx-rain-fill);
+  --wx-snow: var(--wx-snow-line);
+  --wx-sun: var(--wx-sun-fill);
+  --wx-sun-core: #ffdc6b;
+  --wx-hot: var(--wx-hot-fill);
+  --wx-hot-core: #ffb066;
+  --wx-hill-back: var(--gp-hill-2);
+  --wx-hill-front: var(--gp-hill-3);
+  --wx-grass: var(--gp-hill-4);
+  --wx-alert: var(--wx-alert-fill);
+  --wx-alert-fg: var(--wx-alert-mark);
+  --wx-alert-text: var(--wx-alert-icon);
+  --wx-dot: var(--wx-dot-fill);
+  --wx-badge: var(--wx-badge-great);
+  --wx-badge-fg: var(--wx-badge-great-text);
+  /* The ring follows the card's text colour (green on a sky can be faint). */
+  --gp-ring: var(--wx-text);
+  background: linear-gradient(160deg, var(--wx-top) 0%, var(--wx-bottom) 100%);
+  color: var(--wx-fg);
+}
+.gp-wx:is([data-look="cloudy"], [data-look="fog"], [data-look="none"]) {
+  --wx-top: var(--wx-cloudy-top);
+  --wx-bottom: var(--wx-cloudy-bottom);
+}
+.gp-wx[data-look="rain"] {
+  --wx-top: var(--wx-rain-top);
+  --wx-bottom: var(--wx-rain-bottom);
+}
+.gp-wx[data-look="hot"] {
+  --wx-top: var(--wx-hot-top);
+  --wx-bottom: var(--wx-hot-bottom);
+}
+.gp-wx:is([data-look="cold"], [data-look="snow"]) {
+  --wx-top: var(--wx-cold-top);
+  --wx-bottom: var(--wx-cold-bottom);
+}
+.gp-wx:is([data-look="storm"], [data-look="alert"]) {
+  --wx-top: var(--wx-storm-top);
+  --wx-bottom: var(--wx-storm-bottom);
+}
+.gp-wx[data-mood="good"] {
+  --wx-badge: var(--wx-badge-good);
+  --wx-badge-fg: var(--wx-badge-good-text);
+}
+.gp-wx[data-mood="caution"] {
+  --wx-badge: var(--wx-badge-caution);
+  --wx-badge-fg: var(--wx-badge-caution-text);
+}
+.gp-wx[data-mood="warning"] {
+  --wx-badge: var(--wx-badge-warning);
+  --wx-badge-fg: var(--wx-badge-warning-text);
+}
+.gp-wx[data-mood="danger"] {
+  --wx-badge: var(--wx-badge-danger);
+  --wx-badge-fg: var(--wx-badge-danger-text);
+}
+/* Warning and danger: a thick stripe on the left edge in the badge colour (the mood is also in words). */
+.gp-wx:is([data-mood="warning"], [data-mood="danger"]) {
+  box-shadow: inset 8px 0 0 var(--wx-badge);
+}
+.gp-wx-badge {
+  background: var(--wx-badge);
+  color: var(--wx-badge-fg);
+}
+
+/* Gentle motion, only when the visitor allows it: rays turn, clouds drift, drops and flakes fall. Nothing flashes. */
+@keyframes gp-wx-spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+@keyframes gp-wx-drift {
+  from {
+    transform: translateX(-3px);
+  }
+  to {
+    transform: translateX(3px);
+  }
+}
+@keyframes gp-wx-fall {
+  0% {
+    transform: translateY(-6px);
+    opacity: 0;
+  }
+  25% {
+    opacity: 1;
+  }
+  100% {
+    transform: translateY(10px);
+    opacity: 0;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-wx-rays {
+    animation: gp-wx-spin 40s linear infinite;
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .gp-wx-cloud,
+  .gp-wx-wave {
+    animation: gp-wx-drift 4s ease-in-out infinite alternate;
+  }
+  .gp-wx-drop {
+    animation: gp-wx-fall 1.6s ease-in infinite;
+  }
+  .gp-wx-flake {
+    animation: gp-wx-fall 3s linear infinite;
+  }
+}

@@ -1,10 +1,12 @@
 import type { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { cache } from "react";
+import { cache, Suspense } from "react";
 import { FocusPassHeading } from "@/components/pass/FocusPassHeading";
 import { DifferentPassButton } from "@/components/pass/DifferentPassButton";
 import { PassPreview } from "@/components/pass/PassPreview";
+import { ParkWeather } from "@/components/pass/ParkWeather";
+import { WeatherCardLoading } from "@/components/pass/WeatherCard";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
 import { ADULT_PRINT_LINE } from "@/lib/pass/audience";
@@ -57,6 +59,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   const signedIn = (await currentSession()) !== null;
   // Report counts are shown to signed-in grown-ups (the ones who report); 1 read per park per 5 min.
   const stats = signedIn ? await passItemStats(pass) : {};
+  const parkName = safeParkName(pass.park.name).name;
 
   return (
     <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 focus:outline-none sm:py-14">
@@ -71,6 +74,11 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
         </p>
       </div>
       <FocusPassHeading />
+      {/* Weather for the park (Kevin, Oct 8): screen only, streamed in so the pass never waits for it; real Open-Meteo
+          forecast + weather.gov alerts, or the honest "No weather data available" line (src/lib/weather). */}
+      <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
+        <ParkWeather park={{ name: parkName, lat: pass.park.lat, lng: pass.park.lng }} />
+      </Suspense>
       <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
       <div className="flex flex-col gap-4">
         <DifferentPassButton

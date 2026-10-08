@@ -26,6 +26,9 @@ Caps and switches (set explicitly, so a default can't surprise anyone):
 - [ ] `PREWARM_EXAMPLES=1`
 - [ ] Optional: `SITE_URL` / `AUTH_URL` only if a custom domain is used; `APP_CONTACT_URL` (public repo URL)
 - [ ] Never on Vercel: `EVAL_*`, `LOCAL_*`, `MODEL_REASONING_EFFORT` (self-host only)
+- [ ] `GP_E2E_FIXTURE_PASSES` **unset** in every Vercel scope (Production and Preview). It is a test-only switch for
+      the Playwright server; the code also refuses it on any Vercel deployment (`VERCEL=1`), and `tests/**` is not
+      traced into the deploy (`next.config.ts` `outputFileTracingExcludes`, round 9 SEC-9-02).
 
 ## 2. GitHub sign-in (production OAuth app)
 - [ ] Create a **separate** GitHub OAuth app for production (the local one keeps `http://localhost:3123`).

@@ -17,6 +17,12 @@ const nextConfig: NextConfig = {
     "/api/pass": ["./src/data/osm/parks/**/*"],
     "/": ["./src/data/osm/parks/**/*"],
   },
+  // Round 9 (SEC-9-02): src/lib/pass/e2e-fixtures.ts reads tests/fixtures (test-only, behind GP_E2E_FIXTURE_PASSES=1),
+  // which made the tracer copy the whole tests/ tree into the server functions. Nothing under tests/ ships. The
+  // Playwright server runs from the repo itself, so the keyless print tests still read the fixtures there.
+  outputFileTracingExcludes: {
+    "**": ["./tests/**/*"],
+  },
   experimental: {
     // src/proxy.ts (the pre-limiter) makes Next buffer request bodies; keep that buffer small. Our POST
     // routes cap bodies at 2 KB themselves (src/lib/http/guard.ts), so anything over this is refused anyway.

@@ -13,7 +13,7 @@
  * (WEATHER_DAILY_CALLS, default 5,000) keeps us well under Open-Meteo's free 10,000 calls a day.
  */
 import "server-only";
-import { log } from "@/lib/log";
+import { log, logOnce } from "@/lib/log";
 import { SourceError, type FetchLike, type SourceErrorCode } from "@/lib/sources/common";
 import { fetchForecast, roundCoord, validPoint } from "@/lib/sources/open-meteo";
 import { fetchAlerts, inNwsArea } from "@/lib/sources/nws-alerts";
@@ -99,6 +99,11 @@ export async function lookupWeather(lat: number, lng: number, nowMs: number, dep
   const env = deps.env ?? process.env;
   const budget = deps.timeoutMs ?? WEATHER_BUDGET_MS;
   if (!validPoint(lat, lng)) return { fetchedAt: nowMs, forecast: null, forecastError: "bad_point", alerts: null, alertsStatus: "failed" };
+  // WEATHER_DAILY_CALLS=0 switches the weather off: no call to either service.
+  if (dailyCap(env) === 0) {
+    logOnce("weather-off", "weather_off", { reason: "WEATHER_DAILY_CALLS=0" });
+    return { fetchedAt: nowMs, forecast: null, forecastError: "budget", alerts: null, alertsStatus: "failed" };
+  }
   const point = { lat: roundCoord(lat), lng: roundCoord(lng) };
   const forecastP = (async (): Promise<Pick<WeatherFetch, "forecast" | "forecastError">> => {
     if (!takeCall(nowMs, env)) {

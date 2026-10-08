@@ -558,9 +558,10 @@ describe("the card's data (view) and the live lookup", () => {
     expect(lines.some((l) => l.includes('"event":"weather_alerts"') && l.includes('"ok":false'))).toBe(true);
   });
 
-  it("the daily cap stops calls before they are made (WEATHER_DAILY_CALLS=0)", async () => {
+  it("WEATHER_DAILY_CALLS=0 switches the weather off: no call to either service, the honest line", async () => {
     let n = 0;
-    const v = await lookupWeather(14.583, 120.979, Date.now(), {
+    // A US park: not even weather.gov is asked.
+    const v = await lookupWeather(33.10824, -96.62468, Date.now(), {
       env: { WEATHER_DAILY_CALLS: "0" },
       fetchImpl: async () => {
         n++;
@@ -568,7 +569,7 @@ describe("the card's data (view) and the live lookup", () => {
       },
     });
     expect(n).toBe(0);
-    expect(buildWeatherView({ name: "Rizal Park", lat: 14.583, lng: 120.979 }, v, Date.now())).toMatchObject({
+    expect(buildWeatherView({ name: "Celebration Park", lat: 33.10824, lng: -96.62468 }, v, Date.now())).toMatchObject({
       kind: "none",
       reason: "No weather data available: we've used today's free weather lookups. It resets tomorrow.",
     });

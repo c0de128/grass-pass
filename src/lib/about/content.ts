@@ -33,11 +33,11 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 2100, files: 78, day: "Oct 8, 2026" } as const;
+export const UNIT_TESTS = { passed: 2242, files: 82, day: "Oct 8, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
-// RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
+// Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md). RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
-export const AUDIT_ROUNDS = { done: 9, day: "Oct 7, 2026" } as const;
+export const AUDIT_ROUNDS = { done: 10, day: "Oct 8, 2026" } as const;
 const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
 /** "Five rounds so far (Oct 6, 2026)." */
 export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS): string {

@@ -278,7 +278,7 @@ closed models on our DigitalOcean tier answered 403 on Oct 5.
 | M5 Reading level, FK grade median (target <= 3.5) | 2.3 | 2.3 | 2.8 | 2.5 |
 | M6 Name leaks in clue or hint, before the filter (target <= 5%) | 4.0% (clue only 4.0%) | 10.3% (FAIL) | 1.4% | 2.7% |
 | M7 Model call p50 / p95 (target 10 s / 20 s) | **9.9 s / 27.1 s, p95 FAIL** (first calls alone 12.8 s; 39.5 answer tokens/s) | 20.6 s / 57.0 s (FAIL, 3 passes timed out) | none | 15.3 s / 30.0 s (FAIL; 28.1 tok/s) |
-| M8 Cost per pass (target $0.001) | **$0.00108 to $0.00109, FAIL** (2 timed-out calls: prompt only, or billed in full; $0.00106 at $0) | $0.00190 to $0.00204 (FAIL) | $0 | $0.00111 to $0.00127 (FAIL) |
+| M8 Cost per pass, clue calls only (measured Oct 7, before trip tips; target $0.001) | **$0.00108 to $0.00109, FAIL** (2 timed-out calls: prompt only, or billed in full; $0.00106 at $0) | $0.00190 to $0.00204 (FAIL) | $0 | $0.00111 to $0.00127 (FAIL) |
 | M10 Printed clues repeated across parks (target <= 5%) | **4.1% (16/387), PASS** | 0% (0/101) | 20.4% (FAIL) | 9.7% (FAIL) |
 | M11 Printed clues with a wrong count (target 0) | 0 of 97 (11 removed by the check) | 0 of 10 (21 removed) | 0 of 3 | 0 of 71 (10 removed) |
 
@@ -430,8 +430,8 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   and counts only, no photos).
 - Species facts: Wikipedia (CC BY-SA), via the iNaturalist API. Wild Find clues quote these summaries; the printed stub
   says "Species facts: Wikipedia (CC BY-SA), via iNaturalist." whenever a pass has a Wild Find.
-- Clues: [Gemma 4](https://huggingface.co/google/gemma-4-31B-it) (`gemma-4-31B-it`, Apache-2.0) on DigitalOcean
-  serverless inference.
+- Clues and trip tips: [Gemma 4](https://huggingface.co/google/gemma-4-31B-it) (`gemma-4-31B-it`, Apache-2.0) on
+  DigitalOcean serverless inference.
 - Eval comparison: Llama 4 Maverick (Llama 4 Community Licence), on DigitalOcean serverless inference. It answers
   visitors only if `MODEL_ID` is switched to it; then the pass and `/about` show "Built with Llama".
 - Lucky Finds: Google Maps review counts via [SerpApi](https://serpapi.com/) (`google_maps` and `google_maps_reviews`;

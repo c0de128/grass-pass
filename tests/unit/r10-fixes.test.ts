@@ -106,3 +106,26 @@ describe("RULES-10-02 / Q-10-03: model-call counts include the trip-tips call", 
     expect(s).toContain("This counts the clue calls only: it was measured on Oct 7, before trip tips existed.");
   });
 });
+
+describe("SEC-10-05: an unfinished OAuth sign-in is not called a server misconfiguration", () => {
+  it("'Configuration' on a server with OAuth set up says the sign-in took too long; without OAuth it keeps the setup line", async () => {
+    const { errorText, oauthReady, TOO_SLOW_ERROR, ERRORS } = await import("@/lib/accounts/signin-errors");
+    expect(errorText("Configuration", undefined, 600, true)).toBe(TOO_SLOW_ERROR);
+    expect(TOO_SLOW_ERROR).toBe("That sign-in took too long or didn't finish. Please try again.");
+    expect(errorText("Configuration", undefined, 600, false)).toBe(ERRORS.Configuration);
+    expect(oauthReady({ AUTH_SECRET: "x".repeat(32), AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "s" })).toBe(true);
+    expect(oauthReady({ AUTH_SECRET: "x".repeat(32) })).toBe(false);
+    expect(oauthReady({ AUTH_GITHUB_ID: "id", AUTH_GITHUB_SECRET: "s" })).toBe(false);
+  });
+});
+
+describe("NITs: credits and wording", () => {
+  it("footer and credits say Gemma writes the clues AND the trip tips, and the footer credits Open-Meteo and NWS", () => {
+    const footer = read("src/components/SiteFooter.tsx").replace(/\s+/g, " ");
+    expect(footer).toContain("Clues and trip tips: Gemma 4 by default (open model, Apache-2.0)");
+    expect(footer).toMatch(/Open-Meteo <\/a>\{" "\} \(CC BY 4\.0\)/);
+    expect(footer).toMatch(/NWS <\/a>\{" "\} alerts \(public domain\)/);
+    expect(read("README.md")).toContain("- Clues and trip tips: [Gemma 4]");
+    expect(read("src/app/about/page.tsx")).toContain("Clues and trip tips:");
+  });
+});

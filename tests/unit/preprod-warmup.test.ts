@@ -34,7 +34,7 @@ import {
 } from "@/lib/prewarm";
 import { cronAuth, cronWarmResponse } from "@/lib/prewarm-cron";
 import { resetSavedOsm } from "@/lib/sources/osm-snapshot";
-import { passReplay, type Call } from "./support/pass-replay";
+import { isClueCall, passReplay } from "./support/pass-replay";
 import { serpFixture, serpReplay } from "./support/serpapi-replay";
 import { pinnedPass } from "@/lib/pinned";
 
@@ -46,7 +46,7 @@ const SECRET = "a-test-cron-secret-0123456789";
 let replay: ReturnType<typeof passReplay>;
 let logs: string[];
 let restoreLog: () => void;
-const modelCalls = () => replay.calls.filter((c: Call) => c.host === "inference.do-ai.run").length;
+const modelCalls = () => replay.calls.filter(isClueCall).length;
 const events = (name: string) => logs.filter((l) => l.includes(`"event":"${name}"`));
 const src = (path: string) => readFileSync(new URL(`../../${path}`, import.meta.url), "utf8");
 

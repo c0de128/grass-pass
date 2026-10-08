@@ -185,6 +185,8 @@ export async function replayRun(rec: RunRecord, fx: EvalFixture, band: CaseData[
   virtual += dataMs;
   let callNo = 0;
   const deps: BuildDeps = {
+    // Trip tips are their own model call and not what the evals measure (clues).
+    tripTips: false,
     store: new MemoryStore(),
     env: { DO_INFERENCE_API_KEY: "replay-no-network", MODEL_ID: rec.model, ...(rec.model.toLowerCase().includes("llama") ? { MODEL_TIMEOUT_MS: "60000" } : {}) },
     now,

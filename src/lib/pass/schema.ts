@@ -7,6 +7,7 @@ import { z } from "zod";
 import { OctoberBoxSchema } from "@/lib/october";
 import { ExampleLinkSchema } from "@/lib/parks/schema";
 import { SpotSchema } from "@/lib/spot/types";
+import { TripTipsSchema } from "@/lib/tips/schema";
 
 // ---------- age bands (SPEC F2) ----------
 // The plain constants live in ./constants (no zod, for the browser's first paint, UX-4-02); re-exported here.
@@ -116,6 +117,11 @@ export const PassSchema = z.object({
   october: OctoberBoxSchema.optional(),
   /** Find This Spot (S5): the map + riddle, or why there is none. Absent on passes made before S5. */
   spot: SpotSchema.optional(),
+  /**
+   * Trip tips (Kevin 2026-10-08, src/lib/tips): screen only, made once with the pass from that day's forecast, the park
+   * map and the sightings. Absent on passes made before trip tips (the page says so).
+   */
+  tripTips: TripTipsSchema.optional(),
 });
 export type Pass = z.infer<typeof PassSchema>;
 

@@ -27,7 +27,7 @@ import { setLogSink } from "@/lib/log";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import type { PoolItem } from "@/lib/pool/types";
-import { modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
+import { isClueCall, modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
 
 const data: Record<string, CaseData> = {};
 beforeAll(async () => {
@@ -232,7 +232,7 @@ describe("buildPass calls (built failures; every other answer is a real recordin
     resetSavedOsm();
     restore();
   });
-  const modelCalls = (calls: Call[]) => calls.filter((c) => c.host === "inference.do-ai.run");
+  const modelCalls = (calls: Call[]) => calls.filter(isClueCall);
   /** Built: a call that never answers, until the app's own timeout aborts it (Cedar Ridge 10-13 in smoke 1439). */
   const hang = (c: Call) =>
     new Promise<Response>((_, reject) => {

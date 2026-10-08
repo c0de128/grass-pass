@@ -34,7 +34,7 @@ import { featuresQuery, PARK_FILTER, parseParkId } from "@/lib/sources/overpass-
 import { loadGeometry } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
 import { fixture } from "./support/osm-replay";
-import { PARKS, passReplay, type Call } from "./support/pass-replay";
+import { isClueCall, PARKS, passReplay, type Call } from "./support/pass-replay";
 
 const FAKE_KEY = "test-key-not-real"; // gitleaks:allow (dummy test value)
 const ENV = { DO_INFERENCE_API_KEY: FAKE_KEY, MODEL_BASE_URL: "", MODEL_ID: "", AI_DAILY_CAP: "" };
@@ -51,7 +51,7 @@ const movingDec5 = () => {
 const isOverpass = (c: Call) => new URL(c.url).pathname.endsWith("/interpreter");
 const isGeometry = (c: Call) => (new URLSearchParams(c.body ?? "").get("data") ?? "").includes("out geom");
 const isInat = (c: Call) => c.host === "api.inaturalist.org";
-const isModel = (c: Call) => c.host === "inference.do-ai.run";
+const isModel = isClueCall;
 const hang = (c: Call) =>
   new Promise<Response>((_, reject) => {
     const s = c.init?.signal;

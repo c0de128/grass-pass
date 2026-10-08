@@ -12,7 +12,7 @@ import { SPOT_COPY } from "@/lib/spot/types";
 import * as route from "@/app/api/pass/route";
 import { recordedResponse } from "./support/osm-replay";
 import { nextAccountCookie, primeAccountCookies } from "./support/session";
-import { modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
+import { isClueCall, isTipsCall, isWeatherCall, modelRec, PARKS, passReplay, recordedShape, type Call } from "./support/pass-replay";
 
 const FAKE_KEY = "test-key-not-real";
 let n = 0;
@@ -74,7 +74,7 @@ afterEach(() => {
   restoreLog();
 });
 
-const modelCalls = (calls: Call[]) => calls.filter((c) => c.host === "inference.do-ai.run");
+const modelCalls = (calls: Call[]) => calls.filter(isClueCall);
 const isOctoberCall = (c: Call) => /^\/v1\/observations(\/histogram)?$/.test(new URL(c.url).pathname);
 /** The Overpass QL sent in a call (form body `data=`). */
 const overpassQuery = (c: Call) => new URLSearchParams(String(c.init?.body ?? c.body ?? "")).get("data") ?? "";
@@ -155,7 +155,8 @@ describe("POST /api/pass: Connemara (live recordings)", () => {
     // are tested with a fixed clock in october.test.ts.)
     // SEC-1-01: the park-features query goes FIRST; the optional Find This Spot geometry query starts only
     // after it confirmed a named park (it then runs alongside the wildlife step).
-    const calls = replay.calls.filter((c) => !isOctoberCall(c));
+    // Trip tips (their own model call and the forecast lookup) are counted in trip-tips.test.ts.
+    const calls = replay.calls.filter((c) => !isOctoberCall(c) && !isWeatherCall(c) && !isTipsCall(c));
     expect(calls[0].host).toBe("overpass-api.de");
     expect(overpassQuery(calls[0])).not.toContain("out geom");
     expect(calls.map((c) => c.host).sort()).toEqual([

@@ -15,7 +15,7 @@ import { localDay } from "@/lib/time";
 import { searchParks } from "@/lib/parks/search";
 import { ExampleLinkSchema } from "@/lib/parks/schema";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
-import { PARKS, passReplay, type Call } from "./support/pass-replay";
+import { isClueCall, PARKS, passReplay } from "./support/pass-replay";
 
 // Park data and model answers are the LIVE recordings in tests/fixtures (see support/pass-replay.ts).
 // The only built responses are the model 500s in the "failed refresh" tests, which say so.
@@ -30,7 +30,7 @@ const bySlug = (list: readonly ExampleStatus[], slug: string) => list.find((s) =
 let replay: ReturnType<typeof passReplay>;
 let restoreLog: () => void;
 let logs: string[];
-const modelCalls = () => replay.calls.filter((c: Call) => c.host === "inference.do-ai.run").length;
+const modelCalls = () => replay.calls.filter(isClueCall).length;
 
 function useReplay(r: ReturnType<typeof passReplay>) {
   replay = r;

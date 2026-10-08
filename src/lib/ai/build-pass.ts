@@ -68,6 +68,9 @@ import {
   type SpotPlan,
 } from "@/lib/spot/load";
 import { SPOT_COPY } from "@/lib/spot/types";
+import { cachedWeather, type WeatherFetch } from "@/lib/weather/park-weather";
+import { extrasFromElements, type SightedSpecies } from "@/lib/tips/facts";
+import { settle, startTripTips, type TipsRun, type TipsTrace } from "@/lib/tips/generate";
 import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { fixPlantWho } from "./jargon";
@@ -191,6 +194,12 @@ export type BuildDeps = {
   clock?: PassClock;
   /** Eval replay only (evals/replay.ts): the model call's timeout signal on a virtual clock. */
   modelDeadline?: (ms: number) => AbortSignal;
+  /**
+   * Trip tips (src/lib/tips): on unless false. The evals switch them off (they measure clues, and each tips answer is a
+   * model call). `tipsTrace`: recording and tests only.
+   */
+  tripTips?: boolean;
+  tipsTrace?: (t: TipsTrace) => void;
 };
 
 /** Eval-only time limits (see BuildDeps.clock). */
@@ -276,6 +285,8 @@ type WildResult = {
   since: string | null;
   /** R1 follow-up: a plant on offer has no season evidence because the phenology lookup failed (degraded pass). */
   seasonUnknown?: boolean;
+  /** Trip tips: every species iNaturalist listed near the park (null when it didn't answer). */
+  species?: SightedSpecies[] | null;
 };
 
 /** True when some plant in the pool could not be season-checked (the iNaturalist phenology lookup failed). */
@@ -291,7 +302,7 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
       log("pass_source_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status }, "warn");
       // R1-M1: stopped by the pass deadline -> say "too slow", not "didn't answer".
       const message = err.code === "aborted" ? WILD_SLOW_COPY : WILD_DOWN_COPY;
-      return { items: [], state: { status: "unavailable", message }, blocked: 0, checkedAt: null, since: null };
+      return { items: [], state: { status: "unavailable", message }, blocked: 0, checkedAt: null, since: null, species: null };
     }
     throw err;
   };
@@ -333,7 +344,7 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
       }
     } catch (err) {
       const partial = wildPool(list, summaries, since, { month: monthOfDay(localDay(deps.now())), phenology: null });
-      if (partial.state.status === "ok") return { ...partial, checkedAt, since, seasonUnknown: seasonUnknownIn(partial.items) };
+      if (partial.state.status === "ok") return { ...partial, checkedAt, since, seasonUnknown: seasonUnknownIn(partial.items), species: list.species };
       return down(err);
     }
   }
@@ -341,7 +352,7 @@ async function loadWild(f: ParkFeatures, deps: BuildDeps): Promise<WildResult> {
   const month = monthOfDay(localDay(deps.now()));
   const season: WildSeasonInput = { month, phenology: await loadPhenology(f.park.id, center, month, plantCandidateIds(list), srcDeps) };
   const pool = wildPool(list, summaries, since, season);
-  return { ...pool, checkedAt, since, seasonUnknown: seasonUnknownIn(pool.items) };
+  return { ...pool, checkedAt, since, seasonUnknown: seasonUnknownIn(pool.items), species: list.species };
 }
 
 // ---------- the pass ----------
@@ -467,6 +478,11 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     })
     .finally(() => luckyDeadline.clear());
 
+  // Trip tips: the park's forecast (free, Open-Meteo + weather.gov; the same in-process cache the pass page's weather
+  // card reads), fetched while the wildlife step runs. Never throws; its own 8 s budget.
+  const weather: Promise<WeatherFetch> | null =
+    deps.tripTips === false ? null : cachedWeather(f.park.lat, f.park.lng, deps.now(), { fetchImpl: data.fetchImpl, env: data.env });
+
   deps.emit("wildlife", stepText("wildlife", deps.env));
   const wild = await loadWild(f, data);
   const park = withoutReported(parkPool(f), deps.exclude);
@@ -525,6 +541,23 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let riddleAsked = false;
   /** The last answer's own check result (the refill is told what went wrong in it). */
   let lastCheck: ValidationResult | null = null;
+  /** Trip tips (src/lib/tips): started with the first clue call, in parallel, so the pass is not slower. */
+  let tips: TipsRun | null = null;
+  const startTips = (): TipsRun =>
+    startTripTips(
+      {
+        parkName: f.park.name,
+        band,
+        passDay: input.day,
+        map: { kind: f.park.kind, features: f.features, trees: f.trees },
+        extras: early?.status === "ok" ? extrasFromElements(early.geometry.elements) : null,
+        species: wild.species ?? null,
+        since: wild.since,
+        finds: mix.n,
+        weather,
+      },
+      { env: deps.env, now: deps.now, modelFetch: deps.modelFetch, modelLogger: deps.modelLogger, reserveAiCall: deps.reserveAiCall, ...(deps.tipsTrace ? { trace: deps.tipsTrace } : {}) },
+    );
 
   /** Whole-request retries used (at most one, after a failed first call). */
   let wholeRetries = 0;
@@ -602,6 +635,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     // The paid call starts now: it counts, and it finishes (and is cached) even if every client leaves.
     ticket.commit();
     deps.pin();
+    // Trip tips: their own call (and AI_DAILY_CAP slot), after the clue call took its slot.
+    if (call === 1 && deps.tripTips !== false) tips = startTips();
     // Slow provider: each call's limit is sized from what it asks (src/lib/pass/budget.ts). The eval/local clock
     // (deps.clock) keeps its fixed limits.
     const askSpot = callSpot !== null;
@@ -739,6 +774,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     .filter(([k]) => k !== "not_grounded")
     .reduce((a, [, v]) => a + (v ?? 0), 0);
 
+  // Trip tips: normally ready long before the clues (TIPS_BUDGET_MS); never waited for past the pass deadline.
+  const tripTips = tips ? ((await settle(tips.done, Math.max(0, left() - 2_000))) ?? tips.fallback()) : null;
+
   const pass: Pass = {
     id: input.id,
     park: { id: f.park.id, name: f.park.name, lat: f.park.lat, lng: f.park.lng },
@@ -761,6 +799,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     wildSince: wild.since,
     ...(wild.seasonUnknown ? { seasonUnknown: true } : {}),
     spot: finishSpot(spotPlan, riddle),
+    ...(tripTips ? { tripTips } : {}),
   };
   return { kind: "pass", pass };
 }

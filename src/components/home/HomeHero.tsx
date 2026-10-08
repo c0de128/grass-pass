@@ -13,7 +13,9 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
  * right the meadow picture with the tilted real example pass.
  *
  * UX-10-03 (round 10): on phones (below 640 px) the top padding and the gaps are tighter, so at 360x740 the search box
- * starts above the fold. Only spacing changed; the words and the 640 px+ layout are as before.
+ * starts above the fold, and the headline (52 px) and lead (normal line height) are a little tighter, so the whole box
+ * fits (measured: input 678-734 px at 360x740; it was 768-824). Only spacing and size changed; the words and the
+ * 640 px+ layout are as before.
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
@@ -22,7 +24,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
       <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-3 pb-20 sm:pt-12 sm:pb-32 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-40">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-8 lg:col-span-7">
 
-          <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
+          <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-[3.25rem] leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
             <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}
             <span className="relative mt-2 inline-block self-end text-[0.667em] text-primary lg:whitespace-nowrap">
               powered by AI.
@@ -33,7 +35,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           {/* Kevin's own words (2026-10-08), two paragraphs. */}
-          <div className="flex max-w-xl flex-col gap-2 text-base leading-relaxed text-pretty text-muted-foreground sm:gap-4 sm:text-lg">
+          <div className="flex max-w-xl flex-col gap-2 text-base leading-normal text-pretty text-muted-foreground sm:gap-4 sm:text-lg sm:leading-relaxed">
             <p>
               Your local park, turned into an adventure. Grass Pass uses AI, real park maps and recent wildlife sightings
               to write a scavenger hunt made for you or your kids.

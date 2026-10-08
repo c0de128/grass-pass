@@ -11,13 +11,16 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
  * headline with the sunflower underline under "powered by AI.", the lead (the "about 30 seconds" is PASS_WAIT_COPY's
  * usual 10-30 s), the real park search card (children: RestingNotice + PassMaker); on the
  * right the meadow picture with the tilted real example pass.
+ *
+ * UX-10-03 (round 10): on phones (below 640 px) the top padding and the gaps are tighter, so at 360x740 the search box
+ * starts above the fold. Only spacing changed; the words and the 640 px+ layout are as before.
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
     <section id="find" aria-labelledby="hero-title" className="relative scroll-mt-28 sm:scroll-mt-16 overflow-hidden">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-6 pb-20 sm:pt-12 sm:pb-32 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-40">
-        <div className="flex min-w-0 flex-col gap-6 sm:gap-8 lg:col-span-7">
+      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-3 pb-20 sm:pt-12 sm:pb-32 md:px-8 lg:grid-cols-12 lg:items-start lg:gap-8 lg:pt-20 lg:pb-40">
+        <div className="flex min-w-0 flex-col gap-4 sm:gap-8 lg:col-span-7">
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">
             <span className="text-[1.25em] leading-[0.95] lg:whitespace-nowrap">Family time is back!</span>{" "}
@@ -30,7 +33,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
           </h1>
 
           {/* Kevin's own words (2026-10-08), two paragraphs. */}
-          <div className="flex max-w-xl flex-col gap-3 text-base leading-relaxed text-pretty text-muted-foreground sm:gap-4 sm:text-lg">
+          <div className="flex max-w-xl flex-col gap-2 text-base leading-relaxed text-pretty text-muted-foreground sm:gap-4 sm:text-lg">
             <p>
               Your local park, turned into an adventure. Grass Pass uses AI, real park maps and recent wildlife sightings
               to write a scavenger hunt made for you or your kids.
@@ -42,7 +45,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             </p>
           </div>
 
-          <div className="flex flex-col gap-4">
+          <div className="flex flex-col gap-3 sm:gap-4">
             {/* Kevin 2026-10-07: a call to action right above the search box. */}
             <p className="inline-flex items-center gap-3 font-heading text-2xl font-extrabold tracking-tight text-ink sm:text-3xl" data-testid="hero-cta">
               <span className="inline-flex size-9 shrink-0 items-center justify-center rounded-full bg-sun text-sun-foreground shadow-sm" aria-hidden="true">

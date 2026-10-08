@@ -285,6 +285,25 @@ describe("R1-B1: park search survives a public Overpass outage", () => {
     expect(calls).toHaveLength(1 + OVERPASS_DEFAULT_URLS.length);
   });
 
+  it("review MAJOR-1: a bare ZIP '75013' finds Allen TX (US postcode search), not Paris; ZIP+4 shares the cache", async () => {
+    resetSavedOsm();
+    const { fetchImpl, calls } = osmReplay({ overpass: busyOverpass });
+    const r = await searchParks({ kind: "text", q: "75013" }, deps(fetchImpl));
+    if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
+    expect(r.result.query).toEqual({ kind: "text", text: "75013", matched: "75013, Allen, Collin County, Texas, United States" });
+    const geo = new URL(calls[0].url);
+    expect(geo.searchParams.get("postalcode")).toBe("75013");
+    expect(geo.searchParams.get("countrycodes")).toBe("us");
+    expect(geo.searchParams.has("q")).toBe(false);
+    expect(r.result.parks.length).toBeGreaterThan(0);
+    for (const p of r.result.parks) expect(p.distanceM).toBeLessThanOrEqual(5_000);
+    const n = calls.length;
+    const plus4 = await searchParks({ kind: "text", q: "75013-4321" }, deps(fetchImpl));
+    expect(plus4.ok && plus4.result.query).toMatchObject({ matched: "75013, Allen, Collin County, Texas, United States" });
+    // The place came from the "us-zip:75013" cache entry: no second Nominatim call.
+    expect(calls.slice(n).filter((c) => c.url.includes("nominatim"))).toHaveLength(0);
+  });
+
   it("a hung Overpass is given up after the search budget, not the 50 s pass budget", async () => {
     resetSavedOsm();
     const { fetchImpl } = osmReplay({

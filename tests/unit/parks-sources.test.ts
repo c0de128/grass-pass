@@ -3,7 +3,7 @@ import { MemoryStore } from "@/lib/cache/store";
 import { breakerRetryAfter, createSpacedQueue } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { contactUrl, DEFAULT_CONTACT_URL, parseRetryAfter, readTextCapped, SourceError, userAgent } from "@/lib/sources/common";
-import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, PARK_QUERY_RE, parseNominatim } from "@/lib/sources/nominatim";
+import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, PARK_QUERY_RE, parseNominatim, usZipOf } from "@/lib/sources/nominatim";
 import { breakerName, isErrorRemark, isHeavyQueryRemark, overpassEndpoints, OVERPASS_DEFAULT_URLS, runOverpass } from "@/lib/sources/overpass";
 import { parseParks, parksNear, parksQuery } from "@/lib/sources/overpass-parks";
 import { distanceLabel, distanceM, roundCoord } from "@/lib/geo";
@@ -104,6 +104,40 @@ describe("Nominatim parsing (live recordings, 2026-10-05)", () => {
     expect(PARK_QUERY_RE.test("Forest Park Portland OR")).toBe(true);
     expect(PARK_QUERY_RE.test("Allen TX")).toBe(false);
     expect(PARK_QUERY_RE.test("Parkville MO")).toBe(false);
+  });
+});
+
+describe("US ZIP search (review 2026-10-08 MAJOR-1, live recordings)", () => {
+  it("only a whole 5-digit ZIP or ZIP+4 counts as a US ZIP", () => {
+    expect(usZipOf("75013")).toBe("75013");
+    expect(usZipOf(" 75013-1234 ")).toBe("75013");
+    expect(usZipOf("7501")).toBeNull();
+    expect(usZipOf("750131")).toBeNull();
+    expect(usZipOf("75013 Paris")).toBeNull();
+    expect(usZipOf("Allen TX, 75013")).toBeNull();
+    expect(usZipOf("75013-12")).toBeNull();
+  });
+
+  it("the old free-text request for '75013' matched Paris (recorded), so a ZIP is now a US postcode search", () => {
+    const old = fixture("nominatim-bare-75013");
+    expect(parseNominatim(old.body)?.displayName).toContain("France");
+    const rec = fixture("nominatim-zip-75013-us");
+    const meta = rec._recording as unknown as { url: string };
+    expect(nominatimUrl("75013")).toBe(meta.url); // the recorded request is exactly ours
+    expect(nominatimUrl("75013-1234")).toBe(meta.url);
+    const place = parseNominatim(rec.body)!;
+    expect(place.displayName).toBe("75013, Allen, Collin County, Texas, United States");
+    expect(place.lat).toBeCloseTo(33.11, 1);
+    expect(place.lng).toBeCloseTo(-96.69, 1);
+    // A ZIP with words around it stays a free-text search.
+    expect(new URL(nominatimUrl("Allen TX, 75013")).searchParams.get("q")).toBe("Allen TX, 75013");
+  });
+
+  it("geocode('75013') goes to Allen TX", async () => {
+    const { fetchImpl, calls } = osmReplay();
+    const place = await geocode("75013", { store: new MemoryStore(), fetchImpl, queue: instantQueue(), env: {} });
+    expect(place?.displayName).toContain("Allen, Collin County, Texas");
+    expect(calls).toHaveLength(1);
   });
 });
 

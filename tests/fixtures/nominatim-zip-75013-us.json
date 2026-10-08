@@ -1,0 +1,35 @@
+{
+ "_recording": {
+  "what": "Nominatim US postcode search for 75013 (the fix for review MAJOR-1)",
+  "live": true,
+  "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&postalcode=75013&countrycodes=us&limit=1&addressdetails=0&accept-language=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-08T23:51:10.278Z",
+  "recordedBy": "builder review-fixes 2026-10-08: curl with the app User-Agent against the live API"
+ },
+ "body": [
+  {
+   "place_id": 382579027,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "postcode_id": "Pus:75013",
+   "lat": "33.1132075",
+   "lon": "-96.6887791",
+   "category": "place",
+   "type": "postcode",
+   "place_rank": 21,
+   "importance": 0.12000999999999995,
+   "addresstype": "postcode",
+   "name": "75013",
+   "display_name": "75013, Allen, Collin County, Texas, United States",
+   "boundingbox": [
+    "32.8878816",
+    "33.3385242",
+    "-96.9565553",
+    "-96.4210686"
+   ]
+  }
+ ]
+}

@@ -44,6 +44,9 @@ export const NOMINATIM_PARK_RECORDINGS = [
   "nominatim-parks-tenney-park-madison-wi",
 ];
 
+/** Structured (no `q`) searches, matched by the exact URL. Review 2026-10-08 MAJOR-1: the US ZIP search. */
+export const NOMINATIM_URL_RECORDINGS = ["nominatim-zip-75013-us", "nominatim-bare-75013"];
+
 export const OVERPASS_RECORDINGS = [
   "overpass-parks-allen-tx",
   "overpass-parks-connemara-meadow-preserve",
@@ -92,6 +95,8 @@ export function osmReplay(
         if (!park) throw new Error(`no Nominatim park recording for ${url}`);
         return recordedResponse(park);
       }
+      const byUrl = NOMINATIM_URL_RECORDINGS.find((n) => (fixture(n)._recording as { url?: string }).url === url);
+      if (byUrl) return recordedResponse(byUrl);
       const name = NOMINATIM_RECORDINGS[q];
       if (!name) throw new Error(`no Nominatim recording for "${q}"`);
       return recordedResponse(name);

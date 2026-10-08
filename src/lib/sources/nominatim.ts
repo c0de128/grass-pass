@@ -1,6 +1,6 @@
 /**
  * Nominatim (OpenStreetMap place search): turn typed text ("Allen TX", "75013",
- * "Connemara Meadow Preserve") into one point. ADR 0002 D1.
+ * "Connemara Meadow Preserve") into one point. ADR 0002 D1. A bare 5-digit ZIP (or ZIP+4) is a US postcode search.
  *
  * Usage policy (https://operations.osmfoundation.org/policies/nominatim/), all enforced here:
  * - at most 1 request per second for the whole app: one serial queue per process, plus a
@@ -111,9 +111,33 @@ export function cleanPlaceQuery(raw: string): string {
     .trim();
 }
 
+/**
+ * Review 2026-10-08 MAJOR-1: a bare "75013" matched Paris's 13th arrondissement (and "10115" Santo Domingo), but the
+ * app is US-first and the search box says "Town, ZIP or park name". A query that is only a 5-digit ZIP or ZIP+4
+ * ("75013", "75013-1234") is looked up as a US postcode (structured `postalcode=` + `countrycodes=us`).
+ * "75013 Paris" or "Allen TX, 75013" are still free-text searches.
+ */
+export const US_ZIP_RE = /^(\d{5})(?:-\d{4})?$/;
+
+/** The 5-digit US ZIP when the whole (cleaned) query is a ZIP or ZIP+4, else null. */
+export function usZipOf(q: string): string | null {
+  const m = US_ZIP_RE.exec(cleanPlaceQuery(q));
+  return m ? m[1] : null;
+}
+
 export function nominatimUrl(q: string): string {
   const u = new URL(NOMINATIM_SEARCH_URL);
   u.searchParams.set("format", "jsonv2");
+  const zip = usZipOf(q);
+  if (zip) {
+    // Structured search: Nominatim does not allow `q` together with `postalcode`.
+    u.searchParams.set("postalcode", zip);
+    u.searchParams.set("countrycodes", "us");
+    u.searchParams.set("limit", "1");
+    u.searchParams.set("addressdetails", "0");
+    u.searchParams.set("accept-language", "en");
+    return u.toString();
+  }
   u.searchParams.set("q", q);
   u.searchParams.set("limit", String(PARK_QUERY_RE.test(q) ? NOMINATIM_GEOCODE_LIMIT : 1));
   u.searchParams.set("addressdetails", "0");

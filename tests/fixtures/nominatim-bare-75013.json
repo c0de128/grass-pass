@@ -1,0 +1,36 @@
+{
+ "_recording": {
+  "what": "Nominatim free-text search for 75013 (the old request; it matched Paris, review MAJOR-1)",
+  "live": true,
+  "url": "https://nominatim.openstreetmap.org/search?format=jsonv2&q=75013&limit=1&addressdetails=0&accept-language=en",
+  "method": "GET",
+  "userAgent": "GrassPass/0.1 (+https://github.com/c0de128/grass-pass)",
+  "status": 200,
+  "contentType": "application/json; charset=utf-8",
+  "fetchedAt": "2026-10-08T23:51:10.278Z",
+  "recordedBy": "builder review-fixes 2026-10-08: curl with the app User-Agent against the live API"
+ },
+ "body": [
+  {
+   "place_id": 377999881,
+   "licence": "Data © OpenStreetMap contributors, ODbL 1.0. http://osm.org/copyright",
+   "osm_type": "relation",
+   "osm_id": 10777016,
+   "lat": "48.8283881",
+   "lon": "2.3622654",
+   "category": "boundary",
+   "type": "postal_code",
+   "place_rank": 21,
+   "importance": 0.12000999999999995,
+   "addresstype": "postcode",
+   "name": "75013",
+   "display_name": "75013, Paris, Ile-de-France, Metropolitan France, France",
+   "boundingbox": [
+    "48.8155755",
+    "48.8449299",
+    "2.3411401",
+    "2.3902559"
+   ]
+  }
+ ]
+}

@@ -435,7 +435,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
             Town, ZIP or park name
           </label>
           <p id={heroHintId} className="sr-only">
-            For example: Allen TX, 75013 or Arbor Hills Nature Preserve.
+            For example: Allen TX, a US ZIP like 75013, or Arbor Hills Nature Preserve.
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative min-w-0 flex-1">

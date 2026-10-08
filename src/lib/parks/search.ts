@@ -23,7 +23,7 @@ import { dailyPaceState } from "@/lib/limits/budget";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import { isValidLatLng, roundCoord, type LatLng } from "@/lib/geo";
-import { cleanPlaceQuery, geocode, nominatimParks, PlaceSchema, type Place } from "@/lib/sources/nominatim";
+import { cleanPlaceQuery, geocode, nominatimParks, PlaceSchema, usZipOf, type Place } from "@/lib/sources/nominatim";
 import { savedParksNear } from "@/lib/sources/osm-snapshot";
 import { readyExample } from "@/lib/prewarm";
 import { DUPLICATE_NAME_RADIUS_M, normName, parksNear } from "@/lib/sources/overpass-parks";
@@ -288,7 +288,10 @@ async function runSearch(
     let pin: Park | null = null;
 
     if (input.kind === "text") {
-      const pkey = normalizeKey(input.q);
+      // Review 2026-10-08 MAJOR-1: a bare ZIP is now a US postcode search, under its own key, so a "75013" that was
+      // cached as Paris before the fix is not reused, and "75013" and "75013-1234" share one entry.
+      const zip = usZipOf(input.q);
+      const pkey = zip ? `us-zip:${zip}` : normalizeKey(input.q);
       let place: Place | null = null;
       const hit = await placeCache.positive.get(pkey, now());
       if (hit) {

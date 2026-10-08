@@ -8,7 +8,9 @@
  * Providers: GitHub (scope `read:user` only) and Google (`openid profile` only), each only when its id AND
  * secret are set (SEC-4-06: no email scope, and the GitHub profile request never asks for email addresses);
  * plus "judge", a no-input Credentials provider behind the "Try as a judge" button (a shared demo account).
- * Sign-in attempts are rate limited per IP (here for the judge, in the route for every OAuth start and callback).
+ * Sign-in attempts are rate limited per IP: here for the judge; in the route for every OAuth callback and for OAuth starts
+ * POSTed to /api/auth/signin/<provider>. Starts from the sign-in buttons (a server action) are not limited: they cost
+ * nothing and only redirect to the provider (SEC-10-04).
  *
  * SEC-4-05: a sign-in lasts 7 days (GitHub/Google) or 1 day (the judge demo), counted from signing in. The
  * jwt callback signs a token out after that however often it is used; the token's `exp` and the cookie's

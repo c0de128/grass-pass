@@ -1,7 +1,9 @@
 /**
- * Auth.js endpoints (/api/auth/*). OAuth starts (`/signin/<provider>`) and callbacks (`/callback/<provider>`)
- * are rate limited per IP first (src/lib/accounts/signin-rate.ts); the judge demo sign-in is limited inside
- * its provider too (it is usually started by a server action, which never passes through this route).
+ * Auth.js endpoints (/api/auth/*). OAuth starts POSTed here (`/signin/<provider>`) and every callback
+ * (`/callback/<provider>`) are rate limited per IP first (src/lib/accounts/signin-rate.ts); the judge demo sign-in is
+ * limited inside its provider too. SEC-10-04 (round 10): the sign-in BUTTONS start OAuth through a server action
+ * (src/app/actions/auth.ts), which never passes through this route, so those starts are not limited. On purpose: a start
+ * costs no store command and no paid call (it only redirects to GitHub/Google), and the callback that follows is limited.
  * Auth.js itself checks its CSRF token on every POST here.
  */
 import type { NextRequest } from "next/server";

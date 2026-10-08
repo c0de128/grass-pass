@@ -3,7 +3,7 @@
  * when the park is in the US. Never throws and never invents: any failure becomes an honest "No weather data available"
  * reason, and alerts that fail are just left out (logged). See src/lib/sources/open-meteo.ts and nws-alerts.ts.
  *
- * Time budget: the card streams in under <Suspense> (src/app/pass/[id]/page.tsx), so the pass itself never waits. Each
+ * Time budget: the pass page waits at most 1.2 s for it (then streams it in under <Suspense>, src/app/pass/[id]/page.tsx). Each
  * lookup may take up to WEATHER_BUDGET_MS (8 s): a cold server's first request (DNS, TLS, a busy event loop) measured
  * over 4 s in e2e. A fast failure (network error, 5xx) is tried once more inside the same budget.
  *
@@ -11,8 +11,15 @@
  * at most 500 positions, and parallel page views share one request. If a refresh fails, the last good forecast for that
  * position (at most 3 hours old) is shown with its own "forecast updated" time rather than nothing. A daily cap
  * (WEATHER_DAILY_CALLS, default 5,000) keeps us well under Open-Meteo's free 10,000 calls a day.
+ *
+ * Round 10 (SEC-10-03): the cap counts EVERY upstream call, Open-Meteo and weather.gov each on their own counter, per
+ * UTC day. With the shared store (Upstash, production) the count is shared by all server instances (one INCR per real
+ * upstream call); without it (local, tests) it is per process. If the store fails, this process's own count still
+ * applies. A refused or rate-limited answer (429/403) is remembered for 10 minutes, not 1, so a busy upstream is not
+ * asked again every minute for every park.
  */
 import "server-only";
+import { getStore, type Store } from "@/lib/cache/store";
 import { log, logOnce } from "@/lib/log";
 import { SourceError, type FetchLike, type SourceErrorCode } from "@/lib/sources/common";
 import { fetchForecast, roundCoord, validPoint } from "@/lib/sources/open-meteo";
@@ -22,6 +29,8 @@ import { buildWeatherView, type WeatherView } from "./view";
 
 export const WEATHER_TTL_MS = 30 * 60_000;
 export const WEATHER_FAIL_TTL_MS = 60_000;
+/** SEC-10-03: after a 429/403 (the upstream's quota for us) the failed lookup is kept this long. */
+export const WEATHER_RATE_LIMITED_TTL_MS = 10 * 60_000;
 /** The most a lookup (both services, a retry included) may take. */
 export const WEATHER_BUDGET_MS = 8_000;
 /** A failed refresh may fall back to a good forecast at most this old (its own time is shown). */
@@ -41,15 +50,19 @@ export type WeatherFetch = {
   /** null: not asked (outside the US) or the request failed. */
   alerts: WeatherAlert[] | null;
   alertsStatus: "ok" | "not_us" | "failed";
+  /** SEC-10-03: Open-Meteo refused us (429/403): the failed lookup is kept WEATHER_RATE_LIMITED_TTL_MS. */
+  rateLimited?: boolean;
 };
 
 type Entry = { at: number; ttl: number; value: Promise<WeatherFetch> };
-type State = { entries: Map<string, Entry>; good: Map<string, WeatherFetch>; day: string; calls: number };
+/** The upstream services a lookup calls; each has its own daily counter. */
+export type WeatherService = "open-meteo" | "nws";
+type State = { entries: Map<string, Entry>; good: Map<string, WeatherFetch>; day: string; calls: Record<WeatherService, number> };
 const KEY = Symbol.for("grass-pass.weather");
 
 function state(): State {
   const g = globalThis as unknown as Record<symbol, State | undefined>;
-  return (g[KEY] ??= { entries: new Map(), good: new Map(), day: "", calls: 0 });
+  return (g[KEY] ??= { entries: new Map(), good: new Map(), day: "", calls: { "open-meteo": 0, nws: 0 } });
 }
 
 /** Tests: forget the cache and the daily count. */
@@ -58,7 +71,7 @@ export function resetWeather(): void {
   s.entries.clear();
   s.good.clear();
   s.day = "";
-  s.calls = 0;
+  s.calls = { "open-meteo": 0, nws: 0 };
 }
 
 function dailyCap(env: Env): number {
@@ -66,17 +79,37 @@ function dailyCap(env: Env): number {
   return Number.isFinite(n) && n >= 0 && env.WEATHER_DAILY_CALLS?.trim() ? Math.floor(n) : WEATHER_DAILY_CALLS_DEFAULT;
 }
 
-/** Count one Open-Meteo call against today's cap (UTC day: Open-Meteo's own counter). False when the cap is used up. */
-function takeCall(nowMs: number, env: Env): boolean {
+/** The shared store key for a service's calls on a UTC day. */
+export const weatherCallsKey = (service: WeatherService, day: string) => `weather:calls:${service}:${day}`;
+
+/**
+ * Count one upstream call against today's cap (UTC day: Open-Meteo's own counter). False when the cap is used up.
+ * SEC-10-03: shared across instances through the store when it is Upstash; this process's count always applies too.
+ */
+export async function takeWeatherCall(service: WeatherService, nowMs: number, env: Env, sharedStore?: Store): Promise<boolean> {
   const s = state();
   const day = new Date(nowMs).toISOString().slice(0, 10);
   if (s.day !== day) {
     s.day = day;
-    s.calls = 0;
+    s.calls = { "open-meteo": 0, nws: 0 };
   }
-  if (s.calls >= dailyCap(env)) return false;
-  s.calls++;
-  return true;
+  const cap = dailyCap(env);
+  if (s.calls[service] >= cap) return false;
+  s.calls[service]++;
+  const store = sharedStore ?? getStore("limits", { env });
+  if (store.kind !== "upstash") return true;
+  try {
+    const n = await store.incr(weatherCallsKey(service, day), 1, 2 * 86_400);
+    if (n > cap) {
+      logOnce(`weather-cap-${service}-${day}`, "weather_cap_reached", { service, cap, day }, "warn");
+      return false;
+    }
+    return true;
+  } catch (err) {
+    // The store is down: this process's own count (above) still caps it.
+    logOnce(`weather-store-${day}`, "weather_cap_store_error", { error: err instanceof Error ? err.name : "unknown" }, "warn");
+    return true;
+  }
 }
 
 export type WeatherDeps = { fetchImpl?: FetchLike; env?: Env; /** Tests: a shorter budget than the 8 s default. */ timeoutMs?: number };
@@ -106,7 +139,7 @@ export async function lookupWeather(lat: number, lng: number, nowMs: number, dep
   }
   const point = { lat: roundCoord(lat), lng: roundCoord(lng) };
   const forecastP = (async (): Promise<Pick<WeatherFetch, "forecast" | "forecastError">> => {
-    if (!takeCall(nowMs, env)) {
+    if (!(await takeWeatherCall("open-meteo", nowMs, env))) {
       log("weather_forecast", { source: "open-meteo", ok: false, code: "budget" }, "warn");
       return { forecast: null, forecastError: "budget" };
     }
@@ -122,6 +155,11 @@ export async function lookupWeather(lat: number, lng: number, nowMs: number, dep
   })();
   const alertsP = (async (): Promise<Pick<WeatherFetch, "alerts" | "alertsStatus">> => {
     if (!inNwsArea(lat, lng)) return { alerts: null, alertsStatus: "not_us" };
+    // SEC-10-03: weather.gov calls are counted too (their own counter, same daily cap).
+    if (!(await takeWeatherCall("nws", nowMs, env))) {
+      log("weather_alerts", { source: "nws-alerts", ok: false, code: "budget" }, "warn");
+      return { alerts: null, alertsStatus: "failed" };
+    }
     try {
       const r = await withRetry(budget, (timeoutMs) => fetchAlerts(lat, lng, nowMs, { fetchImpl: deps.fetchImpl, env, timeoutMs }));
       log("weather_alerts", { source: "nws-alerts", ok: true, latencyMs: r.latencyMs, alerts: r.alerts.length, ...point });
@@ -133,7 +171,7 @@ export async function lookupWeather(lat: number, lng: number, nowMs: number, dep
     }
   })();
   const [f, a] = await Promise.all([forecastP, alertsP]);
-  return { fetchedAt: nowMs, ...f, ...a };
+  return { fetchedAt: nowMs, ...f, ...a, ...(f.forecastError === "rate_limited" ? { rateLimited: true } : {}) };
 }
 
 /** The cached lookup for a park position (see the file comment). */
@@ -154,6 +192,7 @@ export function cachedWeather(lat: number, lng: number, nowMs: number, deps: Wea
       }
       return w;
     }
+    if (w.rateLimited) entry.ttl = WEATHER_RATE_LIMITED_TTL_MS;
     // A failed refresh: keep showing the last good forecast for this spot (with its own time), not nothing.
     const prev = s.good.get(key);
     if (prev?.forecast && nowMs - prev.fetchedAt <= WEATHER_STALE_MAX_MS && w.forecastError !== "budget") {

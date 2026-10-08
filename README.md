@@ -96,11 +96,12 @@ daily caps protect the free model budget and the public map servers.
 parks, the [National Weather Service](https://www.weather.gov/) (`api.weather.gov`) for active alerts, then writes the
 words itself (`src/lib/weather/summary.ts`: thresholds for storms, rain, heat, cold and wind; "Rain likely from about
 3 PM" comes from the hourly forecast). Only official alerts with `status: Actual` are shown, with their real sender;
-we never write our own instructions for an alert. The card streams in after the pass (the page never waits for it);
-if the weather service does not answer within 8 s the card says "No weather data available" and why. Cached 30
+we never write our own instructions for an alert. The page waits up to 1.2 s for the forecast (usually cached, so the
+card is in the first page and nothing below it jumps); a slower lookup streams in after the pass; if the weather service does not answer within 8 s the card says "No weather data available" and why. Cached 30
 minutes per park position (rounded to about 1 km); if a refresh fails, the last good forecast (at most 3 hours old)
-stays, with its own "forecast updated" time. Daily cap `WEATHER_DAILY_CALLS` (default 5,000; Open-Meteo's free API
-allows 10,000 non-commercial calls a day).
+stays, with its own "forecast updated" time. Daily cap `WEATHER_DAILY_CALLS` (default 5,000 calls each for Open-Meteo and
+weather.gov, per UTC day, shared by all server instances through Upstash; Open-Meteo's free API allows 10,000
+non-commercial calls a day). After a 429 the park waits 10 minutes before asking again.
 
 ## Quick start
 Needs Node 22 and pnpm.

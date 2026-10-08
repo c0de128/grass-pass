@@ -55,6 +55,15 @@ export function readyAnnouncement(parkName: string, cached: boolean, autoOpen: b
   return autoOpen ? `${what} Opening it now. Press Stay here to stop.` : `${what} Open it when you like.`;
 }
 
+/**
+ * Round 9 (Q-9-04): the earlier pass finished while the visitor is on the park step (shown, and said in the live region).
+ * Picking a park still starts a new pass; the finished one stays saved.
+ */
+export function parkStepReadyText(parkName: string, cached: boolean): string {
+  const what = cached ? `Someone already made this pass for ${parkName} today, and it is ready.` : `Your pass for ${parkName} is ready.`;
+  return `${what} Open it with the link below, or pick a park to make a new one.`;
+}
+
 /** The park + age of the request that is really running (labels follow it, not the newest choice: Q-8-03). */
 export type RunningRequest = { parkId: string; parkName: string; band: AgeBand };
 
@@ -414,7 +423,15 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const runName = running?.parkName ?? parkName;
   const runBand = running?.band ?? band;
   const readyHref = state.kind === "done" ? `/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}` : null;
-  const liveText = !open ? "" : step === "make" && state.kind === "done" ? readyAnnouncement(runName ?? "", state.cached, autoOpen) : announce;
+  // Round 9 (Q-9-04): the earlier pass finished while the visitor is back on the park step: say so there too.
+  const readyOnParkStep = open && step === "park" && state.kind === "done" && running !== null;
+  const liveText = !open
+    ? ""
+    : step === "make" && state.kind === "done"
+      ? readyAnnouncement(runName ?? "", state.cached, autoOpen)
+      : readyOnParkStep
+        ? parkStepReadyText(runName ?? "", state.cached)
+        : announce;
   const showBack = (step === "age" || step === "make") && !working && state.kind !== "done";
 
   return (
@@ -576,6 +593,15 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                   <button type="button" onClick={() => goTo("make")} className="min-h-11 text-left font-heading font-extrabold underline underline-offset-4">
                     Back to my pass for {runName}
                   </button>
+                </div>
+              ) : null}
+
+              {readyOnParkStep ? (
+                <div className="flex flex-col items-start gap-2 rounded-2xl bg-sun px-4 py-3 text-sun-foreground" data-testid="ready-on-park-note">
+                  <p className="font-semibold">{parkStepReadyText(runName ?? "", state.kind === "done" && state.cached)}</p>
+                  <Link href={readyHref ?? "/"} onClick={markPassFocus} className="min-h-11 font-heading font-extrabold underline underline-offset-4">
+                    Open my pass for {runName}
+                  </Link>
                 </div>
               ) : null}
 

@@ -261,3 +261,29 @@ test("UX-8-04: the hero card's 'View pass' stays on one line (360 and 1280)", as
     await context.close();
   }
 });
+
+test("Q-9-04: the earlier pass finishes while the visitor is on the park step: the open wizard says it is ready", async ({ browser }) => {
+  test.setTimeout(60_000);
+  const context = await browser.newContext({ ...judgeAddress(46), reducedMotion: "reduce" });
+  const page = await context.newPage();
+  const dialog = await judgeOnStep3(page);
+  await dialog.getByRole("button", { name: "Make my pass" }).click();
+  await push(page, STEP);
+  await dialog.getByRole("button", { name: "Close" }).click();
+  await page.getByRole("button", { name: "Use my location" }).first().click();
+  await expect(dialog.getByTestId("still-making-note")).toBeVisible();
+  // The old request answers while the visitor has not picked a park yet.
+  await push(page, { type: "result", pass, cached: false }, 0);
+  const note = dialog.getByTestId("ready-on-park-note");
+  await expect(note).toContainText("Your pass for Celebration Park is ready.");
+  await expect(dialog.getByTestId("still-making-note")).toHaveCount(0);
+  await expect(page.getByTestId("wizard-announce")).toHaveText("Your pass for Celebration Park is ready. Open it with the link below, or pick a park to make a new one.");
+  // It never opens by itself from the park step.
+  await page.waitForTimeout(2_000);
+  await expect(page).not.toHaveURL(/\/pass\//);
+  const r = await new AxeBuilder({ page }).withTags(AXE_TAGS).include('[data-testid="pass-wizard"]').analyze();
+  expect(r.violations.map((v) => `park step ready ${v.id}`)).toEqual([]);
+  await note.getByRole("link", { name: "Open my pass for Celebration Park" }).click();
+  await expect(page).toHaveURL(new RegExp(`/pass/${pass.id}$`));
+  await context.close();
+});

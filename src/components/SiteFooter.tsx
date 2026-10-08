@@ -182,7 +182,15 @@ export function SiteFooter() {
             <a className={credit} href="https://serpapi.com/">
               SerpApi
             </a>{" "}
-            · Clues: Gemma 4 by default (open model, Apache-2.0) · Icons: Lucide (ISC) · Fonts: Bricolage Grotesque and DM Sans (site),
+            · Weather:{" "}
+            <a className={credit} href="https://open-meteo.com/">
+              Open-Meteo
+            </a>{" "}
+            (CC BY 4.0) and{" "}
+            <a className={credit} href="https://www.weather.gov/">
+              NWS
+            </a>{" "}
+            alerts (public domain) · Clues and trip tips: Gemma 4 by default (open model, Apache-2.0) · Icons: Lucide (ISC) · Fonts: Bricolage Grotesque and DM Sans (site),
             Fredoka and Nunito (print), SIL OFL 1.1 · Park photos: {parkPhotoCreditText()}, details on
             the{" "}
             <Link className={credit} href="/about#credits">

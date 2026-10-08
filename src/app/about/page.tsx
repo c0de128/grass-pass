@@ -479,7 +479,7 @@ export default function AboutPage() {
                 (counts and months only, never review text or names).
               </li>
               <li>
-                Clues:{" "}
+                Clues and trip tips:{" "}
                 <a className={ext} href="https://huggingface.co/google/gemma-4-31B-it">
                   Gemma 4 (gemma-4-31B-it)
                 </a>

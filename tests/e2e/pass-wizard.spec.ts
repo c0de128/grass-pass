@@ -55,14 +55,20 @@ async function axeDialog(page: Page, label: string) {
   expect(overflow, `${label} sideways scroll`).toBeLessThanOrEqual(0);
 }
 
+/**
+ * Q-10-05 (round 10): under the full suite (every worker busy) the home page can take more than the default 5 s to
+ * hydrate and reopen the wizard from sessionStorage, so these waits are longer. Alone the spec passed 3 of 3 runs.
+ */
+const UNDER_LOAD = { timeout: 20_000 };
+
 /** Open the wizard on step 3 the way the sign-in round trip does. */
 async function resumeOnStep3(page: Page) {
   await page.goto("/");
   await page.evaluate(([k, v]) => sessionStorage.setItem(k, v), [RESUME_KEY, JSON.stringify({ park: CELEBRATION, band: "6-10" })]);
-  await page.goto("/?resume=1");
+  await page.goto("/?resume=1", { waitUntil: "load" });
   const dialog = page.getByTestId("pass-wizard");
-  await expect(dialog).toBeVisible();
-  await expect(dialog).toHaveAccessibleName("Make your pass");
+  await expect(dialog).toBeVisible(UNDER_LOAD);
+  await expect(dialog).toHaveAccessibleName("Make your pass", UNDER_LOAD);
   return dialog;
 }
 
@@ -193,7 +199,7 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
 
     for (const [i, line] of STEPS.entries()) {
       await page.evaluate((l) => (window as unknown as { __gpPush: (x: unknown) => void }).__gpPush(l), line);
-      await expect(dialog.getByTestId("making-live")).toHaveText(line.text);
+      await expect(dialog.getByTestId("making-live")).toHaveText(line.text, UNDER_LOAD);
       await expect(rows.nth(i)).toHaveAttribute("data-state", "active");
       await expect(rows.nth(i)).toContainText(line.text);
       for (let j = 0; j < i; j++) await expect(rows.nth(j)).toHaveAttribute("data-state", "done");
@@ -231,11 +237,11 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
         await dialog.getByRole("button", { name: "Next" }).click();
         await dialog.getByRole("button", { name: "Make my pass" }).click();
         for (const line of STEPS.slice(0, 3)) await page.evaluate((l) => (window as unknown as { __gpPush: (x: unknown) => void }).__gpPush(l), line);
-        await expect(dialog.getByTestId("making-live")).toHaveText(STEPS[2].text);
+        await expect(dialog.getByTestId("making-live")).toHaveText(STEPS[2].text, UNDER_LOAD);
         await axeDialog(page, `${label} making`);
         // Ready: checked right away (it opens the pass after 1.6 s).
         await page.evaluate((p) => (window as unknown as { __gpPush: (x: unknown) => void }).__gpPush({ type: "result", pass: p, cached: false }), pass);
-        await expect(dialog.getByTestId("pass-ready")).toBeVisible();
+        await expect(dialog.getByTestId("pass-ready")).toBeVisible(UNDER_LOAD);
         const r = await new AxeBuilder({ page }).withTags(AXE_TAGS).include('[data-testid="pass-wizard"]').analyze();
         expect(r.violations.map((v) => `${label} ready ${v.id}`)).toEqual([]);
       },
@@ -247,7 +253,7 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
     test.setTimeout(120_000);
     await eachSize(browser, async (page, label) => {
       const dialog = await resumeOnStep3(page);
-      await expect(dialog.getByTestId("judge-left")).not.toHaveText("");
+      await expect(dialog.getByTestId("judge-left")).not.toHaveText("", UNDER_LOAD);
       await axeDialog(page, `${label} step 3 signed out`);
     });
   });

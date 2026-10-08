@@ -10,7 +10,7 @@
 import { safetyForBand } from "@/lib/pass/audience";
 import "server-only";
 import "@/lib/zod-config";
-import { createJsonCache, type Store } from "@/lib/cache";
+import { createJsonCache, WaiterAbortedError, type Store } from "@/lib/cache";
 import type { QuotaTicket } from "@/lib/limits";
 import { log } from "@/lib/log";
 import { callModel, configuredModelId, MAX_TOKENS, ModelError, modelTimeoutCapMs, type ModelLogger } from "@/lib/model";
@@ -154,7 +154,11 @@ export type BuildDeps = {
   fetchImpl?: FetchLike;
   /** The model call. */
   modelFetch?: FetchLike;
-  /** In-flight signal: aborts the FREE data steps when every client has left (never the model call). */
+  /**
+   * In-flight signal: aborts the FREE data steps when every client has left (never the model call).
+   * Round 9 (Q-9-01): when it fires BEFORE the paid steps (Lucky Finds searches, the model call), the build stops
+   * with WaiterAbortedError: nothing paid is started and no pass is saved (a pass already pinned finishes).
+   */
   signal: AbortSignal;
   emit: (step: PassStep, text: string) => void;
   /** Called right before the paid model call: it must then finish and be cached even if clients leave. */
@@ -414,12 +418,22 @@ export async function buildPass(input: BuildInput, deps: BuildDeps): Promise<Bui
 /** buildPass after the deadline is set: `data` carries the deadline signal for the free data steps. */
 async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: BuildDeps, left: () => number): Promise<BuildOutcome> {
   const { band } = input;
+  // Round 9 (Q-9-01): every client left before the paid steps. Stop here: no SerpApi search, no model call, no saved
+  // pass (the aborted data steps would otherwise read as "too slow" on a pass nobody waited for). Only the client
+  // signal counts (deps.signal); the data deadline (data.signal) is a real "too slow".
+  const stopIfClientGone = () => {
+    if (deps.signal.aborted) {
+      log("pass_stopped_client_gone", { park: input.ref.type + "/" + input.ref.id, id: input.id });
+      throw new WaiterAbortedError();
+    }
+  };
   deps.emit("map", stepText("map", deps.env));
   const fr = await loadFeatures(
     input.ref,
     { store: data.store, env: data.env, now: data.now, fetchImpl: data.fetchImpl, signal: data.signal, onUpstream: data.onUpstream },
     data.featuresPlan,
   );
+  stopIfClientGone();
   if (!fr.ok) return fr.outcome;
   const f = fr.value;
   // SEC-1-01 / Q-1-06: the optional Find This Spot geometry starts only once features confirmed a
@@ -442,6 +456,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     now: data.now,
     fetchImpl: data.fetchImpl,
     signal: luckyDeadline.signal,
+    // Q-9-01: no NEW search is sent once every client has left (a sent one still finishes and is cached).
+    stopBefore: deps.signal,
     onUpstream: data.onUpstream,
     warmup: data.warmup,
   })
@@ -455,6 +471,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const wild = await loadWild(f, data);
   const park = withoutReported(parkPool(f), deps.exclude);
   const luckyResult = withoutReported(await luckyLoad, deps.exclude);
+  stopIfClientGone();
   const lucky: SectionState = luckyResult.state;
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
 
@@ -563,6 +580,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
           }
         : undefined;
     const { messages, jsonSchema } = requestFor(callPlan, callSpot, notes);
+    // Q-9-01: the last check before the first paid call is reserved and pinned (later calls are pinned already).
+    if (call === 1) stopIfClientGone();
     const ticket = await deps.reserveAiCall();
     if (!ticket) {
       if (call === 1) return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: PASS_COPY.paused, retryAfter: 3600 }, parkData };

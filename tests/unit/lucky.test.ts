@@ -471,10 +471,13 @@ describe("loadLucky (the whole lookup)", () => {
     expect(later.items.map((i) => i.id)).toEqual(["lucky-dog"]); // dogs qualified, then the cap stopped bikes
   });
 
-  it("a cap in the middle keeps what qualified (dogs) but is not cached for 30 days", async () => {
+  it("a cap in the middle keeps what qualified (dogs), says what is missing (Q-9-05), and is not cached for 30 days", async () => {
     const r = serpReplay();
     const out = await loadLucky(ARBOR, { features: {} }, deps(r.fetchImpl, { ...ENV, SERPAPI_DAILY_CAP: "2" }));
-    expect(out.state).toEqual({ status: "ok" });
+    expect(out.state).toEqual({
+      status: "ok",
+      note: "Lucky Finds: only dogs checked. The other visitor-review searches did not run: off for today. We hit the free SerpApi search limit for visitor reviews. It resets at midnight Dallas time.",
+    });
     expect(out.items.map((i) => i.id)).toEqual(["lucky-dog"]);
     const again = serpReplay();
     await loadLucky(ARBOR, { features: {} }, deps(again.fetchImpl, ENV, REC_AT + DAY));

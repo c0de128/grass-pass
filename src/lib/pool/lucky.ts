@@ -229,6 +229,11 @@ export type LuckyDeps = {
   fetchImpl?: FetchLike;
   /** Our pass deadline only (a sent search finishes even when every client has left; its answer is cached). */
   signal?: AbortSignal;
+  /**
+   * Round 9 (Q-9-01): every client has left the pass. No NEW search is sent once it fires (a sent search still
+   * finishes and its counts are cached); the build then stops before the model call.
+   */
+  stopBefore?: AbortSignal;
   /** Called right before a search is sent (charges the per-IP daily share). */
   onUpstream?: () => void;
   /** The server's example warm-up (at most half of the daily SerpApi cap, src/lib/limits/serpapi.ts). */
@@ -246,12 +251,29 @@ export type LuckyResult = {
 
 type Park = { id: string; name: string; lat: number; lng: number };
 
+/** "Lucky Finds: off for today. We hit ..." -> "off for today. We hit ..." (the reason, for a longer sentence). */
+const reasonOf = (message: string) => message.replace(/^(Lucky Finds: |No data available: )/, "");
+
+/**
+ * Round 9 (Q-9-05): a lookup cut short after some searches answered. Finds that qualified are kept (they were paid for);
+ * the note says which keywords were checked and why the rest are missing. With none qualifying, the reason says what
+ * the answered searches found.
+ */
+export function partialLuckyState(rec: Pick<LuckyRecord, "searched" | "finds">, partial: Exclude<SectionState, { status: "ok" }>, kept: number): SectionState {
+  const checked = listWords(rec.searched.map((k) => LUCKY_KEYWORDS[k].plural));
+  if (kept > 0) {
+    return { status: "ok", note: `Lucky Finds: only ${checked} checked. The other visitor-review searches did not run: ${reasonOf(partial.message)}` };
+  }
+  if (rec.searched.length === 0) return partial;
+  return { ...partial, message: `${partial.message} Before that, we checked ${checked}: fewer than ${MIN_MENTIONS} visitor reviews from the last ${WINDOW_MONTHS / 12} years mention ${rec.searched.length === 1 ? "them" : "any of them"}.` };
+}
+
 function fromRecord(rec: LuckyRecord, park: Park, checkedAtMs: number, searches: number, partial: SectionState | null): LuckyResult {
   const qualifying = rec.finds.filter((f) => f.count >= MIN_MENTIONS).slice(0, LUCKY_FINDS_MAX);
   const items = qualifying.map((f) => luckyItem(f, checkedAtMs));
   const checkedAt = new Date(checkedAtMs).toISOString();
+  if (partial && partial.status !== "ok") return { items, state: partialLuckyState(rec, partial, items.length), checkedAt: searches > 0 || items.length > 0 ? checkedAt : null, searches };
   if (items.length > 0) return { items, state: { status: "ok" }, checkedAt, searches };
-  if (partial) return { items, state: partial, checkedAt: searches > 0 ? checkedAt : null, searches };
   if (!rec.place) return { items, state: { status: "empty", message: LUCKY_COPY.noMatch(park.name) }, checkedAt, searches };
   return { items, state: { status: "empty", message: LUCKY_COPY.noEvidence(rec.searched.map((k) => LUCKY_KEYWORDS[k].plural)) }, checkedAt, searches };
 }
@@ -300,6 +322,7 @@ export async function loadLucky(park: Park, features: Pick<ParkFeatures, "featur
     place = "dataId" in v ? { dataId: v.dataId, title: v.title } : null;
     noMatch = "none" in v ? v.none : undefined;
   } else {
+    if (deps.stopBefore?.aborted) return { items: [], state: { status: "unavailable", message: LUCKY_COPY.slow }, checkedAt: null, searches };
     try {
       const m = matchPlace(park, parsePlaces(await serpapiGet(mapsParams(park), "maps", src)));
       if (m.ok) {
@@ -329,6 +352,11 @@ export async function loadLucky(park: Park, features: Pick<ParkFeatures, "featur
   let partial: SectionState | null = null;
   for (const kw of keywordsFor(features)) {
     if (finds.filter((f) => f.count >= MIN_MENTIONS).length >= LUCKY_FINDS_MAX) break;
+    if (deps.stopBefore?.aborted) {
+      // Q-9-01: nobody is waiting; the pass is not made (build-pass stops), and a cut-short lookup is never cached.
+      partial = { status: "unavailable", message: LUCKY_COPY.slow };
+      break;
+    }
     try {
       const json = await serpapiGet(reviewsParams(place.dataId, kw.query), "reviews", src);
       const c = countMentions(json, kw.mentions, deps.now());

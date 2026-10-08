@@ -60,7 +60,8 @@ export type PoolItem = {
 };
 
 export type SectionState =
-  | { status: "ok" }
+  /** Round 9 (Q-9-05): `note` = what is missing from an ok section (Lucky Finds cut short after some searches). */
+  | { status: "ok"; note?: string }
   /** No usable data: the exact SPEC §5.4 "No data available: ..." copy. */
   | { status: "empty"; message: string }
   /** The source didn't answer. */

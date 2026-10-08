@@ -74,7 +74,8 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   const short = pass.target - pass.items.length;
   const missing = SECTIONS.flatMap((s) => {
     const st = pass.sections[s];
-    return st.status === "ok" ? [] : [{ s, message: st.message }];
+    // Round 9 (Q-9-05): an ok section can still say what is missing (Lucky Finds cut short after some searches).
+    return st.status === "ok" ? (st.note ? [{ s, message: st.note }] : []) : [{ s, message: st.message }];
   });
   const { notGrounded, other } = pass.removed;
   const hardNote = hardShortNote(pass);

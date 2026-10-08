@@ -564,6 +564,11 @@ async function buildCounted(ctx: {
       log("pass_not_made", { kind: out.kind, status: out.kind === "error" ? out.status : 200, code: out.kind === "error" ? out.error.code : "EMPTY" }, "warn");
     }
     return out;
+  } catch (err) {
+    // Round 9 (Q-9-01): the build stopped (every client left before the paid steps, or it failed): the October box's
+    // unsent requests are not sent, and nothing is saved.
+    octoberStop.abort(new Error("pass not made"));
+    throw err;
   } finally {
     octoberDeadline.clear();
     if (!ticket.committed) await ticket.release();

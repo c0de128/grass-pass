@@ -48,7 +48,7 @@ export const SectionIdSchema = z.enum(["park", "wild", "lucky"]);
 export type SectionId = z.infer<typeof SectionIdSchema>;
 
 export const SectionStateSchema = z.discriminatedUnion("status", [
-  z.object({ status: z.literal("ok") }),
+  z.object({ status: z.literal("ok"), note: z.string().max(400).optional() }),
   z.object({ status: z.literal("empty"), message: z.string() }),
   z.object({ status: z.literal("unavailable"), message: z.string() }),
   z.object({ status: z.literal("off"), message: z.string() }),

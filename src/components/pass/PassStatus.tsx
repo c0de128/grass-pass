@@ -59,7 +59,10 @@ export function ProgressSteps({ steps }: { steps: { step: PassStep; text: string
 
 /** Section states that are not "ok", each with its exact "No data available" copy (SPEC §5.4). */
 export function SectionNotes({ sections }: { sections: Pass["sections"] }) {
-  const rows = (["park", "wild", "lucky"] as const).filter((k) => sections[k].status !== "ok");
+  const rows = (["park", "wild", "lucky"] as const).filter((k) => {
+    const s = sections[k];
+    return s.status !== "ok" || Boolean(s.note);
+  });
   if (rows.length === 0) return null;
   return (
     <ul className="flex flex-col gap-2">
@@ -68,7 +71,7 @@ export function SectionNotes({ sections }: { sections: Pass["sections"] }) {
         return (
           <li key={k} className="flex flex-col items-start gap-1">
             <Chip kind={k} />
-            <p>{"message" in s ? s.message : null}</p>
+            <p>{"message" in s ? s.message : (s.note ?? null)}</p>
           </li>
         );
       })}

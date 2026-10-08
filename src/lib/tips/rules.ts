@@ -29,16 +29,17 @@ const RULES: readonly Rule[] = [
     kid: (f) => (timeIn(f.text) ? `Plan to be home before ${timeIn(f.text)}` : "Check the sky and head home if you hear thunder"),
     adult: (f) => (timeIn(f.text) ? `Plan to be out of the park before ${timeIn(f.text)}` : "Head indoors if you hear thunder"),
   },
-  { tags: ["alert"], icon: "time", kid: "Read the official weather alert before you go", adult: "Read the official weather alert before you go" },
-  { tags: ["rain"], icon: "umbrella", kid: "Pack rain jackets or an umbrella", adult: "Pack a rain jacket or an umbrella" },
-  { tags: ["hot", "afternoon_heat"], icon: "water", kid: "Bring plenty of water for everyone", adult: "Bring plenty of water" },
-  { tags: ["no_drinking_water"], icon: "water", kid: "Bring water bottles from home", adult: "Bring a water bottle from home" },
   { tags: ["afternoon_heat"], icon: "time", kid: "Go early, before the afternoon heat", adult: "Go early, before the afternoon heat" },
+  { tags: ["alert"], icon: "time", kid: "Read the official alert before you go", adult: "Read the official alert before you go" },
+  { tags: ["rain"], icon: "umbrella", kid: "Pack rain jackets or an umbrella", adult: "Pack a rain jacket or an umbrella" },
+  { tags: ["no_drinking_water"], icon: "water", kid: "Bring water bottles from home: there's no fountain", adult: "Bring water from home: there's no fountain" },
+  { tags: ["hot", "afternoon_heat"], icon: "water", kid: "Bring plenty of water for everyone", adult: "Bring plenty of water" },
+
   { tags: ["uv_high"], icon: "hat", kid: "Pack sun hats for everyone", adult: "Wear a sun hat" },
   { tags: ["uv"], icon: "sunscreen", kid: "Put sunscreen on everyone before you go", adult: "Put on sunscreen before you go" },
   { tags: ["cold"], icon: "jacket", kid: "Bundle up: coats, hats and gloves", adult: "Wear a warm coat, hat and gloves" },
   { tags: ["chilly", "wind"], icon: "jacket", kid: "Bring a jacket for each kid", adult: "Bring a jacket" },
-  { tags: ["layers", "cool_morning"], icon: "layers", kid: "Dress the kids in layers they can peel off", adult: "Dress in layers you can peel off" },
+  { tags: ["layers", "cool_morning"], icon: "layers", kid: "Dress the kids in layers they can take off", adult: "Dress in layers you can take off" },
   {
     tags: ["tick", "mosquito", "chigger"],
     icon: "bugspray",
@@ -70,8 +71,8 @@ export function rulesTips(facts: Pick<TipFacts, "facts">, band: AgeBand): TripTi
     if (out.length >= MAX_TIPS) break;
     const fact = r.tags.map((t) => facts.facts.find((f) => f.tags.includes(t))).find((f) => f !== undefined);
     if (!fact) continue;
-    // At most two tips with the same picture (two water tips on a hot day without a fountain is fine; three is noise).
-    if ((usedIcons.get(r.icon) ?? 0) >= (r.icon === "time" || r.icon === "shoes" ? 1 : 2)) continue;
+    // One tip per picture (one water tip, one shoes tip), except "when to go": a storm time and an early start can both matter.
+    if ((usedIcons.get(r.icon) ?? 0) >= (r.icon === "time" ? 2 : 1)) continue;
     const words = adult ? r.adult : r.kid;
     const tip = typeof words === "string" ? words : words(fact);
     if (out.some((t) => t.tip === tip)) continue;

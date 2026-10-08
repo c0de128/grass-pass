@@ -69,6 +69,7 @@ export const TRIP_TIPS_COPY = {
   /** An older pass, saved before this section existed. */
   beforeTips: "No trip tips for this pass: it was made before trip tips existed.",
   rulesLabel: "Basic tips from the forecast and park map",
+  rulesLabelNoForecast: "Basic tips from the park map",
   rulesWhy: {
     no_answer: "the AI didn't answer",
     failed_checks: "the AI's tips didn't pass our checks",

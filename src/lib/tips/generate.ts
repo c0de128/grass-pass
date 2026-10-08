@@ -90,7 +90,8 @@ export function startTripTips(start: TipsStart, deps: TipsDeps): TipsRun {
   return { done, fallback: () => rulesResult(facts, "no_answer", deps.now()) };
 }
 
-async function fromModel(facts: TipFacts, deps: TipsDeps, t0: number): Promise<TripTips> {
+/** The model's tips (or the rules list) for facts already gathered; `t0` = when the step's clock started. Never rejects for model errors. */
+export async function fromModel(facts: TipFacts, deps: TipsDeps, t0: number): Promise<TripTips> {
   const trace: TipsTrace = { facts };
   const finish = (out: TripTips, extra: Record<string, unknown> = {}) => {
     deps.trace?.(trace);

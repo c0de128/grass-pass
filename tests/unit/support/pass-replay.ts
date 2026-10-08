@@ -55,19 +55,6 @@ export function recordedDraft(slug: string): unknown {
 
 export type Call = { url: string; host: string; init?: RequestInit; body?: string };
 
-type TipsRec = { request: { messages: { role: string; content: string }[] }; response: unknown };
-/** Real trip-tips answers recorded for the replayed parks (tests/fixtures/do-gemma-4-31b-it-trip-tips-*.json), if any. */
-function tipsRecordings(): TipsRec[] {
-  const out: TipsRec[] = [];
-  for (const p of Object.values(PARKS)) {
-    try {
-      out.push(fixture(`do-gemma-4-31b-it-trip-tips-${p.slug}`) as unknown as TipsRec);
-    } catch {
-      // not recorded
-    }
-  }
-  return out;
-}
 
 /**
  * Trip tips (2026-10-08) add one model call per pass (its own request, `trip_tips` schema) and a forecast lookup
@@ -96,14 +83,10 @@ export function passReplay(opts: { model?: (call: Call) => Response | undefined 
     const call: Call = { url, host: u.host, init, body };
     calls.push(call);
 
-    // Trip tips never reach a test's built model answer (`opts.model` builds CLUE answers): a recorded real tips answer
-    // for the park, else no recording (the tips then fall back to the rules list, as they would live).
-    if (isTipsCall(call)) {
-      const sent = JSON.parse(body ?? "{}") as { messages?: { content: string }[] };
-      const user = sent.messages?.[1]?.content ?? "";
-      for (const t of tipsRecordings()) if (user === t.request.messages[1]?.content) return json(t.response);
-      throw new Error("no trip tips recording for this prompt");
-    }
+    // Trip tips never reach a test's built model answer (`opts.model` builds CLUE answers). The replayed parks' data is
+    // from Oct 5-6 and no tips answer was recorded for it, so this call fails like a network error and the pass gets the
+    // rules list, as it would live (tests/unit/trip-tips.test.ts replays the real tips answers recorded on Oct 8).
+    if (isTipsCall(call)) throw new Error("no trip tips recording for this prompt");
     if (u.host === "inference.do-ai.run") {
       const o = await opts.model?.(call);
       if (o) return o;

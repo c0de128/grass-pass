@@ -225,7 +225,12 @@ function weatherFacts(input: TipFactsInput): { facts: TipFact[]; forDate: string
       const from = s.firstRainPossible;
       facts.push({ id: "w-rain", group: "weather", text: from ? `Rain chance up to ${s.rainPct}%, from about ${clockLabel(from)}` : `Rain chance up to ${s.rainPct}%`, tags: ["rain"] });
     } else {
-      facts.push({ id: "w-rain", group: "weather", text: `Rain chance only ${s.rainPct}% while you'd be out`, tags: ["dry"] });
+      facts.push({
+        id: "w-rain",
+        group: "weather",
+        text: s.rainPct < 10 ? "No rain in the forecast while you'd be out" : `Rain chance only ${s.rainPct}% while you'd be out`,
+        tags: ["dry"],
+      });
     }
   }
   if (day.uv !== null && day.uv >= 3) {

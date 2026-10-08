@@ -1,0 +1,607 @@
+{
+  "_recording": {
+    "what": "DERIVED from pass-celebration-6to10-tips-live.json for the rules-fallback view (e2e + screenshots): the same real pass, with id/variant changed to 3 and tripTips replaced by rulesResult(<the recorded facts>, \"no_answer\"), i.e. exactly what the app stores when the tips model call fails. Nothing else changed.",
+    "derivedFrom": "pass-celebration-6to10-tips-live.json"
+  },
+  "pass": {
+    "id": "w188145317-6to10-20261008-3",
+    "park": {
+      "id": "way/188145317",
+      "name": "Celebration Park",
+      "lat": 33.10824,
+      "lng": -96.62468
+    },
+    "ageBand": "6-10",
+    "day": "2026-10-08",
+    "variant": 3,
+    "target": 8,
+    "items": [
+      {
+        "section": "park",
+        "clue": "Spot 2 flat smooth areas with rings on tall posts.",
+        "lookWhere": "",
+        "difficulty": "medium",
+        "evidence": "2 on the park map · OpenStreetMap",
+        "answer": "Basketball courts",
+        "safety": null,
+        "source": "OpenStreetMap",
+        "feature": "basketball",
+        "ref": "osm-basketball"
+      },
+      {
+        "section": "park",
+        "clue": "Point to the water that glitters in the sun.",
+        "lookWhere": "",
+        "difficulty": "easy",
+        "evidence": "2 on the park map · OpenStreetMap",
+        "answer": "Fountains",
+        "safety": "Stay with your grown-up near water.",
+        "source": "OpenStreetMap",
+        "feature": "fountain",
+        "ref": "osm-fountain"
+      },
+      {
+        "section": "park",
+        "clue": "Check for 4 flat areas with a low net in the middle.",
+        "lookWhere": "",
+        "difficulty": "medium",
+        "evidence": "4 on the park map · OpenStreetMap",
+        "answer": "Tennis courts",
+        "safety": null,
+        "source": "OpenStreetMap",
+        "feature": "tennis",
+        "ref": "osm-tennis"
+      },
+      {
+        "section": "park",
+        "clue": "Which big grass area has a big box painted in front of the goal?",
+        "lookWhere": "",
+        "difficulty": "medium",
+        "evidence": "25 on the park map · OpenStreetMap",
+        "answer": "Soccer fields (Celebration Park Soccer Fields)",
+        "safety": null,
+        "source": "OpenStreetMap",
+        "feature": "soccer",
+        "ref": "osm-soccer"
+      },
+      {
+        "section": "park",
+        "clue": "Hunt for a sandy place with a white base at every turn.",
+        "lookWhere": "",
+        "difficulty": "hard",
+        "evidence": "5 on the park map · OpenStreetMap",
+        "answer": "Baseball fields (Celebration Park Baseball Diamonds)",
+        "safety": null,
+        "source": "OpenStreetMap",
+        "feature": "baseball",
+        "ref": "osm-baseball"
+      },
+      {
+        "section": "park",
+        "clue": "Somewhere a mirror shines on a calm day.",
+        "lookWhere": "",
+        "difficulty": "easy",
+        "evidence": "2 on the park map · OpenStreetMap",
+        "answer": "Ponds or lakes",
+        "safety": "Stay with your grown-up near water.",
+        "source": "OpenStreetMap",
+        "feature": "water",
+        "ref": "osm-water"
+      },
+      {
+        "section": "park",
+        "clue": "Peek at the ladders and steps that lead to the top of a tower.",
+        "lookWhere": "",
+        "difficulty": "easy",
+        "evidence": "1 on the park map · OpenStreetMap",
+        "answer": "Playground",
+        "safety": null,
+        "source": "OpenStreetMap",
+        "feature": "playground",
+        "ref": "osm-playground"
+      }
+    ],
+    "sections": {
+      "park": {
+        "status": "ok"
+      },
+      "wild": {
+        "status": "empty",
+        "message": "No data available: no research-grade sightings within 1.5 km in the last 14 days on iNaturalist."
+      },
+      "lucky": {
+        "status": "off",
+        "message": "Lucky Finds: not connected. This server has no SerpApi key, so we can't pull Lucky Finds from visitor reviews."
+      }
+    },
+    "removed": {
+      "notGrounded": 1,
+      "other": 0
+    },
+    "safetyFiltered": 0,
+    "parentNote": "Start with find 7: it's easy and it stays put. Finds 2 and 6 are near water: stay close.",
+    "model": {
+      "answered": "gemma-4-31B-it",
+      "attempts": 2,
+      "latencyMs": 8711
+    },
+    "generatedAt": "2026-10-08T15:18:35.798Z",
+    "dataCheckedAt": {
+      "osm": "2026-10-06T03:25:11.253Z",
+      "inat": "2026-10-08T15:17:47.004Z"
+    },
+    "wildSince": "2026-09-24",
+    "october": {
+      "status": "ok",
+      "radiusKm": 25,
+      "thisYear": {
+        "d1": "2026-09-24",
+        "d2": "2026-10-07",
+        "count": 11
+      },
+      "lastYear": {
+        "d1": "2025-09-24",
+        "d2": "2025-10-07",
+        "count": 60
+      },
+      "checkedAt": "2026-10-08T15:17:47.734Z",
+      "milkweed": {
+        "status": "ok",
+        "count": 7,
+        "radiusKm": 1.5,
+        "checkedAt": "2026-10-08T15:17:48.612Z"
+      }
+    },
+    "spot": {
+      "status": "ok",
+      "target": {
+        "osmId": "way/536185861",
+        "label": "picnic shelter",
+        "name": null,
+        "answer": "The picnic shelter"
+      },
+      "start": {
+        "osmId": "way/374628989",
+        "label": "parking lot"
+      },
+      "walk": {
+        "meters": 140,
+        "direction": "south-east"
+      },
+      "riddle": "I have a roof and pillars to keep you dry while you eat.",
+      "riddleBy": "model",
+      "map": {
+        "w": 420,
+        "h": 260,
+        "outline": [
+          [
+            422,
+            155,
+            378,
+            127,
+            323,
+            81,
+            243,
+            -2
+          ],
+          [
+            105,
+            -2,
+            102,
+            3,
+            91,
+            27,
+            82,
+            54,
+            77,
+            84,
+            77,
+            262
+          ]
+        ],
+        "roads": [
+          [
+            70,
+            116,
+            106,
+            116,
+            115,
+            114,
+            165,
+            82,
+            182,
+            74,
+            198,
+            69,
+            233,
+            60,
+            248,
+            57,
+            260,
+            51,
+            285,
+            35
+          ],
+          [
+            260,
+            51,
+            241,
+            21,
+            236,
+            18,
+            232,
+            16,
+            226,
+            17,
+            163,
+            37,
+            133,
+            51,
+            107,
+            69,
+            105,
+            73,
+            103,
+            78,
+            104,
+            84,
+            121,
+            110
+          ],
+          [
+            111,
+            93,
+            146,
+            69,
+            162,
+            61,
+            214,
+            42,
+            242,
+            36,
+            249,
+            33
+          ]
+        ],
+        "paths": [
+          [
+            230,
+            -2,
+            256,
+            20,
+            265,
+            28,
+            275,
+            45,
+            284,
+            62,
+            292,
+            69,
+            326,
+            89,
+            341,
+            109,
+            351,
+            119,
+            381,
+            136,
+            391,
+            144,
+            401,
+            155,
+            409,
+            166,
+            422,
+            193
+          ],
+          [
+            81,
+            116,
+            80,
+            105,
+            80,
+            95,
+            81,
+            84,
+            84,
+            70,
+            94,
+            44,
+            107,
+            24,
+            110,
+            14,
+            114,
+            -2
+          ],
+          [
+            81,
+            116,
+            85,
+            142,
+            85,
+            155,
+            79,
+            190,
+            80,
+            201,
+            90,
+            233,
+            92,
+            246,
+            91,
+            262
+          ],
+          [
+            83,
+            170,
+            99,
+            149,
+            117,
+            130,
+            127,
+            122,
+            138,
+            114,
+            151,
+            105,
+            164,
+            97,
+            193,
+            85,
+            228,
+            73,
+            245,
+            70,
+            266,
+            68,
+            290,
+            68
+          ],
+          [
+            193,
+            85,
+            265,
+            262
+          ],
+          [
+            209,
+            212,
+            216,
+            223,
+            227,
+            230,
+            239,
+            232,
+            252,
+            230,
+            262,
+            223,
+            269,
+            212,
+            272,
+            200,
+            269,
+            187,
+            262,
+            177,
+            252,
+            170,
+            240,
+            167,
+            227,
+            169,
+            216,
+            176,
+            209,
+            187,
+            206,
+            199,
+            209,
+            212
+          ],
+          [
+            84,
+            161,
+            69,
+            161
+          ]
+        ],
+        "waterways": [],
+        "water": [],
+        "pitches": [
+          [
+            325,
+            173,
+            408,
+            176,
+            418,
+            199,
+            422,
+            219,
+            422,
+            239,
+            417,
+            257,
+            415,
+            262,
+            290,
+            262,
+            273,
+            209,
+            276,
+            193,
+            282,
+            181,
+            299,
+            173,
+            325,
+            173
+          ],
+          [
+            136,
+            262,
+            182,
+            218,
+            195,
+            218,
+            205,
+            221,
+            213,
+            228,
+            234,
+            262,
+            136,
+            262
+          ],
+          [
+            185,
+            99,
+            174,
+            101,
+            157,
+            107,
+            140,
+            119,
+            125,
+            138,
+            117,
+            162,
+            116,
+            181,
+            118,
+            193,
+            121,
+            203,
+            196,
+            189,
+            204,
+            183,
+            206,
+            175,
+            205,
+            166,
+            185,
+            99
+          ],
+          [
+            208,
+            89,
+            223,
+            80,
+            239,
+            75,
+            254,
+            74,
+            267,
+            74,
+            278,
+            77,
+            297,
+            86,
+            307,
+            93,
+            315,
+            102,
+            326,
+            120,
+            281,
+            149,
+            264,
+            163,
+            258,
+            165,
+            251,
+            164,
+            244,
+            161,
+            238,
+            154,
+            236,
+            147,
+            208,
+            89
+          ]
+        ],
+        "parking": [
+          [
+            105,
+            56,
+            140,
+            36,
+            170,
+            24,
+            228,
+            7,
+            245,
+            69,
+            220,
+            74,
+            182,
+            88,
+            135,
+            115,
+            117,
+            80,
+            105,
+            56
+          ]
+        ],
+        "target": [
+          244,
+          202
+        ],
+        "start": [
+          176,
+          58
+        ],
+        "scale": {
+          "units": 115.3,
+          "label": "100 m (330 ft)"
+        },
+        "frame": "spot",
+        "unitsPerM": 1.1535
+      },
+      "checkedAt": "2026-10-06T03:15:18.323Z"
+    },
+    "tripTips": {
+      "source": "rules",
+      "forDate": "2026-10-08",
+      "forecast": true,
+      "items": [
+        {
+          "tip": "Go early, before the afternoon heat",
+          "why": "About 75°F at 10 AM, 88°F by 3 PM",
+          "icon": "time"
+        },
+        {
+          "tip": "Read the official alert before you go",
+          "why": "Official alert: Air Quality Alert (weather.gov)",
+          "icon": "time"
+        },
+        {
+          "tip": "Bring water bottles from home: there's no fountain",
+          "why": "No drinking fountain on the park map",
+          "icon": "water"
+        },
+        {
+          "tip": "Pack sun hats for everyone",
+          "why": "UV index up to 6 (high)",
+          "icon": "hat"
+        },
+        {
+          "tip": "Put sunscreen on everyone before you go",
+          "why": "UV index up to 6 (high)",
+          "icon": "sunscreen"
+        },
+        {
+          "tip": "Dress the kids in layers they can take off",
+          "why": "About 75°F at 10 AM, 88°F by 3 PM",
+          "icon": "layers"
+        }
+      ],
+      "reason": "no_answer",
+      "madeAt": "2026-10-08T15:17:50.288Z"
+    }
+  }
+}

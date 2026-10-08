@@ -34,7 +34,7 @@ export function tipsSystemPrompt(band: AgeBand, forecast: boolean): string {
     "Rules:",
     `- Write ${ASK_MIN} to ${ASK_MAX} tips. Each tip is one short imperative sentence of at most 12 words (at most ${TIP_MAX} characters), like "Wear closed-toe shoes: the creek bank can be muddy".`,
     "- Base every tip on ONE fact from the FACTS list and put that fact's id in factId. Never invent a place, a weather detail, an animal or a plant that is not in the facts.",
-    "- Only write a number if that exact number is in a fact.",
+    '- Only write a number if that exact number is in a fact, and only when it helps (a temperature, a time, a rain chance). Never write "the 1 shelter" or "1 bench": say "the picnic shelter".',
     forecast
       ? "- Use the weather facts first (heat, rain, sun, wind, cold, sunset), then the park map and the sightings."
       : "- There is no forecast: do not mention the weather at all. Use the park map and the sightings.",

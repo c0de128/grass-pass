@@ -143,7 +143,10 @@ export function liveStatement(statuses: readonly ExampleStatus[], enabled: boole
   // Judge R7 T1: "made today" counts only passes shown from today (an older complete one is not today's).
   const today = statuses.filter((s) => s.pass && s.today).length;
   // Kevin 2026-10-07: no count in the pill.
-  if (today > 0) return { text: `Example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
+  // RULES-10-05 (round 10): Kevin's "made today" wording only when EVERY card shown is from today; a mix (an older
+  // complete pass stands in for a short one today) says the dates are on the cards, and does not pulse.
+  if (today > 0 && today === readyOnes.length) return { text: `Example ${today === 1 ? "pass" : "passes"} made today from live data`, live: true };
+  if (today > 0) return { text: "Example passes from live data (dates on each card)", live: false };
   if (statuses.some((s) => s.refreshing)) return { text: "Making today's example passes", live: true };
   if (readyOnes.length > 0) {
     return { text: `${readyOnes.length} example ${readyOnes.length === 1 ? "pass" : "passes"} ready (made on an earlier day)`, live: false };

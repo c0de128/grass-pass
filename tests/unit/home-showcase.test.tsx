@@ -173,6 +173,8 @@ describe("home showcase (v0 slots filled with real data)", () => {
     const pass = realPass();
     expect(liveStatement([readyStatus("oak-point", pass), readyStatus("celebration", pass)], true)).toEqual({ text: "Example passes made today from live data", live: true });
     expect(liveStatement([readyStatus("oak-point", pass, false)], true)).toEqual({ text: "1 example pass ready (made on an earlier day)", live: false });
+    // RULES-10-05 (round 10): one card from today and one from an earlier day: not "made today".
+    expect(liveStatement([readyStatus("oak-point", pass, false), readyStatus("celebration", pass)], true)).toEqual({ text: "Example passes from live data (dates on each card)", live: false });
     expect(liveStatement([missingStatus("oak-point", "x", true)], true)).toEqual({ text: "Making today's example passes", live: true });
     expect(liveStatement([missingStatus("oak-point", "x")], true)).toEqual({ text: "Example passes not ready yet", live: false });
     expect(liveStatement([missingStatus("oak-point", "x")], false)).toEqual({ text: "Example passes are turned off", live: false });

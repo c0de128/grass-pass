@@ -493,7 +493,8 @@ export default function AboutPage() {
                 Site design (v3, Oct 6, 2026): designed by Kevin in v0 by Vercel and ported by hand. Oct 7, 2026 redesign (the home
                 page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its
                 animation): built by AI coding agents (Claude Code) at Kevin&apos;s direction; the footer art is code-drawn SVG, no
-                stock art. Logo sprout and all icons:{" "}
+                stock art. Oct 8, 2026 (the weather card, the trip tips section, the phone layout and the sign-in page): also built by
+                AI coding agents (Claude Code) at Kevin&apos;s direction; the home page text is Kevin&apos;s own. Logo sprout and all icons:{" "}
                 <a className={ext} href="https://lucide.dev/">
                   Lucide
                 </a>{" "}

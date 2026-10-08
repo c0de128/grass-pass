@@ -2,7 +2,7 @@
 
 > Your ticket to get outside. Pick a park. Print a pass. Phone away.
 
-**Try it live:** TODO (PM): put the production URL here at deploy (Fri Oct 9). The example passes open with no
+**Try it live:** https://grass-pass.vercel.app (live since Oct 8, 2026). The example passes open with no
 sign-in; to make your own, press **Try as a judge** (one click, no sign-up).
 
 TODO (PM): put one screenshot of a real pass here (the Arbor Hills example, with its date).
@@ -384,6 +384,8 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Oct 7, 2026 redesign:** the home page sections and How it works diagram, the footer landscape, the Find This Spot
   map and the pass wizard with its animation were built by AI coding agents (Claude Code) at Kevin's direction. The
   footer art is code-drawn SVG, no stock art. Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
+- **Oct 8, 2026:** the weather card, the trip tips section, the phone layout and the sign-in page were also built by
+  AI coding agents (Claude Code) at Kevin's direction. The home page text is Kevin's own.
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
   text; 90 of its drafts shipped (13 with small edits) after a code check and a review by an AI coding agent
   (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,

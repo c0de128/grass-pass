@@ -772,8 +772,8 @@ dialog.gp-wizard::backdrop {
 
 
 /*
- * /signin (Kevin's option A, 2026-10-08): one ticket like the pass maker's dialog. The main part has an ink band with
- * the logo and round notches cut at the band seam and at its bottom corners; the "Why sign in?" stub below has the
+ * /signin (Kevin's option A, 2026-10-08): one ticket like the pass maker's dialog. The main part has round notches
+ * at its bottom corners (Kevin 2026-10-08: no ink band or logo on top); the "Why sign in?" stub below has the
  * matching half notches and a tear line. Masks cut real holes (the page shows through); a drop shadow follows them.
  */
 .gp-signin-ticket {
@@ -785,14 +785,10 @@ dialog.gp-wizard::backdrop {
   border-radius: 2rem 2rem 0 0;
   overflow: hidden;
   -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 var(--seam), #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% var(--seam), #0000 97%, #000 100%),
     radial-gradient(circle var(--notch) at 0 100%, #0000 97%, #000 100%),
     radial-gradient(circle var(--notch) at 100% 100%, #0000 97%, #000 100%);
   -webkit-mask-composite: source-in;
   mask:
-    radial-gradient(circle var(--notch) at 0 var(--seam), #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% var(--seam), #0000 97%, #000 100%),
     radial-gradient(circle var(--notch) at 0 100%, #0000 97%, #000 100%),
     radial-gradient(circle var(--notch) at 100% 100%, #0000 97%, #000 100%);
   mask-composite: intersect;

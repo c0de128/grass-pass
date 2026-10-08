@@ -5,7 +5,6 @@ import { currentSession } from "@/lib/accounts/current";
 import { signOutAction } from "@/app/actions/auth";
 import { JudgePassesLeft } from "@/components/account/SignInCard";
 import { JudgeButton, OAuthButtons } from "@/components/account/SignInPageForms";
-import { Logo } from "@/components/site/Logo";
 import { buttonClassName } from "@/components/ui/Button";
 import {
   ACCOUNT_COPY,
@@ -56,7 +55,7 @@ const WHY: { title: string; detail: string }[] = [
 
 /**
  * Sign-in page (also Auth.js's sign-in and error page), Kevin's option A (2026-10-08): one ticket in the middle,
- * like the pass maker's dialog (ink band with the logo, notched seam, paper body, a tear-off stub). Google and
+ * like the pass maker's dialog (paper body, a tear-off stub; Kevin 2026-10-08: no ink band or logo on top). Google and
  * GitHub (only those set up here), then a separate judge box with the live count, then "Why sign in?" on the stub.
  */
 export default async function SignInPage(props: PageProps<"/signin">) {
@@ -76,9 +75,6 @@ export default async function SignInPage(props: PageProps<"/signin">) {
       <div aria-hidden="true" className="gp-signin-grain grain pointer-events-none absolute inset-0 -z-10" />
       <section aria-labelledby="signin-title" className="gp-signin-ticket w-full max-w-[28rem]" data-testid="sign-in-card">
         <div className="gp-signin-main bg-card text-card-foreground">
-          <div className="gp-band flex h-(--seam) items-center justify-center bg-band text-band-foreground">
-            <Logo inverted notchClassName="bg-band" />
-          </div>
           <div className="flex flex-col gap-5 px-5 pt-7 pb-8 text-center sm:px-9 sm:pt-8">
             <div className="flex flex-col gap-2">
               <h1 id="signin-title" className="text-4xl leading-tight font-extrabold tracking-tight text-ink">

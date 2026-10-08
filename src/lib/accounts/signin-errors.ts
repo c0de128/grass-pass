@@ -2,7 +2,7 @@
 import { waitText } from "@/lib/http/respond";
 import { limitsConfig } from "@/lib/limits/config";
 import { COSTS } from "@/lib/limits/prelimit";
-import { SIGNIN_WINDOW_SEC } from "./config";
+import { authConfigured, enabledOAuthProviders, SIGNIN_WINDOW_SEC } from "./config";
 
 /** Auth.js error codes (pages.error) and ours, as plain words. Unknown codes get the general line. */
 export const ERRORS: Record<string, string> = {
@@ -14,6 +14,16 @@ export const ERRORS: Record<string, string> = {
   Verification: "That sign-in link didn't work. Please try again.",
 };
 export const GENERAL_ERROR = "Sign-in didn't work this time. Give it another try.";
+/**
+ * SEC-10-05 (round 10): Auth.js reports a callback whose sign-in check cookie expired (15 minutes at GitHub/Google) or
+ * went missing as "Configuration". When this server IS set up for OAuth, that is the likely cause, so say so.
+ */
+export const TOO_SLOW_ERROR = "That sign-in took too long or didn't finish. Please try again.";
+
+/** Is OAuth set up here (a secret and at least one provider)? Then "Configuration" means an unfinished sign-in. */
+export function oauthReady(env: Record<string, string | undefined> = process.env): boolean {
+  return authConfigured(env) && enabledOAuthProviders(env).length > 0;
+}
 
 /**
  * SEC-6-03: the longest wait the app itself can put in /signin?wait= (seconds). Two places send a visitor there:
@@ -28,7 +38,8 @@ export function maxSignInWaitSec(env: Record<string, string | undefined> = proce
 }
 
 /** RULES-5-04: the rate-limit line with the real wait when the address carries it (?wait=<seconds>). */
-export function errorText(code: string, wait: string | undefined, maxWaitSec: number = maxSignInWaitSec()): string {
+export function errorText(code: string, wait: string | undefined, maxWaitSec: number = maxSignInWaitSec(), ready: boolean = oauthReady()): string {
+  if (code === "Configuration" && ready) return TOO_SLOW_ERROR;
   const secs = wait && /^\d{1,6}$/.test(wait) ? Number(wait) : null;
   if (code === "rate_limited" && secs !== null && secs > 0 && secs <= maxWaitSec) {
     return `Whoa, that's a lot of sign-ins from your connection (shared Wi-Fi or a phone network can do that). Please wait ${waitText(secs)}, then press the button again.`;

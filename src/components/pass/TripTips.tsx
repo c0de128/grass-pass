@@ -1,4 +1,4 @@
-import { Apple, Clock, Footprints, GlassWater, Layers, Pencil, Route, Shirt, SprayCan, Toilet, TreeDeciduous, Umbrella } from "lucide-react";
+import { Apple, Clock, Footprints, GlassWater, Info, Layers, Pencil, Route, Shirt, SprayCan, Sprout, Toilet, TreeDeciduous, Umbrella } from "lucide-react";
 import type { SVGProps } from "react";
 import { dayLabel } from "@/lib/pass/as-of";
 import { modelShortName, TRIP_TIPS_COPY, type TipIcon, type TripTips as TripTipsData } from "@/lib/tips/schema";
@@ -67,7 +67,7 @@ function LuggageTag({ className }: { className?: string }) {
   );
 }
 
-function Shell({ children, state, label }: { children: React.ReactNode; state: string; label: string }) {
+function Shell({ children, state, label, badge }: { children: React.ReactNode; state: string; label: string; badge?: React.ReactNode }) {
   return (
     <section
       aria-labelledby="trip-tips-title"
@@ -83,9 +83,12 @@ function Shell({ children, state, label }: { children: React.ReactNode; state: s
           <h2 id="trip-tips-title" className="font-heading text-2xl leading-tight font-extrabold tracking-tight text-balance sm:text-3xl">
             {TRIP_TIPS_COPY.heading}
           </h2>
+          {badge}
         </div>
         <LuggageTag className="-mt-1 -mr-1 w-20 shrink-0 -rotate-6 sm:w-28" />
       </div>
+      {/* The tear line of a ticket: dashed, with a notch at each edge (decorative). */}
+      <div aria-hidden="true" className="gp-tips-seam -mx-5 sm:-mx-7" />
       {children}
     </section>
   );
@@ -109,12 +112,30 @@ export function TripTips({ tips, today }: { tips: TripTipsData | undefined; toda
   const stale = tips.forDate < today;
   const fromWhat = tips.forecast ? `the forecast for ${forDay} and the park map` : "the park map and recent sightings";
   return (
-    <Shell state={tips.source} label={`Trip tips for ${forDay}`}>
+    <Shell
+      state={tips.source}
+      label={`Trip tips for ${forDay}`}
+      badge={
+        <p className="gp-tips-badge mt-1.5 inline-flex w-fit items-center gap-1.5 rounded-xl px-2.5 py-1 text-xs leading-snug font-bold" data-testid="trip-tips-source">
+          {tips.source === "model" && tips.model ? (
+            <>
+              <Sprout aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2.5} />
+              Written by {modelShortName(tips.model)} · open model
+            </>
+          ) : (
+            <>
+              <Info aria-hidden="true" className="size-3.5 shrink-0" strokeWidth={2.5} />
+              Basic tips: {TRIP_TIPS_COPY.rulesWhy[tips.reason ?? "no_answer"]}
+            </>
+          )}
+        </p>
+      }
+    >
       <ul className="grid gap-2.5 sm:grid-cols-2 sm:gap-3" data-testid="trip-tips-list">
         {tips.items.map((t, i) => {
           const Icon = ICONS[t.icon];
           return (
-            <li key={`${i}-${t.tip}`} className="gp-tips-item flex items-start gap-3 rounded-2xl p-3 sm:p-3.5" data-icon={t.icon}>
+            <li key={`${i}-${t.tip}`} className="gp-tips-item flex items-start gap-3 rounded-2xl p-3 sm:p-3.5 sm:[&:last-child:nth-child(odd)]:col-span-2" data-icon={t.icon}>
               <span aria-hidden="true" className="gp-tips-icon grid size-10 shrink-0 place-items-center rounded-xl">
                 <Icon className="size-5" strokeWidth={2} />
               </span>
@@ -134,7 +155,7 @@ export function TripTips({ tips, today }: { tips: TripTipsData | undefined; toda
           These tips were made for the weather on {forDay}. Today&apos;s forecast is in the weather card above.
         </p>
       ) : null}
-      <p className="gp-tips-credit border-t border-dashed pt-3 text-xs text-muted-foreground" data-testid="trip-tips-credit">
+      <p className="text-xs text-muted-foreground" data-testid="trip-tips-credit">
         {tips.source === "model" && tips.model ? (
           <>
             Written by {modelShortName(tips.model)} (open model) from {fromWhat}. Code checked that every tip is safe and based on a real fact.

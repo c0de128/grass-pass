@@ -78,11 +78,20 @@ flowchart LR
    see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen. Too few left: up to two refill calls (at most 3 model calls per pass).
 6. **You print it.** Black and white, one Letter page (A4 works too). Code writes every number and date, and the pass
    names the model that actually answered.
+7. **Trip tips (screen only).** Under the weather card, "How to make this a great trip": 4-6 packing and planning tips
+   (shoes, hats, water, sunscreen, bug spray, restroom, when to be back...) written once per pass by the same open model,
+   in parallel with the clues, from facts code writes first: that day's Open-Meteo forecast and weather.gov alerts, the
+   park's mapped fountains, restrooms, shelters, water and paths, and the few iNaturalist sightings worth planning for
+   (poison ivy, ticks, fire ants, mosquitoes, venomous snakes, stinging insects). Each tip must cite one of those facts
+   (shown as "Based on: ..."); code drops a tip that names something not in the facts, adds a number, or says to touch,
+   pick, feed, wade, leave the path or take medicine. No answer within 10 s (or too few tips pass): a short code-written
+   list from the same facts, labelled "Basic tips from the forecast and park map (the AI didn't answer)". Passes made
+   before Oct 8 say they have no trip tips. `src/lib/tips/`.
 
 Passes are cached per park, age band and day (Chicago time), so the next visitor gets them at once. Per-IP limits and
 daily caps protect the free model budget and the public map servers.
 
-**Weather on the pass page** (screen only, never printed, never sent to the model): code asks
+**Weather on the pass page** (screen only, never printed; the card's words are code-written, and only a few code-written facts from it go to the model, for the trip tips in step 7): code asks
 [Open-Meteo](https://open-meteo.com/) for the park's forecast (today, or tomorrow from 6 PM local time) and, for US
 parks, the [National Weather Service](https://www.weather.gov/) (`api.weather.gov`) for active alerts, then writes the
 words itself (`src/lib/weather/summary.ts`: thresholds for storms, rain, heat, cold and wind; "Rain likely from about
@@ -338,7 +347,7 @@ https). What leaves the device (also on `/about`):
 |---|---|---|
 | Typed place text | our server (in the request body, never the web address), then Nominatim; cached 30 days in Upstash Redis by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
-| The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only); the pass page sends only the position, rounded to about 1 km, to Open-Meteo and (US parks) api.weather.gov | park map, sightings, monarch counts, review counts, the weather card |
+| The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only); the pass page, and making a pass, send only the position, rounded to about 1 km, to Open-Meteo and (US parks) api.weather.gov | park map, sightings, monarch counts, review counts, the weather card and trip tips |
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP, web address, time) | Vercel request logs, about 1 hour on the Hobby plan; searches are POSTs, so the logs never hold the typed place or location | running the site |

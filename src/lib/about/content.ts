@@ -33,7 +33,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 2059, files: 75, day: "Oct 8, 2026" } as const;
+export const UNIT_TESTS = { passed: 2100, files: 78, day: "Oct 8, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 // RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
@@ -127,7 +127,8 @@ export function dataSources(): DataSource[] {
 }
 
 /**
- * Weather on the pass page (Kevin, Oct 8): not pass data (the model never sees it), so not one of the four sources above.
+ * Weather on the pass page (Kevin, Oct 8): not clue data, so not one of the four sources above (the trip tips use a few
+ * code-written forecast facts: TRIP_TIPS_ABOUT).
  * Listed with the sources and in the credits.
  */
 export const WEATHER_SOURCES: readonly DataSource[] = [
@@ -137,7 +138,7 @@ export const WEATHER_SOURCES: readonly DataSource[] = [
     gives: "The forecast on each pass page",
     licence: "CC BY 4.0",
     detail:
-      "Weather data by Open-Meteo.com: today's (after 6 PM, tomorrow's) forecast for the park's position, rounded to about 1 km. Code writes the weather words; the model never sees them. Cached 30 minutes; if it doesn't answer within 8 s the card says \"No weather data available\" and why.",
+      "Weather data by Open-Meteo.com: today's (after 6 PM, tomorrow's) forecast for the park's position, rounded to about 1 km. Code writes the weather card's words. When a pass is made, a few code-written facts from it (high and low, rain chance, UV, sunset, alert names) also go to the model for the trip tips. Cached 30 minutes; if it doesn't answer within 8 s the card says \"No weather data available\" and why.",
   },
   {
     name: "National Weather Service",
@@ -148,6 +149,12 @@ export const WEATHER_SOURCES: readonly DataSource[] = [
       "Active alerts for the park's position from api.weather.gov (US parks only). We show the 2 most severe, who sent them and when they end, and link to weather.gov; we never write our own instructions for an alert.",
   },
 ];
+
+/**
+ * Trip tips (Kevin, Oct 8): one honest line on /about (src/lib/tips). Kept here so the page and its test read one text.
+ */
+export const TRIP_TIPS_ABOUT =
+  "Trip tips (\"How to make this a great trip\", on screen only): written once per pass by the same open model, from facts code writes first: that day's forecast and alerts, the park's mapped fountains, restrooms, shelters, water and paths, and the few sightings worth planning for (poison ivy, ticks, fire ants, mosquitoes, venomous snakes, stinging insects). Code drops any tip not based on one of those facts, or that says to touch, pick, feed, wade, leave the path or take medicine. If the model doesn't answer within 10 seconds, the page shows a short code-written list from the same facts and says so. One more model call per pass.";
 
 /** Short ✓ lines on the Privacy card. */
 export const PRIVACY_POINTS: readonly string[] = [
@@ -179,8 +186,8 @@ export function privacyRows(): PrivacyRow[] {
     {
       what: "The park you pick (a public place)",
       where:
-        "Our server, then OpenStreetMap, iNaturalist and SerpApi (name and map position only). The pass page sends only the park's position, rounded to about 1 km, to Open-Meteo and (US parks) the National Weather Service.",
-      why: "For the park map, sightings, monarch counts and review counts, and the weather card.",
+        "Our server, then OpenStreetMap, iNaturalist and SerpApi (name and map position only). The pass page, and making a pass, send only the park's position, rounded to about 1 km, to Open-Meteo and (US parks) the National Weather Service.",
+      why: "For the park map, sightings, monarch counts and review counts, the weather card and the trip tips.",
     },
     {
       what: "The age band (for example 6-10)",

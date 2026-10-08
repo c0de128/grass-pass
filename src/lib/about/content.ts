@@ -37,7 +37,7 @@ export const UNIT_TESTS = { passed: 1973, files: 73, day: "Oct 7, 2026" } as con
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 // RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
-export const AUDIT_ROUNDS = { done: 8, day: "Oct 7, 2026" } as const;
+export const AUDIT_ROUNDS = { done: 9, day: "Oct 7, 2026" } as const;
 const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
 /** "Five rounds so far (Oct 6, 2026)." */
 export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS): string {

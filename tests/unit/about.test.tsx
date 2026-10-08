@@ -545,10 +545,10 @@ describe("fonts are self-hosted", () => {
 });
 
 describe("audit rounds line (one constant)", () => {
-  it("says eight rounds (RULES-8-03: round 8 ran Oct 7), from AUDIT_ROUNDS", async () => {
+  it("says nine rounds (round 9 confirm ran Oct 7), from AUDIT_ROUNDS", async () => {
     const { AUDIT_ROUNDS, auditRoundsLine } = await import("@/lib/about/content");
-    expect(AUDIT_ROUNDS.done).toBe(8);
-    expect(auditRoundsLine()).toBe("Eight rounds so far (Oct 7, 2026).");
+    expect(AUDIT_ROUNDS.done).toBe(9);
+    expect(auditRoundsLine()).toBe("Nine rounds so far (Oct 7, 2026).");
     expect(auditRoundsLine({ done: 1, day: "x" })).toBe("One round so far (x).");
     expect(auditRoundsLine({ done: 12, day: "x" })).toBe("12 rounds so far (x).");
   });

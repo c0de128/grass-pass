@@ -200,7 +200,7 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   but those parks' wildlife data has little to see, so the refills found too few good clues) and 1 because a refill
   ran out of time (Connemara Meadow). A short pass says how many finds are missing.
 - **Cost missed the goal: Gemma $0.00108 a pass (target $0.001; up to $0.00109 if the 2 timed-out calls were billed in
-  full; $0.00106 if they were free).** This counts the clue calls only: it was measured on Oct 7, before trip tips
+  full; $0.00106 if they were free).** This counts the clue calls only: it was measured on Oct 6, before trip tips
   existed. The trip tips add one more short call per pass. With few timeouts, this is the real price of the answered calls; most of it is
   the prompt (2,844 prompt tokens on an answered first call, 2,872 in the run before). Run `-8` looked cheaper at $0
   ($0.00097) only because 15 of its calls never answered. Longer passes cost more in their small checks (see
@@ -278,7 +278,7 @@ closed models on our DigitalOcean tier answered 403 on Oct 5.
 | M5 Reading level, FK grade median (target <= 3.5) | 2.3 | 2.3 | 2.8 | 2.5 |
 | M6 Name leaks in clue or hint, before the filter (target <= 5%) | 4.0% (clue only 4.0%) | 10.3% (FAIL) | 1.4% | 2.7% |
 | M7 Model call p50 / p95 (target 10 s / 20 s) | **9.9 s / 27.1 s, p95 FAIL** (first calls alone 12.8 s; 39.5 answer tokens/s) | 20.6 s / 57.0 s (FAIL, 3 passes timed out) | none | 15.3 s / 30.0 s (FAIL; 28.1 tok/s) |
-| M8 Cost per pass, clue calls only (measured Oct 7, before trip tips; target $0.001) | **$0.00108 to $0.00109, FAIL** (2 timed-out calls: prompt only, or billed in full; $0.00106 at $0) | $0.00190 to $0.00204 (FAIL) | $0 | $0.00111 to $0.00127 (FAIL) |
+| M8 Cost per pass, clue calls only (measured Oct 6, before trip tips; target $0.001) | **$0.00108 to $0.00109, FAIL** (2 timed-out calls: prompt only, or billed in full; $0.00106 at $0) | $0.00190 to $0.00204 (FAIL) | $0 | $0.00111 to $0.00127 (FAIL) |
 | M10 Printed clues repeated across parks (target <= 5%) | **4.1% (16/387), PASS** | 0% (0/101) | 20.4% (FAIL) | 9.7% (FAIL) |
 | M11 Printed clues with a wrong count (target 0) | 0 of 97 (11 removed by the check) | 0 of 10 (21 removed) | 0 of 3 | 0 of 71 (10 removed) |
 

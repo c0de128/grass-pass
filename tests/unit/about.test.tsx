@@ -435,6 +435,8 @@ describe("/about", () => {
     expect(t).toContain(
       "Oct 7, 2026 redesign (the home page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its animation): built by AI coding agents (Claude Code) at Kevin's direction; the footer art is code-drawn SVG, no stock art.",
     );
+    // Kevin 2026-10-08: the Oct 8 work is credited the same way; his hero text is his own.
+    expect(t).toContain("Oct 8, 2026 (the weather card, the trip tips section, the phone layout and the sign-in page): also built by AI coding agents (Claude Code) at Kevin's direction; the home page text is Kevin's own.");
     const readme = readFileSync(join(ROOT, "README.md"), "utf8").replace(/\s+/g, " ");
     expect(readme).toContain("were built by AI coding agents (Claude Code) at Kevin's direction. The footer art is code-drawn SVG, no stock art.");
     expect(readme).toContain("we keep complete ones as examples");

@@ -71,9 +71,12 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover"
               />
+              {/* Kevin 2026-10-08: the honest AI label sits inside the picture, bottom right, in white (a soft dark
+                  backing keeps it readable on any part of the photo). Phones: top right, since the pass card covers the bottom there. */}
+              <p className="absolute top-4 right-4 z-20 rounded-full sm:top-auto sm:bottom-4 bg-black/45 px-2.5 py-1 text-xs font-semibold text-white backdrop-blur-sm">
+                {HERO_ILLUSTRATION.caption}
+              </p>
             </div>
-            {/* Kept outside the picture so the tilted pass card can never cover it (honest AI label). */}
-            <p className="mt-2 text-right text-xs font-semibold text-muted-foreground">{HERO_ILLUSTRATION.caption}</p>
             {/* Phones: in the flow, overlapping the picture's lower part (a real pass is taller than v0's sample, so an
                 absolute card would cover the search card). From 640 px: v0's absolute, tilted placement. */}
             <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:-bottom-32 lg:-left-2 lg:w-64">

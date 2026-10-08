@@ -282,15 +282,15 @@ describe("phone example row (R1 UX m8 kept in the v3 layout)", () => {
     expect(shortParkName("Arbor Hills Nature Preserve")).toBe("Arbor Hills");
   });
 
-  it("sits directly under the headline, before the lead paragraph (above the fold at 360x740 with Kevin's bigger h1)", () => {
+  it("Kevin 2026-10-08 (UX-8-03): sits under the search box, after \"Create your pass now\"", () => {
     const statuses = [readyStatus("arbor-hills", realPass())];
     const html = renderToStaticMarkup(<HomeHero card={null} examples={readyExamples(statuses)}>{null}</HomeHero>);
     const h1End = html.indexOf("</h1>");
     const row = html.indexOf('aria-label="Open an example pass"');
-    const lead = html.indexOf("Grass Pass turns your local park");
+    const cta = html.indexOf('data-testid="hero-cta"');
     expect(h1End).toBeGreaterThan(0);
-    expect(row).toBeGreaterThan(h1End);
-    expect(lead).toBeGreaterThan(row);
+    expect(cta).toBeGreaterThan(h1End);
+    expect(row).toBeGreaterThan(cta);
   });
 });
 

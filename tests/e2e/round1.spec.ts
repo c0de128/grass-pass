@@ -66,8 +66,10 @@ test("the pre-limiter answers 429 with Retry-After before the store is touched",
 test.describe("360 px phone", () => {
   test.use({ viewport: { width: 360, height: 740 } });
 
-  test("ready example passes are one tap away above the fold (or the row is absent when none is ready)", async ({ page }) => {
+  test("Kevin 2026-10-08 (UX-8-03): 'Create your pass now' is above the fold; the example row sits under the search box (or is absent)", async ({ page }) => {
     await page.goto("/");
+    const cta = await page.getByTestId("hero-cta").boundingBox();
+    expect(cta!.y + cta!.height).toBeLessThanOrEqual(740);
     const row = page.getByRole("navigation", { name: "Open an example pass" });
     const ready = await page.getByRole("list", { name: "Example parks" }).getByRole("link").count();
     if (ready === 0) {
@@ -76,7 +78,8 @@ test.describe("360 px phone", () => {
     }
     await expect(row).toBeVisible();
     const box = await row.boundingBox();
-    expect(box!.y + box!.height).toBeLessThanOrEqual(740);
+    const search = await page.getByRole("button", { name: "Use my location" }).boundingBox();
+    expect(box!.y).toBeGreaterThan(search!.y);
     await expect(row.getByRole("link")).toHaveCount(ready);
   });
 });

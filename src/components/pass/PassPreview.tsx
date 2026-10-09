@@ -186,8 +186,17 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
         ) : null}
       </details>
       <ul className="flex flex-col gap-1 text-sm">
-        {/* R1-m10: switched-off sections are noted here for the grown-up, not on the kid's side. */}
-        {SECTIONS.map((s) => pass.sections[s]).map((st, i) => (st.status === "off" ? <li key={`off-${i}`}>{st.message}</li> : null))}
+        {/* R1-m10: switched-off sections are noted here for the grown-up, not on the kid's side. Round 11 (Q-11-03): so is a
+            section that worked but was cut short ("Lucky Finds: only dogs checked ..."), the same note the print stub has. */}
+        {SECTIONS.map((s) => pass.sections[s]).map((st, i) =>
+          st.status === "off" ? (
+            <li key={`off-${i}`}>{st.message}</li>
+          ) : st.status === "ok" && st.note ? (
+            <li key={`note-${i}`} data-testid="section-note">
+              {st.note}
+            </li>
+          ) : null,
+        )}
         {pass.safetyFiltered > 0 ? <li>{SAFETY_FOOTNOTE}</li> : null}
         {pass.removed.other > 0 ? (
           <li>

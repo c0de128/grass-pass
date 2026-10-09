@@ -37,8 +37,11 @@ test("one h1 (Sign in); Google/GitHub first, then the quieter judge tear-off wit
   await page.goto("/signin");
   await expect(page.getByRole("heading", { level: 1 })).toHaveText("Sign in");
   const card = page.getByTestId("sign-in-card");
-  await expect(card.getByTestId("signin-per-day")).toHaveText("2 free passes a day");
-  await expect(card.getByRole("link", { name: "What we keep" })).toHaveAttribute("href", "/about#privacy");
+  // Kevin 2026-10-08 ~7:25 PM CDT: the count comes from the code (ACCOUNT_PASSES_PER_DAY), plus the rating perk; no "sign in first".
+  await expect(card.getByTestId("signin-per-day")).toHaveText(/^\d+ passes a day\s*and rate your pass$/);
+  await expect(card.getByTestId("signin-free-line")).toHaveText("Your free pass for today needs no sign-in.");
+  await expect(card).not.toContainText("signs in first");
+  await expect(card.getByRole("link", { name: "What we keep (spoiler: not much) and for how long" })).toHaveAttribute("href", "/about#privacy");
   await expect(card.getByRole("heading", { level: 2, name: "Judging the contest?" })).toBeVisible();
   await expect(card.getByTestId("judge-left")).toHaveText(/judge passes left today|couldn't check|paused/);
   // The judge button is the secondary (outlined) look, not the solid primary one.

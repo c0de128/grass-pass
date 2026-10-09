@@ -76,11 +76,18 @@ export default async function SignInPage(props: PageProps<"/signin">) {
               <h1 id="signin-title" className="text-4xl leading-none font-extrabold tracking-tight text-ink">
                 Sign in
               </h1>
-              <p className="inline-flex items-center gap-1.5 rounded-full bg-sun px-3 py-1 font-heading text-sm font-extrabold text-sun-foreground" data-testid="signin-per-day">
-                <Ticket className="size-4" aria-hidden="true" />
-                {ACCOUNT_PASSES_PER_DAY} free passes a day
+              {/* Kevin 2026-10-08 ~7:25 PM CDT: today's free pass needs no sign-in; signed in = more a day + rate your pass.
+                  The number is the code's own constant (the pass-limits branch sets it), never typed here. */}
+              <p className="flex flex-wrap items-center gap-x-2 gap-y-1 font-heading text-base font-extrabold text-ink" data-testid="signin-per-day">
+                <span className="inline-flex items-center gap-1.5 rounded-full bg-sun px-3 py-1 text-sm text-sun-foreground">
+                  <Ticket className="size-4" aria-hidden="true" />
+                  {ACCOUNT_PASSES_PER_DAY} passes a day
+                </span>
+                <span>and rate your pass</span>
               </p>
-              <p className="text-base text-muted-foreground text-pretty">Each new pass wakes up a real AI model, so a grown-up signs in first.</p>
+              <p className="text-base text-muted-foreground text-pretty" data-testid="signin-free-line">
+                Your free pass for today needs no sign-in.
+              </p>
             </div>
 
             {error ? (
@@ -112,15 +119,15 @@ export default async function SignInPage(props: PageProps<"/signin">) {
               <OAuthButtons providers={options.providers} returnTo={returnTo} />
             )}
 
-            <p className="-my-2 flex items-center gap-2 text-sm text-muted-foreground" data-testid="signin-privacy">
-              <ShieldCheck className="size-4 shrink-0 text-primary" aria-hidden="true" />
-              <span>
-                No email or name kept.{" "}
-                <Link href="/about#privacy" prefetch={false} className="inline-flex min-h-11 items-center font-semibold text-link underline underline-offset-4">
-                  What we keep
+            <div className="-mb-2 flex items-start gap-2 text-sm text-muted-foreground" data-testid="signin-privacy">
+              <ShieldCheck className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden="true" />
+              <p className="flex flex-col items-start">
+                <span>No email or name kept.</span>
+                <Link href="/about#privacy" prefetch={false} className="inline-flex min-h-11 items-center font-semibold text-balance text-link underline underline-offset-4">
+                  What we keep (spoiler: not much) and for how long
                 </Link>
-              </span>
-            </p>
+              </p>
+            </div>
           </div>
 
           {!session?.provider && !nothing && options.judge ? (

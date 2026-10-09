@@ -20,7 +20,8 @@ const GEMMA = "The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight mo
 const CHECKS = "Code checks every clue against its source and removes any that fail; the model never decides what is safe.";
 const WAIT = "A new pass usually takes 10-30 seconds (PASS_WAIT_COPY), up to about a minute and a half when the free map websites are slow.";
 const AGES = "Age bands are exactly 4-6, 6-10, 10-13 and 13+ (teens and adults; added 2026-10-07) (AGE_BAND_INFO).";
-const SIGNIN = "Browsing, examples, shared links and printing need no sign-in. A NEW pass needs a grown-up signed in: 2 new passes a day each (ACCOUNT_PASSES_PER_DAY), reset at midnight Dallas time.";
+// Fact fix (pass limits, 2026-10-09): was "A NEW pass needs a grown-up signed in: 2 new passes a day each" (Kevin changed the limits on 2026-10-08).
+const SIGNIN = "Browsing, examples, shared links and printing need no sign-in. Without signing in, 1 free new pass a day (a signed cookie counts it). After that a grown-up signs in: 5 new passes a day each (ACCOUNT_DAILY_PASSES), reset at midnight Dallas time.";
 const NODATA = 'Missing data is never faked: the site says "No data available" and why.';
 
 const HOME = "/ (home)";
@@ -679,7 +680,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "step summary, 2 sentences",
     maxChars: 190,
     text: "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.",
-    facts: ["Passes are saved for 30 days.", "{perDay} is filled in by code (2 new passes a day per grown-up).", "Daily limits protect the model budget and the free map servers."],
+    facts: ["Passes are saved for 30 days.", "{perDay} is filled in by code (5 new passes a day per signed-in grown-up; 1 free new pass a day without signing in; fact fix 2026-10-09, was 2).", "Daily limits protect the model budget and the free map servers."],
     keep: ["30 days"],
   },
   {
@@ -1341,7 +1342,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     maxChars: 140,
     text: "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.",
     facts: [SIGNIN, "Signed-in grown-ups can also report what they found."],
-    keep: ["2 a day"],
+    keep: ["5 a day"],
   },
   {
     id: "signin.privacy.link",
@@ -1360,7 +1361,7 @@ export const BLOCKS: readonly CopyBlock[] = [
     maxChars: 180,
     text: "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.",
     facts: ["Each new pass is a real (paid) AI model call.", SIGNIN],
-    keep: ["AI", "2 new passes a day"],
+    keep: ["AI", "5 new passes a day"],
   },
   {
     id: "signin.judge.unknown",
@@ -1378,8 +1379,9 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "privacy line on the sign-in card and pages, 2 sentences",
     maxChars: 120,
     text: "We only keep a scrambled ID to count your 2 passes a day and your found-it reports. No email, no name.",
-    facts: ["We keep only a scrambled ID, to count your 2 passes a day and your reports.", "No email, no name."],
-    keep: ["scrambled ID", "2 passes a day", "No email, no name"],
+    // Fact fix (pass limits, 2026-10-09): was "to count your 2 passes a day".
+    facts: ["We keep only a scrambled ID, to count your new passes (5 a day signed in), reports and ratings.", "No email, no name."],
+    keep: ["scrambled ID", "No email, no name"],
   },
   {
     id: "account.grownups",

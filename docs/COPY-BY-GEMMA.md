@@ -37,6 +37,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 
 **Fact fixes after the fresh-eyes review (not Gemma, 2026-10-08):** the model runs on prepaid DigitalOcean credit, not a free tier, and the pass page now shows weather from Open-Meteo and weather.gov. 3 blocks were fixed by hand (marked "Fact fix (review 2026-10-08" below): one accepted Gemma draft (`pass.paused`) became "edited", and two kept lines on /about were corrected (`about.data.title`, `about.data.osm`).
 
+**Fact fixes for the pass limits (not Gemma, 2026-10-09):** on 2026-10-08 Kevin changed the limits to 1 free new pass a day without signing in and 5 a day signed in. The 4 blocks whose FACTS still said "2 a day" (`how.step.cache.summary`, `signin.why.1`, `signin.card.body`, `account.privacy`) were already off the site; their FACTS sheets below now say the new rule (marked "Fact fix (pass limits, 2026-10-09" below). The old run logs are unchanged.
+
 The code check catches new facts, lost facts and hype. It cannot catch a sentence that is true word by word but wrong as a whole: those were caught in step 4 (look for **UNTRUE** below). It also had one false positive: "No one" counted as the number word "one".
 
 ## Not sent to Gemma
@@ -814,8 +816,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Gemma:** Passes are saved for 30 days. To keep map servers and budgets healthy, grown-ups get {perDay} new passes a day.
 - **Code check:** passed
 - **Shipped:** Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.
-- **Why:** Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers.
-- **FACTS:** Passes are saved for 30 days. / {perDay} is filled in by code (2 new passes a day per grown-up). / Daily limits protect the model budget and the free map servers. · KEEP: "30 days"
+- **Why:** Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of "2 a day". The text itself was already off the site (removedAfterRun).
+- **FACTS:** Passes are saved for 30 days. / {perDay} is filled in by code (5 new passes a day per signed-in grown-up; 1 free new pass a day without signing in; fact fix 2026-10-09, was 2). / Daily limits protect the model budget and the free map servers. · KEEP: "30 days"
 
 #### `how.ai.title`: rejected
 
@@ -1589,8 +1591,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Gemma:** Sign in to make 2 a day or report finds. Browsing, examples, shared links and printing are open to everyone.
 - **Code check:** passed
 - **Shipped:** Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.
-- **Why:** Garbled: 'Sign in to make 2 a day'.
-- **FACTS:** Browsing, examples, shared links and printing need no sign-in. A NEW pass needs a grown-up signed in: 2 new passes a day each (ACCOUNT_PASSES_PER_DAY), reset at midnight Dallas time. / Signed-in grown-ups can also report what they found. · KEEP: "2 a day"
+- **Why:** Garbled: 'Sign in to make 2 a day'. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of "2 a day". The text itself was already off the site (removedAfterRun).
+- **FACTS:** Browsing, examples, shared links and printing need no sign-in. Without signing in, 1 free new pass a day (a signed cookie counts it). After that a grown-up signs in: 5 new passes a day each (ACCOUNT_DAILY_PASSES), reset at midnight Dallas time. / Signed-in grown-ups can also report what they found. · KEEP: "5 a day"
 
 #### `signin.privacy.link`: accepted
 
@@ -1611,8 +1613,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Gemma:** Each new pass uses a real AI model, so grown-ups sign in first for 2 new passes a day. Examples and saved passes need no sign-in.
 - **Code check:** passed
 - **Shipped:** Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.
-- **Why:** Loses the 'wakes up a real AI model' line.
-- **FACTS:** Each new pass is a real (paid) AI model call. / Browsing, examples, shared links and printing need no sign-in. A NEW pass needs a grown-up signed in: 2 new passes a day each (ACCOUNT_PASSES_PER_DAY), reset at midnight Dallas time. · KEEP: "AI", "2 new passes a day"
+- **Why:** Loses the 'wakes up a real AI model' line. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of "2 a day". The text itself was already off the site (removedAfterRun).
+- **FACTS:** Each new pass is a real (paid) AI model call. / Browsing, examples, shared links and printing need no sign-in. Without signing in, 1 free new pass a day (a signed cookie counts it). After that a grown-up signs in: 5 new passes a day each (ACCOUNT_DAILY_PASSES), reset at midnight Dallas time. · KEEP: "AI", "5 new passes a day"
 
 #### `signin.judge.unknown`: rejected
 
@@ -1633,8 +1635,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Gemma:** We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.
 - **Code check:** passed
 - **Shipped:** We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.
-- **Why:** True, on tone, at least as clear as before.
-- **FACTS:** We keep only a scrambled ID, to count your 2 passes a day and your reports. / No email, no name. · KEEP: "scrambled ID", "2 passes a day", "No email, no name"
+- **Why:** True, on tone, at least as clear as before. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of "2 a day". The text itself was already off the site (removedAfterRun).
+- **FACTS:** We keep only a scrambled ID, to count your new passes (5 a day signed in), reports and ratings. / No email, no name. · KEEP: "scrambled ID", "No email, no name"
 
 #### `account.grownups`: accepted
 

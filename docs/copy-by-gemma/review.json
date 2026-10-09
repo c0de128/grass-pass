@@ -489,9 +489,10 @@
       "id": "how.step.cache.summary",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers.",
+      "reason": "Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of \"2 a day\". The text itself was already off the site (removedAfterRun).",
       "shipped": "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.",
-      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history.",
+      "factFixAfterRun": true
     },
     {
       "id": "how.ai.title",
@@ -992,9 +993,10 @@
       "id": "signin.why.1",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Garbled: 'Sign in to make 2 a day'.",
+      "reason": "Garbled: 'Sign in to make 2 a day'. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of \"2 a day\". The text itself was already off the site (removedAfterRun).",
       "shipped": "Only to make a new pass (2 a day) or to tell us what you found. Examples, shared links and printing work without it.",
-      "removedAfterRun": "Kevin picked a new /signin layout on 2026-10-08 (option A): \"Why sign in?\" became three short lines with check marks, so this bullet is gone; the decision is kept as history."
+      "removedAfterRun": "Kevin picked a new /signin layout on 2026-10-08 (option A): \"Why sign in?\" became three short lines with check marks, so this bullet is gone; the decision is kept as history.",
+      "factFixAfterRun": true
     },
     {
       "id": "signin.privacy.link",
@@ -1007,9 +1009,10 @@
       "id": "signin.card.body",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Loses the 'wakes up a real AI model' line.",
+      "reason": "Loses the 'wakes up a real AI model' line. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of \"2 a day\". The text itself was already off the site (removedAfterRun).",
       "shipped": "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.",
-      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history.",
+      "factFixAfterRun": true
     },
     {
       "id": "signin.judge.unknown",
@@ -1022,9 +1025,10 @@
       "id": "account.privacy",
       "decision": "accepted",
       "stage": "agent-review",
-      "reason": "True, on tone, at least as clear as before.",
+      "reason": "True, on tone, at least as clear as before. Fact fix (pass limits, 2026-10-09, how-blueprint designer, not Gemma): since Kevin's change on 2026-10-08 a new pass is free once a day without signing in and signed-in grown-ups get 5 a day (ACCOUNT_DAILY_PASSES), so the FACTS sheet now says that instead of \"2 a day\". The text itself was already off the site (removedAfterRun).",
       "shipped": "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.",
-      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history.",
+      "factFixAfterRun": true
     },
     {
       "id": "account.grownups",

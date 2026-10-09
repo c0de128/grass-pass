@@ -57,6 +57,11 @@ for (const pin of PINNED) {
     await expect(map).toBeVisible();
     await expect(map.locator('[data-marker="x"]')).toHaveCount(1);
     await expect(map.locator('[data-label="start"]')).toHaveCount(1);
+    // map-v2: on screen in colour, a dotted route along the mapped paths, and at least one named landmark (real OSM).
+    await expect(map).toHaveAttribute("data-tone", "color");
+    await expect(map.locator('[data-marker="route"][data-mode="paths"]')).toHaveCount(1);
+    expect(await map.locator('[data-marker="landmark"]').count()).toBeGreaterThan(0);
+    expect(await page.locator('[data-testid="spot-box"][data-variant="screen"] [data-key]').count()).toBeLessThanOrEqual(5);
     const px = await map.evaluate((svg) => {
       const s = svg as SVGSVGElement;
       const scale = s.getBoundingClientRect().width / s.viewBox.baseVal.width;
@@ -72,6 +77,7 @@ for (const pin of PINNED) {
     const kid = page.locator(".gp-kid");
     const legend = kid.locator(".gp-spot-legend");
     if (await legend.isVisible()) expect(await legend.evaluate((el) => el.scrollWidth <= el.clientWidth + 1)).toBe(true);
+    await expect(kid.getByTestId("spot-map")).toHaveAttribute("data-tone", "gray");
     const png = await kid.getByTestId("spot-map").screenshot();
     const coloured = await page.evaluate(async (b64) => {
       const img = new Image();

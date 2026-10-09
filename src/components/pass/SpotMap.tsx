@@ -1,4 +1,4 @@
-import { useId } from "react";
+import { useId, type CSSProperties } from "react";
 import { MapXIcon } from "@/components/art/icons";
 import { Chip } from "@/components/ui/Chip";
 import { formatTime } from "@/lib/pass/format";
@@ -312,6 +312,19 @@ function LegendGlyph({ k }: { k: LegendKey }) {
   }
 }
 
+/** The key samples on paper match the grey printed map (print.css itself stays black and white only, ADR 0004). */
+const PRINT_KEY_VARS = {
+  "--gp-map-route": MAP_PALETTE.gray.route,
+  "--gp-map-start": MAP_PALETTE.gray.start,
+  "--gp-map-path": MAP_PALETTE.gray.path,
+  "--gp-map-road": MAP_PALETTE.gray.roadCasing,
+  "--gp-map-road-core": MAP_PALETTE.gray.roadCore,
+  "--gp-map-water": MAP_PALETTE.gray.waterFill,
+  "--gp-map-water-edge": MAP_PALETTE.gray.waterEdge,
+  "--gp-map-pitch": MAP_PALETTE.gray.pitchFill,
+  "--gp-map-pitch-edge": MAP_PALETTE.gray.pitchEdge,
+} as CSSProperties;
+
 /** The key for a drawing (at most MAX_KEYS: the X, START, the route, then what helps most). */
 export function legendKeys(d: MapDrawing): LegendKey[] {
   return d.legend;
@@ -377,7 +390,7 @@ export function SpotMap({ spot, parkName, variant = "print", headingLevel = 2 }:
             <span>Find This Spot</span>
           </H>
           <p className="gp-spot-riddle">{spot.riddle}</p>
-          <p className="gp-small gp-spot-legend" data-print-drop="3" data-cols={cols}>
+          <p className="gp-small gp-spot-legend" data-print-drop="3" data-cols={cols} style={PRINT_KEY_VARS}>
             {keys}
           </p>
         </div>

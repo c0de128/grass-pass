@@ -4,7 +4,9 @@ import { passOrSkip } from "./support/honest";
 import { judgeAddress, judgeSignInRequest } from "./support/judge";
 
 // S5 Find This Spot: a REAL Celebration Park pass from the running server (live OpenStreetMap,
-// iNaturalist and the open model, or today's cached pass). Its only picnic shelter is the X.
+// iNaturalist and the open model, or today's cached pass). Code picks the X (pick-target.ts): which landmark it is
+// depends on that day's live OSM data and the pass variant, so the checks read the X from the pass itself (its
+// code-written answer, label and OSM id) instead of pinning one (map-v2: the riddle and target drift with live data).
 // If an upstream is down the honest copy is checked and the tests are SKIPPED with the reason; if
 // OpenStreetMap was busy for the map only, the pass carries "No Find This Spot today: ..." and the map
 // tests are skipped with that copy (never passed on a missing map).
@@ -17,7 +19,7 @@ test.use({ launchOptions: { args: ["--disable-lcd-text"] } });
 // SEC-4-02: this spec's own address for the judge demo's 3 passes per connection.
 test.use(judgeAddress(3));
 
-type Spot = { status: string; message?: string; riddle?: string };
+type Spot = { status: string; message?: string; riddle?: string; target?: { osmId: string; label: string; answer: string } };
 
 async function realPass(request: APIRequestContext, baseURL: string): Promise<{ id: string; items: number; spot?: Spot }> {
   // Accounts: a new pass needs a sign-in (the judge demo; today's saved pass would be served anyway).
@@ -60,7 +62,12 @@ test("on screen: the map, the riddle and the OSM credit; the answer only inside 
   await expect(box.getByRole("link", { name: "© OpenStreetMap contributors" })).toBeVisible();
   await expect(page.getByTestId("spot-answer")).toBeHidden(); // inside the closed answer key
   await page.getByText("Answer key (don't peek, kids!)").click();
-  await expect(page.getByTestId("spot-answer")).toContainText(/Find This Spot: The picnic shelter\. .*OpenStreetMap way\/536185861/);
+  const t = pass.spot!.target!;
+  await expect(page.getByTestId("spot-answer")).toContainText(`Find This Spot: ${t.answer}.`);
+  await expect(page.getByTestId("spot-answer")).toContainText(`OpenStreetMap ${t.osmId}`);
+  // map-v2: the map's landmark labels never name the X.
+  const marks = await map.locator('[data-marker="landmark"] text').allTextContents();
+  for (const m of marks) expect(m.toLowerCase()).not.toContain(t.label.toLowerCase());
 });
 
 test("360 px wide: no horizontal scroll with the map, on the pass page and the print page", async ({ page }) => {
@@ -105,8 +112,10 @@ test("print: map + riddle on the kid pass, answer on the stub, ONE page (Letter 
   await expect(kid.getByText(pass.spot!.riddle!)).toBeVisible();
   await expect(kid.getByRole("img", { name: /^Map of Celebration Park/ })).toBeVisible();
   await expect(kid.getByText("Map: © OpenStreetMap contributors")).toBeVisible();
-  await expect(kid).not.toContainText("picnic shelter");
-  await expect(sheet.locator(".gp-stub").getByTestId("spot-answer")).toContainText("Find This Spot: The picnic shelter.");
+  const t = pass.spot!.target!;
+  expect(t.answer.length).toBeGreaterThan(0);
+  await expect(kid).not.toContainText(t.label);
+  await expect(sheet.locator(".gp-stub").getByTestId("spot-answer")).toContainText(`Find This Spot: ${t.answer}.`);
   // PM decision (c): no evidence in the stub answers; the October details are on the stub, the kid box is short.
   await expect(sheet.locator(".gp-answers")).not.toContainText("OpenStreetMap)");
   await expect(sheet.locator('.gp-stub [data-slot="october-source"]')).toContainText(/^October box: /);

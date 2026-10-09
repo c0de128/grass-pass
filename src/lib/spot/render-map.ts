@@ -16,7 +16,7 @@
  *  - The key lists at most MAX_KEYS items.
  */
 import { clipPolyline, clipRing, FRAME_MARGIN_X, FRAME_MARGIN_Y, MIN_SPAN_M, scaleBar, scaleLabelMetres, simplify, type Box, type XY } from "./shapes";
-import { MAP_H, MAP_W, type Landmark, type LandmarkKind, type Line, type Point, type SpotMap } from "./types";
+import { MAP_H, MAP_W, type LandmarkKind, type Line, type Point, type SpotMap } from "./types";
 
 /** Thinnest line on the map, in map units (1.2 pt at the printed 3.2 in width, 1.03 pt at the 0.85 floor scale). */
 export const STROKE_MIN = 2.2;

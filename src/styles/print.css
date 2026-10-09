@@ -608,19 +608,6 @@
   }
 }
 
-/* map-v2: the key samples on paper match the grey printed map (SpotMap.tsx MAP_PALETTE.gray), never the screen colours. */
-.gp-spot-legend {
-  --gp-map-route: #000;
-  --gp-map-start: #000;
-  --gp-map-path: #1a1a1a;
-  --gp-map-road: #333;
-  --gp-map-road-core: #fff;
-  --gp-map-water: #cfcfcf;
-  --gp-map-water-edge: #5c5c5c;
-  --gp-map-pitch: #efefef;
-  --gp-map-pitch-edge: #8a8a8a;
-}
-
 /* map-v2: the route's key carries the walk ("walk this way (the X is 290 m west)"), so it has its own row, last. */
 .gp-spot-legend .gp-spot-key-route {
   grid-column: 1 / -1;

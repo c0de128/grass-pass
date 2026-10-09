@@ -3,7 +3,8 @@
 > Your ticket to get outside. Pick a park. Print a pass. Phone away.
 
 **Try it live:** https://grass-pass.vercel.app (live since Oct 8, 2026). The example passes open with no
-sign-in; to make your own, press **Try as a judge** (one click, no sign-up).
+sign-in. Your first new pass each day needs no sign-in either; for more, press **Try as a judge** (one click, no
+sign-up) or sign in with GitHub or Google.
 
 Grass Pass turns your local park into a one-page treasure hunt, usually in 10-30 seconds (up to about a minute and a
 half for a big park or a slow model; measured, see [Limitations](#limitations)). Pick a park and your kid's age
@@ -117,7 +118,8 @@ Every environment variable is explained in [`.env.example`](.env.example); keys 
 `SERPAPI_API_KEY` (free SerpApi account), capped by `SERPAPI_DAILY_CAP` and `SERPAPI_MONTHLY_CAP`. Without
 `UPSTASH_REDIS_REST_URL`/`_TOKEN`, caches and limits live in memory (fine locally). Without a model key, park search
 works and a new pass says the model is not configured. `AUTH_SECRET` switches on sign-in and "Try as a judge";
-without it, examples, search, shared passes and printing work, but new passes can't be made.
+without it, examples, search, shared passes and printing work, and each browser still gets its 1 free new pass a day
+(no sign-in, so no more than that).
 
 **Stopping spend in an emergency:** `AI_DAILY_CAP=0` pauses new model passes and `JUDGE_DEMO_DAILY_CAP=0` stops new judge
 passes (`SERPAPI_DAILY_CAP=0` does the same for SerpApi); an empty `DO_INFERENCE_API_KEY` stops every model call.

@@ -136,6 +136,7 @@ at DigitalOcean list prices; the $10 prepaid credit is the hard ceiling.
 | `pnpm eval` | the evals: 20 recorded real parks, live open models on DigitalOcean (about $0.07-0.10; last full run $0.092; capped at $1), plus a no-AI baseline. See [`evals/README.md`](evals/README.md) |
 | `pnpm eval:check` | free dry run of every recorded park through the real pass builder, model off |
 | `pnpm eval:record` | re-records the 20 eval parks live from OpenStreetMap and iNaturalist |
+| `pnpm feedback:report` | private: prints the pass-rating counts per park and per tag from the shared Upstash store (read-only; "No data available" without Upstash or ratings). There is no public page for them |
 | `node scripts/render-brand.mjs` | re-renders every logo, icon and share image from `scripts/brand/art.mjs` and `scripts/brand/v3.mjs` |
 
 Measured cold start (laptop: build 17.2 s, first page 0.98 s, first example pass 30.9 s), abuse limits, the storage

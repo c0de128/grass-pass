@@ -179,7 +179,7 @@ export function reasonFor(code: ModelErrorCode, timeoutMs: number = MODEL_TIMEOU
     case "MODEL_RATE_LIMITED":
       return "the AI service is busy";
     case "MODEL_QUOTA":
-      return "the free AI budget is used up for now";
+      return "the AI budget for this demo is used up";
     case "MODEL_TIMEOUT":
       return `it took longer than ${Math.round(timeoutMs / 1000)} seconds`;
     case "MODEL_BAD_OUTPUT":

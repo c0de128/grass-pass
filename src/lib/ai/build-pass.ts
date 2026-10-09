@@ -254,7 +254,8 @@ export function modelFailure(err: ModelError, modelId: string): { status: number
     case "MODEL_TIMEOUT":
       return { status: 504, error: { code: err.code, message: `${name} took too long. Try again. Your park data is below.` } };
     case "MODEL_QUOTA":
-      return { status: 503, error: { code: err.code, message: PASS_COPY.paused, retryAfter: 3600 } };
+      // Review MINOR-2: a used-up prepaid balance doesn't reset in an hour, so no retryAfter (no countdown, no auto retry).
+      return { status: 503, error: { code: err.code, message: PASS_COPY.modelBudget } };
     case "MODEL_NOT_CONFIGURED":
       // R2-m6 (Q-2-05): trying again never helps here, so don't say "try again in a minute".
       return { status: 503, error: { code: err.code, message: `${name} couldn't write clues (${err.reason}). ${MODEL_NOT_CONFIGURED_TAIL}` } };

@@ -175,7 +175,12 @@ export const PASS_COPY = {
   allEmpty: (park: string) =>
     `No data available for ${park}. We found no mapped features or recent wildlife sightings here. Try a bigger park from the list.`,
   notAPark: "We couldn't read that park on OpenStreetMap. Pick another park from the list.",
-  paused: "Clue writing is paused for today since the free budget is used. Passes made earlier still work.",
+  // Review 2026-10-08 MINOR-2: the model runs on Kevin's prepaid DigitalOcean credit, not a free tier, so no "free".
+  paused: "Clue writing is paused for today: today's AI budget is used up. Passes made earlier still work.",
+  /** The provider said the prepaid model credit is used up (402 / 0 balance): it does not come back at midnight. */
+  modelBudget: "Clue writing is paused: the AI budget for this demo is used up. Example passes and passes made earlier still work.",
+  /** SEC-3-03: today's share of the storage service's free monthly commands is used (not the AI budget). */
+  storePaced: "New passes are paused for today: Grass Pass used today's share of its free storage service. Passes made earlier still work.",
   passGone: "No data available: this pass isn't saved here anymore (passes are kept for 30 days), or the link is wrong.",
   /** SEC-7-04: a self-hosted server with a model on its own computer builds only 1-2 passes at once. */
   localBusy: "The AI on this computer is still writing another pass, and it can only do one at a time. Please try again in a minute.",

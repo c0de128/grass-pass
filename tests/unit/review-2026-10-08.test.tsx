@@ -22,6 +22,10 @@ import { makePass, resetPassMaking } from "@/lib/pass/make";
 import { OTHER_PARKS_MAX, otherParksNear } from "@/lib/parks/nearby";
 import type { Park } from "@/lib/parks/schema";
 import { LUCKY_COPY } from "@/lib/pool/lucky";
+import { modelFailure } from "@/lib/ai/build-pass";
+import { ModelError, reasonFor } from "@/lib/model";
+import { PASS_COPY } from "@/lib/pass/schema";
+import { TRIP_TIPS_COPY } from "@/lib/tips/schema";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { JUDGE_QUOTA } from "@/lib/accounts/judge-passes";
 import { parseParks } from "@/lib/sources/overpass-parks";
@@ -223,5 +227,17 @@ describe("MAJOR-3: the one-page promise", () => {
       expect(wr.pass?.passId).toBe(pass.id);
       expect(wr.longPrint).toBeUndefined();
     });
+  });
+});
+
+describe("MINOR-2: quota copy is honest about the prepaid model budget", () => {
+  it("no 'free' AI budget anywhere; a used-up balance has no 'for today' and no 1-hour retry", () => {
+    expect(PASS_COPY.paused).toBe("Clue writing is paused for today: today's AI budget is used up. Passes made earlier still work.");
+    const quota = modelFailure(new ModelError("MODEL_QUOTA", { upstreamStatus: 402 }), "gemma-4-31B-it");
+    expect(quota.error.message).toBe(PASS_COPY.modelBudget);
+    expect(quota.error.message).not.toMatch(/free|today/i);
+    expect(quota.error.retryAfter).toBeUndefined();
+    expect(reasonFor("MODEL_QUOTA")).not.toMatch(/free/);
+    expect(TRIP_TIPS_COPY.rulesWhy.budget).not.toMatch(/free/);
   });
 });

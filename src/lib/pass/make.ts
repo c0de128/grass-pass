@@ -426,7 +426,7 @@ async function buildCounted(ctx: {
   const paced = reservedSlice ? null : dailyPaceState(now());
   if (paced?.paced) {
     log("pass_paused_daily_pace", { used: paced.used, pace: paced.pace }, "warn");
-    return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: `${PASS_COPY.paused} It resets in ${waitText(paced.retryAfter)}.`, retryAfter: paced.retryAfter } };
+    return { kind: "error", status: 429, error: { code: "DAILY_LIMIT", message: `${PASS_COPY.storePaced} It resets in ${waitText(paced.retryAfter)}.`, retryAfter: paced.retryAfter } };
   }
 
   // SEC-3-02: a cached failure (not a park, too heavy, too slow, every Overpass mirror resting) answers

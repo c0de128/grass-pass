@@ -197,7 +197,7 @@ export function privacyRows(): PrivacyRow[] {
     {
       what: "Your IP address",
       where: "Our server. Our storage (Upstash Redis) keeps only a keyed hash, never the address itself, in rate-limit counters that expire within a day.",
-      why: "To stop abuse and keep the free model budget fair.",
+      why: "To stop abuse and keep the model budget fair.",
     },
     {
       what: "Every request (IP address, web address, time)",

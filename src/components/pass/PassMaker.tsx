@@ -39,7 +39,7 @@ import { clientNow, LOCAL_WAIT_COPY, PASS_WAIT_COPY, retryFailsNow, usePassReque
 import { AgeChoices, StepTrail, stepAnnouncement, WIZARD_STEPS, stepIndex, type WizardStep } from "./WizardParts";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
-const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "SIGN_IN_REQUIRED"]);
+const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "SIGN_IN_REQUIRED", "MODEL_QUOTA"]);
 
 /** sessionStorage key: the park + age picked before signing in (this tab only, removed once restored). */
 export const RESUME_KEY = "grass-pass:resume";

@@ -74,7 +74,7 @@ export const TRIP_TIPS_COPY = {
     no_answer: "the AI didn't answer",
     failed_checks: "the AI's tips didn't pass our checks",
     no_key: "this server has no AI key",
-    budget: "today's free AI budget was used up",
+    budget: "today's AI budget was used up",
   } satisfies Record<RulesReason, string>,
   noForecast: "No forecast was available when these tips were made, so they come from the park map and sightings only.",
 } as const;

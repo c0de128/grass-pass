@@ -340,10 +340,10 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
             <li key={it.part} className="gp-legend-item flex gap-4 border-t border-border py-5 first:border-t-0 first:pt-0 md:nth-2:border-t-0 md:nth-2:pt-0 lg:nth-2:border-t lg:nth-2:pt-5" data-legend={it.part} data-has={it.missing ? "false" : "true"}>
               <Mark part={it.part} className={`mt-0.5 ${it.missing ? "gp-mark-off" : ""}`} />
               <div className="flex min-w-0 flex-col gap-1.5">
-                <h3 className="flex flex-wrap items-baseline gap-x-2 gap-y-1 font-heading text-lg leading-tight font-extrabold text-ink">
-                  {NAME[it.part]}
-                  <span className="text-xs font-semibold tracking-wide text-muted-foreground">{it.source}</span>
-                </h3>
+                <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
+                  <h3 className="font-heading text-lg leading-tight font-extrabold text-ink">{NAME[it.part]}</h3>
+                  <p className="text-xs font-semibold tracking-wide text-muted-foreground">{it.source}</p>
+                </div>
                 {it.missing ? (
                   <p className="w-fit rounded-full border border-dashed border-line px-2.5 py-0.5 text-xs font-semibold text-muted-foreground" data-testid="anatomy-when-data">
                     {it.missing}

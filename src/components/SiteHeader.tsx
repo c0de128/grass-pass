@@ -5,9 +5,10 @@ import { ThemeToggle } from "@/components/ThemeToggle";
 
 /** Home page section anchors (v0 nav). Plain links to "/#...", so they also work from /about and a pass page. */
 export const HOME_SECTIONS = [
-  { href: "/#why", label: "Why Grass Pass" },
+  // Kevin 2026-10-09: same order as the page ("What's a pass?" sits right under the hero).
   { href: "/#pass", label: "What's a pass?" },
   { href: "/#parks", label: "Explore" },
+  { href: "/#why", label: "Why Grass Pass" },
 ] as const;
 
 /**

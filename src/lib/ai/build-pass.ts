@@ -458,25 +458,33 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
     onUpstream: data.onUpstream,
   });
 
-  // S6 Lucky Finds (SerpApi), alongside the wildlife step. Its own deadline, NOT the client-gone signal:
-  // a search that was sent is paid for, so it finishes and its counts are cached (never throws).
-  const luckyDeadline = createDeadline(left() - MODEL_MIN_LEFT_MS);
-  const luckyLoad: Promise<LuckyResult> = loadLucky(f.park, f, {
-    store: data.store,
-    env: data.env,
-    now: data.now,
-    fetchImpl: data.fetchImpl,
-    signal: luckyDeadline.signal,
-    // Q-9-01: no NEW search is sent once every client has left (a sent one still finishes and is cached).
-    stopBefore: deps.signal,
-    onUpstream: data.onUpstream,
-    warmup: data.warmup,
-  })
-    .catch((err: unknown): LuckyResult => {
-      log("lucky_failed", { park: f.park.id, kind: err instanceof Error ? err.name : "unknown" }, "error");
-      return { items: [], state: { status: "unavailable", message: LUCKY_COPY.down }, checkedAt: null, searches: 0 };
+  // S6 Lucky Finds (SerpApi). Its own deadline, NOT the client-gone signal: a search that was sent is paid for, so it
+  // finishes and its counts are cached (never throws).
+  // Review 2026-10-08 MAJOR-2: Lucky Finds are extras and never make a pass on their own, so a park whose map + wildlife
+  // pool can't fill a pass must not spend SerpApi searches (a 25-a-day production cap). When the park's own map items
+  // already fill a pass, the search starts now, alongside the wildlife step (no added wait). Otherwise it waits for the
+  // wildlife step and starts only if park + wildlife can fill a pass; if they can't, no search is sent at all.
+  const startLucky = (): Promise<LuckyResult> => {
+    const luckyDeadline = createDeadline(left() - MODEL_MIN_LEFT_MS);
+    return loadLucky(f.park, f, {
+      store: data.store,
+      env: data.env,
+      now: data.now,
+      fetchImpl: data.fetchImpl,
+      signal: luckyDeadline.signal,
+      // Q-9-01: no NEW search is sent once every client has left (a sent one still finishes and is cached).
+      stopBefore: deps.signal,
+      onUpstream: data.onUpstream,
+      warmup: data.warmup,
     })
-    .finally(() => luckyDeadline.clear());
+      .catch((err: unknown): LuckyResult => {
+        log("lucky_failed", { park: f.park.id, kind: err instanceof Error ? err.name : "unknown" }, "error");
+        return { items: [], state: { status: "unavailable", message: LUCKY_COPY.down }, checkedAt: null, searches: 0 };
+      })
+      .finally(() => luckyDeadline.clear());
+  };
+  const park = withoutReported(parkPool(f), deps.exclude);
+  let luckyLoad: Promise<LuckyResult> | null = mixFor(park.items, band) ? startLucky() : null;
 
   // Trip tips: the park's forecast (free, Open-Meteo + weather.gov; the same in-process cache the pass page's weather
   // card reads), fetched while the wildlife step runs. Never throws; its own 8 s budget.
@@ -485,8 +493,17 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
 
   deps.emit("wildlife", stepText("wildlife", deps.env));
   const wild = await loadWild(f, data);
-  const park = withoutReported(parkPool(f), deps.exclude);
-  const luckyResult = withoutReported(await luckyLoad, deps.exclude);
+  const wildItems = withoutReported(wild, deps.exclude).items;
+  /** Park + wildlife finds (before Find This Spot keeps one back): the real count for the "not enough data" headline. */
+  const dataPool = [...park.items, ...wildItems];
+  if (!luckyLoad && mixFor(dataPool, band)) {
+    stopIfClientGone();
+    luckyLoad = startLucky();
+  }
+  const luckyResult: LuckyResult = luckyLoad
+    ? withoutReported(await luckyLoad, deps.exclude)
+    : { items: [], state: { status: "empty", message: LUCKY_COPY.notSearched }, checkedAt: null, searches: 0 };
+  if (!luckyLoad) log("lucky_skipped_short", { park: f.park.id, finds: dataPool.length });
   stopIfClientGone();
   const lucky: SectionState = luckyResult.state;
   const sections: Pass["sections"] = { park: park.state, wild: wild.state, lucky };
@@ -499,7 +516,7 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   let spotPlan: SpotPlan = early ? planSpot(early, { parkName: f.park.name, features: f, variant: input.variant }) : { status: "none", message: SPOT_COPY.slow };
   const target = spotPlan.status === "target" ? spotPlan.target : null;
 
-  const basePool = poolForSpot([...park.items, ...withoutReported(wild, deps.exclude).items], target, band);
+  const basePool = poolForSpot(dataPool, target, band);
   // Lucky Finds are "maybe" extras: they never make a pass on their own (the park + wild pool must fill one).
   const fullPool = mixFor(basePool, band) ? [...basePool, ...luckyResult.items] : basePool;
   const plan = planRequest(fullPool, band, f.park.name);
@@ -509,7 +526,9 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
       kind: "empty",
       parkName: f.park.name,
       // Audit R3-T1: the headline gives the real count, and every section with some data says why it isn't enough.
-      message: bothEmpty ? PASS_COPY.allEmpty(f.park.name) : shortPassMessage(f.park.name, fullPool.length),
+      // Review 2026-10-08 MINOR-1: the count is every park + wildlife find (the same things the sections below list),
+      // not the pool after Find This Spot kept one back ("we found 1" under "2 kinds of mapped things").
+      message: bothEmpty ? PASS_COPY.allEmpty(f.park.name) : shortPassMessage(f.park.name, dataPool.length),
       sections: explainShortSections(f.park.name, sections, { park: park.items, wild: wild.items }),
     };
   }

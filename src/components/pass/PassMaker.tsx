@@ -28,6 +28,8 @@ import { checkQuery, useParkSearch } from "@/components/parks/useParkSearch";
 import type { SignInOptions } from "@/lib/accounts/config";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import type { Park } from "@/lib/parks/schema";
+import { otherParksNear } from "@/lib/parks/nearby";
+import { distanceLabel } from "@/lib/geo";
 import { safeParkName } from "@/lib/safety/contact";
 import { AGE_BAND_INFO, AGE_BAND_STORAGE_KEY, DEFAULT_AGE_BAND, isAgeBand, type AgeBand } from "@/lib/pass/constants";
 import { FOCUS_PASS_KEY } from "./FocusPassHeading";
@@ -371,6 +373,19 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
     goTo("age");
   }
 
+  /** Review MAJOR-2: from "not enough data", try another park from the same search with the same age (straight to step 3). */
+  function onPickOther(p: Park) {
+    reset();
+    setRunning(null);
+    setStayed(false);
+    setNote(null);
+    setPark(p);
+    // Same step, so the step effect doesn't move focus: the picked button goes away, so focus "Make my pass".
+    setStep("make");
+    setAnnounce(`${safeParkName(p.name).name} picked. ${stepAnnouncement("make")}`);
+    requestAnimationFrame(() => makeRef.current?.focus());
+  }
+
   function onBand(b: AgeBand) {
     // Q-8-02: a different age clears an old failure, so its "Try again" can't send the old age.
     if (b !== band && !working) {
@@ -693,6 +708,13 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                         <p className="font-semibold">{state.message}</p>
                       </div>
                       <SectionNotes sections={state.sections} />
+                      <OtherParks
+                        from={park}
+                        parks={search.phase.kind === "done" ? search.phase.result.parks : []}
+                        onPick={onPickOther}
+                        onSearch={() => goTo("park")}
+                        headingId={`${ids}-other-parks`}
+                      />
                     </div>
                   ) : null}
                 </>
@@ -716,7 +738,8 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                   Next
                 </Button>
               ) : null}
-              {step === "make" && !needsSignIn ? (
+              {/* Review MAJOR-2: "not enough data" can't be fixed by pressing the same button; the body offers other parks. */}
+              {step === "make" && !needsSignIn && state.kind !== "empty" ? (
                 <button ref={makeRef} type="button" onClick={make} className={buttonClassName("primary", "px-5 whitespace-nowrap min-[400px]:px-8")}>
                   <Sparkles className="size-5 max-[379px]:hidden" aria-hidden="true" />
                   Make my pass
@@ -726,6 +749,66 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
           ) : null}
         </div>
       </dialog>
+    </section>
+  );
+}
+
+/**
+ * Review 2026-10-08 MAJOR-2: after "not enough real data", up to 3 other parks from the visitor's own search (nearest to
+ * this park first) and a way back to the search. Without a search on the page (e.g. back from signing in) it says so.
+ */
+export function OtherParks({
+  from,
+  parks,
+  onPick,
+  onSearch,
+  headingId,
+}: {
+  from: Park;
+  parks: readonly Park[];
+  onPick: (p: Park) => void;
+  onSearch: () => void;
+  headingId: string;
+}) {
+  const others = otherParksNear(from, parks);
+  const fromName = safeParkName(from.name).name;
+  return (
+    <section aria-labelledby={headingId} className="flex flex-col gap-3 rounded-2xl p-4 ring-1 ring-border" data-testid="other-parks">
+      <h3 id={headingId} className="font-heading text-xl font-extrabold">
+        Try another park nearby
+      </h3>
+      {others.length > 0 ? (
+        <>
+          <p className="text-base text-muted-foreground">
+            Bigger parks usually have more mapped things and wildlife sightings. These are the closest other parks from your search; we only
+            know if one has enough data once you try it.
+          </p>
+          <ul className="flex flex-col gap-2">
+            {others.map(({ park: p, fromM }) => (
+              <li key={p.id}>
+                <button
+                  type="button"
+                  onClick={() => onPick(p)}
+                  className="flex min-h-11 w-full flex-col items-start rounded-xl bg-muted px-4 py-2 text-left hover:bg-muted/70"
+                  data-testid="other-park"
+                >
+                  <span className="font-heading font-extrabold">{safeParkName(p.name).name}</span>
+                  <span className="text-sm text-muted-foreground">
+                    {distanceLabel(fromM)} from {fromName}
+                  </span>
+                </button>
+              </li>
+            ))}
+          </ul>
+        </>
+      ) : (
+        <p className="text-base text-muted-foreground" data-testid="other-parks-none">
+          No data available: there are no other parks from a search on this page to suggest. Search again to see the parks near you.
+        </p>
+      )}
+      <button type="button" onClick={onSearch} className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-link underline underline-offset-4">
+        Search for a different park
+      </button>
     </section>
   );
 }

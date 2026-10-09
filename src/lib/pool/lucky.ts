@@ -134,6 +134,9 @@ export const LUCKY_COPY = {
   paused: "Lucky Finds: paused. The visitor-review service (SerpApi) asked us to wait, so we stopped asking for now.",
   auth: "Lucky Finds: off. The visitor-review service (SerpApi) did not accept this server's key.",
   down: "No data available: SerpApi didn't answer for Google reviews, so there are no Lucky Finds on this pass.",
+  /** Review 2026-10-08 MAJOR-2: the park + wildlife data can't fill a pass, so no visitor-review search was spent. */
+  notSearched:
+    "No data available: we didn't search visitor reviews (Google reviews via SerpApi), because Lucky Finds are only extras and the park map and wildlife data here can't fill a pass.",
   slow: "No data available: Google reviews (via SerpApi) were too slow when this pass was made.",
   noMatch: (park: string) => `No data available: we couldn't match ${park} to one place on Google Maps, so there are no Lucky Finds from visitor reviews.`,
   noEvidence: (keywords: readonly string[]) =>

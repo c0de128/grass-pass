@@ -467,11 +467,15 @@ async function buildCounted(ctx: {
     return { kind: "error", status: 429, error: { code: share.scope === "global" ? "DAILY_LIMIT" : "IP_DAILY_LIMIT", message, retryAfter: share.retryAfter } };
   }
   const ipTicket: QuotaTicket = share.ticket;
-  // Every upstream start spends the per-IP share and the account's share together.
+  // Every upstream start spends the per-IP share. Review 2026-10-08 MAJOR-2: the account's (or judge demo's) share is
+  // spent with it, EXCEPT when the build then stops for "not enough real data" (kind "empty") before any model call:
+  // that is not a pass, so the grown-up or judge keeps their pass (the per-IP share still counts, for flood protection).
+  // A reserved model call spends the account share at once.
+  let upstreamStarted = false;
   const ticket = {
     commit() {
       ipTicket.commit();
-      accountTicket?.commit();
+      upstreamStarted = true;
     },
     release: () => ipTicket.release(),
     get committed() {
@@ -541,6 +545,7 @@ async function buildCounted(ctx: {
           });
           if (!r.ok) return null;
           ticket.commit(); // a model call is an upstream call too
+          accountTicket?.commit();
           return r.ticket;
         },
         startedAt: ctx.startedAt,
@@ -567,11 +572,18 @@ async function buildCounted(ctx: {
       octoberStop.abort(new Error("pass not made"));
       log("pass_not_made", { kind: out.kind, status: out.kind === "error" ? out.status : 200, code: out.kind === "error" ? out.error.code : "EMPTY" }, "warn");
     }
+    // Review MAJOR-2: "not enough data" gives the account/judge share back (build() releases an uncommitted ticket).
+    if (out.kind === "empty") {
+      if (accountTicket && !accountTicket.committed) log("account_share_returned", { reason: "empty" });
+    } else if (upstreamStarted) {
+      accountTicket?.commit();
+    }
     return out;
   } catch (err) {
     // Round 9 (Q-9-01): the build stopped (every client left before the paid steps, or it failed): the October box's
     // unsent requests are not sent, and nothing is saved.
     octoberStop.abort(new Error("pass not made"));
+    if (upstreamStarted) accountTicket?.commit();
     throw err;
   } finally {
     octoberDeadline.clear();

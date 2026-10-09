@@ -228,7 +228,8 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
         await page.addInitScript(REPLAY_SHIM);
         await page.goto("/signin");
         await page.getByRole("button", { name: "Try as a judge" }).click();
-        await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible();
+        // Q-11-04: the judge sign-in round trip can take several seconds under full-suite load (as signin-v2:36).
+        await expect(page.getByRole("button", { name: /Sign out/ })).toBeVisible({ timeout: 20_000 });
         const dialog = await resumeOnStep3(page);
         await expect(dialog.getByRole("button", { name: "Make my pass" })).toBeVisible();
         await axeDialog(page, `${label} step 3`);

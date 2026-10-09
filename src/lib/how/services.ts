@@ -116,7 +116,7 @@ export function services(): Service[] {
       name: onDo ? "DigitalOcean" : host,
       detail: onDo ? "Serverless inference (the model)" : "Model server (MODEL_BASE_URL)",
       group: "platform",
-      usedFor: onDo ? "Runs every Gemma call: no GPU of our own" : "Runs every model call on this server",
+      usedFor: onDo ? "Runs every Gemma call the site makes: no GPU of our own" : "Runs every model call on this server",
       terms: onDo ? `Per token, prepaid credit; at most ${cap} model calls a day` : "Set by MODEL_BASE_URL on this server",
       url: onDo ? "https://docs.digitalocean.com/products/gradient-ai-platform/how-to/use-serverless-inference/" : `https://${host}/`,
       code: { file: "src/lib/model.ts", contains: "inference.do-ai.run" },

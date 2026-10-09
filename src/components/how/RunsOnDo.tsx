@@ -56,7 +56,7 @@ export function RunsOnDo() {
           {onDo ? "Runs on DigitalOcean" : "Where the model runs"}
         </p>
         <h3 className="text-3xl leading-tight font-extrabold text-balance text-ink">
-          {onDo ? "Every Gemma call runs on DigitalOcean" : `This server's model runs at ${new URL(ep.baseUrl).host}`}
+          {onDo ? "Every Gemma call on this site runs on DigitalOcean" : `This server's model runs at ${new URL(ep.baseUrl).host}`}
         </h3>
         <p className="text-pretty">
           {onDo ? (

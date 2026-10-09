@@ -170,7 +170,7 @@ describe("Runs on DigitalOcean (Kevin 2026-10-09: \"Let's add our use of Digital
     const model = read("src/lib/model.ts");
     expect(model).toContain('export const DO_HOST = "inference.do-ai.run"');
     expect(model).toContain("`${baseUrl}/chat/completions`");
-    expect(panel).toContain("Every Gemma call runs on DigitalOcean");
+    expect(panel).toContain("Every Gemma call on this site runs on DigitalOcean");
     expect(panel).toContain("OpenAI-compatible endpoint https://inference.do-ai.run/v1");
     // Key-to-host rule: resolveModelTarget sends DO_INFERENCE_API_KEY only to that host.
     expect(model).toMatch(/u\.hostname === DO_HOST/);
@@ -204,7 +204,7 @@ describe("Runs on DigitalOcean (Kevin 2026-10-09: \"Let's add our use of Digital
     process.env.MODEL_BASE_URL = "http://localhost:11434/v1";
     try {
       const other = text(renderToStaticMarkup(<RunsOnDo />));
-      expect(other).not.toContain("Every Gemma call runs on DigitalOcean");
+      expect(other).not.toContain("Every Gemma call on this site runs on DigitalOcean");
       expect(other).toContain("This server's model runs at localhost:11434");
       expect(services().find((x) => x.id === "digitalocean")!.name).toBe("localhost:11434");
     } finally {

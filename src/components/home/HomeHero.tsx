@@ -20,8 +20,11 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
  * Full-screen hero (Kevin 2026-10-08, option A): from 1024 px the hero fills the first screen under the header, less a
  * small peek of the Explore heading; the type, the search card and the picture grow with the screen (the --hero-*
  * sizes in globals.css, capped for very wide or tall screens). The picture stretches to the left column's height and
- * the real pass card hangs inside the hero's bottom padding (scaled at 1024-1279 px and on short screens so it never
- * hides the child's face). Below 1024 px only the space under the hero is tighter. Words unchanged.
+ * the real pass card hangs inside the hero's bottom padding. Kevin (2026-10-07): the card must never hide the girl. So
+ * from 1024 px the card sits over the picture's bottom-left edge, half in the gap beside it (the 4rem padding), scaled
+ * from its bottom-left corner (0.66 below 1280 px, 0.8 from 1280 px), and the picture is anchored left: her face, her
+ * smile, the paper she writes on and the butterfly stay clear at every size (tests/e2e/hero-face.spec.ts checks it).
+ * Below 1024 px only the space under the hero is tighter. Words unchanged.
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
@@ -69,7 +72,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
         </div>
 
         <div className="relative">
-          <div className="relative mx-auto max-w-md lg:mr-0 lg:ml-auto lg:h-full lg:max-w-none lg:pl-10">
+          <div className="relative mx-auto max-w-md lg:mr-0 lg:ml-auto lg:h-full lg:max-w-none lg:pl-16">
             <div className="relative aspect-[4/5] overflow-hidden rounded-[2rem] shadow-2xl shadow-shadow lg:aspect-auto lg:h-full">
               <Image
                 src={HERO_ILLUSTRATION.src}
@@ -80,7 +83,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 // lead text), and an eager preload competed with the first paint; on desktop it loads at layout.
                 loading="lazy"
                 sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
-                className="h-full w-full object-cover lg:absolute lg:inset-0"
+                className="h-full w-full object-cover lg:absolute lg:inset-0 lg:object-left"
               />
               {/* Kevin 2026-10-08: the honest AI label sits inside the picture, bottom right, in white (a soft dark
                   backing keeps it readable on any part of the photo). Phones: top right, since the pass card covers the bottom there. */}
@@ -90,7 +93,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             </div>
             {/* Phones: in the flow, overlapping the picture's lower part (a real pass is taller than v0's sample, so an
                 absolute card would cover the search card). From 640 px: v0's absolute, tilted placement. */}
-            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:bottom-[calc(1.75rem-var(--hero-pb))] lg:left-2 lg:w-[17rem] lg:origin-bottom-left lg:scale-[0.8] xl:scale-[0.9] xl:[@media(min-height:55rem)]:scale-100">
+            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:bottom-[calc(1.75rem-var(--hero-pb))] lg:left-4 lg:w-[17rem] lg:origin-bottom-left lg:scale-[0.66] xl:scale-[0.8]">
               <HeroPassCard card={card} />
             </div>
           </div>

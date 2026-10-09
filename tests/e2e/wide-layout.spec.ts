@@ -10,6 +10,10 @@ const FIX = join(__dirname, "..", "fixtures");
 const PASS_ID = (JSON.parse(readFileSync(join(FIX, "pass-celebration-13plus-live.json"), "utf8")) as { pass: { id: string } }).pass.id;
 const PAGES = ["/", "/about", "/how-it-works", "/signin", `/pass/${PASS_ID}`] as const;
 
+// Each test walks several full pages (up to 2560 px wide): one at a time, so the shared test server is not starved and the
+// time-limited client checks in other specs (e.g. the judge count on /signin) keep their budget.
+test.describe.configure({ mode: "serial" });
+
 async function open(page: Page, path: string) {
   const res = await page.goto(path);
   expect(res?.status()).toBe(200);

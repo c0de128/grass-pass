@@ -148,7 +148,7 @@ function ParkCard({ park }: { park: Park }) {
 
 export function TwoParks() {
   return (
-    <section id="why" aria-labelledby="why-title" className="scroll-mt-28 overflow-x-clip sm:scroll-mt-16">
+    <section id="why" aria-labelledby="why-title" className="scroll-mt-28 overflow-x-clip bg-background sm:scroll-mt-16">
       <div className="gp-container flex flex-col gap-10 pt-16 pb-2 lg:gap-12 lg:pt-24 lg:pb-4">
         <div className="grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-x-14">
           <div className="flex flex-col gap-4 lg:col-span-6">

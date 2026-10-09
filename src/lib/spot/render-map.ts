@@ -528,6 +528,10 @@ export const X_SIZE = 13;
 export const START_R = 11;
 /** Landmark icon radius in map units. */
 export const ICON_R = 10;
+/** Q-11-02: the farthest a landmark icon is moved off its spot to clear something (the spot stays inside the icon). */
+export const ICON_NUDGE = ICON_R - 2;
+/** Q-11-02: a landmark drawn as its name only (no room for the icon) is centred at most this far from its real spot. */
+export const LABEL_ONLY_MAX_M = 25;
 /** At most this many landmarks are drawn (fewer, bigger things). */
 export const MAX_DRAWN_LANDMARKS = 5;
 /** The key lists at most this many items. */
@@ -608,19 +612,29 @@ export function drawMap(stored: SpotMap, walk: Walk | null = null): MapDrawing {
     box: { x0: nx - 12, y0: 3, x1: nx + 12, y1: ny + 36 },
   };
 
-  // Scale bar: bottom-left, ticks at both ends, its label above it, on a white card.
-  const sx0 = 12;
+  // Scale bar: bottom-left, ticks at both ends, its label above it, on a white card. Round 11 (Q-11-02): bottom-right
+  // instead when the bottom-left card would cover a landmark, the X or START and the bottom-right one covers none.
   const sy0 = MAP_H - 10;
   const u = map.scale.units;
   const scaleText = map.scale.label;
-  const scale = {
+  const scaleW = Math.max(u, textWidth(scaleText, SMALL_FONT));
+  const scaleAt = (sx0: number) => ({
     x: sx0,
     y: sy0,
     units: u,
     label: scaleText,
     d: `M${sx0} ${sy0 - 6}L${sx0} ${sy0}L${r1(sx0 + u)} ${sy0}L${r1(sx0 + u)} ${sy0 - 6}`,
-    box: { x0: 3, y0: sy0 - 11 - SMALL_FONT * 1.2, x1: r1(Math.max(sx0 + u, sx0 + textWidth(scaleText, SMALL_FONT)) + 6), y1: MAP_H - 3 },
-  };
+    box: { x0: sx0 - 9, y0: sy0 - 11 - SMALL_FONT * 1.2, x1: r1(sx0 + scaleW + 6), y1: MAP_H - 3 },
+  });
+  const scaleKeepClear: Rect[] = [
+    square(t, s + 5),
+    ...(map.start ? [square([map.start[0], map.start[1]], START_R + 4)] : []),
+    ...(stored.frame === "spot" || !stored.start ? (map.landmarks ?? []) : []).map((lm) => square([lm.at[0], lm.at[1]], ICON_R + 2)),
+  ];
+  const leftScale = scaleAt(12);
+  const rightScale = scaleAt(r1(MAP_W - 9 - scaleW));
+  const covers = (b: Rect) => scaleKeepClear.some((o) => rectsOverlap(o, b));
+  const scale = covers(leftScale.box) && !covers(rightScale.box) && !rectsOverlap(rightScale.box, north.box) ? rightScale : leftScale;
 
   const xBox = square(t, s + 5);
   const fixed: Rect[] = [north.box, scale.box, xBox];
@@ -691,7 +705,7 @@ export function drawMap(stored: SpotMap, walk: Walk | null = null): MapDrawing {
       skipped.push({ text: lm.text, why: "full" });
       continue;
     }
-    const at: XY = [lm.at[0], lm.at[1]];
+    let at: XY = [lm.at[0], lm.at[1]];
     const nameOnly = lm.kind === "water" || lm.kind === "trail";
     if (nameOnly) {
       const near: XY[] = [at];
@@ -707,11 +721,38 @@ export function drawMap(stored: SpotMap, walk: Walk | null = null): MapDrawing {
       labelBoxes.push(l.box);
       continue;
     }
-    const iconBox = square(at, ICON_R + 2);
-    if (!insideMap(iconBox) || taken.some((o) => rectsOverlap(o, iconBox))) {
-      skipped.push({ text: lm.text, why: "icon" });
+    // Round 11 (Q-11-02): an icon that touches something is nudged (the real spot stays inside the icon's circle), and
+    // when no nudge is clear the name is drawn on its own at the spot, so a map keeps its reference point when one fits.
+    const clearIcon = (p: XY) => {
+      const box = square(p, ICON_R + 2);
+      return insideMap(box) && !taken.some((o) => rectsOverlap(o, box)) ? box : null;
+    };
+    let iconAt: XY = at;
+    let iconBox = clearIcon(at);
+    for (const r of [ICON_NUDGE * 0.5, ICON_NUDGE]) {
+      if (iconBox) break;
+      for (let k = 0; k < 8 && !iconBox; k++) {
+        const p: XY = [at[0] + r * Math.cos((k * Math.PI) / 4), at[1] + r * Math.sin((k * Math.PI) / 4)];
+        iconBox = clearIcon(p);
+        if (iconBox) iconAt = p;
+      }
+    }
+    if (!iconBox) {
+      // The name's centre stays within LABEL_ONLY_MAX_M of the real spot (and 40 map units).
+      const reach = Math.min(40, LABEL_ONLY_MAX_M * (unitsPerMetre(map) ?? 1));
+      const offsets: XY[] = [[0, 0], [0, -12], [0, 12], [-24, 0], [24, 0], [0, -24], [0, 24], [0, -36], [0, 36], [0, -40], [0, 40], [-40, 0], [40, 0], [-30, -24], [30, -24], [-30, 24], [30, 24]];
+      const near: XY[] = offsets.filter(([dx, dy]) => Math.hypot(dx, dy) <= reach).map(([dx, dy]) => [at[0] + dx, at[1] + dy]);
+      const l = placeLabel(lm.text, SMALL_FONT, near, labelAvoid(), 3);
+      if (!isFree(l, labelAvoid())) {
+        skipped.push({ text: lm.text, why: "icon" });
+        continue;
+      }
+      landmarks.push({ kind: lm.kind, icon: null, label: l });
+      taken.push(l.box);
+      labelBoxes.push(l.box);
       continue;
     }
+    at = iconAt;
     const half = textWidth(lm.text, SMALL_FONT) / 2 + 3;
     const g = ICON_R + 4;
     const candidates: XY[] = [

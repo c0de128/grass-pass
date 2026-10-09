@@ -6,7 +6,7 @@ import AboutPage from "@/app/about/page";
 import { SiteFooter, parkPhotoCreditText } from "@/components/SiteFooter";
 import { PARK_PHOTOS } from "@/data/photo-credits";
 import { SiteHeader } from "@/components/SiteHeader";
-import { privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
+import { AGENT_BUILT_OCT_8_9, KEVIN_OWN_WORDS, privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
 import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { jargonProblem, triviaProblem } from "@/lib/ai/jargon";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
@@ -439,11 +439,17 @@ describe("/about", () => {
     expect(t).toContain(
       "Oct 7, 2026 redesign (the home page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its animation): built by AI coding agents (Claude Code) at Kevin's direction; the footer art is code-drawn SVG, no stock art.",
     );
-    // Kevin 2026-10-08: the Oct 8 work is credited the same way; his hero text is his own.
-    expect(t).toContain("Oct 8, 2026 (the weather card, the trip tips section, the phone layout and the sign-in page): also built by AI coding agents (Claude Code) at Kevin's direction; the home page text is Kevin's own.");
+    // Kevin 2026-10-08: the Oct 8 work is credited the same way. RULES-11-03: the Oct 8-9 agent work too, and only the
+    // lines Kevin really wrote are called his (no blanket "the home page text is Kevin's own").
+    expect(t).toContain("Oct 8, 2026 (the weather card, the trip tips section, the phone layout and the sign-in page): also built by AI coding agents (Claude Code) at Kevin's direction.");
+    expect(t).toContain(`Oct 8-9, 2026 (${AGENT_BUILT_OCT_8_9}): built, and partly written, by AI coding agents (Claude Code) at Kevin's direction. Kevin's own words: ${KEVIN_OWN_WORDS}.`);
+    expect(t).not.toContain("the home page text is Kevin's own");
     const readme = readFileSync(join(ROOT, "README.md"), "utf8").replace(/\s+/g, " ");
     expect(readme).toContain("were built by AI coding agents (Claude Code) at Kevin's direction. The footer art is code-drawn SVG, no stock art.");
     expect(readme).toContain("we keep complete ones as examples");
+    expect(readme).toContain(`**Oct 8-9, 2026:** ${AGENT_BUILT_OCT_8_9} were built, and partly written, by AI coding agents`);
+    expect(readme).toContain(`**Kevin's own words:** ${KEVIN_OWN_WORDS}.`);
+    expect(readme).not.toContain("The home page text is Kevin's own");
     // Default model is Gemma: no "Built with Llama" badge, only the explanation of when it shows.
     expect(html).not.toContain('data-testid="built-with-llama"');
   });

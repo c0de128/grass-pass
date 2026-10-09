@@ -47,8 +47,8 @@ export function EvalTable({ columns }: { columns: readonly EvalColumn[] }) {
       target: `${EVAL_THRESHOLDS.p50s} s / ${EVAL_THRESHOLDS.p95s} s`,
     },
     {
-      label: "Cost per pass",
-      plain: "At the provider's list price.",
+      label: "Cost per pass (clue calls)",
+      plain: "At the provider's list price, for the clue calls only; the trip tips (added later) are one more short call.",
       cell: (c) => usd(c.costPerPass),
       target: `${usd(EVAL_THRESHOLDS.costPerPass)} or less`,
     },

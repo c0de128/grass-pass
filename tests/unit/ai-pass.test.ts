@@ -1,5 +1,4 @@
 import { describe, expect, it } from "vitest";
-import HOW_EXAMPLES from "@/data/how/ai-examples.json";
 import { buildMessages, computeMix, escapeSource, planRequest, refillPlan, systemPrompt, userPrompt } from "@/lib/ai/prompt";
 import {
   ASK_EXTRA_MAX,
@@ -256,10 +255,7 @@ describe("validation of the model's answer (SPEC 6.2)", () => {
     expect(conn.questionsFixed).toBe(5);
     expect(new Set(conn.items.map((i) => i.clue.split(/[^A-Za-z]/)[0])).size).toBe(6);
     expect(conn.items.find((i) => i.item.id === "inat-119986")?.clue).toBe("Notice the thick, corky lumps on this tree's bark.");
-    // /how-it-works (Blueprint, 2026-10-09) shows this answer as its job-1 example: its kept and dropped counts must match.
-    expect(conn.items).toHaveLength(HOW_EXAMPLES.clue.answerKept);
-    expect(conn.drops).toEqual(HOW_EXAMPLES.clue.answerDrops);
-    expect(conn.returned).toBe(HOW_EXAMPLES.clue.answerReturned);
+    expect(conn.returned).toBe(9);
     expect(conn.items.length).toBeLessThan(retryThreshold(8));
     // ... so the app refills. The real refill was asked for the 2 missing items + spares from the unused items that
     // did not fail (only 3 are left, so 3 are asked), told what went wrong and which first words are taken.

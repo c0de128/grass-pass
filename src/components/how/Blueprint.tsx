@@ -2,6 +2,7 @@ import {
   Binoculars,
   Braces,
   BookOpen,
+  Cloud,
   CloudSun,
   Database,
   Dog,
@@ -34,6 +35,7 @@ const SERVICE_ICON: Record<string, LucideIcon> = {
   serpapi: Dog,
   "open-meteo": CloudSun,
   nws: Siren,
+  digitalocean: Cloud,
   vercel: Server,
   upstash: Database,
   authjs: KeyRound,
@@ -101,7 +103,7 @@ function ServiceChip({ s, compact = false }: { s: Service; compact?: boolean }) 
   const Icon = SERVICE_ICON[s.id] ?? Database;
   return (
     <li className={`flex items-start gap-3 rounded-2xl bg-muted/70 ring-1 ring-border ${compact ? "px-3 py-2" : "px-3 py-2.5"}`} data-service={s.id}>
-      <span aria-hidden="true" className="mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl bg-primary text-primary-foreground">
+      <span aria-hidden="true" className={`mt-0.5 flex size-8 shrink-0 items-center justify-center rounded-xl ${s.id === "digitalocean" ? "bg-do text-do-foreground" : "bg-primary text-primary-foreground"}`}>
         <Icon className="size-4" strokeWidth={2.25} />
       </span>
       <span className="flex min-w-0 flex-col">
@@ -175,7 +177,12 @@ export function Blueprint({ hardRules, blockedGroups, modelId }: { hardRules: nu
         <Stage n={3} tone="model" title={model.name} hotArrow className="xl:-my-3" service={model.id}>
           <div className="flex flex-col gap-1">
             <p className="w-fit rounded-lg bg-sun-foreground px-2 py-0.5 font-mono text-sm text-sun">{modelId}</p>
-            <p className="text-sm font-semibold">{model.terms.split(";")[0]} · DigitalOcean serverless inference</p>
+            <p className="text-sm font-semibold">
+              {model.terms.split(";")[0]} ·{" "}
+              <a href="#digitalocean" className="underline decoration-sun-foreground/40 underline-offset-2 hover:decoration-sun-foreground">
+                DigitalOcean serverless inference
+              </a>
+            </p>
           </div>
           <ul aria-label="The model's jobs" className="flex flex-col gap-2">
             {[
@@ -224,7 +231,7 @@ export function Blueprint({ hardRules, blockedGroups, modelId }: { hardRules: nu
 
       <div className="relative mt-10 flex flex-col gap-3 border-t-2 border-dashed border-line pt-5 lg:flex-row lg:items-center lg:gap-6">
         <h3 className="shrink-0 text-xs font-bold tracking-widest text-ink uppercase">Runs on</h3>
-        <ul aria-label="Platform services" className="grid flex-1 gap-2 sm:grid-cols-3">
+        <ul aria-label="Platform services" className="grid flex-1 gap-2 sm:grid-cols-2 2xl:grid-cols-4">
           {platform.map((s) => (
             <ServiceChip key={s.id} s={s} />
           ))}

@@ -27,7 +27,9 @@ import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { PARK_PHOTOS } from "@/data/photo-credits";
 import {
   EVAL_RUN_ID,
+  AGENT_BUILT_OCT_8_9,
   GEMMA_COPY,
+  KEVIN_OWN_WORDS,
   PRIVACY_NOTES,
   accountNotes,
   PRIVACY_POINTS,
@@ -499,7 +501,9 @@ export default function AboutPage() {
                 page sections and How it works diagram, the footer landscape, the Find This Spot map and the pass wizard with its
                 animation): built by AI coding agents (Claude Code) at Kevin&apos;s direction; the footer art is code-drawn SVG, no
                 stock art. Oct 8, 2026 (the weather card, the trip tips section, the phone layout and the sign-in page): also built by
-                AI coding agents (Claude Code) at Kevin&apos;s direction; the home page text is Kevin&apos;s own. Logo sprout and all icons:{" "}
+                AI coding agents (Claude Code) at Kevin&apos;s direction. Oct 8-9, 2026 ({AGENT_BUILT_OCT_8_9}): built, and partly
+                written, by AI coding agents (Claude Code) at Kevin&apos;s direction. Kevin&apos;s own words: {KEVIN_OWN_WORDS}. Logo
+                sprout and all icons:{" "}
                 <a className={ext} href="https://lucide.dev/">
                   Lucide
                 </a>{" "}
@@ -507,7 +511,7 @@ export default function AboutPage() {
               </li>
               <li data-testid="copy-credit">
                 Site copy: Gemma 4 redrafted {GEMMA_COPY.sent} blocks of this site&apos;s text; {GEMMA_COPY.shipped} of its drafts
-                shipped ({GEMMA_COPY.edited} with small edits) after a code check and a review by an AI coding agent (Claude
+                shipped ({GEMMA_COPY.edited} with small edits; {GEMMA_COPY.live} are still on the site after later redesigns) after a code check and a review by an AI coding agent (Claude
                 Code). Every block, old and new:{" "}
                 <a className={ext} href={`${REPO_URL}/blob/main/docs/COPY-BY-GEMMA.md`}>
                   docs/COPY-BY-GEMMA.md

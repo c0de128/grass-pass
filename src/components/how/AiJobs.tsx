@@ -1,4 +1,4 @@
-import { ArrowDown, Check, Code2, FileText, PenLine, type LucideIcon } from "lucide-react";
+import { ArrowDown, Ban, Check, Code2, FileText, PenLine, type LucideIcon } from "lucide-react";
 import type { ReactNode } from "react";
 import { clueExample, recordedDay, riddleExample, tipsExample, type Highlighted } from "@/lib/how/ai-examples";
 import { REPO_URL } from "@/lib/site-url";
@@ -67,7 +67,7 @@ function CodeLine({ ok, children }: { ok: boolean; children: ReactNode }) {
   );
 }
 
-function Job({ n, title, children, park, band, day, fixture }: { n: number; title: string; children: ReactNode; park: string; band: string; day: string; fixture: string }) {
+function Job({ n, title, children, park, band, day, fixture, linkLabel = "Raw answer" }: { n: number; title: string; children: ReactNode; park: string; band: string; day: string; fixture: string; linkLabel?: string }) {
   return (
     <li id={`ai-job-${n}`} className="flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-card p-5 shadow-lg ring-1 shadow-shadow/50 ring-border sm:p-6">
       <div className="flex items-start gap-3">
@@ -85,8 +85,8 @@ function Job({ n, title, children, park, band, day, fixture }: { n: number; titl
         <span>
           <span className="sr-only">Recorded at </span>
           {park}, {day}, ages {band} ·{" "}
-          <a className="font-semibold text-link underline underline-offset-2" href={`${REPO_URL}/blob/main/${fixture}`}>
-            Raw answer
+          <a className="font-semibold whitespace-nowrap text-link underline underline-offset-2" href={`${REPO_URL}/blob/main/${fixture}`}>
+            {linkLabel}
           </a>
         </span>
       </p>
@@ -98,10 +98,9 @@ export function AiJobs() {
   const c = clueExample();
   const r = riddleExample();
   const t = tipsExample();
-  const dropped = c.answerReturned - c.answerKept;
   return (
-    <ol aria-label="The open model's three jobs, each with a real example" className="grid gap-5 lg:grid-cols-3">
-      <Job n={1} title="Picks finds, writes clues" park={c.park} band={c.ageBand} day={recordedDay(c.recordedAt)} fixture={c.fixture}>
+    <ol aria-label="The open model's three jobs, each with a real example" className="grid gap-5 lg:grid-cols-[minmax(0,1.35fr)_minmax(0,1fr)_minmax(0,1fr)]">
+      <Job n={1} title="Picks finds, writes clues" park={c.park} band={c.ageBand} day={recordedDay(c.recordedAt)} fixture={c.fixture} linkLabel="Eval results">
         <Part label={`In: ${c.factSource}`} icon={FileText} tone="in">
           <p className="text-sm leading-relaxed">
             <span className="sr-only">Fact, with the model&apos;s proof quote marked: </span>
@@ -114,19 +113,24 @@ export function AiJobs() {
         <Arrow />
         <Part label={`Out: ${c.model}`} icon={PenLine} tone="out">
           <p className="font-heading text-lg leading-snug font-extrabold">&ldquo;{c.out.clue}&rdquo;</p>
+          <div data-testid="ai-vs-template" className="mt-1 flex flex-col gap-1 border-t-2 border-dashed border-sun-foreground/25 pt-2.5">
+            <p className="flex items-center gap-1.5 text-[0.7rem] font-bold tracking-wider uppercase">
+              <Ban aria-hidden="true" className="size-3.5" strokeWidth={2.5} />
+              Same fact, no AI (our template)
+            </p>
+            <p className="text-sm leading-snug">&ldquo;{c.noAi.clue}&rdquo;</p>
+          </div>
         </Part>
         <Arrow />
         <Part label="Code" icon={Code2} tone="code">
           <ul className="flex flex-col gap-1.5">
             <CodeLine ok={c.grounded}>{c.grounded ? "Quote found, word for word." : "Quote not found: removed."}</CodeLine>
-            {c.printed !== c.out.clue ? (
+            {c.printedAsWritten ? null : (
               <CodeLine ok>
-                Prints: <q className="font-semibold">{c.printed}</q>
+                Made the &quot;?&quot; after a command a full stop: <q className="font-semibold">{c.printed}</q>
               </CodeLine>
-            ) : null}
-            <CodeLine ok>
-              Removed {dropped} of {c.answerReturned} clues in this answer.
-            </CodeLine>
+            )}
+            <CodeLine ok>Answer key: {c.answerName}.</CodeLine>
           </ul>
         </Part>
       </Job>

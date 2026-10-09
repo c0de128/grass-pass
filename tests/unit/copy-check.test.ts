@@ -93,6 +93,11 @@ describe("the shipped copy is really in the code", () => {
     const readme = readFileSync(path.join(ROOT, "README.md"), "utf8");
     expect(readme).toContain(`redrafted ${GEMMA_COPY.sent} blocks`);
     expect(readme).toContain(`${GEMMA_COPY.shipped} of its drafts`);
+    // RULES-11-03: the README said "14 with small edits" while the log had 15; and 10 shipped drafts left the site later.
+    const live = review.decisions.filter((d) => (d.decision === "accepted" || d.decision === "edited") && !d.removedAfterRun).length;
+    expect(live).toBe(GEMMA_COPY.live);
+    const flat = readme.replace(/\s+/g, " ");
+    expect(flat).toContain(`(${GEMMA_COPY.edited} with small edits; ${GEMMA_COPY.live} are still on the site after later redesigns)`);
   });
 
   it("hand edits still pass the code check", () => {

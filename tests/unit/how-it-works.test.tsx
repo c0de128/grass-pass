@@ -106,7 +106,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
 
   it("RULES-8-04: the open-model card says ages 6-10, and the 13+ check is quoted with its over-target label", () => {
     const g = evalColumn("gemma-4-31B-it");
-    expect(t).toContain(`On 20 parks, ages 6-10: $${g.costPerPass.toFixed(5)} a pass, reading grade ${g.fkGrade.toFixed(1)}`);
+    expect(t).toContain(`On 20 parks, ages 6-10: $${g.costPerPass.toFixed(5)} a pass for the clue calls (trip tips add one more short call), reading grade ${g.fkGrade.toFixed(1)}`);
     // (`t` puts a space at each tag edge: "partial-1617 ,".)
     expect(t).toMatch(/Teens and adults \(13\+\), a smaller partial check \(run 2026-10-07-partial-1617 ?, 2026-10-07, 3 parks, one run each,/);
     expect(t).toContain("3 of 3 passes complete (at most one find short; 2 printed every find) in 6 model calls, 2 of 3 with their 3 hard finds, 9.5 s typical and 11.8 s slow (within the 10 s / 20 s targets), 2.4% of clues named their answer before the checks (code removed them).");
@@ -188,7 +188,8 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     // Kevin asked for about 400 words (the old page showed 1,046 in the browser). The real examples and the services
     // table are quoted in full. This static count also sees the phone-only copy of each table cell and the arrows'
     // punctuation, so its cap is looser than the browser count in tests/e2e/how-blueprint.spec.ts.
-    expect(visible.split(" ").length).toBeLessThanOrEqual(900);
+    // Oct 9 (r11): + the "Runs on DigitalOcean" panel, the no-AI clue and the DigitalOcean row (browser count 788 -> 932).
+    expect(visible.split(" ").length).toBeLessThanOrEqual(1050);
     // Every honest limit stays one click away, from the shared data.
     for (const l of howLimits()) expect(t).toContain(text(l.title));
     const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));

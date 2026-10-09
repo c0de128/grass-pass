@@ -23,6 +23,7 @@ import type { ReactNode } from "react";
 import { AiJobs } from "@/components/how/AiJobs";
 import { Blueprint } from "@/components/how/Blueprint";
 import { ProofNumbers } from "@/components/how/ProofNumbers";
+import { RunsOnDo } from "@/components/how/RunsOnDo";
 import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
@@ -130,6 +131,8 @@ export default function HowItWorksPage() {
   const smokeP50Over = SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s;
   const smokeP95Over = SMOKE_10_13.p95s > EVAL_THRESHOLDS.p95s;
   const all = services();
+  // The model itself is not counted as an outside service (judge R11); DigitalOcean, which serves it, is.
+  const outside = all.filter((s) => s.group !== "model");
   const limitsList = howLimits();
   const aiPrivacy = howPrivacyPoints().find((p) => p.startsWith("The AI sees")) ?? "";
 
@@ -408,8 +411,8 @@ export default function HowItWorksPage() {
           </p>
           <ul aria-label="In short" className="flex flex-wrap gap-2">
             {[
-              { icon: Scale, text: "Open weights, Apache-2.0" },
-              { icon: Database, text: `${all.length} outside services, all listed below` },
+              { icon: Scale, text: modelId === "gemma-4-31B-it" ? "Gemma 4 · open weights, Apache-2.0" : "Open weights, Apache-2.0" },
+              { icon: Database, text: `${outside.length} outside services, all listed below` },
               { icon: ListChecks, text: `${always.length} code checks on every clue` },
             ].map((c) => (
               <li key={c.text} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-ink shadow-sm ring-1 ring-border">
@@ -438,6 +441,7 @@ export default function HowItWorksPage() {
         intro="The AI cannot invent finds because it can only use ids from the park's own fact list."
       >
         <AiJobs />
+        <RunsOnDo />
         <div id="why-open" className="gp-band flex scroll-mt-28 flex-col gap-6 rounded-3xl bg-band p-6 text-band-foreground sm:scroll-mt-20 sm:p-8 xl:flex-row xl:items-start xl:gap-10">
           <div className="flex flex-col gap-2 xl:w-1/4 xl:shrink-0">
             <p className="text-xs font-bold tracking-widest text-sun uppercase">Why an open model</p>
@@ -590,7 +594,7 @@ export default function HowItWorksPage() {
           </Disclosure>
           <Disclosure id="measured-detail" icon={Gauge} title={`What we measured: run ${EVAL_RUN_ID}`}>
           <p>
-            On {EVAL_PARKS} parks, ages 6-10: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
+            On {EVAL_PARKS} parks, ages 6-10: {usd(gemma.costPerPass)} a pass for the clue calls (trip tips add one more short call), reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
             {template.fkGrade.toFixed(1)}). All numbers: the{" "}
             <Link className={ext} href="/about#measured">
               About page

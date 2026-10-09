@@ -404,12 +404,14 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   map and the pass wizard with its animation were built by AI coding agents (Claude Code) at Kevin's direction. The
   footer art is code-drawn SVG, no stock art. Logo and icons: [Lucide](https://lucide.dev/) (`lucide-react`, ISC).
 - **Oct 8, 2026:** the weather card, the trip tips section, the phone layout and the sign-in page were also built by
-  AI coding agents (Claude Code) at Kevin's direction. The home page text is Kevin's own.
+  AI coding agents (Claude Code) at Kevin's direction.
+- **Oct 8-9, 2026:** the full-screen hero, "What's a pass?" (its layout and its copy), the redesigned "The problem" section, map v2, sign-in v2, the wide layout, pass limits and feedback, and the new How it works page were built, and partly written, by AI coding agents (Claude Code) at Kevin's direction.
+- **Kevin's own words:** the home hero headline and paragraphs, "Why Find a pinecone fails" and its paragraphs, the nav labels, the button labels "Make a free pass" and "Create your pass now", the footer's closing line, and the idea for the hero offer line.
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (14 with small edits) after a code check and a review by an AI coding agent
-  (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,
-  with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
-  (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.
+  text; 90 of its drafts shipped (15 with small edits; 80 are still on the site after later redesigns) after a code
+  check and a review by an AI coding agent (Claude Code), and the rest kept their old text. No person has reviewed the
+  drafts yet. Every block, old and new, with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
+  (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own words (above) are his.
 - **Home page pictures:** the hero is an AI illustration generated with v0 by Vercel (labelled "AI illustration"; it
   shows no real child or park). The four park photos are real, used under their free licences (credited on each
   photo, under the cards and on `/about`; details in `src/data/photo-credits.ts`), resized and converted to WebP:

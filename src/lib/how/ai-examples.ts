@@ -11,11 +11,17 @@ import { fixCommandQuestion, isGrounded } from "@/lib/ai/validate";
 
 export type Highlighted = { before: string; quote: string; after: string } | null;
 
-/** The excerpt split around the proof quote (case-insensitive), or null when the quote isn't in it word for word. */
+/**
+ * The excerpt split around the proof quote, or null when the quote isn't in it word for word. Case-insensitive, and any
+ * run of whitespace matches any other: Wikipedia's "15 centimetres" has a no-break space where the model typed a plain
+ * one (the app's own isGrounded check normalizes whitespace the same way). The marked text is the source's own characters.
+ */
 export function highlightQuote(text: string, quote: string): Highlighted {
-  const i = text.toLowerCase().indexOf(quote.toLowerCase());
-  if (i < 0) return null;
-  return { before: text.slice(0, i), quote: text.slice(i, i + quote.length), after: text.slice(i + quote.length) };
+  const words = quote.trim().split(/\s+/).filter(Boolean);
+  if (words.length === 0) return null;
+  const m = new RegExp(words.map((w) => w.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")).join("\\s+"), "i").exec(text);
+  if (!m) return null;
+  return { before: text.slice(0, m.index), quote: m[0], after: text.slice(m.index + m[0].length) };
 }
 
 export const AI_EXAMPLES = raw;
@@ -25,12 +31,21 @@ export function recordedDay(iso: string): string {
   return new Date(iso).toLocaleDateString("en-US", { timeZone: "America/Chicago", month: "short", day: "numeric", year: "numeric" });
 }
 
+/**
+ * Job 1 (judge R11: show what the model adds): one Gemma clue from the committed eval run, next to the no-AI template's
+ * clue for the same fact in the same run. Same park, same tree, same data; only the writer differs.
+ */
 export function clueExample() {
   const c = raw.clue;
+  const printed = fixCommandQuestion(c.out.clue);
   return {
     ...c,
     grounded: isGrounded(c.out.sourceQuote, c.inExcerpt),
-    printed: fixCommandQuestion(c.out.clue),
+    printed,
+    /** True when code printed the model's words unchanged (no "?" to "." edit). */
+    printedAsWritten: printed === c.out.clue,
+    /** The common name the answer key prints: "Osage-orange" from "Osage-orange (Maclura pomifera)". */
+    answerName: c.answer.split(" (")[0],
     highlight: highlightQuote(c.inExcerpt, c.out.sourceQuote),
   };
 }

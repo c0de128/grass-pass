@@ -10,13 +10,13 @@ import { expect, test, type Page } from "@playwright/test";
 
 const ROOT = join(__dirname, "..", "..");
 const EXAMPLES = JSON.parse(readFileSync(join(ROOT, "src/data/how/ai-examples.json"), "utf8")) as {
-  clue: { fixture: string; factId: string; inExcerpt: string; out: { clue: string; sourceQuote: string } };
+  clue: { fixture: string; park: string; run: number; factId: string; inExcerpt: string; out: { clue: string; sourceQuote: string } };
   riddle: { fixture: string; out: { riddle: string; sourceQuote: string } };
   tips: { fixture: string; factId: string; inExcerpt: string; out: { tip: string } };
 };
 const fixture = (f: string) => JSON.parse(readFileSync(join(ROOT, f), "utf8"));
 const AXE_TAGS = ["wcag2a", "wcag2aa", "wcag21a", "wcag21aa", "wcag22aa", "best-practice"];
-const SERVICES = ["OpenStreetMap", "iNaturalist", "Wikipedia", "SerpApi", "Open-Meteo", "weather.gov", "Gemma 4 31B", "Vercel", "Upstash Redis", "Auth.js"];
+const SERVICES = ["OpenStreetMap", "iNaturalist", "Wikipedia", "SerpApi", "Open-Meteo", "weather.gov", "Gemma 4 31B", "DigitalOcean", "Vercel", "Upstash Redis", "Auth.js"];
 
 const overflow = (page: Page) => page.evaluate(() => document.documentElement.scrollWidth - document.documentElement.clientWidth);
 
@@ -30,7 +30,7 @@ test("the blueprint names every service, with the open model in the middle stage
   await expect(stages).toHaveCount(5);
   await expect(stages.nth(2)).toContainText("gemma-4-31B-it");
   await expect(stages.nth(2)).toContainText("only AI step");
-  // The services table lists the same ten.
+  // The services table lists the same eleven (the model plus 10 outside services).
   const table = page.getByRole("table", { name: /Every outside service/ });
   for (const name of SERVICES) await expect(table.getByRole("rowheader", { name: new RegExp(name.replace(".", "\\.")) })).toBeVisible();
 });
@@ -51,16 +51,18 @@ test("the flow is left-to-right from 1280 px and top-to-bottom on a phone", asyn
 
 test("each model example on the page matches its real recording on disk", async ({ page }) => {
   await page.goto("/how-it-works");
-  // Job 1: the fact sentence, the clue and the proof quote, read from the recorded request and answer.
-  const c = fixture(EXAMPLES.clue.fixture);
-  const answer = JSON.parse(c.response.choices[0].message.content) as { items: { itemId: string; clue: string; sourceQuote: string }[] };
-  const item = answer.items.find((i) => i.itemId === EXAMPLES.clue.factId)!;
-  expect(c.request.messages[1].content).toContain(EXAMPLES.clue.inExcerpt);
+  // Job 1: Gemma's clue next to the no-AI template's clue for the same fact, both read from the committed eval run.
+  const e = fixture(EXAMPLES.clue.fixture) as { runs: { parkName: string; model: string; run: number; calls: { rawItems: { itemId: string; clue: string; sourceQuote: string }[] | null }[] }[] };
+  const run = (model: string) => e.runs.find((r) => r.parkName === EXAMPLES.clue.park && r.model === model && r.run === EXAMPLES.clue.run)!;
+  const item = run("gemma-4-31B-it").calls.flatMap((x) => x.rawItems ?? []).find((i) => i.itemId === EXAMPLES.clue.factId)!;
+  const tpl = run("no-AI template").calls[0].rawItems!.find((i) => i.itemId === EXAMPLES.clue.factId)!;
   const job1 = page.locator("#ai-job-1");
   await expect(job1).toContainText(item.clue);
-  await expect(job1.locator("mark")).toHaveText(item.sourceQuote);
+  await expect(job1).toContainText(tpl.clue);
+  // The mark keeps the source's own no-break spaces; compare with whitespace normalized.
+  expect((await job1.locator("mark").innerText()).replace(/\s+/g, " ")).toBe(item.sourceQuote);
   await expect(job1).toContainText(EXAMPLES.clue.inExcerpt);
-  await expect(job1.getByRole("link", { name: "Raw answer" })).toHaveAttribute("href", new RegExp(`${EXAMPLES.clue.fixture}$`));
+  await expect(job1.getByRole("link", { name: "Eval results" })).toHaveAttribute("href", new RegExp(`${EXAMPLES.clue.fixture}$`));
   // Job 2: the riddle.
   const r = fixture(EXAMPLES.riddle.fixture);
   const spot = JSON.parse(r.response.choices[0].message.content).spot as { riddle: string; sourceQuote: string };
@@ -137,5 +139,7 @@ test("the visible copy stays short (folded detail not counted)", async ({ page }
   });
   // The old page showed 1,046 with this count (measured on the live site, 2026-10-09). Kevin's target is about 400; the
   // real examples and the services table are the rest (see the designer's report).
-  expect(words).toBeLessThanOrEqual(820);
+  // Oct 9 (r11): 788 -> 932 with Kevin's "Runs on DigitalOcean" panel (~100), the no-AI template clue in job 1 and the
+  // DigitalOcean services row. Trimming "Fine print" / the open-weights band (judge R11) is Kevin's call.
+  expect(words).toBeLessThanOrEqual(950);
 });

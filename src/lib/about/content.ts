@@ -60,7 +60,16 @@ export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS)
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 15 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 15, live: 80 } as const;
+
+/**
+ * RULES-11-03 (round 11): who wrote and built what, after Oct 8. One wording for /about and the README (about.test
+ * checks both). Kevin's own words: logs/decision-log.md (2026-10-08 ~1:45 PM hero text, locked) and round-11 CONTEXT
+ * ("Kevin's locked copy"). Agent-built Oct 8-9: commits 7495597, 1b4b444, 657ce51, 1ab32e0, aa136bc, f67d8db, c839da3,
+ * 5ffce8d (each Co-Authored-By: Claude).
+ */
+export const AGENT_BUILT_OCT_8_9 = `the full-screen hero, "What's a pass?" (its layout and its copy), the redesigned "The problem" section, map v2, sign-in v2, the wide layout, pass limits and feedback, and the new How it works page`;
+export const KEVIN_OWN_WORDS = `the home hero headline and paragraphs, "Why Find a pinecone fails" and its paragraphs, the nav labels, the button labels "Make a free pass" and "Create your pass now", the footer's closing line, and the idea for the hero offer line`;
 
 export type StatTile = {
   value: string;
@@ -378,7 +387,7 @@ export function howLimits(): Limit[] {
   return [
     {
       title: "Cost missed the goal.",
-      detail: `${usd(g.costPerPass)} a pass (target ${usd(t.costPerPass)}; ${costHighNote()}).`,
+      detail: `${usd(g.costPerPass)} a pass for the clue calls (target ${usd(t.costPerPass)}; ${costHighNote()}). The trip tips add one more short call.`,
     },
     {
       title: "Some clues are still vague.",

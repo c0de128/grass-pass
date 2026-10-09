@@ -8,8 +8,10 @@ import { join, resolve } from "node:path";
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import HowItWorksPage from "@/app/how-it-works/page";
-import { UNIT_TESTS } from "@/lib/about/content";
-import { evalColumn } from "@/lib/about/eval-summary";
+import { RunsOnDo } from "@/components/how/RunsOnDo";
+import { UNIT_TESTS, howLimits } from "@/lib/about/content";
+import { EVAL_THRESHOLDS, evalColumn } from "@/lib/about/eval-summary";
+import { limitsConfig } from "@/lib/limits/config";
 import { MAX_MODEL_CALLS } from "@/lib/ai/build-pass";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
@@ -31,30 +33,48 @@ function sourceIn(fixture: { request: { messages: { content: string }[] } }, id:
 }
 
 describe("the model examples are verbatim copies of real recordings", () => {
-  it("job 1 (clue + proof quote): the Connemara answer for Hercules' club", () => {
+  it("job 1 (clue vs no AI): the Osage-orange pair from the committed eval run, Gemma next to the no-AI template", () => {
+    // Judge R11: "Use the post's Osage-orange pair instead". Both clues are from eval run 2026-10-06-9 (Connemara Meadow
+    // Preserve, ages 6-10, run 1), which replays recorded park data (tests/fixtures/evals) through the app's own code.
     const c = AI_EXAMPLES.clue;
-    const f = json(c.fixture);
-    expect(f._recording.recordedAt).toBe(c.recordedAt);
-    expect(f._recording.ageBand).toBe(c.ageBand);
-    expect(f.response.model).toBe(c.model);
-    const src = sourceIn(f, c.factId)!;
-    expect(src.kind).toBe(c.factKind);
-    // The excerpt is one whole sentence of the fact the model was given.
-    expect(src.text.split(/(?<=\.) /)).toContain(c.inExcerpt);
-    const answer = JSON.parse(f.response.choices[0].message.content) as { items: { itemId: string; clue: string; sourceQuote: string; difficulty: string }[] };
-    const item = answer.items.find((i) => i.itemId === c.factId)!;
+    const e = json(c.fixture) as {
+      meta: { startedAt: string; ageBand: string };
+      runs: { slug: string; model: string; run: number; parkName: string; calls: { rawItems: { itemId: string; clue: string; sourceQuote: string; difficulty: string }[] | null }[]; items: { clue: string; answer: string; taxonId?: number }[] }[];
+    };
+    expect(e.meta.startedAt).toBe(c.recordedAt);
+    expect(e.meta.ageBand).toBe(c.ageBand);
+    const run = (model: string) => e.runs.find((r) => r.parkName === c.park && r.model === model && r.run === c.run)!;
+    const g = run(c.model);
+    const item = g.calls.flatMap((x) => x.rawItems ?? []).find((i) => i.itemId === c.factId)!;
     expect({ clue: item.clue, sourceQuote: item.sourceQuote, difficulty: item.difficulty }).toEqual(c.out);
-    expect(answer.items).toHaveLength(c.answerReturned);
-    // Kept / dropped counts are pinned by the replay in tests/unit/ai-pass.test.ts (see the Blueprint line there).
+    // What the pass printed for that find, and its answer key line.
+    const taxon = Number(c.factId.replace("inat-", ""));
+    const printed = g.items.find((i) => i.taxonId === taxon)!;
+    expect(printed.clue).toBe(c.printedClue);
+    expect(printed.answer).toBe(c.answer);
+    // The no-AI template's clue for the same fact, same park, same run number.
+    const tpl = run(c.noAi.model).calls[0].rawItems!.find((i) => i.itemId === c.factId)!;
+    expect(tpl.clue).toBe(c.noAi.clue);
+    // The excerpt is one whole sentence of the recorded Wikipedia summary (via iNaturalist) the fact came from.
+    const facts = JSON.stringify(json(c.factFixture));
+    const summary = (JSON.parse(facts).exchanges as { body?: { results?: { id: number; wikipedia_summary?: string }[] } }[])
+      .flatMap((x) => x.body?.results ?? [])
+      .find((r) => r.id === taxon)!.wikipedia_summary!;
+    expect(summary.replace(/<[^>]+>/g, "").split(/(?<=\.) /)).toContain(c.inExcerpt);
   });
 
   it("job 1: what the page says code did is computed by the app's own checks", () => {
     const c = clueExample();
     expect(c.grounded).toBe(true);
-    // The same printed clue the replay test pins (ai-pass.test.ts: "Notice the thick, corky lumps on this tree's bark.").
-    expect(c.printed).toBe("Notice the thick, corky lumps on this tree's bark.");
-    expect(c.highlight?.quote).toBe(c.out.sourceQuote);
+    // The model's clue is a statement, so code printed it unchanged (no "?" to "." edit to explain).
+    expect(c.printed).toBe(c.printedClue);
+    expect(c.printedAsWritten).toBe(true);
+    expect(c.answerName).toBe("Osage-orange");
+    // The mark is the source's own characters (a no-break space in "3–6 in"), matched whitespace-insensitively.
+    expect(c.highlight?.quote.replace(/\s+/g, " ")).toBe(c.out.sourceQuote);
+    expect(c.inExcerpt).toContain(c.highlight!.quote);
     expect(highlightQuote("abc", "zzz")).toBeNull();
+    expect(highlightQuote("a (b) c", "(B)")?.quote).toBe("(b)");
   });
 
   it("job 2 (riddle): the Celebration answer, checked by validateSpot in the replay", () => {
@@ -92,7 +112,11 @@ describe("the model examples are verbatim copies of real recordings", () => {
     const page = decode(html);
     const c = AI_EXAMPLES.clue;
     expect(page).toContain(c.out.clue);
-    expect(page).toContain(c.out.sourceQuote);
+    expect(page.replace(/\s+/g, " ")).toContain(c.out.sourceQuote);
+    expect(page).toContain(c.noAi.clue);
+    expect(page).toContain(`Answer key: ${clueExample().answerName}.`);
+    // The old "Prints:" line read like a bug when it turned a question into a statement (judge R11): not shown here.
+    expect(page).not.toContain("Prints:");
     expect(page).toContain(AI_EXAMPLES.riddle.out.riddle);
     expect(page).toContain(AI_EXAMPLES.tips.out.tip);
     expect(page).toContain(AI_EXAMPLES.tips.inExcerpt);
@@ -134,6 +158,68 @@ describe("the services list is true to the code", () => {
     const table = html.match(/<table[^>]*data-testid="services-table"[\s\S]*?<\/table>/)?.[0] ?? "";
     for (const s of services()) expect(table, s.id).toContain(`data-service-row="${s.id}"`);
     expect((table.match(/data-service-row=/g) ?? []).length).toBe(services().length);
+  });
+});
+
+describe("Runs on DigitalOcean (Kevin 2026-10-09: \"Let's add our use of DigitalOcean.\")", () => {
+  const text = (h: string) => decode(h.replace(/<[^>]+>/g, " ")).replace(/\s+/g, " ");
+  const panel = text(html.match(/<div id="digitalocean"[\s\S]*?<\/ul>\s*<\/div>/)?.[0] ?? "");
+
+  it("says how the app uses DigitalOcean, every fact from code or the eval", () => {
+    const g = evalColumn("gemma-4-31B-it");
+    const model = read("src/lib/model.ts");
+    expect(model).toContain('export const DO_HOST = "inference.do-ai.run"');
+    expect(model).toContain("`${baseUrl}/chat/completions`");
+    expect(panel).toContain("Every Gemma call runs on DigitalOcean");
+    expect(panel).toContain("OpenAI-compatible endpoint https://inference.do-ai.run/v1");
+    // Key-to-host rule: resolveModelTarget sends DO_INFERENCE_API_KEY only to that host.
+    expect(model).toMatch(/u\.hostname === DO_HOST/);
+    expect(panel).toContain("only ever sent to inference.do-ai.run");
+    expect(panel).toContain(`on prepaid credit; at most ${limitsConfig().aiDailyCap} model calls a day`);
+    expect(panel).toContain(`${g.p50s!.toFixed(1)} s a typical call.`);
+    // The cost missed its target in this run, and it counts the clue calls only.
+    expect(g.costPerPass).toBeGreaterThan(EVAL_THRESHOLDS.costPerPass);
+    expect(panel).toContain(`$${g.costPerPass.toFixed(5)} a pass for the clue calls: missed the $${EVAL_THRESHOLDS.costPerPass.toFixed(5)} target`);
+    expect(panel).toContain("Trip tips add one short call");
+    expect(panel).toContain("MODEL_BASE_URL and MODEL_ID");
+    expect(evalColumn("llama-4-maverick").runs).toBeGreaterThan(0);
+    expect(panel).toContain("under the same checks (Llama 4 Maverick ran them in our eval)");
+    // Honest scope: the website is on Vercel, not DigitalOcean.
+    expect(panel).toContain("The website itself is hosted on Vercel");
+  });
+
+  it("the services table has a DigitalOcean row, and the hero names Gemma 4 and counts the services without the model", () => {
+    const s = services();
+    const doRow = s.find((x) => x.id === "digitalocean")!;
+    expect(doRow.name).toBe("DigitalOcean");
+    expect(doRow.terms).toContain(`at most ${limitsConfig().aiDailyCap} model calls a day`);
+    expect(s.find((x) => x.id === "gemma")!.terms).toBe("Apache-2.0 open weights");
+    const hero = text(html.match(/<ul aria-label="In short"[\s\S]*?<\/ul>/)?.[0] ?? "");
+    expect(hero).toContain("Gemma 4 · open weights, Apache-2.0");
+    expect(hero).toContain(`${s.filter((x) => x.group !== "model").length} outside services`);
+  });
+
+  it("a server pointed at another model host does not claim DigitalOcean", () => {
+    const prev = process.env.MODEL_BASE_URL;
+    process.env.MODEL_BASE_URL = "http://localhost:11434/v1";
+    try {
+      const other = text(renderToStaticMarkup(<RunsOnDo />));
+      expect(other).not.toContain("Every Gemma call runs on DigitalOcean");
+      expect(other).toContain("This server's model runs at localhost:11434");
+      expect(services().find((x) => x.id === "digitalocean")!.name).toBe("localhost:11434");
+    } finally {
+      if (prev === undefined) delete process.env.MODEL_BASE_URL;
+      else process.env.MODEL_BASE_URL = prev;
+    }
+  });
+
+  it("RULES-11-02: every cost-per-pass figure on the page says it is for the clue calls", () => {
+    const g = evalColumn("gemma-4-31B-it");
+    const all = text(html);
+    const sentences = all.split(/(?<=[.!?])\s+(?=[A-Z$])/).filter((x) => x.includes(`$${g.costPerPass.toFixed(5)}`));
+    expect(sentences.length).toBeGreaterThan(0);
+    for (const s of sentences) expect(s, s).toMatch(/clue/i);
+    expect(howLimits()[0].detail).toContain("for the clue calls");
   });
 });
 

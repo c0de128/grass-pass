@@ -5,8 +5,8 @@
  * file must exist and contain the host or package it names. Nothing here is a claim about quality or speed.
  */
 import { oauthProviderNames, judgeDemoEnabled } from "@/lib/accounts/config";
-import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
-import { configuredModelId } from "@/lib/model";
+import { SERPAPI_FREE_MONTHLY, limitsConfig } from "@/lib/limits/config";
+import { DO_BASE_URL, configuredModelId, modelEndpoint } from "@/lib/model";
 import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
 
 /** Where a service sits in the blueprint. */
@@ -33,6 +33,10 @@ export function services(): Service[] {
   const judge = judgeDemoEnabled();
   const signIn = [providers ? `${providers} sign-in` : null, judge ? `"Try as a judge"` : null].filter(Boolean).join(", ");
   const model = configuredModelId();
+  // Where the model runs: DigitalOcean serverless inference unless MODEL_BASE_URL points elsewhere (src/lib/model.ts).
+  const onDo = modelEndpoint().baseUrl === DO_BASE_URL;
+  const host = onDo ? "inference.do-ai.run" : new URL(modelEndpoint().baseUrl).host;
+  const cap = limitsConfig().aiDailyCap;
   return [
     {
       id: "osm",
@@ -100,8 +104,21 @@ export function services(): Service[] {
       detail: model === "gemma-4-31B-it" ? "gemma-4-31B-it on DigitalOcean" : `${model} (MODEL_ID)`,
       group: "model",
       usedFor: "Clues, riddle, trip tips",
-      terms: model === "gemma-4-31B-it" ? "Apache-2.0 open weights; DigitalOcean bills per token" : "Set by MODEL_ID on this server",
+      terms: model === "gemma-4-31B-it" ? "Apache-2.0 open weights" : "Set by MODEL_ID on this server",
       url: "https://huggingface.co/google/gemma-4-31B-it",
+      code: { file: "src/lib/model.ts", contains: "inference.do-ai.run" },
+    },
+    {
+      // Judge R11: DigitalOcean gets its own row (it was only inside the Gemma row). Facts: the endpoint and the
+      // key-to-host rule are src/lib/model.ts (DO_BASE_URL, resolveModelTarget); per-token billing on prepaid credit is
+      // README "Cost" and src/lib/limits/config.ts (aiDailyCap, AI_DAILY_CAP); the website itself is on Vercel (next row).
+      id: "digitalocean",
+      name: onDo ? "DigitalOcean" : host,
+      detail: onDo ? "Serverless inference (the model)" : "Model server (MODEL_BASE_URL)",
+      group: "platform",
+      usedFor: onDo ? "Runs every Gemma call: no GPU of our own" : "Runs every model call on this server",
+      terms: onDo ? `Per token, prepaid credit; at most ${cap} model calls a day` : "Set by MODEL_BASE_URL on this server",
+      url: onDo ? "https://docs.digitalocean.com/products/gradient-ai-platform/how-to/use-serverless-inference/" : `https://${host}/`,
       code: { file: "src/lib/model.ts", contains: "inference.do-ai.run" },
     },
     {

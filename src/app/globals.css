@@ -33,6 +33,8 @@
   --color-mark-foreground: var(--gp-mark-foreground);
   --color-ai-soft: var(--gp-ai-soft);
   --color-ai-soft-foreground: var(--gp-ai-soft-foreground);
+  --color-do: var(--gp-do);
+  --color-do-foreground: var(--gp-do-foreground);
   --color-footer: var(--gp-footer);
   --color-footer-foreground: var(--gp-footer-foreground);
   --color-footer-muted: var(--gp-footer-muted);

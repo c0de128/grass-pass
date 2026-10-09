@@ -320,7 +320,7 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
               <Sheet a={a} />
               <figcaption className="text-sm text-pretty text-muted-foreground" data-testid="anatomy-caption">
                 <strong className="font-semibold text-foreground">A real pass:</strong> {a.parkName}
-                {a.place ? `, ${a.place}` : ""}, made {a.madeAt} from that day&apos;s data. Shown as printed, nothing added.{" "}
+                {a.place ? `, ${a.place}` : ""}, made {a.madeAt} from that day&apos;s data. Shown as printed; map drawn with today&apos;s map code.{" "}
                 <Link href={a.href} prefetch={false} className="inline-flex min-h-11 items-center gap-0.5 font-semibold whitespace-nowrap text-link underline underline-offset-4">
                   See the whole pass
                   <ArrowUpRight className="size-3.5" aria-hidden="true" />

@@ -1,28 +1,29 @@
 {
   "_source": {
-    "rule": "Every string below is copied byte-for-byte from a committed real recording (tests/fixtures). Never edit by hand: tests/unit/how-blueprint.test.tsx re-reads each fixture and fails on any difference. An \"in\" text marked excerpt is one whole sentence of the fact the model was given.",
+    "rule": "Every string below is copied byte-for-byte from a committed real recording (tests/fixtures, or the committed eval run in evals/results that replays them). Never edit by hand: tests/unit/how-blueprint.test.tsx re-reads each fixture and fails on any difference. An \"in\" text marked excerpt is one whole sentence of the fact the model was given.",
     "copiedOn": "2026-10-09"
   },
   "clue": {
-    "fixture": "tests/fixtures/do-gemma-4-31b-it-connemara-meadow-preserve-pass.json",
-    "recordedAt": "2026-10-06T20:20:45.379Z",
+    "fixture": "evals/results/2026-10-06-9.json",
+    "factFixture": "tests/fixtures/evals/connemara-meadow-preserve.json",
+    "recordedAt": "2026-10-07T04:01:47.860Z",
     "park": "Connemara Meadow Preserve",
     "ageBand": "6-10",
     "model": "gemma-4-31B-it",
-    "factId": "inat-119986",
-    "factKind": "plant",
+    "run": 1,
+    "factId": "inat-58205",
     "factSource": "Wikipedia, via iNaturalist",
-    "inExcerpt": "It grows to 10–17 m tall and has distinctive spined thick, corky lumps 2–3 cm long on the bark.",
+    "inExcerpt": "The distinctive fruit, from a multiple fruit family, is roughly spherical, bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green in the fall.",
     "out": {
-      "clue": "Notice the thick, corky lumps on this tree's bark?",
-      "sourceQuote": "spined thick, corky lumps",
+      "clue": "Hunt for a tree with bumpy, yellow-green fruit.",
+      "sourceQuote": "bumpy, 8 to 15 centimetres (3–6 in) in diameter, and turns a bright yellow-green",
       "difficulty": "medium"
     },
-    "answerReturned": 9,
-    "answerKept": 6,
-    "answerDrops": {
-      "generic_clue": 2,
-      "name_leak": 1
+    "printedClue": "Hunt for a tree with bumpy, yellow-green fruit.",
+    "answer": "Osage-orange (Maclura pomifera)",
+    "noAi": {
+      "model": "no-AI template",
+      "clue": "____, commonly known as the ____ orange, is a small deciduous tree or large shrub, typically growing to 8 to 15 metres"
     }
   },
   "riddle": {

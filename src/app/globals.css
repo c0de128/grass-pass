@@ -799,7 +799,9 @@ dialog.gp-wizard::backdrop {
   right: 1.25rem;
   border-top: 2px dashed color-mix(in oklab, var(--gp-line) 70%, transparent);
 }
+/* Room for the live count (two short lines) before it arrives, so nothing below jumps (CLS). */
 .gp-signin-stub [data-testid="judge-left"] {
+  min-height: 2.5rem;
   text-wrap: balance;
 }
 .gp-signin-grain {

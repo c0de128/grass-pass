@@ -128,6 +128,5 @@ export function passPagePrintLine(pass: Pass, adultLine: string): string {
   return likelyOnePage(pass) === false ? KID_PRINT_LINE_LONG : KID_PRINT_LINE;
 }
 
-/** The print page's first words (print.css shows one of the two: the measured page count, else this estimate). */
-export const PRINT_LEAD_ONE = "One black-and-white Letter page.";
+/** The print page's first words when the sheet needs 2 pages (the 1-page lead is written in the print page itself). */
 export const PRINT_LEAD_TWO = "Two black-and-white Letter pages: this pass is long.";

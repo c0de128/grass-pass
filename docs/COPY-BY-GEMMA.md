@@ -7,8 +7,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 - **Model:** `gemma-4-31B-it` on DigitalOcean serverless inference, through the app's own model client (`src/lib/model.ts`, strict JSON schema output).
 - **Calls:** 19 (batches of 10), 39,228 prompt + 6,075 completion tokens, **$0.0101** at DigitalOcean list prices (logged in `evals/results/SPEND.md`). Failures: none.
 - **Blocks sent:** 184.
-  - **Accepted** as Gemma wrote them: 77
-  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): 13
+  - **Accepted** as Gemma wrote them: 76
+  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): 14
   - **Rejected** (old text kept): 76 (1 by the code check, 75 by the AI coding agent review)
   - **Unchanged** (Gemma returned the old text): 18
 - **Reviewed by:** Builder G, an AI coding agent (Claude Code), 2026-10-06; no person has reviewed the drafts yet. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
@@ -34,6 +34,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 **Fact fixes after the run (not Gemma):** after the run, main changed the pass builder so a pass makes 1-3 model calls (`MAX_MODEL_CALLS = 3`: one whole retry if the first call fails, refills if too few clues pass). Gemma had been sent the old "one retry" facts. 4 blocks were fixed by hand for that (marked "Fact fix after the rebase" below): two accepted Gemma drafts became "edited", and two kept old lines were corrected. Their FACTS sheets below show the new rule.
 
 **Fact fixes after the self-host measurement (not Gemma, 2026-10-06):** a self-hosted Gemma 4 E2B run on a laptop CPU was measured (`evals/results/2026-10-06-selfhost-notes.md`), so "not measured yet" became untrue. 2 blocks were fixed by hand (marked "Fact fix after the self-host measurement" below): one accepted Gemma draft became "edited", and one kept line was corrected. Their FACTS sheets below show the measured result.
+
+**Fact fixes after the fresh-eyes review (not Gemma, 2026-10-08):** the model runs on prepaid DigitalOcean credit, not a free tier, and the pass page now shows weather from Open-Meteo and weather.gov. 3 blocks were fixed by hand (marked "Fact fix (review 2026-10-08" below): one accepted Gemma draft (`pass.paused`) became "edited", and two kept lines on /about were corrected (`about.data.title`, `about.data.osm`).
 
 The code check catches new facts, lost facts and hype. It cannot catch a sentence that is true word by word but wrong as a whole: those were caught in step 4 (look for **UNTRUE** below). It also had one false positive: "No one" counted as the number word "one".
 
@@ -1252,8 +1254,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Old:** Four real sources, dated
 - **Gemma:** Four dated data sources
 - **Code check:** passed
-- **Shipped:** Four real sources, dated
-- **Why:** Drops 'real'.
+- **Shipped:** Six real sources, dated
+- **Why:** Drops 'real'. Fact fix (review 2026-10-08 MINOR-3, builder, not Gemma): the card now lists all 6 outside data services (OpenStreetMap, iNaturalist, Wikipedia, SerpApi, Open-Meteo, weather.gov), so 'Four' was no longer true.
 - **FACTS:** Four real data sources (OpenStreetMap, iNaturalist, Wikipedia, SerpApi), each fact dated.
 
 #### `about.data.osm`: rejected
@@ -1263,8 +1265,8 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Old:** Parks, paths and what is mapped inside them
 - **Gemma:** Parks, paths and what's inside them
 - **Code check:** passed
-- **Shipped:** Parks, paths and what is mapped inside them
-- **Why:** Drops 'mapped' (only what is mapped is used).
+- **Shipped:** Nominatim search, parks and what's mapped
+- **Why:** Drops 'mapped' (only what is mapped is used). Fact fix (review 2026-10-08 MINOR-3, builder, not Gemma): the park search is OpenStreetMap's Nominatim service, so the line names it.
 - **FACTS:** OpenStreetMap gives the parks, their paths and what is mapped inside them.
 
 #### `about.data.inat`: accepted
@@ -1814,15 +1816,15 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Why:** Gemma returned the current text unchanged.
 - **FACTS:** The park couldn't be read on OpenStreetMap; pick another from the list. · KEEP: "OpenStreetMap"
 
-#### `pass.paused`: accepted
+#### `pass.paused`: edited
 
 `src/lib/pass/schema.ts:168` · limit message, 2 sentences · max 110 characters
 
 - **Old:** Clue writing is paused for today (free budget used). Passes already made today still work.
 - **Gemma:** Clue writing is paused for today since the free budget is used. Passes made earlier still work.
 - **Code check:** passed
-- **Shipped:** Clue writing is paused for today since the free budget is used. Passes made earlier still work.
-- **Why:** True, on tone, at least as clear as before.
+- **Shipped:** Clue writing is paused for today: today's AI budget is used up. Passes made earlier still work.
+- **Why:** True, on tone, at least as clear as before. Fact fix (review 2026-10-08 MINOR-2, builder, not Gemma): the model runs on prepaid DigitalOcean credit, not a free tier, so 'free budget' was not true; a used-up balance now has its own message (PASS_COPY.modelBudget).
 - **FACTS:** The daily model budget is used, so no new clues today. / Passes already made today still work.
 
 #### `pass.variantLimit`: rejected

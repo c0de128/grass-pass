@@ -270,7 +270,7 @@ describe("NITs", () => {
     expect(luckyLead({ section: "park", clue: "Maybe the slide?" })).toBeNull();
     // Real recorded Lucky Finds keep their lead unless they say "maybe" themselves.
     const pass = recordedPass("pass-celebration-lucky-live");
-    for (const it of pass.items.filter((i) => i.section === "lucky")) expect(luckyLead(it)).toBe(/maybe/i.test(it.clue) ? null : LUCKY_MAYBE);
+    for (const it of pass.items.filter((i) => i.section === "lucky")) expect(luckyLead(it)).toBe(/\bmaybe\b/i.test(it.clue) ? null : LUCKY_MAYBE);
   });
 
   it("NIT-5: an evening pass says the day it was made and the day its forecast is for", () => {

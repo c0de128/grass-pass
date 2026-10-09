@@ -389,7 +389,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Oct 8, 2026:** the weather card, the trip tips section, the phone layout and the sign-in page were also built by
   AI coding agents (Claude Code) at Kevin's direction. The home page text is Kevin's own.
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (13 with small edits) after a code check and a review by an AI coding agent
+  text; 90 of its drafts shipped (14 with small edits) after a code check and a review by an AI coding agent
   (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,
   with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.

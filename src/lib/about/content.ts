@@ -50,7 +50,7 @@ export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS)
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 13 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 14 } as const;
 
 export type StatTile = {
   value: string;
@@ -97,7 +97,7 @@ export function dataSources(): DataSource[] {
     {
       name: "OpenStreetMap",
       url: "https://www.openstreetmap.org/copyright",
-      gives: "Park search (Nominatim), parks and what is mapped inside them",
+      gives: "Nominatim search, parks and what's mapped",
       licence: "ODbL 1.0",
       detail:
         "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within 5 km and what is mapped inside them. Code draws the Find This Spot map from it.",

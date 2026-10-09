@@ -768,15 +768,17 @@
       "id": "about.data.title",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Drops 'real'.",
-      "shipped": "Four real sources, dated"
+      "reason": "Drops 'real'. Fact fix (review 2026-10-08 MINOR-3, builder, not Gemma): the card now lists all 6 outside data services (OpenStreetMap, iNaturalist, Wikipedia, SerpApi, Open-Meteo, weather.gov), so 'Four' was no longer true.",
+      "shipped": "Six real sources, dated",
+      "factFixAfterRun": true
     },
     {
       "id": "about.data.osm",
       "decision": "rejected",
       "stage": "agent-review",
-      "reason": "Drops 'mapped' (only what is mapped is used).",
-      "shipped": "Parks, paths and what is mapped inside them"
+      "reason": "Drops 'mapped' (only what is mapped is used). Fact fix (review 2026-10-08 MINOR-3, builder, not Gemma): the park search is OpenStreetMap's Nominatim service, so the line names it.",
+      "shipped": "Nominatim search, parks and what's mapped",
+      "factFixAfterRun": true
     },
     {
       "id": "about.data.inat",
@@ -1043,7 +1045,7 @@
       "id": "pass.printline",
       "decision": "accepted",
       "stage": "agent-review",
-      "reason": "True, on tone, at least as clear as before.",
+      "reason": "True, on tone, at least as clear as before. Moved (review 2026-10-08 MAJOR-3, builder): the same text is now KID_PRINT_LINE in src/lib/pass/print-size.ts; a pass estimated to need 2 printed pages shows KID_PRINT_LINE_LONG instead.",
       "shipped": "One black-and-white page. Cut it in half: kids get the hunt, you get the answers."
     },
     {
@@ -1125,10 +1127,11 @@
     },
     {
       "id": "pass.paused",
-      "decision": "accepted",
+      "decision": "edited",
       "stage": "agent-review",
-      "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Clue writing is paused for today since the free budget is used. Passes made earlier still work."
+      "reason": "True, on tone, at least as clear as before. Fact fix (review 2026-10-08 MINOR-2, builder, not Gemma): the model runs on prepaid DigitalOcean credit, not a free tier, so 'free budget' was not true; a used-up balance now has its own message (PASS_COPY.modelBudget).",
+      "shipped": "Clue writing is paused for today: today's AI budget is used up. Passes made earlier still work.",
+      "factFixAfterRun": true
     },
     {
       "id": "pass.variantLimit",

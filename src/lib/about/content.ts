@@ -45,10 +45,10 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  */
 export const UNIT_TESTS = { passed: 2671, files: 96, day: "Oct 9, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
-// Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md). RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
+// Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md); rounds 11 (full) and 12 (confirm) ran on Oct 9 before the Oct 9 deploy. RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
-export const AUDIT_ROUNDS = { done: 10, day: "Oct 8, 2026" } as const;
-const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten"] as const;
+export const AUDIT_ROUNDS = { done: 12, day: "Oct 9, 2026" } as const;
+const COUNT_WORDS = ["Zero", "One", "Two", "Three", "Four", "Five", "Six", "Seven", "Eight", "Nine", "Ten", "Eleven", "Twelve"] as const;
 /** "Five rounds so far (Oct 6, 2026)." */
 export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS): string {
   const n = COUNT_WORDS[r.done] ?? String(r.done);

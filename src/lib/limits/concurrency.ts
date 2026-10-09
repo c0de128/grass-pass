@@ -88,7 +88,8 @@ export function createSpacedQueue(minIntervalMs: number, deps: { now?: () => num
       const job = tail.then(async () => {
         if (signal?.aborted) throw new QueueAbortedError();
         const wait = lastStart + minIntervalMs - now();
-        if (wait > 0) await sleep(wait);
+        // Q-11-06: never longer than one interval (a clock that moved backwards would ask setTimeout for days).
+        if (wait > 0) await sleep(Math.min(wait, minIntervalMs));
         if (signal?.aborted) throw new QueueAbortedError();
         lastStart = now();
         return fn();

@@ -230,6 +230,17 @@ export function PassFailure({
   );
 }
 
+/**
+ * The failure as the wizard shows it. Signed out, "sign in" / "no free pass left" becomes the friendly "No pass ... was
+ * made today yet" line, EXCEPT right after a real failure (Q-11-01: `earlier`), whose honest message and example stay.
+ */
+export function failureShown(state: Extract<PassState, { kind: "failed" }>, account: PassMakerAccount | undefined): Extract<PassState, { kind: "failed" }> {
+  if ((state.code === "SIGN_IN_REQUIRED" || state.code === "FREE_PASS_USED") && account && !account.signedIn && !state.earlier) {
+    return { ...state, message: "No pass for this park and age was made today yet. Sign in above to make one." };
+  }
+  return state;
+}
+
 export function readStoredBand(): AgeBand {
   try {
     const v = window.localStorage.getItem(AGE_BAND_STORAGE_KEY);
@@ -789,11 +800,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                   {state.kind === "failed" ? (
                     <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-3 focus:outline-none">
                       <PassFailure
-                        state={
-                          (state.code === "SIGN_IN_REQUIRED" || state.code === "FREE_PASS_USED") && account && !account.signedIn
-                            ? { ...state, message: "No pass for this park and age was made today yet. Sign in above to make one." }
-                            : state
-                        }
+                        state={failureShown(state, account)}
                         secondsToRetry={secondsToRetry}
                         onTryAgain={tryAgain}
                       />

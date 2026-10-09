@@ -32,7 +32,7 @@ const RULES: readonly Rule[] = [
   { tags: ["afternoon_heat"], icon: "time", kid: "Go early, before the afternoon heat", adult: "Go early, before the afternoon heat" },
   { tags: ["alert"], icon: "time", kid: "Read the official alert before you go", adult: "Read the official alert before you go" },
   { tags: ["rain"], icon: "umbrella", kid: "Pack rain jackets or an umbrella", adult: "Pack a rain jacket or an umbrella" },
-  { tags: ["no_drinking_water"], icon: "water", kid: "Bring water bottles from home: there's no fountain", adult: "Bring water from home: there's no fountain" },
+  { tags: ["no_drinking_water"], icon: "water", kid: "Bring water bottles from home: the park map shows no fountain", adult: "Bring water from home: the park map shows no fountain" },
   { tags: ["hot", "afternoon_heat"], icon: "water", kid: "Bring plenty of water for everyone", adult: "Bring plenty of water" },
 
   { tags: ["uv_high"], icon: "hat", kid: "Pack sun hats for everyone", adult: "Wear a sun hat" },

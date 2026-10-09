@@ -18,6 +18,10 @@
  * the new signed value in the stream's last line (`free.receipt`) and the page posts it straight back to
  * POST /api/free-pass, which checks the signature and sets the cookie. The receipt IS a valid cookie value: it can
  * only raise today's count, never lower it, and skipping it is no better than clearing cookies (the per-IP backstop).
+ *
+ * Round 11 (Q-11-05, accepted): two signed-out tabs with no cookie that start new passes at the same moment both read
+ * "0 used", so that browser can get 2 free passes; the per-connection ANON_PASSES_PER_IP_PER_DAY backstop still bounds
+ * it (the same as clearing cookies).
  */
 import "server-only";
 import { createHash, createHmac, timingSafeEqual } from "node:crypto";
@@ -107,4 +111,15 @@ export function freePassSetCookie(value: string, nowMs: number, secure: boolean)
   const expires = new Date(nowMs + maxAge * 1000).toUTCString();
   const name = secure ? FREE_PASS_COOKIES[0] : FREE_PASS_COOKIES[1];
   return `${name}=${value}; Path=/; Max-Age=${maxAge}; Expires=${expires}; HttpOnly; SameSite=Lax${secure ? "; Secure" : ""}`;
+}
+
+/**
+ * The signed value for a free pass charged at `chargedAt` by a request that started at `requestedAt` with `used` free
+ * passes already counted, or null. SEC-11-02: `used` is the count for the Chicago day the request STARTED; a charge
+ * that lands after Chicago midnight belongs to that earlier day, so it gives no receipt (it must not use up the new
+ * day's free pass).
+ */
+export function freePassReceipt(used: number, requestedAt: number, chargedAt: number, env: Env = process.env): string | null {
+  if (localDay(chargedAt) !== localDay(requestedAt)) return null;
+  return signFreePass(used + 1, chargedAt, env);
 }

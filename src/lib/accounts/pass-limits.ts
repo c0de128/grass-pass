@@ -23,7 +23,8 @@ import { readAccount } from "./session";
 
 const PRIVATE = { "Cache-Control": "private, no-store" };
 
-export const FreePassReceiptSchema = z.object({ receipt: z.string().min(1).max(80) });
+/** SEC-11-03: strict, like the feedback schema (an unknown field is a 400, never silently ignored). */
+export const FreePassReceiptSchema = z.object({ receipt: z.string().min(1).max(80) }).strict();
 
 export async function freePassReceiptResponse(req: Request, now: () => number = () => Date.now()): Promise<Response> {
   const g = await guardJsonPost(req, FreePassReceiptSchema);

@@ -115,7 +115,30 @@ export type PassState =
       autoRetryAt?: number;
       /** Set when this request used a free pass anyway (the paid call started, then failed). */
       freeLeft?: number;
+      /** Q-11-01: the message (and example) are the previous real failure's; this answer only said no free pass is left. */
+      earlier?: boolean;
     };
+
+/** Answers that only mean "no free pass left" (or "sign in"): they never replace a real failure's message. */
+export const FREE_GONE_RESULT_CODES: readonly string[] = ["FREE_PASS_USED", "SIGN_IN_REQUIRED", "ANON_IP_DAILY_LIMIT"];
+
+type Failed = Extract<PassState, { kind: "failed" }>;
+
+/** The wait before the one automatic retry, or null. Q-11-01: never once this answer used the last free pass. */
+export function autoRetryFor(s: Failed): number | null {
+  if (s.freeLeft === 0) return null;
+  return plannedAutoRetryMs(s.code, s.retryAfter);
+}
+
+/**
+ * Q-11-01: a "no free pass left" answer right after a real failure for the same park and age keeps that failure's
+ * honest message, example link and park data (the page then shows the sign-in step), instead of replacing them.
+ */
+export function keepEarlierFailure(s: Failed, prev: Failed | null): Failed {
+  if (!prev || !FREE_GONE_RESULT_CODES.includes(s.code) || FREE_GONE_RESULT_CODES.includes(prev.code)) return s;
+  const example = s.example ?? prev.example;
+  return { ...s, message: prev.message, earlier: true, ...(example ? { example } : {}), ...(prev.parkData ? { parkData: prev.parkData } : {}) };
+}
 
 export type RunOptions = {
   /** Try once more by itself after a busy/slow map-data failure (the page's main "Make my pass"). */
@@ -132,6 +155,8 @@ export function usePassRequest() {
   const [state, setState] = useState<PassState>({ kind: "idle" });
   const abortRef = useRef<AbortController | null>(null);
   const retryRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+  /** The last real failure and the request it answered (Q-11-01). */
+  const lastFailRef = useRef<{ key: string; state: Extract<PassState, { kind: "failed" }> } | null>(null);
   const runRef = useRef<(body: PassRequest, opts?: RunOptions) => Promise<PassState>>(async () => ({ kind: "idle" }));
 
   useEffect(
@@ -146,6 +171,7 @@ export function usePassRequest() {
     abortRef.current?.abort();
     abortRef.current = null;
     clearRetry(retryRef);
+    lastFailRef.current = null;
     setState({ kind: "idle" });
   }, []);
 
@@ -167,7 +193,11 @@ export function usePassRequest() {
     const finish = (result: PassState) => {
       clearTimeout(timer);
       let s = result;
-      const wait = s.kind === "failed" ? plannedAutoRetryMs(s.code, s.retryAfter) : null;
+      const wait = s.kind === "failed" ? autoRetryFor(s) : null;
+      const key = `${body.parkId}|${body.ageBand}`;
+      const prev = lastFailRef.current?.key === key ? lastFailRef.current.state : null;
+      if (s.kind === "failed") s = keepEarlierFailure(s, prev);
+      if (abortRef.current === ac) lastFailRef.current = s.kind === "failed" ? { key, state: s.earlier && prev ? prev : s } : null;
       if (abortRef.current === ac && opts.autoRetry && s.kind === "failed" && wait !== null) {
         s = { ...s, autoRetryAt: clientNow() + wait };
         // One retry only: the second run doesn't ask for another.

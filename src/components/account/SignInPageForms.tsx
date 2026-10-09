@@ -9,7 +9,7 @@
 import { Gavel } from "lucide-react";
 import { useFormStatus } from "react-dom";
 import { signInAction } from "@/app/actions/auth";
-import { buttonClassName } from "@/components/ui/Button";
+import { buttonClassName, type ButtonVariant } from "@/components/ui/Button";
 import { PROVIDER_LABELS, type OAuthProviderId } from "@/lib/accounts/config";
 import { GitHubMark, GoogleMark } from "./ProviderLogos";
 import { announceSessionChange } from "./session-event";
@@ -61,21 +61,22 @@ export function OAuthButtons({ providers, returnTo }: { providers: OAuthProvider
   );
 }
 
-function JudgeSubmit() {
+function JudgeSubmit({ variant }: { variant: ButtonVariant }) {
   const { pending } = useFormStatus();
   return (
-    <button type="submit" name="provider" value="judge" aria-disabled={pending || undefined} className={buttonClassName("primary", "w-full")}>
+    <button type="submit" name="provider" value="judge" aria-disabled={pending || undefined} className={buttonClassName(variant, "w-full")}>
       <Gavel className="size-5" aria-hidden="true" />
       {pending ? "Signing in…" : "Try as a judge"}
     </button>
   );
 }
 
-export function JudgeButton({ returnTo }: { returnTo: string }) {
+/** Kevin 2026-10-08 (sign-in v2): on /signin the judge button is the quieter "secondary" look, under the parent sign-in. */
+export function JudgeButton({ returnTo, variant = "primary" }: { returnTo: string; variant?: ButtonVariant }) {
   return (
     <form action={submit} className="flex flex-col">
       <input type="hidden" name="returnTo" value={returnTo} />
-      <JudgeSubmit />
+      <JudgeSubmit variant={variant} />
     </form>
   );
 }

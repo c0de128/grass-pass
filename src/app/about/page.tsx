@@ -301,7 +301,7 @@ export default function AboutPage() {
               Details, one click away.
             </h2>
           </div>
-          <div className="flex min-w-0 flex-col gap-6 xl:col-span-8">
+          <div className="flex min-w-0 flex-col gap-6 xl:col-span-8 xl:max-w-4xl">
 
           <Disclosure id="measured-table" icon={Table2} title="Why open: the full measured table" hint="Gemma 4, Llama 4 and a no-AI template, side by side">
             <p>

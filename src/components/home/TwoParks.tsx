@@ -169,7 +169,7 @@ export function TwoParks() {
             <ParkTicket park={TWO_PARKS[1]} />
           </div>
 
-          <p className="-mt-2 max-w-4xl text-[13px] lg:max-w-none leading-snug text-why-muted sm:text-sm" data-testid="two-parks-source">
+          <p className="-mt-2 max-w-[75ch] text-[13px] leading-snug text-why-muted sm:text-sm" data-testid="two-parks-source">
             {TWO_PARKS_SOURCE}
           </p>
         </div>

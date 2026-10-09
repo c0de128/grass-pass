@@ -40,10 +40,11 @@ for (const width of [360, 1280]) {
       expect(headline).toMatch(/^No weather data available: .+/);
       await expect(card).not.toContainText("°");
     }
-    // It sits above the pass card and never makes the page scroll sideways.
+    // It comes before the pass card (above it; from 1280 px, in the column to its left: wide layout 2026-10-09) and never
+    // makes the page scroll sideways.
     const cardBox = await card.boundingBox();
     const passBox = await page.locator("#pass-title").boundingBox();
-    expect(cardBox && passBox && cardBox.y < passBox.y).toBe(true);
+    expect(cardBox && passBox && (cardBox.y < passBox.y || cardBox.x + cardBox.width <= passBox.x)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   });
 }

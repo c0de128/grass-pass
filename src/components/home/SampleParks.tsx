@@ -192,7 +192,7 @@ export function SampleParks({
               ...TWO_PARKS.map((p) => p.slug),
             ]),
           ]}
-          className="-mt-6 text-xs text-muted-foreground"
+          className="-mt-6 max-w-[75ch] text-xs text-muted-foreground"
         />
       </div>
     </section>

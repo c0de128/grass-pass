@@ -117,7 +117,7 @@ function ParkCard({ park }: { park: Park }) {
       <div className="flex flex-col gap-4 px-6 pt-4 pb-5 sm:px-6.5">
         <p className="flex items-end gap-4">
           <span className="font-heading text-7xl leading-[0.78] font-extrabold tracking-tighter text-link lg:text-8xl">{park.big.value}</span>
-          <span className="max-w-[12rem] pb-0.5 text-[0.95rem] leading-snug font-semibold text-pretty">{park.big.label}</span>
+          <span className="max-w-[12rem] pb-0.5 text-[0.95rem] leading-snug font-semibold text-balance lg:max-w-[15rem]">{park.big.label}</span>
         </p>
         <UnitChart park={park} />
       </div>

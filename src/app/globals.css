@@ -25,9 +25,6 @@
   --color-band: var(--gp-band);
   --color-band-foreground: var(--gp-band-foreground);
   --color-band-muted: var(--gp-band-muted);
-  --color-why: var(--gp-why);
-  --color-why-foreground: var(--gp-why-foreground);
-  --color-why-muted: var(--gp-why-muted);
   --color-sheet: var(--gp-sheet);
   --color-sheet-ink: var(--gp-sheet-ink);
   --color-sheet-muted: var(--gp-sheet-muted);
@@ -218,6 +215,32 @@
   }
 }
 
+
+/* "The problem" (Kevin 2026-10-09, option A "Calm and light"): white park cards with a hairline ring and a soft,
+   layered shadow, the same family as the "What's a pass?" sheet but lighter. */
+.gp-why-card {
+  box-shadow:
+    0 0 0 1px rgb(16 41 26 / 0.07),
+    0 1px 2px rgb(16 41 26 / 0.06),
+    0 18px 40px -24px rgb(16 41 26 / 0.3);
+}
+:root[data-theme="dark"] .gp-why-card {
+  box-shadow:
+    0 0 0 1px rgb(230 238 219 / 0.09),
+    0 18px 40px -20px rgb(0 0 0 / 0.65);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gp-why-card {
+    box-shadow:
+      0 0 0 1px rgb(230 238 219 / 0.09),
+      0 18px 40px -20px rgb(0 0 0 / 0.65);
+  }
+}
+
+.gp-why-grain {
+  -webkit-mask-image: radial-gradient(ellipse 55% 60% at 50% 45%, #000 0%, #0000 75%);
+  mask-image: radial-gradient(ellipse 55% 60% at 50% 45%, #000 0%, #0000 75%);
+}
 
 /* "The problem" unit charts: each mark (one species / one field or court) pops in as the chart scrolls into view.
    Decorative only (the numbers are text); no motion when the visitor asks for less, or without scroll timelines. */

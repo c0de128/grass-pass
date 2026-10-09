@@ -308,7 +308,8 @@ describe("/about", () => {
     // RULES-10-02 (round 10): +10 so the cost tile and the call count can name the trip-tips call.
     // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity), +20 for the 5th photo credit (judge R7
     // T1: Oak Point is an example now; Connemara's photo stays in the "two parks" band, and every photo is credited).
-    expect(visible.split(" ").length).toBeLessThanOrEqual(690);
+    // Review 2026-10-08 MINOR-3: +25 so the data card lists all 6 real sources (Open-Meteo and weather.gov too).
+    expect(visible.split(" ").length).toBeLessThanOrEqual(715);
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {

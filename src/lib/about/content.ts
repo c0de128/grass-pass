@@ -97,7 +97,7 @@ export function dataSources(): DataSource[] {
     {
       name: "OpenStreetMap",
       url: "https://www.openstreetmap.org/copyright",
-      gives: "Parks, paths and what is mapped inside them",
+      gives: "Park search (Nominatim), parks and what is mapped inside them",
       licence: "ODbL 1.0",
       detail:
         "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within 5 km and what is mapped inside them. Code draws the Find This Spot map from it.",

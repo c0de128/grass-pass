@@ -93,7 +93,8 @@ export default function AboutPage() {
               <Pill className="bg-ink text-on-ink">Gemma 4 · Apache-2.0</Pill>
             </li>
             <li>
-              <Pill>4 real data sources</Pill>
+              {/* Review 2026-10-08 MINOR-3: 4 park data sources + 2 weather sources (park search is OpenStreetMap's Nominatim). */}
+              <Pill>{sources.length + WEATHER_SOURCES.length} real data sources</Pill>
             </li>
             <li>
               <Pill>No ads, no analytics</Pill>
@@ -220,10 +221,10 @@ export default function AboutPage() {
                 <Pill>Real data</Pill>
               </div>
               <h3 id="card-data" className="text-3xl leading-tight font-extrabold text-ink">
-                Four real sources, dated
+                Six real sources, dated
               </h3>
               <ul className="flex flex-col divide-y divide-border">
-                {sources.map((s) => (
+                {[...sources, ...WEATHER_SOURCES].map((s) => (
                   <li key={s.name} className="flex flex-wrap items-center justify-between gap-x-3 gap-y-1 py-2.5">
                     <span className="flex flex-col">
                       <a className={ext} href={s.url}>

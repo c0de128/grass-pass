@@ -8,6 +8,8 @@ import { renderToStaticMarkup } from "react-dom/server";
 import { z } from "zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OtherParks } from "@/components/pass/PassMaker";
+import AboutPage from "@/app/about/page";
+import { dataSources, WEATHER_SOURCES } from "@/lib/about/content";
 import { createJsonCache } from "@/lib/cache";
 import { getStore, resetStores } from "@/lib/cache/store";
 import { isCompletePass } from "@/lib/pass/complete";
@@ -239,5 +241,17 @@ describe("MINOR-2: quota copy is honest about the prepaid model budget", () => {
     expect(quota.error.retryAfter).toBeUndefined();
     expect(reasonFor("MODEL_QUOTA")).not.toMatch(/free/);
     expect(TRIP_TIPS_COPY.rulesWhy.budget).not.toMatch(/free/);
+  });
+});
+
+describe("MINOR-3: /about counts every outside data service", () => {
+  it("says 6 real data sources (4 park data + Open-Meteo and weather.gov) and names Nominatim", () => {
+    const html = renderToStaticMarkup(<AboutPage />).replace(/<!-- -->/g, "");
+    expect(dataSources().length + WEATHER_SOURCES.length).toBe(6);
+    expect(html).toContain("6 real data sources");
+    expect(html).toContain("Six real sources, dated");
+    expect(html).not.toContain("4 real data sources");
+    expect(html).not.toContain("Four real sources");
+    for (const name of ["OpenStreetMap", "iNaturalist", "Wikipedia", "SerpApi", "Open-Meteo", "National Weather Service", "Nominatim"]) expect(html).toContain(name);
   });
 });

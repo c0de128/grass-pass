@@ -92,7 +92,10 @@ Kevin's rules (2026-10-06): anyone can search parks, open the example passes and
 password is ever stored), **2 new passes a day per account** (Chicago day). A pass already made today for that park
 and age is served to anyone (it costs nothing). The order on `POST /api/pass` is: signed in? -> the account's daily
 count -> the existing per-IP and global limits; the account's count is given back unless an upstream call really
-started (a failed build that did call the model still counts). A rebuild of today's pass after a source was down
+started (a failed build that did call the model still counts). A build that stops with "Not enough real data for a
+pass" (before any model call) gives the account's or judge's share back too (review 2026-10-08); the per-IP share
+still counts, because the map and wildlife calls really happened. Such a park also sends no SerpApi search: the Lucky
+Finds search starts only once the park map and wildlife finds can fill a pass. A rebuild of today's pass after a source was down
 (at most 3 a day per park and age) does not count toward anyone's 2.
 
 A sign-in lasts **7 days** (GitHub, or Google when configured) or **1 day** (the judge demo), counted from signing in however much it is

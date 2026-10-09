@@ -33,7 +33,8 @@ Live demo: https://grass-pass.vercel.app (live since Oct 8, 2026; sign-in with G
 
 1. On the home page, tap an **example park** (Arbor Hills Nature Preserve is the first). Today's pass is already
    made, so it opens at once, with no sign-in.
-2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below.
+2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below. (The home page prefers
+   example passes that fit one page; a pass that runs long says "Two black-and-white Letter pages" before you print.)
 3. To make your own: search a park by name (for example "Arbor Hills Nature Preserve") or a town, pick a park and an
    age, and press **Make my pass**. A new pass needs a grown-up to sign in (GitHub or Google, both live on the site; 2 a day);
    judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
@@ -55,7 +56,8 @@ flowchart LR
   V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
 ```
 
-1. **You pick a park.** Nominatim (OpenStreetMap search) finds the place; the Overpass API lists nearby parks.
+1. **You pick a park.** Nominatim (OpenStreetMap search) finds the place (a bare 5-digit ZIP or ZIP+4 is looked up as
+   a US ZIP code, so "75013" is Allen, TX, not Paris); the Overpass API lists nearby parks.
 2. **Code collects facts:** mapped features (Overpass) and recent sightings with their Wikipedia summaries
    (iNaturalist); monarch counts from Sep 15 to Nov 15. For Lucky Finds it matches the park on Google Maps (SerpApi
    `google_maps`: same name, within 1 km of the map centre, a park and not a court inside it), then counts reviews
@@ -239,7 +241,8 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   renewal day (`SERPAPI_RENEWS_DAY`), and keeps counts 30 days. Over a limit, the pass says Lucky Finds are off for
   today (or this month). A count means visitors wrote about it, not that it is there today, so the pass prints
   "Maybe!". A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
-  least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed.
+  least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed. A park whose map and
+  wildlife data can't fill a pass sends no SerpApi search (Lucky Finds are only extras).
 - **Self-hosting is slow on a laptop CPU.** Measured with Gemma 4 E2B on Ollama, no GPU, 5 parks, $0: with the app's
   70 s limit per model call (the most the app allows; the hosted site gives a first call 30-40 s), 0 of 5 passes were complete (3 ran out of time and 2 came out short); given more time (eval
   only), 4 of 5 were complete at about 1-3 minutes a pass. With the app's longer local clock (`LOCAL_MODEL_TIMEOUT_MS`,
@@ -336,6 +339,8 @@ Anyone can search, open the example passes and any shared link, and print. **A N
 with GitHub or Google (both set up on the live site; a self-hosted copy shows the ones it has keys for; Auth.js / next-auth v5; no password stored): **2 new passes a day per account** (Chicago
 day). A pass already made today for that park and age is served to anyone. **Try as a judge** signs in to a shared
 demo account in one click (`JUDGE_DEMO_DAILY_CAP`, default 60 a day for all judges, at most 3 per connection).
+A park without enough real data for a pass (no model call) doesn't use one of these passes; the wizard then offers up
+to 3 other parks from the same search.
 Signed-in visitors can report each find (Found it / Didn't find it / Not safe); thresholds count different accounts,
 and judge demo reports are only logged. Limits, sessions, moderation and provider setup:
 [`docs/OPERATIONS.md`](docs/OPERATIONS.md#accounts-and-visitor-reports).

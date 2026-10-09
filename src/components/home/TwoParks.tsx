@@ -144,7 +144,7 @@ export function TwoParks() {
               </h2>
             </div>
             <div className="flex flex-col gap-3 lg:col-span-7">
-              <p className="max-w-[68ch] text-base leading-relaxed text-pretty text-why-muted 2xl:text-lg">
+              <p className="max-w-[68ch] text-base leading-relaxed text-pretty text-why-muted">
                 Generic scavenger hunts fail because parks aren&rsquo;t generic. A manicured city park has basketball hoops; a
                 rugged nature preserve has butterflies. That&rsquo;s why Grass Pass builds every adventure from scratch using your
                 park&rsquo;s exact map and the last two weeks of local wildlife sightings.

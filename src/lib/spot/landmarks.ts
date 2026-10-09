@@ -23,6 +23,8 @@ export const MAX_LANDMARKS = 6;
 export const LANDMARK_CLEAR_OF_X_M = 45;
 /** ... nor within this many metres of START (START is already labelled). */
 export const LANDMARK_CLEAR_OF_START_M = 25;
+/** START is usually a parking lot: another lot this close to it would only repeat it. */
+export const PARKING_CLEAR_OF_START_M = 80;
 /** Landmarks sit at least this far inside the map box (map units), so the icon and its label fit. */
 const EDGE = 14;
 /** A name longer than this is replaced by the kind's short label. */
@@ -190,7 +192,8 @@ export function pickLandmarks(
     const at = anchorOf(el, kind, opts.toMap, mid);
     if (!at || !inBox(at)) continue;
     if (Math.hypot(at[0] - opts.target[0], at[1] - opts.target[1]) < clearX) continue;
-    if (opts.start && Math.hypot(at[0] - opts.start[0], at[1] - opts.start[1]) < clearStart) continue;
+    const fromStart = opts.start ? Math.hypot(at[0] - opts.start[0], at[1] - opts.start[1]) : Infinity;
+    if (fromStart < clearStart || (kind === "parking" && fromStart < PARKING_CLEAR_OF_START_M * opts.unitsPerM)) continue;
     const d = opts.start ? distToSegment(at, opts.start, opts.target) : Math.hypot(at[0] - opts.target[0], at[1] - opts.target[1]);
     found.push({ osmId: el.osmId, kind, text, at: [Math.round(at[0]), Math.round(at[1])], d });
   }

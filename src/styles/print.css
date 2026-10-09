@@ -612,3 +612,13 @@
 .gp-spot-legend .gp-spot-key-route {
   grid-column: 1 / -1;
 }
+
+/* map-v2: on a phone (the print page's on-screen preview, never PrintFit's measuring copy) the key wraps in 2 columns. */
+@media screen and (max-width: 640px) {
+  .gp-sheet:not(.gp-measure) .gp-spot-legend {
+    grid-template-columns: repeat(2, minmax(0, max-content));
+  }
+  .gp-sheet:not(.gp-measure) .gp-spot-legend .gp-spot-key {
+    white-space: normal;
+  }
+}

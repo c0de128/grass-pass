@@ -11,7 +11,7 @@ import type { Pass } from "@/lib/pass/schema";
 import { pinnedPass } from "@/lib/pinned";
 import { savedGeometry } from "@/lib/sources/osm-snapshot";
 import { buildMap, type ParkGeometry } from "@/lib/spot/geometry";
-import { LANDMARK_CLEAR_OF_X_M, landmarkKindOf, landmarkText, MAX_LANDMARKS } from "@/lib/spot/landmarks";
+import { LANDMARK_CLEAR_OF_X_M, landmarkKindOf, PARKING_CLEAR_OF_START_M, landmarkText, MAX_LANDMARKS } from "@/lib/spot/landmarks";
 import { pickTarget } from "@/lib/spot/pick-target";
 import { withClearMap } from "@/lib/spot/redraw";
 import { drawMap } from "@/lib/spot/render-map";
@@ -51,6 +51,9 @@ describe("landmarks are real OSM objects near the walk, and never the answer", (
         expect(x >= 0 && x <= spot.map.w && y >= 0 && y <= spot.map.h, name).toBe(true);
         expect(Math.hypot(x - spot.map.target[0], y - spot.map.target[1]), `${name}: ${lm.text} near the X`).toBeGreaterThanOrEqual(LANDMARK_CLEAR_OF_X_M * spot.map.unitsPerM! - 1);
         if (spot.target.name) expect(lm.text.toLowerCase(), name).not.toContain(spot.target.name.toLowerCase());
+        // START is a parking lot or entrance: no second "Parking" right beside it.
+        if (lm.kind === "parking" && spot.map.start)
+          expect(Math.hypot(x - spot.map.start[0], y - spot.map.start[1]), name).toBeGreaterThanOrEqual(PARKING_CLEAR_OF_START_M * spot.map.unitsPerM! - 1);
       }
       // The drawn ones are a subset of the stored ones (a label that can't be placed clear is left out, never moved onto something else).
       const d = drawMap(spot.map, spot.walk);

@@ -250,7 +250,7 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
       where: a && a.park.length > 0 ? rowsLabel(a.park) : null,
       body: (
         <>
-          Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like &ldquo;2 basketball courts.&rdquo;
+          Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like &ldquo;8 bridges.&rdquo;
         </>
       ),
       missing: has("park") ? null : whenData,

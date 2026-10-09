@@ -80,7 +80,7 @@ describe("MAJOR-2: a park without enough data", () => {
     expect(lines.some((l) => l.includes('"event":"lucky_skipped_short"'))).toBe(true);
   });
 
-  it("does not use one of a signed-in grown-up's 2 passes", async () => {
+  it("does not use one of a signed-in grown-up's daily passes", async () => {
     const { base, serp } = shortParkFetch();
     const account = { key: "acct-review-1", provider: "github" as const, judge: false };
     const out = await makePass(

@@ -60,8 +60,6 @@ describe.each([
     ["footer-foreground", "footer", "footer links and closing line"],
     ["footer-muted", "footer", "footer credits"],
     ["footer-heading", "footer", "footer column headings (sunflower)"],
-    ["why-foreground", "why", "text on the logo-green \"The problem\" panel"],
-    ["why-muted", "why", "body text and source line on the logo-green panel"],
     ["on-ink", "ink", "text on ink pills"],
     // "What's a pass?" anatomy (2026-10-08): the real pass on a paper sheet, and the numbered green markers.
     ["sheet-ink", "sheet", "pass text on the paper sheet"],

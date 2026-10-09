@@ -43,7 +43,9 @@ test("one h1 (Sign in); Google/GitHub first, then the quieter judge tear-off wit
   await expect(card).not.toContainText("signs in first");
   await expect(card.getByRole("link", { name: "What we keep (spoiler: not much) and for how long" })).toHaveAttribute("href", "/about#privacy");
   await expect(card.getByRole("heading", { level: 2, name: "Judging the contest?" })).toBeVisible();
-  await expect(card.getByTestId("judge-left")).toHaveText(/judge passes left today|couldn't check|paused/);
+  // The count is a client fetch (/api/judge-passes + a lazy schema chunk): under full-suite load it can take over the
+  // default 5 s (the full-run flake of Oct 9), so it gets the same 20 s as the other load-bound waits (Q-10-05).
+  await expect(card.getByTestId("judge-left")).toHaveText(/judge passes left today|couldn't check|paused/, { timeout: 20_000 });
   // The judge button is the secondary (outlined) look, not the solid primary one.
   const judge = card.getByRole("button", { name: "Try as a judge" });
   await expect(judge).toHaveClass(/ring-line/);

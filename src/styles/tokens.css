@@ -48,10 +48,6 @@
   --gp-band: #10291a; /* the dark "Why generic hunts fail" band and the footer */
   --gp-band-foreground: #eef3e2;
   --gp-band-muted: #b7c1b0; /* 8.3:1 on the band */
-  /* The home "The problem" section (Kevin, 2026-10-07): the logo's grass green as a big ticket panel. */
-  --gp-why: #137838; /* = --gp-primary, the logo ticket */
-  --gp-why-foreground: #ffffff; /* 5.57:1 on the panel */
-  --gp-why-muted: #e3f0dc; /* 4.71:1 on the panel */
   /* Site footer (Kevin, 2026-10-07, his landscape reference): a deep forest-green band under a hand-drawn ridge.
      The hills fade from the page colour (far, pale sage) to the footer green (front ridge). */
   --gp-footer: #1d3a25; /* deep forest */
@@ -119,9 +115,6 @@
     --gp-band: #050d07;
     --gp-band-foreground: #e6eedb;
     --gp-band-muted: #aeb6a6;
-    --gp-why: #137838; /* the same logo green as light mode (the brand colour, not the lighter dark-mode button green) */
-    --gp-why-foreground: #ffffff;
-    --gp-why-muted: #e3f0dc;
     --gp-footer: #0b2013; /* a touch greener than the night page */
     --gp-footer-foreground: #e6eedb; /* 14.3:1 */
     --gp-footer-muted: #aeb6a6; /* 8.2:1 */
@@ -181,9 +174,6 @@
   --gp-band: #050d07;
   --gp-band-foreground: #e6eedb;
   --gp-band-muted: #aeb6a6;
-  --gp-why: #137838;
-  --gp-why-foreground: #ffffff;
-  --gp-why-muted: #e3f0dc;
   --gp-footer: #0b2013; /* a touch greener than the night page */
   --gp-footer-foreground: #e6eedb; /* 14.3:1 */
   --gp-footer-muted: #aeb6a6; /* 8.2:1 */

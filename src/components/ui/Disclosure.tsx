@@ -36,7 +36,7 @@ export function Disclosure({
   const inset = tone === "inset";
   const hintClass = tone === "band" ? "text-band-muted" : "text-muted-foreground";
   return (
-    <details id={id} className={`group scroll-mt-28 ring-1 sm:scroll-mt-20 ${inset ? "rounded-2xl" : "rounded-3xl"} ${box}`}>
+    <details id={id} className={`group scroll-mt-4 ring-1 sm:scroll-mt-3 ${inset ? "rounded-2xl" : "rounded-3xl"} ${box}`}>
       <summary
         className={`flex cursor-pointer list-none items-center gap-4 [&::-webkit-details-marker]:hidden ${inset ? "min-h-12 rounded-2xl px-4 py-2.5" : "min-h-14 rounded-3xl px-5 py-4 sm:px-6"}`}
       >

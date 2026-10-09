@@ -47,7 +47,7 @@ export function RunsOnDo() {
     <div
       id="digitalocean"
       data-testid="runs-on-do"
-      className="relative grid scroll-mt-28 gap-6 overflow-hidden rounded-3xl bg-card p-6 pl-7 text-card-foreground shadow-lg ring-1 shadow-shadow/40 ring-border sm:scroll-mt-20 sm:p-8 sm:pl-9 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] xl:gap-10"
+      className="relative grid scroll-mt-4 gap-6 overflow-hidden rounded-3xl bg-card p-6 pl-7 text-card-foreground shadow-lg ring-1 shadow-shadow/40 ring-border sm:scroll-mt-3 sm:p-8 sm:pl-9 xl:grid-cols-[minmax(0,0.85fr)_minmax(0,2fr)] xl:gap-10"
     >
       <span aria-hidden="true" className="absolute inset-y-0 left-0 w-1.5 bg-do" />
       <div className="flex flex-col gap-3">

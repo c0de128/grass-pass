@@ -74,7 +74,7 @@ const smoke13Id = SMOKE_13PLUS.summary.replace(/^evals\/results\//, "").replace(
 /** A section with the site's section head (eyebrow + big title) over the shared container. */
 function Section({ id, eyebrow, title, intro, tone = "plain", children }: { id: string; eyebrow: string; title: string; intro?: ReactNode; tone?: "plain" | "muted"; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-28 sm:scroll-mt-16 ${tone === "muted" ? "bg-muted/70" : ""}`}>
+    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-4 sm:scroll-mt-0 ${tone === "muted" ? "bg-muted/70" : ""}`}>
       <div className="gp-container flex flex-col gap-8 py-14 lg:py-20">
         <div className="flex max-w-3xl flex-col gap-3">
           <p className={`text-xs font-bold tracking-widest uppercase ${tone === "muted" ? "text-link" : "text-primary"}`}>{eyebrow}</p>
@@ -99,7 +99,7 @@ function Steps({ steps }: { steps: readonly Step[] }) {
   return (
     <ol aria-label="How a pass is made, step by step" className="flex flex-col gap-6">
       {steps.map((s, i) => (
-        <li key={s.id} id={`step-${s.id}`} className="flex scroll-mt-28 flex-col gap-2 border-l-4 border-line pl-4 sm:scroll-mt-20">
+        <li key={s.id} id={`step-${s.id}`} className="flex scroll-mt-4 flex-col gap-2 border-l-4 border-line pl-4 sm:scroll-mt-3">
           <h4 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg leading-tight font-extrabold text-ink">
             <s.icon aria-hidden="true" className="size-5 shrink-0" />
             <span>
@@ -442,7 +442,7 @@ export default function HowItWorksPage() {
       >
         <AiJobs />
         <RunsOnDo />
-        <div id="why-open" className="gp-band flex scroll-mt-28 flex-col gap-6 rounded-3xl bg-band p-6 text-band-foreground sm:scroll-mt-20 sm:p-8 xl:flex-row xl:items-start xl:gap-10">
+        <div id="why-open" className="gp-band flex scroll-mt-4 flex-col gap-6 rounded-3xl bg-band p-6 text-band-foreground sm:scroll-mt-3 sm:p-8 xl:flex-row xl:items-start xl:gap-10">
           <div className="flex flex-col gap-2 xl:w-1/4 xl:shrink-0">
             <p className="text-xs font-bold tracking-widest text-sun uppercase">Why an open model</p>
             <h3 className="text-3xl leading-tight font-extrabold">Open weights, our own rules</h3>
@@ -539,7 +539,7 @@ export default function HowItWorksPage() {
 
       <Section id="fine-print" eyebrow="Fine print" title="Limits, privacy and every detail">
         <div className="grid gap-4 md:grid-cols-2">
-          <article id="limits" aria-labelledby="limits-title" className="flex min-w-0 scroll-mt-28 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-20">
+          <article id="limits" aria-labelledby="limits-title" className="flex min-w-0 scroll-mt-4 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-3">
             <h3 id="limits-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
               <TriangleAlert aria-hidden="true" className="size-6 shrink-0" />
               Where we fall short
@@ -561,7 +561,7 @@ export default function HowItWorksPage() {
               </ul>
             </Disclosure>
           </article>
-          <article id="privacy" aria-labelledby="privacy-title" className="flex min-w-0 scroll-mt-28 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-20">
+          <article id="privacy" aria-labelledby="privacy-title" className="flex min-w-0 scroll-mt-4 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-3">
             <h3 id="privacy-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
               <Lock aria-hidden="true" className="size-6 shrink-0" />
               Nothing about your child

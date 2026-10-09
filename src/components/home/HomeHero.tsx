@@ -28,7 +28,7 @@ import { HERO_ILLUSTRATION } from "@/lib/illustrations";
  */
 export function HomeHero({ card, examples, children }: { card: HeroCard | null; examples: readonly ReadyExample[]; children: ReactNode }) {
   return (
-    <section id="find" aria-labelledby="hero-title" className="gp-hero relative z-[2] scroll-mt-28 overflow-x-clip sm:scroll-mt-16">
+    <section id="find" aria-labelledby="hero-title" className="gp-hero relative z-[2] scroll-mt-4 overflow-x-clip sm:scroll-mt-0">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
       <div className="gp-container relative grid gap-14 pt-3 pb-10 sm:pt-12 sm:pb-28 lg:min-h-(--hero-h) lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)] lg:content-center lg:gap-x-8 lg:gap-y-0 lg:pt-(--hero-pt) lg:pb-(--hero-pb)">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-8 lg:gap-(--hero-gap)">

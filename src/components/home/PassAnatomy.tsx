@@ -300,7 +300,7 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
   ];
 
   return (
-    <section id="pass" aria-labelledby="pass-title" className="gp-anatomy scroll-mt-28 overflow-x-clip bg-muted/70 sm:scroll-mt-16">
+    <section id="pass" aria-labelledby="pass-title" className="gp-anatomy scroll-mt-4 overflow-x-clip bg-muted/70 sm:scroll-mt-0">
       <div className="gp-container grid gap-10 py-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:gap-y-10 lg:py-24">
         <div className="flex flex-col gap-4 lg:col-span-5 lg:col-start-8 lg:row-start-1">
           <p className="text-xs font-bold tracking-widest text-link uppercase">What&apos;s a pass?</p>

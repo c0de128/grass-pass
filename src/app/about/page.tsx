@@ -119,7 +119,7 @@ export default function AboutPage() {
       </section>
 
       {/* 2. Stat tiles: real measured numbers, misses marked. */}
-      <section id="measured" aria-labelledby="measured-title" className="gp-band scroll-mt-28 bg-band text-band-foreground sm:scroll-mt-16">
+      <section id="measured" aria-labelledby="measured-title" className="gp-band scroll-mt-4 bg-band text-band-foreground sm:scroll-mt-0">
         <div className="gp-container flex flex-col gap-10 py-20 lg:py-24">
           <div className="grid gap-5 lg:grid-cols-2 lg:items-end">
             <div className="flex flex-col gap-4">
@@ -171,7 +171,7 @@ export default function AboutPage() {
       </section>
 
       {/* 3. The five cards. */}
-      <section aria-labelledby="inside-title" className="scroll-mt-28 sm:scroll-mt-16">
+      <section aria-labelledby="inside-title" className="scroll-mt-4 sm:scroll-mt-0">
         <div className="gp-container flex flex-col gap-10 py-20 lg:py-24">
           <div className="flex max-w-2xl flex-col gap-4">
             <Eyebrow>In one look</Eyebrow>
@@ -181,7 +181,7 @@ export default function AboutPage() {
           </div>
 
           <div className="grid gap-5 md:grid-cols-6">
-            <article id="why-open" aria-labelledby="card-model" className="flex scroll-mt-28 flex-col gap-5 rounded-3xl bg-primary p-7 text-primary-foreground sm:scroll-mt-20 md:col-span-3 lg:p-9">
+            <article id="why-open" aria-labelledby="card-model" className="flex scroll-mt-4 flex-col gap-5 rounded-3xl bg-primary p-7 text-primary-foreground sm:scroll-mt-3 md:col-span-3 lg:p-9">
               <div className="flex items-center justify-between gap-3">
                 <Cpu className="size-8" aria-hidden="true" />
                 <Pill className="bg-black/20 text-primary-foreground">Open model</Pill>
@@ -257,7 +257,7 @@ export default function AboutPage() {
               </ul>
             </article>
 
-            <article id="privacy" aria-labelledby="card-privacy" className="gp-band flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-band p-7 text-band-foreground sm:scroll-mt-20 md:col-span-2">
+            <article id="privacy" aria-labelledby="card-privacy" className="gp-band flex scroll-mt-4 flex-col gap-4 rounded-3xl bg-band p-7 text-band-foreground sm:scroll-mt-3 md:col-span-2">
               <Lock className="size-7 text-sun" aria-hidden="true" />
               <h3 id="card-privacy" className="text-2xl font-extrabold">
                 Privacy
@@ -275,7 +275,7 @@ export default function AboutPage() {
               </a>
             </article>
 
-            <article id="limits" aria-labelledby="card-limits" className="flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-sun p-7 text-sun-foreground sm:scroll-mt-20 md:col-span-2">
+            <article id="limits" aria-labelledby="card-limits" className="flex scroll-mt-4 flex-col gap-4 rounded-3xl bg-sun p-7 text-sun-foreground sm:scroll-mt-3 md:col-span-2">
               <TriangleAlert className="size-7" aria-hidden="true" />
               <h3 id="card-limits" className="text-2xl font-extrabold">
                 Honest limits
@@ -294,7 +294,7 @@ export default function AboutPage() {
       </section>
 
       {/* 4. Details on demand: everything else, folded. */}
-      <section aria-labelledby="details-title" className="scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
+      <section aria-labelledby="details-title" className="scroll-mt-4 bg-muted/70 sm:scroll-mt-0">
         {/* Wide layout (2026-10-09): from 1280 px the head sits in a sticky left column, the folded details on the right. */}
         <div className="gp-container flex flex-col gap-6 py-20 lg:py-24 xl:grid xl:grid-cols-12 xl:gap-x-12">
           <div className="flex flex-col gap-4 xl:sticky xl:top-24 xl:col-span-4 xl:self-start">
@@ -428,7 +428,7 @@ export default function AboutPage() {
       </section>
 
       {/* 5. Credits: photos visible as thumbnails, everything else folded. */}
-      <section id="credits" aria-labelledby="credits-title" className="scroll-mt-28 sm:scroll-mt-16">
+      <section id="credits" aria-labelledby="credits-title" className="scroll-mt-4 sm:scroll-mt-0">
         <div className="gp-container flex flex-col gap-8 py-20 lg:py-24">
           <div className="flex max-w-2xl flex-col gap-4">
             <Eyebrow>Thank you</Eyebrow>

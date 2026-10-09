@@ -69,7 +69,7 @@ function CodeLine({ ok, children }: { ok: boolean; children: ReactNode }) {
 
 function Job({ n, title, children, park, band, day, fixture, linkLabel = "Raw answer" }: { n: number; title: string; children: ReactNode; park: string; band: string; day: string; fixture: string; linkLabel?: string }) {
   return (
-    <li id={`ai-job-${n}`} className="flex scroll-mt-28 flex-col gap-4 rounded-3xl bg-card p-5 shadow-lg ring-1 shadow-shadow/50 ring-border sm:p-6">
+    <li id={`ai-job-${n}`} className="flex scroll-mt-4 sm:scroll-mt-11 flex-col gap-4 rounded-3xl bg-card p-5 shadow-lg ring-1 shadow-shadow/50 ring-border sm:p-6">
       <div className="flex items-start gap-3">
         <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-2xl bg-sun font-heading text-lg font-extrabold text-sun-foreground">
           {n}

@@ -74,6 +74,16 @@
 }
 
 @layer base {
+  /* UX-11-01 / UX-10-05: keyboard focus and in-page jumps never land under the sticky header (SiteHeader: two rows,
+     about 96 px, on phones; h-16 + border from 640 px). WCAG 2.4.11 Focus Not Obscured. */
+  html {
+    scroll-padding-top: 6rem;
+  }
+  @media (width >= 40rem) {
+    html {
+      scroll-padding-top: 4.25rem;
+    }
+  }
   body {
     background: var(--gp-background);
     color: var(--gp-foreground);

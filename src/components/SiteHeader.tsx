@@ -38,7 +38,7 @@ export function SiteHeader() {
           <ul className="flex items-center gap-5 sm:gap-4 lg:gap-6">
             {HOME_SECTIONS.map((link) => (
               <li key={link.href} className="hidden min-[1180px]:block">
-                <Link href={link.href} prefetch={false} className="text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground">
+                <Link href={link.href} prefetch={false} className="inline-flex min-h-6 items-center text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground">
                   {link.label}
                 </Link>
               </li>
@@ -47,7 +47,7 @@ export function SiteHeader() {
               <li key={link.href}>
                 <Link
                   href={link.href}
-                  className="inline-flex min-h-11 items-center text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-1.5 lg:min-h-0 lg:px-0"
+                  className="inline-flex min-h-11 items-center text-sm font-medium whitespace-nowrap text-muted-foreground transition-colors hover:text-foreground sm:px-1.5 lg:min-h-6 lg:px-0"
                 >
                   {link.label}
                 </Link>

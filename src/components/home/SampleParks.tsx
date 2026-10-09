@@ -42,7 +42,7 @@ export function SampleParks({
     <section
       id="parks"
       aria-labelledby="examples-title"
-      className="relative z-[1] scroll-mt-28 bg-background sm:scroll-mt-16"
+      className="relative z-[1] scroll-mt-4 bg-background sm:scroll-mt-0"
     >
       <div className="gp-container flex flex-col gap-12 pt-14 pb-24 sm:pt-16 lg:pt-8 lg:pb-32">
         <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
@@ -131,7 +131,7 @@ export function SampleParks({
                   <Link
                     href={ex.href}
                     prefetch={false}
-                    className="group flex h-full scroll-mt-28 flex-col overflow-hidden rounded-3xl sm:scroll-mt-24 bg-card ring-1 ring-border transition-all hover:shadow-xl hover:shadow-shadow motion-safe:hover:-translate-y-1"
+                    className="group flex h-full scroll-mt-4 flex-col overflow-hidden rounded-3xl sm:scroll-mt-7 bg-card ring-1 ring-border transition-all hover:shadow-xl hover:shadow-shadow motion-safe:hover:-translate-y-1"
                   >
                     {picture}
                     <div className="flex flex-1 flex-col gap-3 p-5">

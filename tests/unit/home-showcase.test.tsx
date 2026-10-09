@@ -199,8 +199,10 @@ describe("home showcase (v0 slots filled with real data)", () => {
     if (pass.spot?.status === "ok" && pass.spot.riddleBy === "model") expect(q?.riddle).toBe(pass.spot.riddle);
     else expect(q).toBeNull();
     expect(spotQuote([missingStatus("oak-point", "x")])).toBeNull();
-    const html = renderToStaticMarkup(<PassAnatomy spot={null} />);
+    // Kevin 2026-10-08 (option A): the section shows a pinned pass now (tests/unit/pass-anatomy.test.tsx); with none, it says so.
+    const html = renderToStaticMarkup(<PassAnatomy anatomy={null} />);
     expect(html).not.toContain("Something with a roof where people eat lunch");
+    expect(html).toContain("No data available: the saved example pass couldn&#x27;t be loaded");
     expect(html).toContain("No proof? The pass leaves them off and says why.");
     expect(html).toContain("Maybe-sightings, like dogs or bikes, mentioned in at least 3 Google Maps reviews from the last 2 years");
     expect(html).not.toMatch(/printed as .look, don/);

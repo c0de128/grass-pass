@@ -28,6 +28,12 @@
   --color-why: var(--gp-why);
   --color-why-foreground: var(--gp-why-foreground);
   --color-why-muted: var(--gp-why-muted);
+  --color-sheet: var(--gp-sheet);
+  --color-sheet-ink: var(--gp-sheet-ink);
+  --color-sheet-muted: var(--gp-sheet-muted);
+  --color-sheet-line: var(--gp-sheet-line);
+  --color-mark: var(--gp-mark);
+  --color-mark-foreground: var(--gp-mark-foreground);
   --color-footer: var(--gp-footer);
   --color-footer-foreground: var(--gp-footer-foreground);
   --color-footer-muted: var(--gp-footer-muted);
@@ -901,4 +907,81 @@ dialog.gp-wizard::backdrop {
   .gp-spot-keys .gp-spot-glyph {
     filter: grayscale(1);
   }
+}
+
+/*
+ * "What's a pass?" anatomy (Kevin's option A "Show a real pass", 2026-10-08): one real pass as a paper sheet (paper in
+ * both themes), numbered green markers hanging off its left edge, a numbered list beside it. Hovering a list item
+ * lights up its part on the sheet (a nicety only: the list's words name each part and where it is).
+ */
+.gp-anatomy {
+  --gp-anatomy-bg: color-mix(in srgb, var(--gp-muted) 70%, var(--gp-background));
+}
+.gp-sheet {
+  box-shadow:
+    0 0 0 1px rgb(16 41 26 / 0.08),
+    0 1px 2px rgb(16 41 26 / 0.08),
+    0 12px 28px -12px rgb(16 41 26 / 0.28),
+    0 40px 80px -40px rgb(16 41 26 / 0.35);
+}
+:root[data-theme="dark"] .gp-sheet {
+  box-shadow:
+    0 0 0 1px rgb(0 0 0 / 0.3),
+    0 18px 40px -16px rgb(0 0 0 / 0.7),
+    0 50px 90px -40px rgb(0 0 0 / 0.8);
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gp-sheet {
+    box-shadow:
+      0 0 0 1px rgb(0 0 0 / 0.3),
+      0 18px 40px -16px rgb(0 0 0 / 0.7),
+      0 50px 90px -40px rgb(0 0 0 / 0.8);
+  }
+}
+.gp-sheet-notch {
+  background: var(--gp-anatomy-bg);
+}
+.gp-mark {
+  box-shadow: 0 0 0 3px var(--gp-sheet), 0 2px 6px rgb(16 41 26 / 0.25);
+}
+.gp-legend-item .gp-mark {
+  box-shadow: 0 0 0 3px var(--gp-anatomy-bg);
+}
+.gp-legend-item .gp-mark-off {
+  background: transparent;
+  color: var(--gp-muted-foreground);
+  box-shadow: inset 0 0 0 2px var(--gp-line);
+}
+/* The Find This Spot map on the sheet: a thin frame, no extra margins. */
+.gp-anatomy-map svg {
+  display: block;
+  width: 100%;
+  height: auto;
+}
+.gp-region::before {
+  content: "";
+  position: absolute;
+  inset: -0.5rem -0.75rem;
+  border-radius: 0.75rem;
+  background: color-mix(in oklab, var(--gp-mark) 9%, transparent);
+  opacity: 0;
+  pointer-events: none;
+}
+.gp-anatomy:has([data-legend="park"]:hover) [data-region="park"]::before,
+.gp-anatomy:has([data-legend="wild"]:hover) [data-region="wild"]::before,
+.gp-anatomy:has([data-legend="lucky"]:hover) [data-region="lucky"]::before,
+.gp-anatomy:has([data-legend="spot"]:hover) [data-region="spot"]::before,
+.gp-anatomy:has([data-legend="october"]:hover) [data-region="october"]::before,
+.gp-anatomy:has([data-legend="stub"]:hover) [data-region="stub"]::before {
+  opacity: 1;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-region::before {
+    transition: opacity 200ms ease;
+  }
+}
+/* The dotted grain behind the sheet, fading out at the edges (decorative; the hero's grain). */
+.gp-anatomy-grain {
+  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, #0000 75%);
+  mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, #0000 75%);
 }

@@ -10,7 +10,8 @@ import { TwoParks } from "@/components/home/TwoParks";
 import { RestingNotice } from "@/components/RestingNotice";
 import { PassMaker } from "@/components/pass/PassMaker";
 import { memoize } from "@/lib/cache/memo";
-import { heroCard, readyExamples, spotQuote } from "@/lib/home/showcase";
+import { heroCard, readyExamples } from "@/lib/home/showcase";
+import { passAnatomyFor } from "@/lib/home/pass-anatomy";
 import { restingState } from "@/lib/limits/budget";
 import { exampleStatuses, prewarmEnabled, prewarmIdle, WARMUP_BUDGET_MS } from "@/lib/prewarm";
 import { signInOptions } from "@/lib/accounts/config";
@@ -65,7 +66,8 @@ export default async function Home() {
       {/* Kevin 2026-10-07: How it works comes before The problem. */}
       <HowItWorks />
       <TwoParks />
-      <PassAnatomy spot={spotQuote(statuses)} />
+      {/* Kevin 2026-10-08 (option A): one real pinned pass, printed-style, with numbered parts. */}
+      <PassAnatomy anatomy={passAnatomyFor()} />
       <FinalCta />
       <HomeAnchors />
       <FadeInOnScroll />

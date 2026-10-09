@@ -93,7 +93,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; the agent review caught it.",
-      "shipped": "Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”"
+      "shipped": "Venomous snakes, poison ivy, stinging bugs and more ({blocked} risky groups in all) are never printed. Every Wild Find says “look, don't touch.”",
+      "removedAfterRun": "Replaced on 2026-10-09 in the pass-anatomy redesign (Kevin's option A, branch pass-anatomy, waiting for Kevin's OK): the real pass now shown beside it has a Wild Find whose fixed line is \"Look, don't pick or eat.\", so \"Every Wild Find says 'look, don't touch'\" was not exactly true. The new line says every Wild Find carries a look-only safety line, like \"look, don't touch.\" The decision is kept as history."
     },
     {
       "id": "home.pass.park.body",

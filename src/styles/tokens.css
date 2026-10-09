@@ -85,6 +85,13 @@
   --gp-map-water-edge: #2f7fbf; /* 4.4:1 */
   --gp-map-pitch: #cde6b0;
   --gp-map-pitch-edge: #5f9944; /* 3.4:1 */
+  /* "What's a pass?" anatomy (2026-10-08): the real pass is a paper sheet in both themes; one marker green. */
+  --gp-sheet: #ffffff;
+  --gp-sheet-ink: #10291a; /* 15.5:1 on the sheet */
+  --gp-sheet-muted: #4a5d4f; /* 7.1:1 on the sheet */
+  --gp-sheet-line: #78867c; /* 3.8:1 on the sheet (box and rule lines) */
+  --gp-mark: #137838; /* numbered markers, both themes: white numerals 5.6:1 */
+  --gp-mark-foreground: #ffffff;
 }
 
 /* Dark mode: the system preference unless the visitor picked light; or an explicit dark pick. */
@@ -140,6 +147,12 @@
     --gp-map-water-edge: #7fbbe6; /* 7.6:1 */
     --gp-map-pitch: #cde6b0;
     --gp-map-pitch-edge: #9fd27f; /* 9.4:1 */
+    --gp-sheet: #f3efe2; /* warm paper on the night meadow, 13.5:1 under ink */
+    --gp-sheet-ink: #10291a;
+    --gp-sheet-muted: #4a5d4f; /* 6.1:1 on the dark-mode sheet */
+    --gp-sheet-line: #6f7d73; /* 3.8:1 on the dark-mode sheet */
+    --gp-mark: #137838;
+    --gp-mark-foreground: #ffffff;
   }
 }
 
@@ -194,6 +207,12 @@
   --gp-map-water-edge: #7fbbe6; /* 7.6:1 */
   --gp-map-pitch: #cde6b0;
   --gp-map-pitch-edge: #9fd27f; /* 9.4:1 */
+  --gp-sheet: #f3efe2; /* warm paper on the night meadow, 13.5:1 under ink */
+  --gp-sheet-ink: #10291a;
+  --gp-sheet-muted: #4a5d4f; /* 6.1:1 on the dark-mode sheet */
+  --gp-sheet-line: #6f7d73; /* 3.8:1 on the dark-mode sheet */
+  --gp-mark: #137838;
+  --gp-mark-foreground: #ffffff;
 }
 
 /* Inside the dark band and the footer the focus ring is sunflower (green on ink is too faint). */

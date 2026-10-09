@@ -63,6 +63,10 @@ describe.each([
     ["why-foreground", "why", "text on the logo-green \"The problem\" panel"],
     ["why-muted", "why", "body text and source line on the logo-green panel"],
     ["on-ink", "ink", "text on ink pills"],
+    // "What's a pass?" anatomy (2026-10-08): the real pass on a paper sheet, and the numbered green markers.
+    ["sheet-ink", "sheet", "pass text on the paper sheet"],
+    ["sheet-muted", "sheet", "small print on the paper sheet"],
+    ["mark-foreground", "mark", "numerals on the green markers"],
   ];
   it.each(text)("%s on %s >= 4.5:1 (%s)", (fg, bg) => {
     expect(t[fg], fg).toBeDefined();
@@ -76,6 +80,7 @@ describe.each([
     ["ring", "background", "focus ring"],
     ["ring", "card", "focus ring on cards"],
     ["primary", "background", "primary button edge"],
+    ["sheet-line", "sheet", "box and rule lines on the paper sheet"],
   ])("%s on %s >= 3:1 (%s)", (fg, bg) => {
     expect(contrast(t[fg], t[bg])).toBeGreaterThanOrEqual(3);
   });

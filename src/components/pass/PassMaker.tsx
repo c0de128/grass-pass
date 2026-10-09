@@ -27,7 +27,7 @@ import { SignInCard } from "@/components/account/SignInCard";
 import { PassesLeftLine, signInPromptFor } from "@/components/account/PassesLeft";
 import { ParkStep } from "@/components/parks/ParkStep";
 import { checkQuery, useParkSearch } from "@/components/parks/useParkSearch";
-import type { SignInOptions } from "@/lib/accounts/config";
+import { perDayWords, type SignInOptions } from "@/lib/accounts/config";
 import { Button, buttonClassName } from "@/components/ui/Button";
 import type { Park } from "@/lib/parks/schema";
 import { otherParksNear } from "@/lib/parks/nearby";
@@ -130,6 +130,41 @@ export async function takeResume(): Promise<{ park: Park; band: AgeBand } | null
  * `freeLeft`: signed out, the free passes left today when the page was made (from the signed cookie; Kevin 2026-10-08).
  */
 export type PassMakerAccount = { signedIn: boolean; judge?: boolean; options: SignInOptions; freeLeft?: number };
+
+/**
+ * The line under the hero search (Kevin 2026-10-09, replaces "1 Park · 2 Explorer · 3 Make it"): what it costs and what
+ * signing in adds. Every number comes from the real settings (FREE_PASSES / ACCOUNT_DAILY_PASSES via signInOptions).
+ * Signed out: "Always free · 1 pass a day, or Sign in for 5 a day + feedback". Signed in: what the account gets.
+ */
+export function HeroOffer({ account }: { account: PassMakerAccount }) {
+  const o = account.options;
+  const canSignIn = o.configured && (o.providers.length > 0 || o.judge);
+  const cls = "text-xs font-semibold text-pretty text-muted-foreground lg:text-sm";
+  if (account.signedIn) {
+    return (
+      <p className={cls} data-testid="hero-offer">
+        {account.judge ? "Signed in as a judge · rate each pass" : `Signed in · ${perDayWords(o.perDay)} · rate each pass`}
+      </p>
+    );
+  }
+  return (
+    <p className={cls} data-testid="hero-offer">
+      Always free
+      {o.free > 0 ? ` · ${o.free} ${o.free === 1 ? "pass" : "passes"} a day` : null}
+      {canSignIn ? (
+        <>
+          {o.free > 0 ? ", or " : " · "}
+          <span className="whitespace-nowrap">
+            <Link href="/signin" className="text-link underline underline-offset-4 hover:no-underline">
+              Sign in
+            </Link>{" "}
+            for {o.perDay} a day + feedback
+          </span>
+        </>
+      ) : null}
+    </p>
+  );
+}
 
 /** Said (polite live region) and shown after coming back from signing in, as focus moves to "Make my pass". */
 export function signedInNote(judge: boolean): string {
@@ -535,17 +570,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
             <LocateFixed className="size-4 lg:size-5" aria-hidden="true" />
             Use my location
           </button>
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground lg:text-sm" data-testid="hero-steps-hint">
-            {WIZARD_STEPS.map((s, i) => (
-              <span key={s.key} className="inline-flex items-center gap-1.5">
-                {i > 0 ? <span aria-hidden="true">·</span> : null}
-                <span className="inline-flex size-4.5 items-center justify-center rounded-full bg-muted text-[10px] font-extrabold text-foreground lg:size-5.5 lg:text-xs" aria-hidden="true">
-                  {i + 1}
-                </span>
-                {s.label}
-              </span>
-            ))}
-          </p>
+          {account ? <HeroOffer account={account} /> : null}
         </div>
       </div>
 

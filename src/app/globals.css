@@ -138,6 +138,9 @@
   .gp-spot-keys[data-cols="1"] {
     grid-template-columns: repeat(1, max-content);
   }
+  .gp-spot-keys[data-cols="2"] {
+    grid-template-columns: repeat(2, max-content);
+  }
   .gp-spot-keys[data-cols="3"] {
     grid-template-columns: repeat(3, max-content);
   }
@@ -858,4 +861,17 @@ dialog.gp-wizard::backdrop {
 }
 .gp-oauth-btn:hover {
   background: var(--gp-oauth-hover);
+}
+
+/* map-v2: the route's key carries the walk, so it has its own row, last (2 columns on phones, then data-cols). */
+.gp-spot-keys .gp-spot-key-route {
+  grid-column: 1 / -1;
+}
+
+/* map-v2: printing the pass PAGE (not the print page) still gives a grey map and key, like the printed pass. */
+@media print {
+  .gp-spot-screen .gp-spot-svg,
+  .gp-spot-keys .gp-spot-glyph {
+    filter: grayscale(1);
+  }
 }

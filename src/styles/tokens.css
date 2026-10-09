@@ -74,6 +74,17 @@
   --gp-oauth-foreground: #1f1f1f; /* 16.4:1 */
   --gp-oauth-border: #747775; /* 4.6:1 on white */
   --gp-oauth-hover: #f2f2f2;
+  /* map-v2: Find This Spot key samples (the map itself is always a light paper map; SpotMap.tsx MAP_PALETTE).
+     Each line sample is >= 3:1 on the card it sits on (non-text contrast, WCAG 1.4.11). */
+  --gp-map-route: #d9480f; /* 3.9:1 on white */
+  --gp-map-start: #137838;
+  --gp-map-path: #93602f; /* 5.6:1 */
+  --gp-map-road: #8f8877; /* 3.5:1 */
+  --gp-map-road-core: #ffffff;
+  --gp-map-water: #a9d4f0;
+  --gp-map-water-edge: #2f7fbf; /* 4.4:1 */
+  --gp-map-pitch: #cde6b0;
+  --gp-map-pitch-edge: #5f9944; /* 3.4:1 */
 }
 
 /* Dark mode: the system preference unless the visitor picked light; or an explicit dark pick. */
@@ -120,6 +131,15 @@
     --gp-oauth-foreground: #e3e3e3;
     --gp-oauth-border: #8e918f;
     --gp-oauth-hover: #1f2021;
+    --gp-map-route: #ff8a4c; /* 6.9:1 on the dark card */
+    --gp-map-start: #4cc274;
+    --gp-map-path: #d39a62; /* 6.6:1 */
+    --gp-map-road: #b6ae9c; /* 7.4:1 */
+    --gp-map-road-core: #15261a;
+    --gp-map-water: #a9d4f0;
+    --gp-map-water-edge: #7fbbe6; /* 7.6:1 */
+    --gp-map-pitch: #cde6b0;
+    --gp-map-pitch-edge: #9fd27f; /* 9.4:1 */
   }
 }
 
@@ -165,6 +185,15 @@
   --gp-oauth-foreground: #e3e3e3;
   --gp-oauth-border: #8e918f;
   --gp-oauth-hover: #1f2021;
+  --gp-map-route: #ff8a4c; /* 6.9:1 on the dark card */
+  --gp-map-start: #4cc274;
+  --gp-map-path: #d39a62; /* 6.6:1 */
+  --gp-map-road: #b6ae9c; /* 7.4:1 */
+  --gp-map-road-core: #15261a;
+  --gp-map-water: #a9d4f0;
+  --gp-map-water-edge: #7fbbe6; /* 7.6:1 */
+  --gp-map-pitch: #cde6b0;
+  --gp-map-pitch-edge: #9fd27f; /* 9.4:1 */
 }
 
 /* Inside the dark band and the footer the focus ring is sunflower (green on ink is too faint). */

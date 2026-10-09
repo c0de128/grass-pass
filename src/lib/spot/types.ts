@@ -26,6 +26,34 @@ export const PointSchema = z.tuple([Coord, Coord]);
 export type Line = z.infer<typeof LineSchema>;
 export type Point = z.infer<typeof PointSchema>;
 
+/** map-v2: what a landmark is (its icon). Every one is a real OSM object near the walk (landmarks.ts). */
+export const LANDMARK_KINDS = [
+  "playground",
+  "toilets",
+  "shelter",
+  "bridge",
+  "parking",
+  "pitch",
+  "dog_park",
+  "splash_pad",
+  "fountain",
+  "viewpoint",
+  "tower",
+  "water",
+  "trail",
+] as const;
+export const LandmarkSchema = z.object({
+  /** The OpenStreetMap object it is (every label on the map is traceable to one). */
+  osmId: z.string().regex(/^(node|way|relation)\/\d{1,15}$/),
+  kind: z.enum(LANDMARK_KINDS),
+  /** Short label: the kind's plain word ("Playground") or a short OSM name ("White Rock Lake"). */
+  text: z.string().min(1).max(28),
+  /** Icon position (map units). */
+  at: PointSchema,
+});
+export type Landmark = z.infer<typeof LandmarkSchema>;
+export type LandmarkKind = Landmark["kind"];
+
 export const SpotMapSchema = z.object({
   w: z.literal(MAP_W),
   h: z.literal(MAP_H),
@@ -56,6 +84,11 @@ export const SpotMapSchema = z.object({
   frame: z.literal("spot").optional(),
   /** Map units per metre (framed maps). Older maps carry it only inside the scale label. */
   unitsPerM: z.number().positive().max(100).optional(),
+  /**
+   * map-v2 (2026-10-08): named reference points near the walk, picked by code from the same OSM answer (never the X).
+   * Absent on older maps (the drawing then shows none; redraw.ts adds them when the OSM answer is saved).
+   */
+  landmarks: z.array(LandmarkSchema).max(8).optional(),
 });
 export type SpotMap = z.infer<typeof SpotMapSchema>;
 

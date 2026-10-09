@@ -15,6 +15,7 @@ import { z } from "zod";
 import { parkQueryHead, runOverpass, type OverpassDeps } from "@/lib/sources/overpass";
 import { cleanOsmText, parkIdOf, parkSelector, type ParkRef } from "@/lib/sources/overpass-features";
 import { clipPolyline, clipRing, fitTwoPoints, MIN_SPAN_M, scaleBar, simplify, type Box } from "./shapes";
+import { pickLandmarks } from "./landmarks";
 import { MAP_H, MAP_W, MAX_MAP_POINTS, type Line, type Point, type SpotMap } from "./types";
 
 // ---------- query ----------
@@ -297,7 +298,12 @@ export const NO_START_SPAN_M = 500;
  * drawing scale (Douglas-Peucker, 0.6 map units ~ 0.3 pt printed).
  * Point budget: the simplification tolerance grows until the map holds at most MAX_MAP_POINTS.
  */
-export function buildMap(g: ParkGeometry, target: LatLng, start: LatLng | null): SpotMap {
+export function buildMap(
+  g: ParkGeometry,
+  target: LatLng,
+  start: LatLng | null,
+  ids?: { targetId: string; startId: string | null },
+): SpotMap {
   const origin: LatLng = start ? [(start[0] + target[0]) / 2, (start[1] + target[1]) / 2] : target;
   const proj = projector(origin);
   let unitsPerM: number;
@@ -373,6 +379,10 @@ export function buildMap(g: ParkGeometry, target: LatLng, start: LatLng | null):
     r = finish(tol);
   }
   const round = (p: [number, number]): Point => [Math.round(p[0]), Math.round(p[1])];
+  // map-v2: named reference points near the walk (code-picked real OSM objects, never the X; landmarks.ts).
+  const landmarks = ids
+    ? pickLandmarks(g, { toMap, unitsPerM, target: toMap(target), start: start ? toMap(start) : null, targetId: ids.targetId, startId: ids.startId })
+    : undefined;
   return {
     w: MAP_W,
     h: MAP_H,
@@ -388,5 +398,6 @@ export function buildMap(g: ParkGeometry, target: LatLng, start: LatLng | null):
     scale: scaleBar(unitsPerM, MAP_W * 0.3),
     frame: "spot",
     unitsPerM: Math.round(unitsPerM * 1e4) / 1e4,
+    ...(landmarks ? { landmarks } : {}),
   };
 }

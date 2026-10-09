@@ -10,7 +10,7 @@ import { MIN_FIT } from "@/components/pass/PrintFit";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { KidPass } from "@/components/pass/KidPass";
 import { ParentStub } from "@/components/pass/ParentStub";
-import { mapDescription, SpotAnswer, SpotMap, SpotMapSvg } from "@/components/pass/SpotMap";
+import { MAP_PALETTE, mapDescription, SpotAnswer, SpotMap, SpotMapSvg } from "@/components/pass/SpotMap";
 import { buildMessages, computeMix, openersFor, systemPrompt, userPrompt, voiceFor } from "@/lib/ai/prompt";
 import { validateSpot } from "@/lib/ai/validate";
 import { MemoryStore, resetStores } from "@/lib/cache/store";
@@ -238,7 +238,7 @@ describe("pickTarget (code decides where the X goes)", () => {
 describe("buildMap + drawMap (stored map, then SVG)", () => {
   const g = geo(CEL);
   const t = pickTarget(g, { parkName: "Celebration Park", features: feats(CEL), variant: 1 })!;
-  const map = buildMap(g, t.center, t.start!.at);
+  const map = buildMap(g, t.center, t.start!.at, { targetId: t.osmId, startId: t.start!.osmId });
 
   it("is valid for storage: integer units inside the box, under the point budget, X and START inside", () => {
     expect(SpotMapSchema.safeParse(map).success).toBe(true);
@@ -274,7 +274,11 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
     expect(order.length).toBeGreaterThan(0);
     const rank = ["water", "pitch", "parking", "outline", "waterway", "road", "path"];
     expect([...order].sort((a, b) => rank.indexOf(a) - rank.indexOf(b))).toEqual(order);
-    expect(d.legend).toEqual(order);
+    // map-v2: a key of at most 5: the X, START, the visible layers that help most, and the route last.
+    expect(d.legend.length).toBeLessThanOrEqual(5);
+    expect(d.legend.slice(0, 2)).toEqual(["x", "start"]);
+    expect(d.legend.at(-1)).toBe(d.route!.mode === "paths" ? "route" : "straight");
+    for (const k of d.legend.slice(2, -1)) expect(order).toContain(k);
     expect(d.x.d).toMatch(/^M[\d.]+ [\d.]+L[\d.]+ [\d.]+M[\d.]+ [\d.]+L[\d.]+ [\d.]+$/);
     expect(d.start?.label.text).toBe("START");
     // Printed 3.2 in wide (230.4 pt over MAP_W units, print.css); PrintFit never goes below MIN_FIT (0.91).
@@ -283,10 +287,15 @@ describe("buildMap + drawMap (stored map, then SVG)", () => {
     expect(STROKE_MIN * ptPerUnit * MIN_FIT).toBeGreaterThanOrEqual(1);
   });
 
-  it("the SVG is black and white only, has a title for screen readers, the X, START, north arrow and scale bar", () => {
-    const html = renderToStaticMarkup(<SpotMapSvg drawing={drawMap(map, t.walk)} title="Map of Celebration Park" />);
+  it("printed: greys only (no colour), no hatching or dot patterns; on screen: the brand palette; a title, the X, START, north arrow and scale bar", () => {
+    const html = renderToStaticMarkup(<SpotMapSvg drawing={drawMap(map, t.walk)} title="Map of Celebration Park" tone="gray" />);
     const colours = [...html.matchAll(/(?:fill|stroke)="([^"]+)"/g)].map((m) => m[1]);
-    for (const c of colours) expect(["#000", "#fff", "none"].includes(c) || /^url\(#spot-(hatch|dots|clip)-/.test(c)).toBe(true);
+    const grey = (c: string) => /^#([0-9a-f]{2})\1\1$/i.test(c) || /^#([0-9a-f])\1\1$/i.test(c);
+    for (const c of colours) expect(grey(c) || c === "none" || /^url\(#spot-clip-/.test(c), c).toBe(true);
+    expect(html).not.toMatch(/<pattern/);
+    const screen = renderToStaticMarkup(<SpotMapSvg drawing={drawMap(map, t.walk)} title="Map of Celebration Park" tone="color" />);
+    expect(screen).toContain(`fill="${MAP_PALETTE.color.land}"`);
+    expect(screen).toContain(`stroke="${MAP_PALETTE.color.route}"`);
     expect(html).toMatch(/<svg[^>]*role="img"[^>]*aria-labelledby="spot-title-[^"]+"/);
     expect(html).toContain(">Map of Celebration Park</title>");
     for (const m of ["x", "start", "north", "scale"]) expect(html).toContain(`data-marker="${m}"`);
@@ -477,12 +486,21 @@ describe("Find This Spot on paper and on screen", () => {
     expect(t).toContain("Find This Spot");
     expect(t).toContain(spot.riddle);
     expect(t).toContain("Map: © OpenStreetMap contributors");
-    // map-clear: the frame is START to the X (140 m), so the pond is out of view and not in the legend.
-    for (const k of ["the spot", "START (begin here)", "this way (straight line)", "sports field", "parking (P)", "road", "path or trail"]) expect(t).toContain(k);
+    // map-v2: a key of at most 5; the route follows the mapped paths and its key line carries the code-measured walk.
+    const keys = [...html.matchAll(/data-key="([a-z]+)"/g)].map((m) => m[1]);
+    expect(keys).toEqual(["x", "start", "path", "road", "route"]);
+    for (const k of ["the spot", "START (begin here)", "path or trail", "road", "walk this way (the X is 140 m south-east)"]) expect(t).toContain(k);
     expect(t).not.toContain("water");
     expect(t).not.toContain("picnic shelter");
+    expect(t).not.toContain("Shelter");
+    const d = drawMap(spot.map, spot.walk);
+    const names = d.landmarks.map((l) => l.label.text);
+    expect(names.length).toBeGreaterThan(0);
     expect(mapDescription("Celebration Park", spot)).toBe(
       "Map of Celebration Park drawn from OpenStreetMap, north is up. START is at a parking lot; the X is about 140 m south-east of it.",
+    );
+    expect(mapDescription("Celebration Park", spot, d)).toBe(
+      `Map of Celebration Park drawn from OpenStreetMap, north is up. START is at a parking lot; the X is about 140 m south-east of it, and a dotted route follows the paths. Landmarks on the map: ${names.join(", ")}.`,
     );
   });
 

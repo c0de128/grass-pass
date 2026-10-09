@@ -230,7 +230,7 @@ export function finishSpot(plan: SpotPlan, riddle: string | null): Spot {
     walk: t.walk,
     riddle: riddle ?? SPOT_COPY.codeRiddle(t.start !== null),
     riddleBy: riddle ? "model" : "code",
-    map: buildMap(plan.geometry, t.center, t.start?.at ?? null),
+    map: buildMap(plan.geometry, t.center, t.start?.at ?? null, { targetId: t.osmId, startId: t.start?.osmId ?? null }),
     checkedAt: new Date(plan.checkedAt).toISOString(),
   };
 }

@@ -130,6 +130,33 @@
 }
 
 /*
+ * Full-screen hero (Kevin 2026-10-08, option A). From 1024 px the hero fills the first screen under the sticky header,
+ * less a small "peek" so the Explore eyebrow and the top of its heading show at the bottom (a cue to scroll). Every
+ * size below grows with the screen's height (svh) as well as its width, so a 1280x800 laptop and a 1920x1080 monitor
+ * both get a balanced, full first screen; the caps stop giant type on 2560 px and a stretched hero on very tall
+ * screens (the hero is never taller than 60rem). Used through Tailwind's lg:*-(--hero-*) classes in HomeHero.tsx and
+ * the hero search card in PassMaker.tsx. Phones and tablets keep their own layout (no variables there).
+ */
+@media (min-width: 64rem) {
+  .gp-hero {
+    /* The sticky header: 64 px + its 1 px border (SiteHeader.tsx, sm:h-16). */
+    --hero-header: 4.0625rem;
+    --hero-peek: clamp(5rem, 11svh, 8.5rem);
+    --hero-h: min(calc(100svh - var(--hero-header) - var(--hero-peek)), 60rem);
+    --hero-pt: clamp(1.25rem, 3svh, 3rem);
+    /* Room for the tilted pass card that hangs below the picture. */
+    --hero-pb: clamp(2.5rem, 5.5svh, 4.5rem);
+    --hero-gap: clamp(1.125rem, 2.5svh, 2.25rem);
+    /* "Family time is back!" is 1.25x this and must stay on one line in the left column (5.1vw keeps it inside at 1024-1280 px). */
+    --hero-h1: clamp(2.75rem, min(5.1vw, 7.2svh), 4.25rem);
+    --hero-lead: clamp(1.125rem, 2.3svh, 1.375rem);
+    --hero-cta: clamp(1.75rem, 3.7svh, 2.375rem);
+    --hero-input-h: clamp(3.5rem, 6.8svh, 4.25rem);
+    --hero-card-pad: clamp(1.125rem, 2.4svh, 1.75rem);
+  }
+}
+
+/*
  * UX-4-07 (R4), UX-6-02 (R6), map-clear: Find This Spot labels are 17-18 map units on screen and paper alike (>= 11 px on a
  * 360 px phone, ~9 pt printed). No phone override: the label placement (render-map.ts) relies on the drawn size.
  */

@@ -485,7 +485,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
       </h2>
 
       {/* The hero search card: just the place, Find parks, and Use my location. The rest happens in the wizard. */}
-      <div className="flex flex-col gap-3 rounded-3xl bg-card p-4 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-5">
+      <div className="flex flex-col gap-3 rounded-3xl bg-card p-4 text-card-foreground shadow-xl shadow-shadow ring-1 ring-border sm:p-5 lg:gap-4 lg:rounded-[1.75rem] lg:p-(--hero-card-pad)">
         <form aria-label="Find a park" noValidate onSubmit={onHeroSubmit} className="flex flex-col gap-2">
           <label htmlFor={heroInputId} className="sr-only">
             Town, ZIP or park name
@@ -495,7 +495,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
           </p>
           <div className="flex flex-col gap-3 sm:flex-row">
             <div className="relative min-w-0 flex-1">
-              <MapPin className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary" aria-hidden="true" />
+              <MapPin className="pointer-events-none absolute top-1/2 left-4 size-5 -translate-y-1/2 text-primary lg:left-5 lg:size-6" aria-hidden="true" />
               <input
                 ref={heroInputRef}
                 id={heroInputId}
@@ -512,10 +512,10 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                 }}
                 aria-invalid={heroError ? true : undefined}
                 aria-describedby={heroError ? `${heroHintId} ${heroErrorId}` : heroHintId}
-                className="h-14 w-full rounded-2xl border border-line bg-background/60 pr-4 pl-12 text-base text-foreground placeholder:text-muted-foreground aria-invalid:border-2 aria-invalid:border-destructive"
+                className="h-14 w-full rounded-2xl border border-line bg-background/60 pr-4 pl-12 text-base lg:h-(--hero-input-h) lg:pl-14 lg:text-lg text-foreground placeholder:text-muted-foreground aria-invalid:border-2 aria-invalid:border-destructive"
               />
             </div>
-            <button type="submit" className={buttonClassName("primary", "h-14 shrink-0 px-7")}>
+            <button type="submit" className={buttonClassName("primary", "h-14 shrink-0 px-7 lg:h-(--hero-input-h) lg:px-9 lg:text-lg")}>
               <Target className="size-5" aria-hidden="true" />
               Find parks
             </button>
@@ -526,20 +526,20 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
             </p>
           ) : null}
         </form>
-        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border pt-2 text-sm">
+        <div className="flex flex-wrap items-center justify-between gap-x-4 gap-y-1 border-t border-border pt-2 text-sm lg:pt-3 lg:text-base">
           <button
             type="button"
             onClick={onHeroLocate}
             className="inline-flex min-h-11 w-fit items-center gap-2 rounded-md font-semibold text-link underline-offset-4 hover:underline"
           >
-            <LocateFixed className="size-4" aria-hidden="true" />
+            <LocateFixed className="size-4 lg:size-5" aria-hidden="true" />
             Use my location
           </button>
-          <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground" data-testid="hero-steps-hint">
+          <p className="flex items-center gap-1.5 text-xs font-semibold text-muted-foreground lg:text-sm" data-testid="hero-steps-hint">
             {WIZARD_STEPS.map((s, i) => (
               <span key={s.key} className="inline-flex items-center gap-1.5">
                 {i > 0 ? <span aria-hidden="true">·</span> : null}
-                <span className="inline-flex size-4.5 items-center justify-center rounded-full bg-muted text-[10px] font-extrabold text-foreground" aria-hidden="true">
+                <span className="inline-flex size-4.5 items-center justify-center rounded-full bg-muted text-[10px] font-extrabold text-foreground lg:size-5.5 lg:text-xs" aria-hidden="true">
                   {i + 1}
                 </span>
                 {s.label}

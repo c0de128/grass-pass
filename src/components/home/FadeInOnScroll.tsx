@@ -45,7 +45,7 @@ export function FadeInOnScroll() {
       { rootMargin: "0px 0px -8% 0px", threshold: 0.05 },
     );
     for (const el of document.querySelectorAll<HTMLElement>(FADE_SELECTOR)) {
-      if (el.getBoundingClientRect().top < window.innerHeight * 0.92) continue;
+      if (el.getBoundingClientRect().top < window.innerHeight) continue;
       el.classList.add("gp-fade");
       io.observe(el);
     }

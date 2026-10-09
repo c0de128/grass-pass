@@ -44,7 +44,7 @@ export function SampleParks({
       aria-labelledby="examples-title"
       className="relative z-[1] scroll-mt-28 bg-background sm:scroll-mt-16"
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 py-24 md:px-8 lg:py-32">
+      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 pt-14 pb-24 sm:pt-16 md:px-8 lg:pt-8 lg:pb-32">
         <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
           <div className="flex max-w-2xl flex-col gap-4 sm:max-w-none">
             <p className="text-xs font-bold tracking-widest text-primary uppercase">

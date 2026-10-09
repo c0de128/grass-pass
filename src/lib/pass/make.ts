@@ -23,7 +23,7 @@ import { pinnedPassById } from "@/lib/pinned";
 import { e2eFixturePass } from "./e2e-fixtures";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
-import type { ModelLogger } from "@/lib/model";
+import { hasModelKey, type ModelLogger } from "@/lib/model";
 import { localDay, secondsUntilLocalMidnight } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
 import type { TipsTrace } from "@/lib/tips/generate";
@@ -216,7 +216,7 @@ export type MakeDeps = {
    * "Make a different pass", or a rebuild of a degraded pass) needs a signed-in `account` OR a free pass left
    * (`freePass`); a saved pass for today is still served to anyone (it costs nothing). Each account may start
    * ACCOUNT_DAILY_PASSES (default 5) new passes per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP, at most
-   * JUDGE_PASSES_PER_IP_PER_DAY per connection (SEC-4-02). Counted only when a build really starts. Q-4-03: a rebuild
+   * JUDGE_PASSES_PER_IP_PER_DAY per connection (SEC-4-02). Counted only when a paid model call really starts (Q-11-01). Q-4-03: a rebuild
    * of today's degraded pass is NOT counted against the account (the per-IP share, AI_DAILY_CAP and
    * MAX_DEGRADED_REBUILDS bound it); a signed-out visitor is shown the degraded pass instead of a rebuild.
    */
@@ -265,22 +265,13 @@ const signInRequired = (env: Record<string, string | undefined>): MakeOutcome =>
 /** Signed-out new passes per connection per day (the cookie's backstop): quota `anon-new`, keyed by the client IP. */
 export const ANON_QUOTA = "anon-new";
 
-/** A ticket that also calls `onCommit` once, the first time it is committed (the free-pass charge). */
-function onFirstCommit(t: QuotaTicket, onCommit: () => void): QuotaTicket {
-  let fired = false;
-  return {
-    commit() {
-      t.commit();
-      if (fired) return;
-      fired = true;
-      onCommit();
-    },
-    release: () => t.release(),
-    get committed() {
-      return t.committed;
-    },
-  };
-}
+/**
+ * The share reserved for this build. `floodShare`: a per-connection flood backstop (signed out: `anon-new`), spent as
+ * before round 11: once an upstream call started, unless the build then stopped for "not enough data". Otherwise (an account, the judge demo) it is the grown-up's
+ * pass, spent only when a paid model call really starts. `onCharged`: the free pass (signed out), charged at that same
+ * moment (round-11 Q-11-01: a failed FREE source, e.g. OpenStreetMap busy, never uses the free pass).
+ */
+type AccountShare = { ticket: QuotaTicket; floodShare: boolean; onCharged?: () => void };
 
 /**
  * Accounts: reserve this account's share of today's new passes (the judge demo: its per-connection share of
@@ -293,15 +284,16 @@ async function reserveAccountShare(
   env: Record<string, string | undefined>,
   now: number,
   rebuild: boolean,
-): Promise<null | { ok: true; ticket: QuotaTicket } | { ok: false; outcome: MakeOutcome }> {
+): Promise<null | ({ ok: true } & AccountShare) | { ok: false; outcome: MakeOutcome }> {
   if (deps.internal || rebuild) return null;
   if (!deps.account) {
     // Signed out with a free pass left (checked in makePass): this connection's share of signed-out new passes today,
-    // so clearing the cookie can't drain the model budget. The free pass is charged when this ticket is committed.
+    // so clearing the cookie can't drain the model budget. It is spent on any upstream start (flood protection); the
+    // free pass itself is charged only when a paid model call starts (Q-11-01).
     if (!deps.requireAccount || !deps.freePass) return null;
     const free = deps.freePass;
     const r = await reserveQuota(store, { name: ANON_QUOTA, key: deps.ip, perKey: anonPassesPerIpPerDay(env), global: NO_GLOBAL_CAP, period: { kind: "day" }, now });
-    if (r.ok) return { ok: true, ticket: onFirstCommit(r.ticket, free.onCharged) };
+    if (r.ok) return { ok: true, ticket: r.ticket, floodShare: true, onCharged: free.onCharged };
     log("anon_ip_daily_limit", { scope: r.scope }, "warn");
     return { ok: false, outcome: { kind: "error", status: 429, error: { code: "ANON_IP_DAILY_LIMIT", message: anonIpLimitCopy(env), retryAfter: r.retryAfter } } };
   }
@@ -314,7 +306,7 @@ async function reserveAccountShare(
     period: { kind: "day" },
     now,
   });
-  if (r.ok) return { ok: true, ticket: r.ticket };
+  if (r.ok) return { ok: true, ticket: r.ticket, floodShare: false };
   log(judge ? "judge_daily_limit" : "account_daily_limit", judge ? { scope: r.scope } : {}, "warn");
   return {
     ok: false,
@@ -441,7 +433,7 @@ type BuildCtx = Parameters<typeof buildCounted>[0];
 /**
  * Accounts: the account's (or judge demo's) daily share is taken before the per-IP and global caps (auth ->
  * account count -> the existing limits), right after the free checks (daily pace, a cached failure: those
- * answer without touching the account's count), and given back unless an upstream call really started
+ * answer without touching the account's count), and given back unless a paid model call really started
  * (Q-3-03 pattern).
  */
 async function build(ctx: BuildCtx): Promise<BuildOutcome> {
@@ -501,6 +493,21 @@ async function buildCounted(ctx: {
   if (acct && !acct.ok) return acct.outcome as BuildOutcome;
   held.ticket = acct?.ticket ?? null;
   const accountTicket = held.ticket;
+  const floodShare = acct?.floodShare === true;
+  let charged = false;
+  /**
+   * Round 11 (Q-11-01): the grown-up's pass (an account's or the judge demo's daily share, or the signed-out free pass)
+   * is spent only when a PAID model call really starts: a reserved model call with a model configured. A failed free
+   * source (OpenStreetMap/iNaturalist busy, refused, 429/503/504), "not enough data" and a keyless server
+   * (MODEL_NOT_CONFIGURED) never spend it. The per-IP shares (pass-new, and anon-new signed out) still count on any
+   * upstream start, for flood protection.
+   */
+  const chargePass = () => {
+    accountTicket?.commit();
+    if (charged) return;
+    charged = true;
+    acct?.onCharged?.();
+  };
 
   // Caps BEFORE any upstream: the model budget must have room, then the per-IP daily share.
   const aiCap = aiCapFor(cfg, reservedSlice);
@@ -525,10 +532,9 @@ async function buildCounted(ctx: {
     return { kind: "error", status: 429, error: { code: share.scope === "global" ? "DAILY_LIMIT" : "IP_DAILY_LIMIT", message, retryAfter: share.retryAfter } };
   }
   const ipTicket: QuotaTicket = share.ticket;
-  // Every upstream start spends the per-IP share. Review 2026-10-08 MAJOR-2: the account's (or judge demo's) share is
-  // spent with it, EXCEPT when the build then stops for "not enough real data" (kind "empty") before any model call:
-  // that is not a pass, so the grown-up or judge keeps their pass (the per-IP share still counts, for flood protection).
-  // A reserved model call spends the account share at once.
+  // Every upstream start spends the per-IP share (pass-new); signed out, anon-new is spent with it at the end unless the
+  // build stopped for "not enough data" (unchanged flood protection). The account's (or judge demo's) share and the free
+  // pass are spent only by chargePass() (a paid model call starts).
   let upstreamStarted = false;
   const ticket = {
     commit() {
@@ -603,7 +609,8 @@ async function buildCounted(ctx: {
           });
           if (!r.ok) return null;
           ticket.commit(); // a model call is an upstream call too
-          accountTicket?.commit();
+          // A keyless server reserves the slot and then stops with MODEL_NOT_CONFIGURED: nothing paid starts.
+          if (hasModelKey(ctx.env)) chargePass();
           return r.ticket;
         },
         startedAt: ctx.startedAt,
@@ -630,18 +637,17 @@ async function buildCounted(ctx: {
       octoberStop.abort(new Error("pass not made"));
       log("pass_not_made", { kind: out.kind, status: out.kind === "error" ? out.status : 200, code: out.kind === "error" ? out.error.code : "EMPTY" }, "warn");
     }
-    // Review MAJOR-2: "not enough data" gives the account/judge share back (build() releases an uncommitted ticket).
-    if (out.kind === "empty") {
-      if (accountTicket && !accountTicket.committed) log("account_share_returned", { reason: "empty" });
-    } else if (upstreamStarted) {
-      accountTicket?.commit();
-    }
+    // Review MAJOR-2 / Q-11-01: a build that stopped before any paid call gives the account/judge share back (build()
+    // releases an uncommitted ticket).
+    if (floodShare) {
+      if (upstreamStarted && out.kind !== "empty") accountTicket?.commit();
+    } else if (accountTicket && !accountTicket.committed) log("account_share_returned", { reason: out.kind === "empty" ? "empty" : "no_paid_call" });
     return out;
   } catch (err) {
     // Round 9 (Q-9-01): the build stopped (every client left before the paid steps, or it failed): the October box's
     // unsent requests are not sent, and nothing is saved.
     octoberStop.abort(new Error("pass not made"));
-    if (upstreamStarted) accountTicket?.commit();
+    if (floodShare && upstreamStarted) accountTicket?.commit();
     throw err;
   } finally {
     octoberDeadline.clear();

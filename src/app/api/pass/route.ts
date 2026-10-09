@@ -31,7 +31,7 @@ import { EXAMPLE_PARKS, readyExample } from "@/lib/prewarm";
 import { MAP_DATA_FAILURE_CODES, PassRequestSchema, type PassLine } from "@/lib/pass/schema";
 import { withRefreshScope } from "@/lib/sources/osm-refresh";
 import { localModelClock } from "@/lib/pass/local-clock";
-import { freePassesLeft, freePassesUsed, freePassSetCookie, isHttps, signFreePass } from "@/lib/limits/free-pass";
+import { freePassesLeft, freePassesUsed, freePassReceipt, freePassSetCookie, isHttps } from "@/lib/limits/free-pass";
 import type { FreeCharge } from "@/lib/pass/schema";
 
 export const runtime = "nodejs";
@@ -75,12 +75,18 @@ export async function POST(req: Request): Promise<Response> {
 
   const account = await readAccount(req);
   // Signed out: the free passes this browser used today (its signed cookie; 0 when missing or not valid for today).
-  const freeUsed = account ? 0 : freePassesUsed(req.headers.get("cookie"), Date.now());
+  const requestedAt = Date.now();
+  const freeUsed = account ? 0 : freePassesUsed(req.headers.get("cookie"), requestedAt);
   let chargedAt: number | null = null;
-  /** The new signed count once THIS request's free pass was charged (null otherwise). */
+  /**
+   * The new signed count once THIS request's free pass was charged (null otherwise). SEC-11-02: `freeUsed` is the count
+   * for the Chicago day the request started; a charge that lands after Chicago midnight belongs to that earlier day, so
+   * no receipt is issued (it would otherwise use up the NEW day's free pass).
+   */
   const charged = (): { value: string; at: number; free: FreeCharge } | null => {
     if (chargedAt === null) return null;
-    const value = signFreePass(freeUsed + 1, chargedAt);
+    const value = freePassReceipt(freeUsed, requestedAt, chargedAt);
+    if (value === null) return null;
     return { value, at: chargedAt, free: { left: freePassesLeft(freeUsed + 1), receipt: value } };
   };
   const enc = new TextEncoder();

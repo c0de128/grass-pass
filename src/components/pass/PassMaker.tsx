@@ -231,6 +231,14 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const readyLinkRef = useRef<HTMLAnchorElement>(null);
   // Q-8-03: the request actually running (or last finished), so its labels never show a newer choice.
   const [running, setRunning] = useState<RunningRequest | null>(null);
+  // Review MAJOR-2: after picking another park from "not enough data", focus "Make my pass" once it is rendered again.
+  const focusMakeNext = useRef(false);
+  useEffect(() => {
+    if (focusMakeNext.current && makeRef.current) {
+      focusMakeNext.current = false;
+      makeRef.current.focus();
+    }
+  });
   // UX-8-07: the visitor stopped the ready step's auto-open.
   const [stayed, setStayed] = useState(false);
 
@@ -380,10 +388,11 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
     setStayed(false);
     setNote(null);
     setPark(p);
-    // Same step, so the step effect doesn't move focus: the picked button goes away, so focus "Make my pass".
+    // Same step, so the step effect doesn't move focus: the picked button goes away, so focus "Make my pass" once it
+    // is back (it is rendered only after the reset above commits).
     setStep("make");
     setAnnounce(`${safeParkName(p.name).name} picked. ${stepAnnouncement("make")}`);
-    requestAnimationFrame(() => makeRef.current?.focus());
+    focusMakeNext.current = true;
   }
 
   function onBand(b: AgeBand) {

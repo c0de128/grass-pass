@@ -11,7 +11,7 @@ import { TripTips } from "@/components/pass/TripTips";
 import { buttonClassName } from "@/components/ui/Button";
 import { safeParkName } from "@/lib/ai/validate";
 import { ADULT_PRINT_LINE } from "@/lib/pass/audience";
-import { isAdultBand } from "@/lib/pass/schema";
+import { passPagePrintLine } from "@/lib/pass/print-size";
 import { loadPass } from "@/lib/pass/make";
 import { withClearMap } from "@/lib/spot/redraw";
 import { passAsOf } from "@/lib/pass/as-of";
@@ -75,7 +75,8 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
           Print pass
         </Link>
         <p className="text-base text-muted-foreground">
-          {isAdultBand(pass.ageBand) ? ADULT_PRINT_LINE : "One black-and-white page. Cut it in half: kids get the hunt, you get the answers."}
+          {/* Review MAJOR-3: a pass estimated to need 2 printed pages doesn't promise one (src/lib/pass/print-size.ts). */}
+          {passPagePrintLine(pass, ADULT_PRINT_LINE)}
         </p>
       </div>
       <FocusPassHeading />

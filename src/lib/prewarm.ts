@@ -50,6 +50,7 @@ import type { ExampleLink } from "@/lib/parks/schema";
 import { DEFAULT_AGE_BAND, type AgeBand, type Pass } from "@/lib/pass/schema";
 import { completeness, isCompletePass, type Completeness } from "@/lib/pass/complete";
 import { pinnedPass } from "@/lib/pinned";
+import { likelyOnePage } from "@/lib/pass/print-size";
 
 export type ExamplePark = {
   slug: string;
@@ -142,6 +143,8 @@ export type WarmDeps = {
   examples?: readonly ExamplePark[];
   /** Wall clock for time budgets and log throttling (tests move it; `now` is the app clock, often frozen in tests). */
   clock?: () => number;
+  /** Review MAJOR-3: does a pass fit one printed page (default: the estimate in src/lib/pass/print-size.ts)? */
+  onePage?: (pass: Pass) => boolean | null;
 };
 
 type Holder = {
@@ -274,6 +277,11 @@ export type ExampleStatus = {
   /** True when this server is making a new one right now. */
   refreshing: boolean;
   /**
+   * Review 2026-10-08 MAJOR-3: the newest complete pass is estimated to need 2 printed pages (src/lib/pass/print-size.ts),
+   * so the park's pinned one-page pass is shown instead (with its real date). Absent/false otherwise.
+   */
+  longPrint?: boolean;
+  /**
    * Only when pass is null: ONE complete sentence saying why (starts "No data available yet:", never
    * nested, Q-1-10). `retry` says whether a reload can help soon.
    */
@@ -391,6 +399,7 @@ function maybeRefresh(ex: ExamplePark, day: string, deps: WarmDeps, need: Exclud
 }
 
 type Inspected = {
+  longPrint: boolean;
   latest: Saved | null;
   latestC: Completeness | null;
   shown: Saved | null;
@@ -400,7 +409,7 @@ type Inspected = {
 };
 
 /** Read one example's saved state (1 GET + memoized pass reads) and decide what it needs today. */
-async function inspect(ex: ExamplePark, today: string, nowMs: number): Promise<Inspected> {
+async function inspect(ex: ExamplePark, today: string, nowMs: number, onePage: (pass: Pass) => boolean | null = likelyOnePage): Promise<Inspected> {
   const hit = await savedCache.get(ex.slug, nowMs);
   // The link must still open: the pass itself lives 30 days in the pass cache.
   const latestPass = hit ? await loadPass(hit.value.passId, nowMs) : null;
@@ -422,6 +431,17 @@ async function inspect(ex: ExamplePark, today: string, nowMs: number): Promise<I
       shownPass = cPass;
     }
   }
+  // Review 2026-10-08 MAJOR-3: "one page" is the product's promise. A complete pass estimated to need 2 printed pages
+  // gives way to the park's pinned pass when that one fits (both are real; the card shows the pinned pass's real date).
+  let longPrint = false;
+  if (shownPass && onePage(shownPass) === false) {
+    const pin = pinnedPass(ex.slug);
+    if (pin && pin.id !== shownPass.id && onePage(pin) !== false) {
+      shown = { passId: pin.id, day: pin.day, generatedAt: pin.generatedAt };
+      shownPass = pin;
+      longPrint = true;
+    }
+  }
   const isToday = latest !== null && latest.day === today;
   const short = isToday && latestC && !latestC.complete ? { items: latestC.items, target: latestC.target, riddle: latestC.riddle } : null;
   let need: Need = "none";
@@ -436,7 +456,7 @@ async function inspect(ex: ExamplePark, today: string, nowMs: number): Promise<I
       shownPass = pin;
     }
   }
-  return { latest, latestC, shown, shownPass, short, need };
+  return { longPrint, latest, latestC, shown, shownPass, short, need };
 }
 
 /**
@@ -455,7 +475,7 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
   let started = false;
   const out: ExampleStatus[] = [];
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
-    const i = await inspect(ex, today, now());
+    const i = await inspect(ex, today, now(), deps.onePage);
     const { latest, shown, shownPass, short } = i;
     let refreshing = h.running.has(ex.slug);
     if (i.need !== "none" && enabled && !refreshing) {
@@ -480,7 +500,18 @@ export async function exampleStatuses(deps: WarmDeps = {}): Promise<ExampleStatu
                 : err
                   ? `No data available yet: the last try didn't work because ${failureReason(err.code)}.`
                   : "No data available yet: no pass has been made for it today.";
-    out.push({ example: ex, pass: shown, latest, passData: shownPass, fresh: i.need !== "refresh", today: shown !== null && shown.day === today, short, refreshing, missing });
+    out.push({
+      example: ex,
+      pass: shown,
+      latest,
+      passData: shownPass,
+      fresh: i.need !== "refresh",
+      today: shown !== null && shown.day === today,
+      short,
+      refreshing,
+      missing,
+      ...(i.longPrint ? { longPrint: true } : {}),
+    });
   }
   // Judge R7 top-5 #3: complete examples first (config order kept within each group).
   return [...out.filter((s) => s.pass !== null), ...out.filter((s) => s.pass === null)];
@@ -497,13 +528,14 @@ export const READY_EXAMPLE_MEMO_MS = 5 * 60_000;
  * A ready example pass to offer when a park search can't answer (R1-B1): the first example whose
  * saved pass still opens. Never starts a refresh. Null when none is ready.
  */
-export async function readyExample(deps: Pick<WarmDeps, "now" | "examples"> = {}): Promise<ExampleLink | null> {
-  if (!deps.now && !deps.examples) return memoize("ready-example", READY_EXAMPLE_MEMO_MS, () => findReadyExample({}));
+export async function readyExample(deps: Pick<WarmDeps, "now" | "examples" | "onePage"> = {}): Promise<ExampleLink | null> {
+  if (!deps.now && !deps.examples && !deps.onePage) return memoize("ready-example", READY_EXAMPLE_MEMO_MS, () => findReadyExample({}));
   return findReadyExample(deps);
 }
 
-async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promise<ExampleLink | null> {
+async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples" | "onePage">): Promise<ExampleLink | null> {
   const now = deps.now ?? (() => Date.now());
+  const onePage = deps.onePage ?? likelyOnePage;
   // Judge R7 T1: a complete example pass first, then a pinned one (src/lib/pinned.ts), else any saved one (an error
   // page may still offer a short real pass). One GET per example, as before.
   const latest: { ex: ExamplePark; id: string }[] = [];
@@ -511,7 +543,13 @@ async function findReadyExample(deps: Pick<WarmDeps, "now" | "examples">): Promi
     const hit = await savedCache.get(ex.slug, now());
     if (!hit) continue;
     const complete = hit.value.complete;
-    if (complete && (await loadPass(complete.passId, now()))) return { name: ex.name, href: `/pass/${complete.passId}?example=1` };
+    const completePass = complete ? await loadPass(complete.passId, now()) : null;
+    if (complete && completePass) {
+      // Review MAJOR-3: a pass estimated to need 2 printed pages gives way to the park's pinned one-page pass.
+      const pin = onePage(completePass) === false ? pinnedPass(ex.slug) : null;
+      const id = pin && onePage(pin) !== false ? pin.id : complete.passId;
+      return { name: ex.name, href: `/pass/${id}?example=1` };
+    }
     latest.push({ ex, id: hit.value.passId });
   }
   for (const ex of deps.examples ?? EXAMPLE_PARKS) {
@@ -553,7 +591,7 @@ export async function warmExamples(deps: WarmDeps = {}, opts: { budgetMs?: numbe
     // A refresh, then (when it came out short with nothing complete to show) the second try.
     for (let round = 0; round < 2; round++) {
       const today = localDay(now());
-      const i = await inspect(ex, today, now());
+      const i = await inspect(ex, today, now(), deps.onePage);
       if (i.need === "none") break;
       if (!fits()) {
         log("prewarm_budget_stop", { example: ex.slug, need: i.need, budgetMs: opts.budgetMs, usedMs: clock() - t0 });

@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
-import { HIDDEN_PARK_NOTE, safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
-import type { Pass, SectionId } from "@/lib/pass/schema";
-import { hardShortNote } from "@/lib/pass/short-copy";
+import type { Pass } from "@/lib/pass/schema";
+import { stubNotes } from "@/lib/pass/stub-notes";
 import { ADULT_TEAR_TEXT, AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
 import type { AgeBand } from "@/lib/pass/schema";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
-
-const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
 
 /** Fixed, code-written line for the grown-up (ADR 0003: look-only, never eat or pick). */
 export const STUB_LOOK_ONLY = "Look only: don't pick, eat, catch or chase anything on this pass.";
@@ -71,27 +68,9 @@ export function ParentStub({ pass, passUrl, spotAnswer, october }: ParentStubPro
   // Wild Finds clues are written from (and quote) Wikipedia summaries: credit them on paper (CC BY-SA).
   const wiki = pass.items.some((it) => it.section === "wild");
   const safety = [...new Set(pass.items.map((it) => it.safety).filter((s): s is string => Boolean(s)))];
-  const short = pass.target - pass.items.length;
-  const missing = SECTIONS.flatMap((s) => {
-    const st = pass.sections[s];
-    // Round 9 (Q-9-05): an ok section can still say what is missing (Lucky Finds cut short after some searches).
-    return st.status === "ok" ? (st.note ? [{ s, message: st.note }] : []) : [{ s, message: st.message }];
-  });
-  const { notGrounded, other } = pass.removed;
-  const hardNote = hardShortNote(pass);
   const copy = copyFor(pass.ageBand);
-  const notes: string[] = [
-    // R2-m3: the park name was hidden on this pass; say why.
-    ...(safeParkName(pass.park.name).hidden ? [HIDDEN_PARK_NOTE] : []),
-    ...missing.map((m) => m.message),
-    // S5: why there is no Find This Spot map (the kid side shows nothing in that case).
-    ...(pass.spot?.status === "none" ? [pass.spot.message] : []),
-    ...(short > 0 ? [`No data available for ${short} more ${short === 1 ? "find" : "finds"}: ${short === 1 ? "its clue" : "their clues"} didn't pass our checks, so we left ${short === 1 ? "it" : "them"} off.`] : []),
-    // Audit R4 (Q-4-04): fewer hard finds than the age band promises.
-    ...(hardNote ? [hardNote] : []),
-    ...(notGrounded > 0 ? [`${notGrounded} ${notGrounded === 1 ? "clue" : "clues"} removed: didn't match ${notGrounded === 1 ? "its" : "their"} source.`] : []),
-    ...(other > 0 ? [`${other} ${other === 1 ? "clue" : "clues"} removed: gave away the answer or broke a rule.`] : []),
-  ];
+  // "Not on this pass": shared with the print-size estimate (src/lib/pass/stub-notes.ts).
+  const notes = stubNotes(pass);
 
   return (
     <section className="gp-stub" aria-labelledby="stub-title">

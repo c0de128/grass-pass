@@ -554,6 +554,26 @@
   display: none;
 }
 
+/*
+ * Review 2026-10-08 MAJOR-3: the print page's lead says one page or two. Before PrintFit has measured, the server's
+ * estimate (main[data-print-estimate]) picks; once it has, the measured .gp-sheet[data-pages] wins (higher specificity).
+ */
+.gp-print-page .gp-lead-two,
+.gp-print-page[data-print-estimate="2"] .gp-lead-one {
+  display: none;
+}
+.gp-print-page[data-print-estimate="2"] .gp-lead-two {
+  display: inline;
+}
+.gp-print-page:has(.gp-sheet[data-pages="1"]) .gp-lead-one,
+.gp-print-page:has(.gp-sheet[data-pages="2"]) .gp-lead-two {
+  display: inline;
+}
+.gp-print-page:has(.gp-sheet[data-pages="1"]) .gp-lead-two,
+.gp-print-page:has(.gp-sheet[data-pages="2"]) .gp-lead-one {
+  display: none;
+}
+
 /* ---------- print ---------- */
 
 @media print {

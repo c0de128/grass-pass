@@ -3,10 +3,19 @@
  * input replayed from live recordings (support/pass-replay.ts, support/serpapi-replay.ts). The iNaturalist 503 is a
  * built failure (it cannot be recorded on demand), as in pass-route.test.ts.
  */
+import { readFileSync } from "node:fs";
 import { renderToStaticMarkup } from "react-dom/server";
+import { z } from "zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OtherParks } from "@/components/pass/PassMaker";
+import { createJsonCache } from "@/lib/cache";
 import { getStore, resetStores } from "@/lib/cache/store";
+import { isCompletePass } from "@/lib/pass/complete";
+import { estimatePrintPx, KID_PRINT_LINE, KID_PRINT_LINE_LONG, likelyOnePage, passPagePrintLine, PRINT_PAGE_PX } from "@/lib/pass/print-size";
+import { PassSchema, type Pass } from "@/lib/pass/schema";
+import { madeLine } from "@/lib/home/showcase";
+import { pinnedPass } from "@/lib/pinned";
+import { EXAMPLE_PARKS, exampleStatuses, prewarmIdle, readyExample, resetPrewarm } from "@/lib/prewarm";
 import { quotaUsage } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { makePass, resetPassMaking } from "@/lib/pass/make";
@@ -128,5 +137,91 @@ describe("MAJOR-2: the way forward in the wizard", () => {
     const none = renderToStaticMarkup(<OtherParks from={parks[0]} parks={[]} onPick={() => undefined} onSearch={() => undefined} headingId="h" />);
     expect(none).toContain("No data available: there are no other parks from a search on this page to suggest.");
     expect(none).toContain("Search for a different park");
+  });
+});
+
+/** A real recorded pass from tests/fixtures (its `pass`). */
+function recordedPass(name: string): Pass {
+  const j = JSON.parse(readFileSync(`tests/fixtures/${name}.json`, "utf8")) as { pass?: unknown; body?: { pass?: unknown } };
+  return PassSchema.parse(j.pass ?? j.body?.pass ?? j);
+}
+
+describe("MAJOR-3: the one-page promise", () => {
+  // PrintFit's own measure (sheet height at 0.91 with every optional line left out), headless Chromium on the live
+  // print pages, 2026-10-08. The page holds PRINT_PAGE_PX (971 px).
+  const MEASURED: [string, number][] = [
+    ["white-rock", 938],
+    ["oak-point", 943],
+    ["celebration", 896],
+  ];
+
+  it("the estimate is within 5 px of the measured sheet for every pinned example, and each fits one page", () => {
+    for (const [slug, px] of MEASURED) {
+      const pass = pinnedPass(slug)!;
+      expect(Math.abs(estimatePrintPx(pass) - px), slug).toBeLessThanOrEqual(5);
+      expect(likelyOnePage(pass), slug).toBe(true);
+    }
+    expect(PRINT_PAGE_PX).toBeCloseTo(971.2, 1);
+  });
+
+  it("a long real pass (Arbor Hills, 8 finds with a Lucky Find) is estimated to need 2 pages; the pass page says so", () => {
+    const long = recordedPass("pass-arbor-hills-lucky-live");
+    expect(likelyOnePage(long)).toBe(false);
+    expect(passPagePrintLine(long, "adult line")).toBe(KID_PRINT_LINE_LONG);
+    expect(passPagePrintLine(pinnedPass("oak-point")!, "adult line")).toBe(KID_PRINT_LINE);
+    // A 13+ sheet has its own fonts and floor: not estimated, its own line.
+    const teen = recordedPass("pass-white-rock-13plus-r8-live");
+    expect(likelyOnePage(teen)).toBeNull();
+    expect(passPagePrintLine(teen, "adult line")).toBe("adult line");
+  });
+
+  describe("the example picker prefers a one-page pass", () => {
+    beforeEach(() => {
+      resetPrewarm();
+      vi.stubEnv("PREWARM_EXAMPLES", "0");
+    });
+    afterEach(async () => {
+      await prewarmIdle();
+    });
+
+    // Selection logic: a real recorded complete pass (Celebration, Oct 7) saved as White Rock's newest complete pass, with
+    // the one-page answer injected (the estimate itself is tested above), so the test doesn't depend on its numbers.
+    async function saveAsWhiteRock(pass: Pass, t: number) {
+      const passes = createJsonCache({ name: "pass", schema: PassSchema, ttlSec: 30 * 24 * 3600, maxEntries: 10 });
+      const entries = createJsonCache({ name: "example-pass", schema: z.object({ passId: z.string(), day: z.string(), generatedAt: z.string() }), ttlSec: 60 * 24 * 3600, maxEntries: 10 });
+      await passes.set(pass.id, pass, { now: t });
+      await entries.set("white-rock", { passId: pass.id, day: pass.day, generatedAt: pass.generatedAt }, { now: t });
+    }
+    const newest = () => recordedPass("pass-celebration-complete-live");
+    const only = EXAMPLE_PARKS.filter((e) => e.slug === "white-rock");
+
+    it("a newest complete pass that may need 2 pages gives way to the pinned one-page pass, and the card says why", async () => {
+      const pass = newest();
+      expect(isCompletePass(pass)).toBe(true);
+      // The next day (Oct 8, 10 AM CDT), so neither pass is "today's".
+      const t = Date.parse("2026-10-08T15:00:00Z");
+      await saveAsWhiteRock(pass, t);
+      const onePage = (p: Pass) => p.id !== pass.id;
+      const [wr] = await exampleStatuses({ now: () => t, examples: only, onePage });
+      const pin = pinnedPass("white-rock")!;
+      expect(wr.latest?.passId).toBe(pass.id);
+      expect(wr.pass?.passId).toBe(pin.id);
+      expect(wr.passData?.id).toBe(pin.id);
+      expect(wr.longPrint).toBe(true);
+      expect(wr.today).toBe(false);
+      expect(madeLine(wr, "Oct 7, 10:11 AM CDT")).toContain("looked too long for one printed page, so this one-page pass is shown");
+      // The park-search fallback link follows the same rule.
+      expect(await readyExample({ now: () => t, examples: only, onePage })).toMatchObject({ href: `/pass/${pin.id}?example=1` });
+    });
+
+    it("a newest complete pass that fits one page is still shown (no swap), with the real estimate", async () => {
+      const pass = newest();
+      expect(likelyOnePage(pass)).toBe(true);
+      const t = Date.parse(pass.generatedAt) + 60_000;
+      await saveAsWhiteRock(pass, t);
+      const [wr] = await exampleStatuses({ now: () => t, examples: only });
+      expect(wr.pass?.passId).toBe(pass.id);
+      expect(wr.longPrint).toBeUndefined();
+    });
   });
 });

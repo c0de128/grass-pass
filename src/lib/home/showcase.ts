@@ -172,8 +172,10 @@ export function noExamplesText(statuses: readonly Pick<ExampleStatus, "refreshin
  * Judge R7 T1: the "Made …" line under an example card. Today's pass: its time. An older complete pass (today's came
  * out short, or isn't made yet): its real date, that it was made from that day's data, and why it is shown.
  */
-export function madeLine(s: Pick<ExampleStatus, "today" | "short" | "refreshing">, madeAt: string): string {
+export function madeLine(s: Pick<ExampleStatus, "today" | "short" | "refreshing" | "longPrint">, madeAt: string): string {
   if (s.today) return `Made ${madeAt}`;
+  // Review 2026-10-08 MAJOR-3: the newest complete pass was estimated to need 2 printed pages.
+  if (s.longPrint) return `Made ${madeAt} from that day's data. The newest pass for this park looked too long for one printed page, so this one-page pass is shown.`;
   const why = s.short
     ? ` Today's pass had ${s.short.items} of ${s.short.target} finds${s.short.riddle === "code" ? " and no riddle" : ""}, so this complete one is shown.`
     : s.refreshing

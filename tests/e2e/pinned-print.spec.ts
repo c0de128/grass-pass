@@ -32,6 +32,10 @@ for (const pin of PINNED) {
 
     await page.goto(`/pass/${pin.id}/print`);
     await expect(page.locator(".gp-sheet[data-fit]")).toHaveCount(1);
+    // Review 2026-10-08 MAJOR-3: the lead matches PrintFit's measured page count.
+    await expect(page.locator(".gp-sheet")).toHaveAttribute("data-pages", "1");
+    await expect(page.locator(".gp-lead-one")).toBeVisible();
+    await expect(page.locator(".gp-lead-two")).toBeHidden();
     await page.emulateMedia({ media: "print", colorScheme: "light" });
     await page.evaluate(async () => {
       await document.fonts.ready;
@@ -86,3 +90,17 @@ for (const pin of PINNED) {
     expect(coloured).toBe(0);
   });
 }
+
+// Review 2026-10-08 MAJOR-3: when PrintFit measures 2 pages, the print page no longer says "One ... page". No pinned
+// pass needs 2 pages, so this sets the measured attribute PrintFit would set and checks the CSS that follows it.
+test("the print lead follows PrintFit's measure: 2 pages hides 'One black-and-white Letter page'", async ({ page }) => {
+  const pin = PINNED[0]!;
+  await page.goto(`/pass/${pin.id}/print`);
+  await expect(page.locator(".gp-sheet[data-fit]")).toHaveCount(1);
+  await page.locator(".gp-sheet").evaluate((el) => {
+    (el as HTMLElement).dataset.pages = "2";
+  });
+  await expect(page.locator(".gp-lead-one")).toBeHidden();
+  await expect(page.locator(".gp-lead-two")).toBeVisible();
+  await expect(page.locator(".gp-lead-two")).toHaveText("Two black-and-white Letter pages: this pass is long.");
+});

@@ -12,9 +12,11 @@ import { judgeAddress } from "./support/judge";
  *   on the last stream line that the page posts to POST /api/free-pass BEFORE it shows the outcome;
  * - a pass that is made shows the ready moment and then OPENS the pass page by itself (no sign-in card in between);
  * - a pass whose paid call started and then failed shows the failure AND the sign-in step (the free pass is used);
- * - a keyless server (CI, `pnpm e2e` without a model key) stops with MODEL_NOT_CONFIGURED before any paid call: no
- *   charge, no cookie, so the test is SKIPPED with that code (support/honest.ts), as are a park with too little data
- *   (EMPTY) and a pass someone already made today (served free, nothing to count).
+ * - a keyless server (CI, `pnpm e2e` without a model key): the live iNaturalist read starts (that is what charges the
+ *   free pass, the same rule as an account's pass), then the build stops with MODEL_NOT_CONFIGURED. No model and no
+ *   SerpApi call is ever made, so this whole test runs keyless through the charged-failure path (measured Oct 9).
+ * - honest SKIPS (support/honest.ts): a failure before anything started (no cookie), a park with too little data
+ *   (EMPTY), and a pass someone already made today (served free, nothing to count).
  * Then the NEXT try is the sign-in step: "Make a different pass" on the pass page (or the wizard itself after a charged
  * failure), and again after a full reload of the home page (the server reads the cookie).
  */

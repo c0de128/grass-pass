@@ -264,7 +264,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Drops 'open'; otherwise the same as the current line.",
-      "shipped": "You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest."
+      "shipped": "You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.quick.title",
@@ -504,77 +505,88 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Garbled ('using the code mix'). Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Pick the finds, inside the mix code allows."
+      "shipped": "Pick the finds, inside the mix code allows.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.ai.does.2",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Write each clue in kid words, plus a hint."
+      "shipped": "Write each clue in kid words, plus a hint.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.ai.does.3",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Rate each find easy, medium or hard."
+      "shipped": "Rate each find easy, medium or hard.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.ai.does.4",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Copy a proof quote from its facts."
+      "shipped": "Copy a proof quote from its facts.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.ai.does.5",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Write the Find This Spot riddle."
+      "shipped": "Write the Find This Spot riddle.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.1",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Collect every fact, with its source and date."
+      "shipped": "Collect every fact, with its source and date.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.2",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Remove unsafe species, before and after."
+      "shipped": "Remove unsafe species, before and after.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.3",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Set the mix and the number of finds."
+      "shipped": "Set the mix and the number of finds.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.4",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Check every clue; remove failures."
+      "shipped": "Check every clue; remove failures.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.5",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Pick the spot, draw the map, measure the walk."
+      "shipped": "Pick the spot, draw the map, measure the walk.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.code.does.6",
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.",
-      "shipped": "Write every number, date, safety line and answer."
+      "shipped": "Write every number, date, safety line and answer.",
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.ai.schema",
@@ -617,7 +629,8 @@
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became \"edited\". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both. Fact fix (RULES-7-02, Builder AD, not Gemma): 2 of the 5 app-clock passes did finish (short, 6 of 8), and the 70 s limit of that run is not the hosted site's (30-40 s sized first calls), so the card says '0 of 5 passes complete within the app's limits'.",
       "shipped": "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass.",
-      "factFixAfterRun": true
+      "factFixAfterRun": true,
+      "removedAfterRun": "Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history."
     },
     {
       "id": "how.open.3.title",

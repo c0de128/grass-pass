@@ -35,14 +35,17 @@ for (const width of WIDTHS) {
   }
 }
 
-test("the page renders every step and links back to About and the footer links to it", async ({ page }) => {
+test("the folded walk-through has every step, and the footer's 'Why an open model' link lands on #why-open", async ({ page }) => {
   await page.goto("/how-it-works");
-  const steps = page.getByRole("list", { name: "How a pass is made, step by step" }).locator(":scope > li");
+  const steps = page.locator('ol[aria-label="How a pass is made, step by step"] > li');
   await expect(steps).toHaveCount(9);
   await expect(page.getByText("Done by the open model")).toHaveCount(1);
   await expect(page.getByRole("link", { name: "About page" }).first()).toHaveAttribute("href", /\/about#/);
   await expect(page.getByRole("contentinfo").getByRole("link", { name: "How it works", exact: true })).toHaveAttribute("href", "/how-it-works");
-  // The in-page index jumps to a section.
-  await page.getByRole("navigation", { name: "On this page" }).getByRole("link", { name: "Honest limits" }).click();
-  await expect(page).toHaveURL(/#limits$/);
+  // Blueprint (2026-10-09): the in-page index is gone; the footer link still lands on the open-model block.
+  const why = page.getByRole("contentinfo").getByRole("link", { name: "Why an open model" });
+  await expect(why).toHaveAttribute("href", "/how-it-works#why-open");
+  await why.click();
+  await expect(page).toHaveURL(/#why-open$/);
+  await expect(page.getByRole("heading", { level: 3, name: "Open weights, our own rules" })).toBeInViewport();
 });

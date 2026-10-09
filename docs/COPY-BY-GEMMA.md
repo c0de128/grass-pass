@@ -484,6 +484,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of wildlife sightings. Code fact-checks every one. Your printer does the rest.
 - **Why:** Drops 'open'; otherwise the same as the current line.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI model is Gemma 4 (gemma-4-31B-it), Google's open-weight model (Apache-2.0), run on DigitalOcean serverless inference in the US. / Sources: the park's real map (OpenStreetMap) and the last 14 days of wildlife sightings (iNaturalist). / Code checks every clue against its source and removes any that fail; the model never decides what is safe. · KEEP: "Gemma 4"
 
 #### `how.quick.title`: rejected
@@ -836,6 +837,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Pick the finds, inside the mix code allows.
 - **Why:** Garbled ('using the code mix'). Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI picks the finds within the mix code allows.
 
 #### `how.ai.does.2`: rejected
@@ -847,6 +849,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Write each clue in kid words, plus a hint.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI writes each clue in kid-level words, plus an optional hint.
 
 #### `how.ai.does.3`: rejected
@@ -858,6 +861,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Rate each find easy, medium or hard.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI rates each find easy, medium or hard.
 
 #### `how.ai.does.4`: rejected
@@ -869,6 +873,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Copy a proof quote from its facts.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI copies a proof quote from each find's facts (code checks it word for word).
 
 #### `how.ai.does.5`: rejected
@@ -880,6 +885,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Write the Find This Spot riddle.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** The AI writes the Find This Spot riddle. · KEEP: "Find This Spot"
 
 #### `how.code.does.1`: rejected
@@ -891,6 +897,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Collect every fact, with its source and date.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code collects every fact with its source and date.
 
 #### `how.code.does.2`: rejected
@@ -902,6 +909,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Remove unsafe species, before and after.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code removes unsafe species before and after the model. · KEEP: "before", "after"
 
 #### `how.code.does.3`: rejected
@@ -913,6 +921,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Set the mix and the number of finds.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code sets the section mix and the number of finds.
 
 #### `how.code.does.4`: rejected
@@ -924,6 +933,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Check every clue; remove failures.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code checks every clue and removes the ones that fail.
 
 #### `how.code.does.5`: rejected
@@ -935,6 +945,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Pick the spot, draw the map, measure the walk.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code picks the Find This Spot place, draws the map and measures the walk.
 
 #### `how.code.does.6`: rejected
@@ -946,6 +957,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Write every number, date, safety line and answer.
 - **Why:** Gemma mixed verb forms inside one list (Pick / Copies / Writes) and dropped the full stops; taking only some would leave the list inconsistent.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Code writes every number, date, safety line and answer on the pass.
 
 #### `how.ai.schema`: accepted
@@ -1012,6 +1024,7 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Code check:** passed
 - **Shipped:** Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass. _(Gemma draft, edited)_
 - **Why:** True, on tone, at least as clear as before. Fact fix after the self-host measurement (Builder W, 2026-10-06, not Gemma): a self-hosted run was measured (evals/results/2026-10-06-selfhost-notes.md), so 'not measured yet' is no longer true. The accepted Gemma draft became "edited". Fact fix (RULES-6-02, Builder AA, not Gemma): '1-3 minutes a pass' was measured only with the eval's longer clock; with the app's normal limits 0 of 5 passes were complete, so the card now says both. Fact fix (RULES-7-02, Builder AD, not Gemma): 2 of the 5 app-clock passes did finish (short, 6 of 8), and the 70 s limit of that run is not the hosted site's (30-40 s sized first calls), so the card says '0 of 5 passes complete within the app's limits'.
+- **Removed after the run:** Kevin rebuilt /how-it-works for judges on 2026-10-09 (Blueprint); the decision is kept as history.
 - **FACTS:** Any OpenAI-compatible server works, for example Ollama on your own computer. / Measured: Gemma 4 E2B on a laptop CPU costs $0 but takes 1-3 minutes a pass, too slow for the app's 70 s limit. / With the app's normal time limits, 0 of 5 passes finished complete; given more time (the eval's longer clock), a pass takes 1-3 minutes. · KEEP: "OpenAI-compatible", "Ollama", "$0", "0 of 5"
 
 #### `how.open.3.title`: rejected

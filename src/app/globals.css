@@ -34,6 +34,8 @@
   --color-sheet-line: var(--gp-sheet-line);
   --color-mark: var(--gp-mark);
   --color-mark-foreground: var(--gp-mark-foreground);
+  --color-ai-soft: var(--gp-ai-soft);
+  --color-ai-soft-foreground: var(--gp-ai-soft-foreground);
   --color-footer: var(--gp-footer);
   --color-footer-foreground: var(--gp-footer-foreground);
   --color-footer-muted: var(--gp-footer-muted);
@@ -124,6 +126,21 @@
 @utility grain {
   background-image: radial-gradient(color-mix(in oklab, var(--gp-foreground) 10%, transparent) 1px, transparent 1px);
   background-size: 18px 18px;
+}
+
+/* /how-it-works blueprint sheet (2026-10-09): a faint drafting grid (minor 24 px, major 96 px) in the grass green. Decorative. */
+@utility gp-blueprint {
+  background-image:
+    linear-gradient(color-mix(in oklab, var(--gp-primary) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--gp-primary) 14%, transparent) 1px, transparent 1px),
+    linear-gradient(color-mix(in oklab, var(--gp-primary) 6%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--gp-primary) 6%, transparent) 1px, transparent 1px);
+  background-size:
+    96px 96px,
+    96px 96px,
+    24px 24px,
+    24px 24px;
+  background-position: -1px -1px;
 }
 
 /* The tear-off perforation on the pass card (v0). */

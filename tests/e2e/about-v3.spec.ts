@@ -79,12 +79,11 @@ test("/about: the footer credits link lands on the credits with the photo thumbn
   await expect(photos.first().getByRole("img")).toBeVisible();
 });
 
-test("/how-it-works: each step shows a summary; its detail is one click away", async ({ page }) => {
+test("/how-it-works: the step-by-step detail is one click away (Blueprint, 2026-10-09: folded under the hood)", async ({ page }) => {
   await page.goto("/how-it-works");
-  const steps = page.getByRole("list", { name: "How a pass is made, step by step" }).locator(":scope > li");
+  const steps = page.locator('ol[aria-label="How a pass is made, step by step"] > li');
   await expect(steps).toHaveCount(9);
-  const checks = steps.nth(4);
-  await expect(checks.getByRole("list", { name: "Reasons a clue is removed" })).toBeHidden();
-  await checks.locator("summary").click();
-  await expect(checks.getByRole("list", { name: "Reasons a clue is removed" })).toBeVisible();
+  await expect(steps.nth(4).getByRole("list", { name: "Reasons a clue is removed" })).toBeHidden();
+  await page.locator("details#steps > summary").click();
+  await expect(steps.nth(4).getByRole("list", { name: "Reasons a clue is removed" })).toBeVisible();
 });

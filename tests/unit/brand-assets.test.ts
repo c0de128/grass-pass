@@ -42,6 +42,9 @@ const V3_SUN_ON_DARK = new Set([
   "src/components/home/HowItWorks.tsx",
   "src/app/about/page.tsx",
   "src/app/how-it-works/page.tsx",
+  // /how-it-works Blueprint (2026-10-09): sunflower icons and the model id only on the dark "Code" panels and the ink pill.
+  "src/components/how/Blueprint.tsx",
+  "src/components/how/AiJobs.tsx",
   // The pass wizard: the step trail (sunflower dots and current step) sits on the wizard header's dark band.
   "src/components/pass/WizardParts.tsx",
 ]);

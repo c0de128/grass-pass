@@ -25,17 +25,20 @@ const html = renderToStaticMarkup(<HowItWorksPage />);
 const t = text(html);
 
 describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detail, accurate to the code", () => {
-  it("has one h1, the six sections and an in-page index", () => {
+  it("has one h1 and the Blueprint sections (Kevin 2026-10-09); #why-open still exists for the footer link", () => {
     expect(html.match(/<h1/g)).toHaveLength(1);
     expect(t).toContain("How a park becomes a pass.");
-    // Kevin 2026-10-08: the 10-second section (#quick) is gone as redundant.
-    for (const id of ["steps", "ai-role", "why-open", "limits", "privacy", "built"]) {
+    for (const id of ["blueprint", "ai", "why-open", "numbers", "services", "fine-print", "limits", "privacy", "steps", "measured-detail", "built"]) {
       expect(html, id).toContain(`id="${id}"`);
-      expect(html, id).toContain(`href="#${id}"`);
+    }
+    // The diagram links each model job to its example card.
+    for (const n of [1, 2, 3]) {
+      expect(html).toContain(`href="#ai-job-${n}"`);
+      expect(html).toContain(`id="ai-job-${n}"`);
     }
   });
 
-  it("the step diagram is an ordered list of text steps, each saying who does it; the AI does exactly one", () => {
+  it("the folded walk-through is an ordered list of text steps, each saying who does it; the AI does exactly one", () => {
     const list = html.match(/<ol aria-label="How a pass is made, step by step"[\s\S]*?<\/ol>/)?.[0] ?? "";
     expect(list).not.toBe("");
     expect((list.match(/<li /g) ?? []).length).toBe(9);
@@ -95,8 +98,10 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(t).toContain('swaps a worn-out opening ("Somewhere you will see a") for a plain word ("Spot a"), and says "What", not "Who", for a plant, fungus or lichen.');
     // RULES-7-06: the wait line went with the 10-second section (Kevin 2026-10-08); no shorter claim may replace it.
     expect(t).not.toContain("usually takes 10-30 seconds.");
-    // RULES-7-02: the self-host card says "complete", not "finished in the app's normal time".
-    expect(t).toContain("0 of 5 passes complete within the app's limits");
+    // RULES-7-02: the self-host numbers say "complete", not "finished in the app's normal time" (the card's short line
+    // since the Blueprint, 2026-10-09; the numbers are in the folded limits).
+    expect(t).toContain("On a laptop CPU it costs $0, but it is slow.");
+    expect(t).toContain("0 of 5 passes were complete");
   });
 
   it("RULES-8-04: the open-model card says ages 6-10, and the 13+ check is quoted with its over-target label", () => {
@@ -173,14 +178,19 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(SMOKE_10_13.timeouts).toBe(0);
   });
 
-  it("v3: every step shows a short summary and folds its detail into a closed disclosure; visible copy stays short", () => {
-    const list = html.match(/<ol aria-label="How a pass is made, step by step"[\s\S]*?<\/ol>/)?.[0] ?? "";
-    expect((list.match(/<details/g) ?? []).length).toBe(9);
+  it("Blueprint (2026-10-09): every detail is folded into closed disclosures; the visible page stays short", () => {
     for (const d of html.match(/<details[^>]*>/g) ?? []) expect(d).not.toMatch(/\sopen[\s=>]/);
-    const visible = text(html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>"));
-    expect(visible.split(" ").length).toBeLessThanOrEqual(1250);
-    // Honest limits stay visible as titles, and every one comes from the shared data.
-    for (const l of howLimits()) expect(text(visible)).toContain(l.title);
+    // The walk-through, the measured table and the limits are each inside a closed disclosure.
+    const visibleHtml = html.replace(/<\/summary>[\s\S]*?<\/details>/g, "</summary>");
+    expect(visibleHtml).not.toContain('aria-label="How a pass is made, step by step"');
+    expect(visibleHtml).not.toContain("measured-caption");
+    const visible = text(visibleHtml.replace(/<span class="sr-only">[^<]*<\/span>/g, " "));
+    // Kevin asked for about 400 words (the old page showed 1,046 in the browser). The real examples and the services
+    // table are quoted in full. This static count also sees the phone-only copy of each table cell and the arrows'
+    // punctuation, so its cap is looser than the browser count in tests/e2e/how-blueprint.spec.ts.
+    expect(visible.split(" ").length).toBeLessThanOrEqual(900);
+    // Every honest limit stays one click away, from the shared data.
+    for (const l of howLimits()) expect(t).toContain(text(l.title));
     const levels = [...html.matchAll(/<h([1-6])[\s>]/g)].map((m) => Number(m[1]));
     levels.forEach((l, i) => i > 0 && expect(l - levels[i - 1], `heading ${i}`).toBeLessThanOrEqual(1));
   });

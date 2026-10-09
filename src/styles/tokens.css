@@ -92,6 +92,9 @@
   --gp-sheet-line: #78867c; /* 3.8:1 on the sheet (box and rule lines) */
   --gp-mark: #137838; /* numbered markers, both themes: white numerals 5.6:1 */
   --gp-mark-foreground: #ffffff;
+  /* /how-it-works (2026-10-09): the model's answer boxes, a soft sunflower in both themes (the AI's colour). Ink text 13.9:1 light, 11.5:1 dark (the dark value is used in both dark blocks). */
+  --gp-ai-soft: #fff3c4;
+  --gp-ai-soft-foreground: #10291a;
 }
 
 /* Dark mode: the system preference unless the visitor picked light; or an explicit dark pick. */
@@ -153,6 +156,8 @@
     --gp-sheet-line: #6f7d73; /* 3.8:1 on the dark-mode sheet */
     --gp-mark: #137838;
     --gp-mark-foreground: #ffffff;
+    --gp-ai-soft: #f7dc84;
+    --gp-ai-soft-foreground: #10291a;
   }
 }
 
@@ -213,6 +218,8 @@
   --gp-sheet-line: #6f7d73; /* 3.8:1 on the dark-mode sheet */
   --gp-mark: #137838;
   --gp-mark-foreground: #ffffff;
+  --gp-ai-soft: #f7dc84;
+  --gp-ai-soft-foreground: #10291a;
 }
 
 /* Inside the dark band and the footer the focus ring is sunflower (green on ink is too faint). */

@@ -1,8 +1,5 @@
 import {
   ArrowRight,
-  Bot,
-  Check,
-  Code2,
   Database,
   Gauge,
   Hammer,
@@ -17,21 +14,26 @@ import {
   ShieldCheck,
   Timer,
   TriangleAlert,
+  Workflow,
   type LucideIcon,
 } from "lucide-react";
 import type { Metadata } from "next";
 import Link from "next/link";
 import type { ReactNode } from "react";
+import { AiJobs } from "@/components/how/AiJobs";
+import { Blueprint } from "@/components/how/Blueprint";
+import { ProofNumbers } from "@/components/how/ProofNumbers";
 import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
-import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
+import { EVAL_RUN_ID, UNIT_TESTS, aboutLimitPoints, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
 import { accountPassesPerDay, anonPassesPerIpPerDay, freePassesPerDay, freePassRule, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
 import { HARD_EXTRA } from "@/lib/ai/prompt";
 import { DROP_REASONS } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
+import { services } from "@/lib/how/services";
 import { limitsConfig } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
 import { configuredModelId, modelTimeoutCapMs } from "@/lib/model";
@@ -50,8 +52,15 @@ export const metadata: Metadata = {
     "See how we turn a park's real map and wildlife sightings into a printable pass. Gemma 4, an open model, writes the clues and code fact-checks every one. What the AI does, what it doesn't, and what we measured.",
 };
 
+/*
+ * Kevin, 2026-10-09 (option A, "Blueprint"): "I want the how-it-works page to be for the judges of the hackathon. It
+ * should be a page that shows the services the app uses and how it implements AI ... easy to understand and not too
+ * wordy." One architecture diagram (src/components/how/Blueprint.tsx), the model's three jobs with real recorded
+ * examples (AiJobs.tsx), real numbers (ProofNumbers.tsx), a services table, and one line each for limits and privacy.
+ * Every detail the old long page had stays reachable in closed disclosures at the bottom ("Under the hood").
+ */
+
 const ext = "font-semibold text-link underline underline-offset-2";
-const bandLink = "font-semibold text-band-foreground underline underline-offset-2";
 
 const gemma = evalColumn("gemma-4-31B-it");
 const template = evalColumn("no-AI template");
@@ -61,36 +70,19 @@ const smokeId = SMOKE_10_13.summary.replace(/^evals\/results\//, "").replace(/\.
 const smoke13Url = `${REPO_URL}/blob/main/${SMOKE_13PLUS.summary}`;
 const smoke13Id = SMOKE_13PLUS.summary.replace(/^evals\/results\//, "").replace(/\.md$/, "");
 
-/** A full-width band with the v3 section head (eyebrow + big title), like the home page. */
-function Band({
-  id,
-  eyebrow,
-  title,
-  tone = "plain",
-  children,
-}: {
-  id: string;
-  eyebrow: string;
-  title: string;
-  tone?: "plain" | "muted" | "dark";
-  children: ReactNode;
-}) {
-  const bg = tone === "dark" ? "gp-band bg-band text-band-foreground" : tone === "muted" ? "bg-muted/70" : "";
+/** A section with the site's section head (eyebrow + big title) over the shared container. */
+function Section({ id, eyebrow, title, intro, tone = "plain", children }: { id: string; eyebrow: string; title: string; intro?: ReactNode; tone?: "plain" | "muted"; children: ReactNode }) {
   return (
-    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-28 sm:scroll-mt-16 ${bg}`}>
-      {/* Wide layout (2026-10-09): from 1280 px the head sits in a sticky left column and the content uses the rest of
-          the shared container; paragraphs keep their 65ch measure. Below 1280 px: one column, as before. */}
-      <div className="gp-container flex flex-col gap-8 py-16 lg:py-20 xl:grid xl:grid-cols-12 xl:gap-x-12">
-        <div className="flex max-w-3xl flex-col gap-3 xl:sticky xl:top-24 xl:col-span-4 xl:self-start">
-          <p className={`text-xs font-bold tracking-widest uppercase ${tone === "dark" ? "text-sun" : tone === "muted" ? "text-link" : "text-primary"}`}>{eyebrow}</p>
-          <h2
-            id={`${id}-title`}
-            className={`text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl xl:text-[2.75rem] 2xl:text-5xl ${tone === "dark" ? "" : "text-ink"}`}
-          >
+    <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-28 sm:scroll-mt-16 ${tone === "muted" ? "bg-muted/70" : ""}`}>
+      <div className="gp-container flex flex-col gap-8 py-14 lg:py-20">
+        <div className="flex max-w-3xl flex-col gap-3">
+          <p className={`text-xs font-bold tracking-widest uppercase ${tone === "muted" ? "text-link" : "text-primary"}`}>{eyebrow}</p>
+          <h2 id={`${id}-title`} className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
             {title}
           </h2>
+          {intro ? <p className="max-w-[60ch] text-lg leading-relaxed text-pretty">{intro}</p> : null}
         </div>
-        <div className="flex min-w-0 flex-col gap-8 xl:col-span-8">{children}</div>
+        {children}
       </div>
     </section>
   );
@@ -98,52 +90,26 @@ function Band({
 
 type Who = "code" | "model" | "you";
 const WHO_LABEL: Record<Who, string> = { code: "Done by code", model: "Done by the open model", you: "Done by you" };
-const WHO_CLASS: Record<Who, string> = {
-  code: "bg-muted text-foreground",
-  model: "bg-sun text-sun-foreground",
-  you: "bg-primary text-primary-foreground",
-};
 
-/** A step: one short visible summary, and the full detail folded under it. */
+/** A step of the detailed walk-through (folded at the bottom of the page): its summary and its full detail. */
 type Step = { id: string; icon: LucideIcon; who: Who; title: string; summary: ReactNode; more?: ReactNode };
 
 function Steps({ steps }: { steps: readonly Step[] }) {
   return (
-    <ol aria-label="How a pass is made, step by step" className="relative flex flex-col gap-5">
+    <ol aria-label="How a pass is made, step by step" className="flex flex-col gap-6">
       {steps.map((s, i) => (
-        <li key={s.id} id={`step-${s.id}`} className="relative flex scroll-mt-28 gap-4 sm:scroll-mt-20 sm:gap-5">
-          {/* The connecting line of the diagram (decorative): down the icon rail from 640 px, between the cards on phones. */}
-          {i < steps.length - 1 ? (
-            <>
-              <span aria-hidden="true" className="absolute top-14 bottom-[-1.25rem] left-7 hidden w-0.5 -translate-x-1/2 bg-line sm:block" />
-              <span aria-hidden="true" className="absolute bottom-[-1.25rem] left-1/2 h-5 w-0.5 -translate-x-1/2 bg-line sm:hidden" />
-            </>
-          ) : null}
-          <span
-            aria-hidden="true"
-            className={`relative z-10 hidden size-14 shrink-0 items-center justify-center rounded-2xl sm:flex ${s.who === "model" ? "bg-sun text-sun-foreground" : "bg-ink text-on-ink"}`}
-          >
-            <s.icon className="size-6" />
-          </span>
-          <div
-            className={`flex min-w-0 flex-1 flex-col gap-3 rounded-3xl bg-card p-5 sm:p-6 ${s.who === "model" ? "shadow-xl shadow-shadow ring-2 ring-sun" : "ring-1 ring-border"}`}
-          >
-            <div className="flex flex-wrap items-center gap-x-3 gap-y-2">
-              <span aria-hidden="true" className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-ink text-on-ink sm:hidden">
-                <s.icon className="size-5" />
-              </span>
-              <h3 className="text-xl leading-tight font-extrabold text-ink">
-                <span className="text-muted-foreground">Step {i + 1}.</span> {s.title}
-              </h3>
-              <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${WHO_CLASS[s.who]}`}>{WHO_LABEL[s.who]}</span>
-            </div>
-            <p className="max-w-[65ch] leading-relaxed text-card-foreground">{s.summary}</p>
-            {s.more ? (
-              <Disclosure tone="inset" level={4} title={`More on step ${i + 1}: ${s.title.toLowerCase()}`}>
-                {s.more}
-              </Disclosure>
-            ) : null}
-          </div>
+        <li key={s.id} id={`step-${s.id}`} className="flex scroll-mt-28 flex-col gap-2 border-l-4 border-line pl-4 sm:scroll-mt-20">
+          <h4 className="flex flex-wrap items-center gap-x-3 gap-y-1 text-lg leading-tight font-extrabold text-ink">
+            <s.icon aria-hidden="true" className="size-5 shrink-0" />
+            <span>
+              <span className="text-muted-foreground">Step {i + 1}.</span> {s.title}
+            </span>
+            <span className={`rounded-full px-2.5 py-0.5 text-xs font-bold ${s.who === "model" ? "bg-sun text-sun-foreground" : s.who === "you" ? "bg-primary text-primary-foreground" : "bg-muted text-foreground"}`}>
+              {WHO_LABEL[s.who]}
+            </span>
+          </h4>
+          <p className="max-w-[70ch]">{s.summary}</p>
+          {s.more ? <div className="flex max-w-[75ch] flex-col gap-3 text-[0.95rem] text-muted-foreground [&_strong]:text-foreground">{s.more}</div> : null}
         </li>
       ))}
     </ol>
@@ -163,6 +129,9 @@ export default function HowItWorksPage() {
   const p50Met = (gemma.p50s ?? Infinity) <= EVAL_THRESHOLDS.p50s;
   const smokeP50Over = SMOKE_10_13.p50s > EVAL_THRESHOLDS.p50s;
   const smokeP95Over = SMOKE_10_13.p95s > EVAL_THRESHOLDS.p95s;
+  const all = services();
+  const limitsList = howLimits();
+  const aiPrivacy = howPrivacyPoints().find((p) => p.startsWith("The AI sees")) ?? "";
 
   const steps: Step[] = [
     {
@@ -422,126 +391,215 @@ export default function HowItWorksPage() {
     ["Clues repeated across parks", pct(gemma.repeatPct), `${EVAL_THRESHOLDS.repeatPct}% or lower`, gemma.repeatPct <= EVAL_THRESHOLDS.repeatPct],
   ];
 
+  const GROUP_LABEL = { data: "Data", model: "Open model", platform: "Platform" } as const;
+
   return (
     <main id="main" tabIndex={-1} className="flex w-full flex-1 flex-col focus:outline-none">
       <OpenOnHash />
 
       <section aria-labelledby="how-title" className="grain">
-        <div className="gp-container flex flex-col gap-5 pt-14 pb-12 lg:pt-20">
+        <div className="gp-container flex flex-col gap-5 pt-14 pb-10 lg:pt-20 lg:pb-12">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
           <h1 id="how-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
             How a park becomes a pass.
           </h1>
-          <p className="max-w-[55ch] text-xl leading-relaxed text-pretty">
-            You pick the park. Gemma 4, an open AI model, writes the clues from its real map and the last two weeks of
-            wildlife sightings. Code fact-checks every one. Your printer does the rest.
+          <p className="max-w-[55ch] text-xl leading-relaxed text-pretty sm:text-2xl">
+            Real park data in. One open AI model writes. Code checks every line. Paper out.
           </p>
-          <nav aria-label="On this page">
-            <ul className="flex flex-wrap gap-2">
-              {[
-                ["#steps", "Step by step"],
-                ["#ai-role", "What the AI does"],
-                ["#why-open", "Why an open model"],
-                ["#limits", "Honest limits"],
-                ["#privacy", "Privacy"],
-                ["#built", "How it was built"],
-              ].map(([href, label]) => (
-                <li key={href}>
-                  <a
-                    className="inline-flex min-h-11 items-center rounded-full bg-card px-4 text-sm font-semibold text-link underline-offset-4 ring-1 ring-border hover:underline"
-                    href={href}
-                  >
-                    {label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </nav>
+          <ul aria-label="In short" className="flex flex-wrap gap-2">
+            {[
+              { icon: Scale, text: "Open weights, Apache-2.0" },
+              { icon: Database, text: `${all.length} outside services, all listed below` },
+              { icon: ListChecks, text: `${always.length} code checks on every clue` },
+            ].map((c) => (
+              <li key={c.text} className="inline-flex min-h-10 items-center gap-2 rounded-full bg-card px-4 text-sm font-semibold text-ink shadow-sm ring-1 ring-border">
+                <c.icon aria-hidden="true" className="size-4 text-primary" />
+                {c.text}
+              </li>
+            ))}
+          </ul>
         </div>
       </section>
 
-      <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted">
-        <p className="-mt-2 max-w-[65ch]">
-          Each step is handled by <strong>code</strong>, <strong>the open model</strong>, or <strong>you</strong>. The AI has
-          one job: picking the finds and writing the words.
-        </p>
-        <Steps steps={steps} />
-      </Band>
+      <Section
+        id="blueprint"
+        eyebrow="The blueprint"
+        title="Every service, and where the AI sits"
+        intro="Follow the arrows: real data, code, one open model, code again, paper."
+      >
+        <Blueprint hardRules={always.length} blockedGroups={BLOCKED_TAXA.length} modelId={modelId} />
+      </Section>
 
-      <Band id="ai-role" eyebrow="What the AI does and doesn't do" title="The AI picks and writes. Code does the rest.">
-        <div className="grid gap-4 md:grid-cols-2">
-          <div className="flex flex-col gap-3 rounded-3xl bg-sun p-6 text-sun-foreground">
-            <h3 className="flex items-center gap-2 text-xl font-extrabold">
-              <Bot aria-hidden="true" className="size-6" />
-              The AI does
-            </h3>
-            <ul className={bullets}>
-              <li>Pick the finds, inside the mix code allows.</li>
-              <li>Write each clue in kid words, plus a hint.</li>
-              <li>Rate each find easy, medium or hard.</li>
-              <li>Copy a proof quote from its facts.</li>
-              <li>Write the Find This Spot riddle.</li>
-              <li>Write the trip tips from that day&apos;s forecast and the park map (one more call per pass).</li>
-            </ul>
+      <Section
+        id="ai"
+        tone="muted"
+        eyebrow="Where the AI is"
+        title="The AI picks and writes. Code does the rest."
+        intro="The AI cannot invent finds because it can only use ids from the park's own fact list."
+      >
+        <AiJobs />
+        <div id="why-open" className="gp-band flex scroll-mt-28 flex-col gap-6 rounded-3xl bg-band p-6 text-band-foreground sm:scroll-mt-20 sm:p-8 xl:flex-row xl:items-start xl:gap-10">
+          <div className="flex flex-col gap-2 xl:w-1/4 xl:shrink-0">
+            <p className="text-xs font-bold tracking-widest text-sun uppercase">Why an open model</p>
+            <h3 className="text-3xl leading-tight font-extrabold">Open weights, our own rules</h3>
           </div>
-          <div className="gp-band flex flex-col gap-3 rounded-3xl bg-band p-6 text-band-foreground">
-            <h3 className="flex items-center gap-2 text-xl font-extrabold">
-              <Code2 aria-hidden="true" className="size-6 text-sun" />
-              Code does
-            </h3>
-            <ul className={bullets}>
-              <li>Collect every fact, with its source and date.</li>
-              <li>Remove unsafe species, before and after.</li>
-              <li>Set the mix and the number of finds.</li>
-              <li>Check every clue; remove failures.</li>
-              <li>Pick the spot, draw the map, measure the walk.</li>
-              <li>Write every number, date, safety line and answer.</li>
-              <li>Write the weather card; drop any trip tip that breaks a safety rule or isn&apos;t based on a real fact.</li>
-            </ul>
-          </div>
+          <ul className="grid flex-1 gap-5 md:grid-cols-3">
+            {[
+              { icon: Scale, title: "The licence is open.", body: "Gemma 4's weights are Apache-2.0: anyone can download, run and build on them." },
+              {
+                icon: Hammer,
+                title: "It can be self-hosted.",
+                body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU it costs $0, but it is slow.",
+              },
+              {
+                icon: ShieldCheck,
+                title: "Our rules, not a vendor's.",
+                body: "The same checks run on any model; Llama 4 Maverick went through them in our test.",
+              },
+            ].map((c) => (
+              <li key={c.title} className="flex flex-col gap-1.5">
+                <h4 className="flex items-center gap-2 text-lg font-extrabold">
+                  <c.icon aria-hidden="true" className="size-5 shrink-0 text-sun" />
+                  {c.title}
+                </h4>
+                <p className="text-sm leading-relaxed text-band-muted">{c.body}</p>
+              </li>
+            ))}
+          </ul>
         </div>
-        <p className="max-w-[65ch]">
-          The AI cannot invent finds because it can only use ids from the park&apos;s own fact list.
-        </p>
-      </Band>
+      </Section>
 
-      <Band id="why-open" eyebrow="Why an open model" title="Open weights, our own rules" tone="dark">
-        <ul className="grid gap-4 md:grid-cols-3">
-          {[
-            { icon: Scale, title: "The licence is open.", body: "Gemma 4's weights are Apache-2.0: anyone can download, run and build on them." },
-            {
-              icon: Hammer,
-              title: "It can be self-hosted.",
-              body: "Any OpenAI-compatible server, like Ollama. On a laptop CPU: $0, but 0 of 5 passes complete within the app's limits; with more time, 1-3 min a pass.",
-            },
-            {
-              icon: ShieldCheck,
-              title: "Our rules, not a vendor's.",
-              body: "The same checks run on any model; Llama 4 Maverick went through them in our test.",
-            },
-          ].map((c) => (
-            <li key={c.title} className="flex flex-col gap-2 rounded-3xl bg-band-foreground/[0.06] p-6 ring-1 ring-band-foreground/10">
-              <c.icon aria-hidden="true" className="size-6 text-sun" />
-              <h3 className="text-lg font-extrabold">{c.title}</h3>
-              <p className="text-sm leading-relaxed text-band-muted">{c.body}</p>
-            </li>
-          ))}
-        </ul>
-        <p className="flex max-w-[65ch] items-start gap-2 text-band-muted">
-          <Gauge aria-hidden="true" className="mt-1 size-4 shrink-0 text-sun" />
-          <span>
+      <Section
+        id="numbers"
+        eyebrow="Measured"
+        title="Real numbers, misses included"
+        intro={
+          <>
+            Eval run {EVAL_RUN_ID}: {EVAL_PARKS} real parks, ages 6-10, {gemma.runs} runs (
+            <a className={ext} href={resultsUrl}>
+              full results
+            </a>
+            ).
+          </>
+        }
+      >
+        <ProofNumbers />
+      </Section>
+
+      <Section id="services" tone="muted" eyebrow="Services" title="What it runs on, and what it costs">
+        <div className="overflow-hidden rounded-3xl bg-card text-card-foreground shadow-lg ring-1 shadow-shadow/40 ring-border">
+          <table className="w-full border-collapse text-left" data-testid="services-table">
+            <caption className="sr-only">Every outside service Grass Pass uses, what it is for, and its licence or cost</caption>
+            <thead className="bg-muted/70 text-xs tracking-wider uppercase">
+              <tr>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  Service
+                </th>
+                <th scope="col" className="px-4 py-3 sm:px-6">
+                  What it&apos;s for
+                </th>
+                <th scope="col" className="hidden px-4 py-3 sm:px-6 md:table-cell">
+                  Licence or cost
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              {all.map((s) => (
+                <tr key={s.id} data-service-row={s.id} className={`border-t border-border align-top ${s.group === "model" ? "bg-sun/15" : ""}`}>
+                  <th scope="row" className="px-4 py-3 sm:px-6">
+                    <a className="font-heading font-extrabold text-ink underline-offset-2 hover:underline" href={s.url}>
+                      {s.name}
+                    </a>
+                    <span className="block text-xs font-semibold text-muted-foreground">{GROUP_LABEL[s.group]}</span>
+                  </th>
+                  <td className="px-4 py-3 sm:px-6">
+                    {s.usedFor}
+                    <span className="mt-1 block text-sm text-muted-foreground md:hidden">{s.terms}</span>
+                  </td>
+                  <td className="hidden px-4 py-3 text-muted-foreground sm:px-6 md:table-cell">{s.terms}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+        <p className="flex flex-wrap gap-3">
+          <a className={buttonClassName("secondary")} href={REPO_URL}>
+            Source code on GitHub (MIT)
+          </a>
+          <Link className={buttonClassName("primary", "group")} href="/" prefetch={false}>
+            Make a pass
+            <ArrowRight aria-hidden="true" className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
+          </Link>
+        </p>
+      </Section>
+
+      <Section id="fine-print" eyebrow="Fine print" title="Limits, privacy and every detail">
+        <div className="grid gap-4 md:grid-cols-2">
+          <article id="limits" aria-labelledby="limits-title" className="flex min-w-0 scroll-mt-28 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-20">
+            <h3 id="limits-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+              <TriangleAlert aria-hidden="true" className="size-6 shrink-0" />
+              Where we fall short
+            </h3>
+            <p>
+              {aboutLimitPoints()[0]} All of them:{" "}
+              <Link className={ext} href="/about#limits-detail">
+                About page
+              </Link>
+              .
+            </p>
+            <Disclosure id="limits-detail" tone="inset" level={4} title={`All ${limitsList.length} limits, with the numbers`}>
+              <ul className={bullets}>
+                {limitsList.map((l) => (
+                  <li key={l.title}>
+                    <strong>{l.title}</strong> {l.detail}
+                  </li>
+                ))}
+              </ul>
+            </Disclosure>
+          </article>
+          <article id="privacy" aria-labelledby="privacy-title" className="flex min-w-0 scroll-mt-28 flex-col gap-3 rounded-3xl bg-card p-6 ring-1 ring-border [overflow-wrap:anywhere] sm:scroll-mt-20">
+            <h3 id="privacy-title" className="flex items-center gap-2 text-2xl font-extrabold text-ink">
+              <Lock aria-hidden="true" className="size-6 shrink-0" />
+              Nothing about your child
+            </h3>
+            <p>
+              {aiPrivacy} Everything that leaves your device: the{" "}
+              <Link className={ext} href="/about#privacy-table">
+                About page
+              </Link>
+              .
+            </p>
+            <Disclosure id="privacy-detail" tone="inset" level={4} title="Privacy in short">
+              <ul className={bullets}>
+                {howPrivacyPoints().map((p) => (
+                  <li key={p}>{p}</li>
+                ))}
+              </ul>
+            </Disclosure>
+          </article>
+        </div>
+
+        <div className="flex flex-col gap-3">
+          <h3 className="text-xs font-bold tracking-widest text-primary uppercase">Under the hood</h3>
+          <Disclosure id="steps" icon={Workflow} title="From “which park?” to “found it!”">
+            <p className="max-w-[65ch]">
+              Each step is handled by <strong>code</strong>, <strong>the open model</strong>, or <strong>you</strong>. The AI has
+              one job: picking the finds and writing the words.
+            </p>
+            <Steps steps={steps} />
+          </Disclosure>
+          <Disclosure id="measured-detail" icon={Gauge} title={`What we measured: run ${EVAL_RUN_ID}`}>
+          <p>
             On {EVAL_PARKS} parks, ages 6-10: {usd(gemma.costPerPass)} a pass, reading grade {gemma.fkGrade.toFixed(1)} (no-AI template:{" "}
             {template.fkGrade.toFixed(1)}). All numbers: the{" "}
-            <Link className={bandLink} href="/about#measured">
+            <Link className={ext} href="/about#measured">
               About page
             </Link>
             .
-          </span>
-        </p>
-        <Disclosure tone="band" icon={Gauge} title={`What we measured: run ${EVAL_RUN_ID}`} hint="Each number, its target, met or missed">
+          </p>
           <p>
             {EVAL_PARKS} real parks, ages 6-10 (
-            <a className={bandLink} href={resultsUrl}>
+            <a className={ext} href={resultsUrl}>
               full results
             </a>
             ):
@@ -592,7 +650,7 @@ export default function HowItWorksPage() {
           <p>
             Ages {SMOKE_10_13.ageBand}, a smaller partial check (run <code>{smokeId}</code>, {SMOKE_10_13.day},{" "}
             {SMOKE_10_13.parks} parks, one run each,{" "}
-            <a className={bandLink} href={smokeUrl}>
+            <a className={ext} href={smokeUrl}>
               results
             </a>
             ): {SMOKE_10_13.complete} of {SMOKE_10_13.parks} passes complete in {SMOKE_10_13.calls} model calls,{" "}
@@ -617,7 +675,7 @@ export default function HowItWorksPage() {
           <p>
             Teens and adults ({SMOKE_13PLUS.ageBand}), a smaller partial check (run <code>{smoke13Id}</code>, {SMOKE_13PLUS.day},{" "}
             {SMOKE_13PLUS.parks} parks, one run each,{" "}
-            <a className={bandLink} href={smoke13Url}>
+            <a className={ext} href={smoke13Url}>
               results
             </a>
             ): {SMOKE_13PLUS.complete} of {SMOKE_13PLUS.parks} passes complete (at most one find short; {SMOKE_13PLUS.full} printed
@@ -630,86 +688,27 @@ export default function HowItWorksPage() {
             calls, so a small sample.
           </p>
         </Disclosure>
-      </Band>
-
-      <Band id="limits" eyebrow="Honest limits" title="Where we fall short">
-        <ul className="grid gap-3 sm:grid-cols-2">
-          {howLimits().map((l) => (
-            <li key={l.title} className="flex gap-3 rounded-2xl bg-card p-4 ring-1 ring-border">
-              <TriangleAlert aria-hidden="true" className="mt-0.5 size-5 shrink-0 text-ink" />
-              <span className="font-semibold text-ink">{l.title}</span>
-            </li>
-          ))}
-        </ul>
-        <Disclosure id="limits-detail" icon={TriangleAlert} title="The limits, with the numbers" hint="One line of detail for each">
-          <ul className={bullets}>
-            {howLimits().map((l) => (
-              <li key={l.title}>
-                <strong>{l.title}</strong> {l.detail}
+          <Disclosure id="built" icon={Hammer} title="Built in the contest week, with AI coding agents">
+            <p className="max-w-[65ch]">
+              Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding
+              agents wrote and reviewed most of the code.
+            </p>
+            <ul className={bullets}>
+              <li>AI coding agents (Claude Code) wrote most of the code as &quot;builders&quot; and reviewed it as &quot;auditors&quot;.</li>
+              <li>
+                Each audit round runs five reviews (contest rules, security, quality, accessibility and design, and a judge
+                simulator); builders then fix the findings. {auditRoundsLine()}
               </li>
-            ))}
-          </ul>
-          <p>
-            All limits, with numbers:{" "}
-            <Link className={ext} href="/about#limits-detail">
-              About page
-            </Link>
-            .
-          </p>
-        </Disclosure>
-      </Band>
-
-      <Band id="privacy" eyebrow="Privacy in short" title="Nothing about your child" tone="muted">
-        <ul className="grid gap-x-8 gap-y-3 sm:grid-cols-2">
-          {howPrivacyPoints().map((p) => (
-            <li key={p} className="flex gap-2">
-              <Check aria-hidden="true" className="mt-1 size-4 shrink-0 text-primary" />
-              <span>{p}</span>
-            </li>
-          ))}
-        </ul>
-        <p className="flex items-center gap-2">
-          <Lock aria-hidden="true" className="size-4 shrink-0 text-primary" />
-          <span>
-            What leaves your device, in full: the{" "}
-            <Link className={ext} href="/about#privacy-table">
-              About page
-            </Link>
-            .
-          </span>
-        </p>
-      </Band>
-
-      <Band id="built" eyebrow="How this app was built" title="Built in the contest week, with AI coding agents">
-        <p className="max-w-[65ch]">
-          Built during the Hacktoberfest 2026 Week 1 entry period (first commit Oct 5, 2026). Kevin made the decisions; AI coding
-          agents wrote and reviewed most of the code.
-        </p>
-        <Disclosure icon={Hammer} title="Who built what, and how it is checked" hint="Builders, auditors and the tests">
-          <ul className={bullets}>
-            <li>AI coding agents (Claude Code) wrote most of the code as &quot;builders&quot; and reviewed it as &quot;auditors&quot;.</li>
-            <li>
-              Each audit round runs five reviews (contest rules, security, quality, accessibility and design, and a judge
-              simulator); builders then fix the findings. {auditRoundsLine()}
-            </li>
-            <li>
-              GitHub Actions runs lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
-              answers, a production build, and browser tests with accessibility checks on every push to main. Each run&apos;s
-              result, green or red, is public on the repo&apos;s Actions tab.
-            </li>
-            <li>Claude never writes a pass: every clue comes from the open model named on that pass.</li>
-          </ul>
-        </Disclosure>
-        <p className="flex flex-wrap gap-3">
-          <a className={buttonClassName("secondary")} href={REPO_URL}>
-            Source code on GitHub (MIT)
-          </a>
-          <Link className={buttonClassName("primary", "group")} href="/" prefetch={false}>
-            Make a pass
-            <ArrowRight aria-hidden="true" className="size-5 motion-safe:transition-transform motion-safe:group-hover:translate-x-0.5" />
-          </Link>
-        </p>
-      </Band>
+              <li>
+                GitHub Actions runs lint, type checks, {UNIT_TESTS.passed} unit tests (counted {UNIT_TESTS.day}) on recorded real API
+                answers, a production build, and browser tests with accessibility checks on every push to main. Each run&apos;s
+                result, green or red, is public on the repo&apos;s Actions tab.
+              </li>
+              <li>Claude never writes a pass: every clue comes from the open model named on that pass.</li>
+            </ul>
+          </Disclosure>
+        </div>
+      </Section>
     </main>
   );
 }

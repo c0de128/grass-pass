@@ -1,24 +1,32 @@
 import { expect, test } from "@playwright/test";
+import { FREE_PASSES_PER_DAY } from "@/lib/accounts/config";
 import { skipIfHonestAlert } from "./support/honest";
 import { judgeAddress } from "./support/judge";
 
 /**
  * The free pass against the REAL server and its REAL cookie (Kevin, 2026-10-08). Signed out, step 3 for Celebration Park
- * (its map is saved in the repo, src/data/osm), "Make my pass" with no sign-in. On a keyless server (CI, `pnpm e2e`
- * without a model key) the build reads the live iNaturalist sightings and then stops with MODEL_NOT_CONFIGURED: no
- * model and no SerpApi call is ever made. Started upstream calls use the free pass (the same rule as an account's pass),
- * so the server's signed receipt comes back, the page posts it, and the server sets the httpOnly cookie. Then the
- * second try is the sign-in step, and a reload still knows (the server reads the cookie).
- * A park without enough data, or a busy outside service, is reported as SKIPPED with its code (support/honest.ts).
+ * (its map is saved in the repo, src/data/osm), "Make my pass" with no sign-in.
+ *
+ * What the app really does (src/components/pass/PassMaker.tsx, usePassRequest.ts, src/app/api/pass/route.ts):
+ * - the free pass is charged only when the paid call STARTS; the cookie comes on the response, or as a signed receipt
+ *   on the last stream line that the page posts to POST /api/free-pass BEFORE it shows the outcome;
+ * - a pass that is made shows the ready moment and then OPENS the pass page by itself (no sign-in card in between);
+ * - a pass whose paid call started and then failed shows the failure AND the sign-in step (the free pass is used);
+ * - a keyless server (CI, `pnpm e2e` without a model key) stops with MODEL_NOT_CONFIGURED before any paid call: no
+ *   charge, no cookie, so the test is SKIPPED with that code (support/honest.ts), as are a park with too little data
+ *   (EMPTY) and a pass someone already made today (served free, nothing to count).
+ * Then the NEXT try is the sign-in step: "Make a different pass" on the pass page (or the wizard itself after a charged
+ * failure), and again after a full reload of the home page (the server reads the cookie).
  */
 const WAIT = 95_000;
 const RESUME_KEY = "grass-pass:resume";
 const CELEBRATION = { id: "way/188145317", name: "Celebration Park", kind: "park", lat: 33.10824, lng: -96.62468, distanceM: 120 };
+const USED = "You used today's free pass";
 
 test.use(judgeAddress(53));
 
 test("signed out: the free pass sets ONE signed httpOnly cookie (date + count) only when used; the next try asks to sign in, also after a reload", async ({ page }) => {
-  test.setTimeout(WAIT + 60_000);
+  test.setTimeout(WAIT + 90_000);
   const resume = async () => {
     await page.goto("/");
     await page.evaluate(([k, v]) => sessionStorage.setItem(k, v), [RESUME_KEY, JSON.stringify({ park: CELEBRATION, band: "6-10" })]);
@@ -27,22 +35,49 @@ test("signed out: the free pass sets ONE signed httpOnly cookie (date + count) o
     await expect(dialog).toHaveAccessibleName("Make your pass", { timeout: 20_000 });
     return dialog;
   };
+  const freeCookies = async () => (await page.context().cookies()).filter((c) => c.name.endsWith("gp-free"));
 
   let dialog = await resume();
   // Browsing so far set no cookie.
   expect(await page.context().cookies()).toEqual([]);
-  await expect(dialog.getByTestId("passes-left")).toContainText("you have 1 free pass left today");
+  await expect(dialog.getByTestId("passes-left")).toContainText(`you have ${FREE_PASSES_PER_DAY} free pass left today`);
   await dialog.getByRole("button", { name: "Make my pass" }).click();
 
-  const usedStep = dialog.getByTestId("sign-in-card").getByRole("heading", { name: "You used today's free pass" });
+  // Wait for the real outcome. Polled every 250 ms: the ready moment lasts READY_PAUSE_MS (1.6 s) before the pass opens.
+  const ready = dialog.getByTestId("pass-ready");
   const failed = dialog.locator("[data-error-code]");
   const empty = dialog.getByTestId("other-parks");
-  await expect(usedStep.or(empty).or(failed).first()).toBeVisible({ timeout: WAIT });
-  if (await empty.isVisible()) test.skip(true, "EMPTY: Celebration Park had too little live data just now (that never uses the free pass)");
-  if (!(await usedStep.isVisible())) await skipIfHonestAlert(failed, "free pass");
+  const onPassPage = () => new URL(page.url()).pathname.startsWith("/pass/");
+  const outcome = async (): Promise<"opened" | "ready" | "failed" | "empty" | "waiting"> => {
+    if (onPassPage()) return "opened";
+    if (await ready.isVisible().catch(() => false)) return "ready";
+    if (await failed.first().isVisible().catch(() => false)) return "failed";
+    if (await empty.isVisible().catch(() => false)) return "empty";
+    return "waiting";
+  };
+  await expect.poll(outcome, { timeout: WAIT, intervals: [250] }).not.toBe("waiting");
+  const first = await outcome();
+  if (first === "empty") test.skip(true, "EMPTY: Celebration Park had too little live data just now (that never uses the free pass)");
+
+  if (first === "failed" && (await freeCookies()).length === 0) {
+    // Nothing paid started (e.g. MODEL_NOT_CONFIGURED keyless, a busy map service): no free pass used, no cookie.
+    expect(await page.context().cookies()).toEqual([]);
+    await skipIfHonestAlert(failed.first(), "free pass");
+  }
+
+  if (first === "ready" || first === "opened") {
+    // A made pass opens by itself (Q-8-03 auto-open); wait for the pass page.
+    await expect(page).toHaveURL(/\/pass\//, { timeout: 15_000 });
+    if (new URL(page.url()).searchParams.get("reused") === "1") {
+      // Someone already made this pass today: it is served to anyone and costs nothing, so no free pass is counted.
+      expect(await freeCookies()).toEqual([]);
+      test.skip(true, "CACHED: a Celebration Park pass for this age was already made today (served free, the free pass stays unused)");
+    }
+  }
 
   // The cookie: one, httpOnly, SameSite=Lax, only the Chicago date and a count (+ the signature), gone by tomorrow.
-  await expect.poll(async () => (await page.context().cookies()).filter((c) => c.name.endsWith("gp-free")).length).toBe(1);
+  // usePassRequest posts the receipt before it shows the outcome, so it is already set here.
+  await expect.poll(async () => (await freeCookies()).length).toBe(1);
   const cookies = await page.context().cookies();
   expect(cookies.map((c) => c.name)).toEqual(["gp-free"]);
   const c = cookies[0];
@@ -56,14 +91,32 @@ test("signed out: the free pass sets ONE signed httpOnly cookie (date + count) o
   expect(left).toBeLessThanOrEqual(25 * 3600);
   // The page can't read it (httpOnly).
   expect(await page.evaluate(() => document.cookie.includes("gp-free"))).toBe(false);
-  // The server counts it: no free pass left.
+  // The server counts it: no free pass left (perDay is the server's ACCOUNT_DAILY_PASSES, so only its shape is checked).
   const r = await page.request.get("/api/passes-left");
-  expect(await r.json()).toEqual({ kind: "free", free: 1, left: 0, perDay: 5 });
-  await expect(dialog.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
+  const body = (await r.json()) as { kind: string; free: number; left: number; perDay: number };
+  expect(body).toMatchObject({ kind: "free", free: FREE_PASSES_PER_DAY, left: 0 });
+  expect(Number.isInteger(body.perDay) && body.perDay >= 1).toBe(true);
+
+  // The NEXT try, without a reload: the sign-in step, and no new pass request.
+  let passPosts = 0;
+  page.on("request", (req) => {
+    if (req.method() === "POST" && new URL(req.url()).pathname === "/api/pass") passPosts += 1;
+  });
+  if (onPassPage()) {
+    await page.getByRole("button", { name: "Make a different pass" }).click();
+    await expect(page.getByTestId("sign-in-card").getByRole("heading", { name: USED })).toBeVisible();
+    expect(passPosts).toBe(0);
+  } else {
+    // A charged failure: the wizard already shows the sign-in step instead of "Make my pass".
+    await expect(dialog.getByTestId("sign-in-card").getByRole("heading", { name: USED })).toBeVisible();
+    await expect(dialog.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
+  }
+  expect((await freeCookies()).length).toBe(1);
 
   // A reload: the server reads the cookie and goes straight to the sign-in step.
   dialog = await resume();
-  await expect(dialog.getByTestId("sign-in-card").getByRole("heading", { name: "You used today's free pass" })).toBeVisible();
+  await expect(dialog.getByTestId("sign-in-card").getByRole("heading", { name: USED })).toBeVisible();
   await expect(dialog.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
   await expect(dialog.getByTestId("sign-in-card").getByRole("button", { name: "Try as a judge" })).toBeVisible();
+  expect(passPosts).toBe(0);
 });

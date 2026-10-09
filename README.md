@@ -33,7 +33,8 @@ Live demo: https://grass-pass.vercel.app (live since Oct 8, 2026; sign-in with G
 
 1. On the home page, tap an **example park** (Arbor Hills Nature Preserve is the first). Today's pass is already
    made, so it opens at once, with no sign-in.
-2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below.
+2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below. (The home page prefers
+   example passes that fit one page; a pass that runs long says "Two black-and-white Letter pages" before you print.)
 3. To make your own: search a park by name (for example "Arbor Hills Nature Preserve") or a town, pick a park and an
    age, and press **Make my pass**. The first new pass each day needs no sign-in; after that a grown-up signs in (GitHub
    or Google, both live on the site; 5 a day), and judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
@@ -55,7 +56,8 @@ flowchart LR
   V --> PR["Print<br/>kid pass + tear line<br/>+ grown-up stub"]
 ```
 
-1. **You pick a park.** Nominatim (OpenStreetMap search) finds the place; the Overpass API lists nearby parks.
+1. **You pick a park.** Nominatim (OpenStreetMap search) finds the place (a bare 5-digit ZIP or ZIP+4 is looked up as
+   a US ZIP code, so "75013" is Allen, TX, not Paris); the Overpass API lists nearby parks.
 2. **Code collects facts:** mapped features (Overpass) and recent sightings with their Wikipedia summaries
    (iNaturalist); monarch counts from Sep 15 to Nov 15. For Lucky Finds it matches the park on Google Maps (SerpApi
    `google_maps`: same name, within 1 km of the map centre, a park and not a court inside it), then counts reviews
@@ -239,7 +241,8 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   renewal day (`SERPAPI_RENEWS_DAY`), and keeps counts 30 days. Over a limit, the pass says Lucky Finds are off for
   today (or this month). A count means visitors wrote about it, not that it is there today, so the pass prints
   "Maybe!". A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
-  least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed.
+  least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed. A park whose map and
+  wildlife data can't fill a pass sends no SerpApi search (Lucky Finds are only extras).
 - **Self-hosting is slow on a laptop CPU.** Measured with Gemma 4 E2B on Ollama, no GPU, 5 parks, $0: with the app's
   70 s limit per model call (the most the app allows; the hosted site gives a first call 30-40 s), 0 of 5 passes were complete (3 ran out of time and 2 came out short); given more time (eval
   only), 4 of 5 were complete at about 1-3 minutes a pass. With the app's longer local clock (`LOCAL_MODEL_TIMEOUT_MS`,
@@ -338,7 +341,8 @@ free new pass a day** (Chicago day), counted by one small signed cookie (below),
 cookies can't drain the model budget. **After that, a grown-up signs in** with GitHub or Google (both set up on the live
 site; a self-hosted copy shows the ones it has keys for; Auth.js / next-auth v5; no password stored): **5 new passes a
 day per account** (`ACCOUNT_DAILY_PASSES`). A pass already made today for that park and age is served to anyone and
-counts for nobody; a park without enough real data never uses up a pass. **Try as a judge** signs in to a shared demo
+counts for nobody; a park without enough real data for a pass (no model call) never uses up a pass, and the
+wizard then offers up to 3 other parks from the same search. **Try as a judge** signs in to a shared demo
 account in one click (`JUDGE_DEMO_DAILY_CAP`, default 60 a day for all judges, at most 3 per connection). Signed-in
 visitors can report each find (Found it / Didn't find it / Not safe); thresholds count different accounts, and judge
 demo reports are only logged. Signed-in visitors can also **rate a pass**: 1 to 5 stars and tags (Too easy, Too hard,
@@ -399,7 +403,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Oct 8, 2026:** the weather card, the trip tips section, the phone layout and the sign-in page were also built by
   AI coding agents (Claude Code) at Kevin's direction. The home page text is Kevin's own.
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (13 with small edits) after a code check and a review by an AI coding agent
+  text; 90 of its drafts shipped (14 with small edits) after a code check and a review by an AI coding agent
   (Claude Code), and the rest kept their old text. No person has reviewed the drafts yet. Every block, old and new,
   with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own lines (home hero, problem band, how-it-works headline) are his.

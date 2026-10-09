@@ -1433,7 +1433,8 @@ export const BLOCKS: readonly CopyBlock[] = [
   {
     id: "pass.printline",
     page: PASS,
-    file: "src/app/pass/[id]/page.tsx",
+    // Review 2026-10-08 MAJOR-3: the line moved to KID_PRINT_LINE (the page shows it, or the 2-page line).
+    file: "src/lib/pass/print-size.ts",
     role: "line next to the Print pass button, 2 sentences",
     maxChars: 110,
     text: "One black-and-white page. Cut it in half: the kid gets the hunt, you get the answers.",

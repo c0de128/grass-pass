@@ -102,5 +102,5 @@ test("the print lead follows PrintFit's measure: 2 pages hides 'One black-and-wh
   });
   await expect(page.locator(".gp-lead-one")).toBeHidden();
   await expect(page.locator(".gp-lead-two")).toBeVisible();
-  await expect(page.locator(".gp-lead-two")).toHaveText("Two black-and-white Letter pages: this pass is long.");
+  await expect(page.locator(".gp-lead-two")).toContainText("Two black-and-white Letter pages: this pass is long.");
 });

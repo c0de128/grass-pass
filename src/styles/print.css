@@ -563,11 +563,11 @@
   display: none;
 }
 .gp-print-page[data-print-estimate="2"] .gp-lead-two {
-  display: inline;
+  display: block;
 }
 .gp-print-page:has(.gp-sheet[data-pages="1"]) .gp-lead-one,
 .gp-print-page:has(.gp-sheet[data-pages="2"]) .gp-lead-two {
-  display: inline;
+  display: block;
 }
 .gp-print-page:has(.gp-sheet[data-pages="1"]) .gp-lead-two,
 .gp-print-page:has(.gp-sheet[data-pages="2"]) .gp-lead-one {

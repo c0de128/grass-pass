@@ -97,7 +97,10 @@ signs in** with GitHub, or Google when configured (OAuth through Auth.js / next-
 for that park and age is served to anyone (it costs nothing and counts for nobody). The order on `POST /api/pass` is:
 cached? -> signed in, or a free pass left? -> the account's (or this connection's signed-out) daily count -> the existing
 per-IP and global limits; the count is given back unless an upstream call really started (a failed build that did call
-the model still counts; a park without enough real data does not). A rebuild of today's pass after a source was down
+the model still counts). A build that stops with "Not enough real data for a pass" (before any model call) gives the
+account's, judge's or free pass back too (review 2026-10-08); the per-IP share still counts, because the map and
+wildlife calls really happened. Such a park also sends no SerpApi search: the Lucky Finds search starts only once the
+park map and wildlife finds can fill a pass. A rebuild of today's pass after a source was down
 (at most 3 a day per park and age) does not count toward anyone's passes; a signed-out visitor is shown the saved pass
 instead of a rebuild.
 

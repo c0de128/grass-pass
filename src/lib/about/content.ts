@@ -43,7 +43,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 2242, files: 82, day: "Oct 8, 2026" } as const;
+export const UNIT_TESTS = { passed: 2258, files: 83, day: "Oct 8, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 // Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md). RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
@@ -60,7 +60,7 @@ export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS)
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 13 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 14 } as const;
 
 export type StatTile = {
   value: string;
@@ -107,7 +107,7 @@ export function dataSources(): DataSource[] {
     {
       name: "OpenStreetMap",
       url: "https://www.openstreetmap.org/copyright",
-      gives: "Park search (Nominatim), parks and what is mapped inside them",
+      gives: "Nominatim search, parks and what's mapped",
       licence: "ODbL 1.0",
       detail:
         "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within 5 km and what is mapped inside them. Code draws the Find This Spot map from it.",

@@ -96,7 +96,7 @@ function ParkCard({ park }: { park: Park }) {
     >
       {/* 1. The park: a framed photo, its credit, its name. */}
       <div className="flex flex-col gap-4 p-2.5 pb-0">
-        <div className="relative aspect-[16/7] overflow-hidden rounded-[1.3rem] bg-muted md:aspect-[2/1] lg:aspect-[21/9]">
+        <div className="relative aspect-[16/7] overflow-hidden rounded-[1.3rem] bg-muted md:aspect-[2/1] lg:aspect-[21/9] 2xl:aspect-[3/1]">
           <Image
             src={pic.src}
             alt={pic.alt}

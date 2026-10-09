@@ -19,6 +19,7 @@ import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
 import { currentFreePassesLeft, currentSession } from "@/lib/accounts/current";
 import { PassFeedback } from "@/components/pass/PassFeedback";
+import { isAdultBand } from "@/lib/pass/constants";
 import { localDay } from "@/lib/time";
 
 /**
@@ -108,7 +109,7 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
           returnTo={`/pass/${pass.id}`}
         />
         {/* Kevin 2026-10-08: signed-in grown-ups rate the pass (stars + tags, no text); signed out: a sign-in link. */}
-        <PassFeedback passId={pass.id} signedIn={signedIn} judge={session?.p === "judge"} />
+        <PassFeedback passId={pass.id} signedIn={signedIn} judge={session?.p === "judge"} adult={isAdultBand(pass.ageBand)} />
         <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
           Pick another park
         </Link>

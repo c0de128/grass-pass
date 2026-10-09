@@ -13,13 +13,13 @@ import Link from "next/link";
 import { useId, useState, type FormEvent } from "react";
 import { buttonClassName } from "@/components/ui/Button";
 import { z } from "@/lib/zod-config";
-import { FEEDBACK_COPY, FEEDBACK_TAG_LABELS, FEEDBACK_TAGS, FeedbackResponseSchema, type FeedbackTag } from "@/lib/feedback/kinds";
+import { FEEDBACK_COPY, FEEDBACK_TAGS, feedbackTagLabel, FeedbackResponseSchema, type FeedbackTag } from "@/lib/feedback/kinds";
 
 const ErrorSchema = z.object({ error: z.object({ code: z.string(), message: z.string().max(300) }) });
 
 type Sent = { kind: "idle" } | { kind: "sending" } | { kind: "done"; message: string } | { kind: "failed"; message: string };
 
-export function PassFeedback({ passId, signedIn, judge = false }: { passId: string; signedIn: boolean; judge?: boolean }) {
+export function PassFeedback({ passId, signedIn, judge = false, adult = false }: { passId: string; signedIn: boolean; judge?: boolean; adult?: boolean }) {
   const ids = useId();
   const headingId = `${ids}-heading`;
   const starsErrorId = `${ids}-stars-error`;
@@ -35,7 +35,7 @@ export function PassFeedback({ passId, signedIn, judge = false }: { passId: stri
         <h2 id={headingId} className="font-heading text-xl font-extrabold text-ink">
           {FEEDBACK_COPY.heading}
         </h2>
-        <p className="text-base">Ratings are for signed-in grown-ups. Stars and a few tags, no typing.</p>
+        <p className="text-base">Rating a pass needs a sign-in. Stars and a few tags, no typing.</p>
         <Link href={`/signin?from=${encodeURIComponent(`/pass/${passId}`)}`} prefetch={false} className={buttonClassName("secondary")}>
           {FEEDBACK_COPY.signedOut}
         </Link>
@@ -141,7 +141,7 @@ export function PassFeedback({ passId, signedIn, judge = false }: { passId: stri
                     on ? "bg-ink text-on-ink" : "bg-card text-foreground hover:bg-muted"
                   }`}
                 >
-                  {FEEDBACK_TAG_LABELS[t]}
+                  {feedbackTagLabel(t, adult)}
                 </button>
               );
             })}

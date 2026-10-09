@@ -55,7 +55,7 @@ async function resumeOnStep3(page: Page) {
 const push = (page: Page, line: unknown) => page.evaluate((l) => (window as unknown as { __gpPush: (x: unknown) => void }).__gpPush(l), line);
 
 test.describe("signed out: 1 free pass, then the sign-in step", () => {
-  test.use(judgeAddress(41));
+  test.use(judgeAddress(51));
 
   test("Make my pass with no sign-in; once the free pass is used, the next try is the friendly sign-in step (5 a day or Try as a judge)", async ({ page }) => {
     await page.addInitScript(SHIM);
@@ -102,7 +102,7 @@ test.describe("signed out: 1 free pass, then the sign-in step", () => {
 });
 
 test.describe("How was this pass? (a recorded real pass, the real feedback API)", () => {
-  test.use(judgeAddress(42));
+  test.use(judgeAddress(52));
 
   test("signed out: only a sign-in link, which comes back to the pass", async ({ page }) => {
     const res = await page.goto(`/pass/${FIXTURE_ID}`);
@@ -131,7 +131,7 @@ test.describe("How was this pass? (a recorded real pass, the real feedback API)"
     await expect(form.getByRole("alert")).toHaveText("Pick 1 to 5 stars first.");
     await expect(form.getByRole("radio", { name: "1 star" })).toBeFocused();
 
-    await form.getByText("4 stars").click();
+    await form.locator("label").filter({ hasText: "4 stars" }).click();
     await expect(form.getByRole("radio", { name: "4 stars" })).toBeChecked();
     await form.getByRole("button", { name: "Kids loved it" }).click();
     await expect(form.getByRole("button", { name: "Kids loved it" })).toHaveAttribute("aria-pressed", "true");

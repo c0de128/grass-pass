@@ -19,6 +19,14 @@ export const FEEDBACK_TAG_LABELS: Record<FeedbackTag, string> = {
   not_safe: "Not safe",
 };
 
+/**
+ * A 13+ pass is for teens and adults on their own (src/lib/pass/audience.ts): the same `kids_loved` tag reads "We loved
+ * it" there. Stored and counted as the same tag.
+ */
+export function feedbackTagLabel(tag: FeedbackTag, adult: boolean): string {
+  return adult && tag === "kids_loved" ? "We loved it" : FEEDBACK_TAG_LABELS[tag];
+}
+
 /** Ratings are deleted after this many days (like item reports). */
 export const FEEDBACK_KEEP_DAYS = 90;
 

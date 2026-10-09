@@ -15,7 +15,7 @@ const WAIT = 95_000;
 const RESUME_KEY = "grass-pass:resume";
 const CELEBRATION = { id: "way/188145317", name: "Celebration Park", kind: "park", lat: 33.10824, lng: -96.62468, distanceM: 120 };
 
-test.use(judgeAddress(43));
+test.use(judgeAddress(53));
 
 test("signed out: the free pass sets ONE signed httpOnly cookie (date + count) only when used; the next try asks to sign in, also after a reload", async ({ page }) => {
   test.setTimeout(WAIT + 60_000);

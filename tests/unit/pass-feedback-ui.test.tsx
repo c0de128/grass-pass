@@ -31,6 +31,13 @@ describe("PassFeedback", () => {
     expect(html).not.toContain('type="radio"');
   });
 
+  it("a 13+ pass says \"We loved it\" (the same tag), and nothing says grown-up", () => {
+    const html = renderToStaticMarkup(<PassFeedback passId={ID} signedIn adult />);
+    expect(html).toContain(">We loved it</button>");
+    expect(html).not.toContain("Kids loved it");
+    expect(renderToStaticMarkup(<PassFeedback passId={ID} signedIn={false} adult />)).not.toMatch(/grown-up/i);
+  });
+
   it("the judge demo is told its ratings are only logged", () => {
     expect(renderToStaticMarkup(<PassFeedback passId={ID} signedIn judge />)).toContain("Judge demo ratings are logged for review, but they aren&#x27;t counted.");
   });

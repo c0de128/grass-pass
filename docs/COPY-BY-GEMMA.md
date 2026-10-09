@@ -7,8 +7,8 @@ On 2026-10-06, Kevin asked for the rest of the website copy to be revised with G
 - **Model:** `gemma-4-31B-it` on DigitalOcean serverless inference, through the app's own model client (`src/lib/model.ts`, strict JSON schema output).
 - **Calls:** 19 (batches of 10), 39,228 prompt + 6,075 completion tokens, **$0.0101** at DigitalOcean list prices (logged in `evals/results/SPEND.md`). Failures: none.
 - **Blocks sent:** 184.
-  - **Accepted** as Gemma wrote them: 76
-  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): 14
+  - **Accepted** as Gemma wrote them: 75
+  - **Edited** (Gemma draft with a small fix by the reviewing AI coding agent, marked "Gemma draft, edited"): 15
   - **Rejected** (old text kept): 76 (1 by the code check, 75 by the AI coding agent review)
   - **Unchanged** (Gemma returned the old text): 18
 - **Reviewed by:** Builder G, an AI coding agent (Claude Code), 2026-10-06; no person has reviewed the drafts yet. Decisions and reasons: `docs/copy-by-gemma/review.json`. Raw drafts: `docs/copy-by-gemma/run-2026-10-06T20-43-12-393Z.json`.
@@ -216,16 +216,16 @@ Each batch's user message is `Rewrite these N blocks.` followed by the blocks as
 - **Why:** UNTRUE: '{blocked} other risky groups' (the count already includes poison ivy and stinging bugs), and it drops venomous snakes. The code check passed it; the agent review caught it.
 - **FACTS:** {blocked} is the number of blocked risky species groups (BLOCKED_TAXA.length: 71 since the evening of 2026-10-06, round 7; 17 when this copy was drafted), filled in by code. / Blocked: venomous snakes, poison ivy, stinging bugs and more. They are never printed. / Every Wild Find carries the line "look, don't touch." · KEEP: "never printed", "look, don't touch"
 
-#### `home.pass.park.body`: accepted
+#### `home.pass.park.body`: edited
 
 `src/components/home/PassAnatomy.tsx:58` · Park Finds card body, 1-2 sentences · max 170 characters
 
 - **Old:** Hoops, shelters, bridges and playground gear, straight from the park's OpenStreetMap map, with real counts like “2 basketball courts.”
 - **Gemma:** Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like "2 basketball courts."
 - **Code check:** passed
-- **Shipped:** Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like "2 basketball courts."
-- **Why:** True and shorter; it says code writes the counts. Straight quotes set as curly quotes in JSX.
-- **FACTS:** Park Finds are things mapped inside the park on OpenStreetMap: hoops, shelters, bridges, playground gear. / Code writes the real counts, for example "2 basketball courts". · KEEP: "OpenStreetMap", "2 basketball courts"
+- **Shipped:** Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like "8 bridges."
+- **Why:** True and shorter; it says code writes the counts. Straight quotes set as curly quotes in JSX. Owner edit (Kevin, 2026-10-09, not Gemma): the example count now matches the Oak Point pass shown beside it (8 bridges on its park map), so the accepted Gemma draft became "edited".
+- **FACTS:** Park Finds are things mapped inside the park on OpenStreetMap: hoops, shelters, bridges, playground gear. / Code writes the real counts, for example "8 bridges" (the Oak Point pass on the home page has 8 on its park map). · KEEP: "OpenStreetMap", "8 bridges"
 
 #### `home.pass.lucky.body`: edited
 

@@ -3,14 +3,18 @@
 /** "Make a different pass" (SPEC F5): a new variant for today, with the same real progress steps. */
 import { useEffect, useRef, useState } from "react";
 import { SignInCard } from "@/components/account/SignInCard";
+import { signInPromptFor } from "@/components/account/PassesLeft";
 import { useRouter } from "next/navigation";
 import { Button } from "@/components/ui/Button";
 import { MAX_VARIANTS, type AgeBand } from "@/lib/pass/schema";
 import { ParkDataList, ProgressSteps } from "./PassStatus";
-import type { PassMakerAccount } from "./PassMaker";
+import { FREE_GONE_CODES, type PassMakerAccount } from "./PassMaker";
 import { usePassRequest } from "./usePassRequest";
 
-/** Accounts: a different pass is a NEW pass, so a signed-out visitor gets the sign-in card instead. */
+/**
+ * Accounts: a different pass is a NEW pass. A signed-out visitor with a free pass left today may use it here (Kevin
+ * 2026-10-08); without one they get the sign-in card instead.
+ */
 export function DifferentPassButton({
   parkId,
   ageBand,
@@ -41,7 +45,11 @@ export function DifferentPassButton({
   const alertRef = useRef<HTMLDivElement>(null);
   const working = state.kind === "working";
   const [askSignIn, setAskSignIn] = useState(false);
-  const showSignIn = askSignIn || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED");
+  const [freeLeftSeen, setFreeLeftSeen] = useState<number | undefined>(undefined);
+  const freeLeft = freeLeftSeen ?? account?.freeLeft ?? 0;
+  const failedCode = state.kind === "failed" ? state.code : null;
+  const freeGone = failedCode !== null && FREE_GONE_CODES.includes(failedCode);
+  const showSignIn = askSignIn || failedCode === "SIGN_IN_REQUIRED" || freeGone;
 
   useEffect(() => {
     if (state.kind === "done") router.push(`/pass/${state.pass.id}${state.cached ? "?reused=1" : ""}`);
@@ -61,15 +69,26 @@ export function DifferentPassButton({
         aria-disabled={working || undefined}
         onClick={() => {
           if (working) return;
-          if (account && !account.signedIn) setAskSignIn(true);
-          else void run({ parkId, ageBand, fresh: true });
+          if (account && !account.signedIn && freeLeft <= 0) setAskSignIn(true);
+          else
+            void run({ parkId, ageBand, fresh: true }).then((s) => {
+              if ((s.kind === "done" || s.kind === "failed") && s.freeLeft !== undefined) setFreeLeftSeen(s.freeLeft);
+              else if (s.kind === "failed" && FREE_GONE_CODES.includes(s.code)) setFreeLeftSeen(0);
+            });
         }}
       >
         {working ? "Making a different pass…" : "Make a different pass"}
       </Button>
       {state.kind === "working" ? <ProgressSteps steps={state.steps} /> : null}
-      {showSignIn && account ? <SignInCard id="different-signin" options={account.options} returnTo={returnTo} heading="Sign in to make a different pass" /> : null}
-      {(state.kind === "failed" && state.code !== "SIGN_IN_REQUIRED") || state.kind === "empty" ? (
+      {showSignIn && account ? (
+        <SignInCard
+          id="different-signin"
+          options={account.options}
+          returnTo={returnTo}
+          {...signInPromptFor({ options: account.options, signedIn: account.signedIn, code: failedCode, what: "a different pass" })}
+        />
+      ) : null}
+      {(state.kind === "failed" && state.code !== "SIGN_IN_REQUIRED" && !freeGone) || state.kind === "empty" ? (
         <div ref={alertRef} tabIndex={-1} className="flex flex-col gap-2">
           <div role="alert" className="rounded-2xl bg-muted p-4">
             <p className="font-semibold">{state.message}</p>

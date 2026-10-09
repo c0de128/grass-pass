@@ -17,7 +17,8 @@ import { withClearMap } from "@/lib/spot/redraw";
 import { passAsOf } from "@/lib/pass/as-of";
 import { signInOptions } from "@/lib/accounts/config";
 import { passItemStats } from "@/lib/reports/stats";
-import { currentSession } from "@/lib/accounts/current";
+import { currentFreePassesLeft, currentSession } from "@/lib/accounts/current";
+import { PassFeedback } from "@/components/pass/PassFeedback";
 import { localDay } from "@/lib/time";
 
 /**
@@ -57,7 +58,10 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   const pass = await getPass(id);
   // Unknown or expired id: HTTP 404 with the honest "No pass here" copy (./not-found.tsx).
   if (!pass) notFound();
-  const signedIn = (await currentSession()) !== null;
+  const session = await currentSession();
+  const signedIn = session !== null;
+  // Kevin 2026-10-08: signed out, the free passes left today ("Make a different pass" may use one); cookie only.
+  const freeLeft = signedIn ? 0 : await currentFreePassesLeft();
   // Report counts are shown to signed-in grown-ups (the ones who report); 1 read per park per 5 min.
   const stats = signedIn ? await passItemStats(pass) : {};
   const parkName = safeParkName(pass.park.name).name;
@@ -100,9 +104,11 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
           variant={pass.variant}
           madeToday={pass.day === today()}
           example={sp.example === "1"}
-          account={{ signedIn, options: signInOptions() }}
+          account={{ signedIn, options: signInOptions(), freeLeft }}
           returnTo={`/pass/${pass.id}`}
         />
+        {/* Kevin 2026-10-08: signed-in grown-ups rate the pass (stars + tags, no text); signed out: a sign-in link. */}
+        <PassFeedback passId={pass.id} signedIn={signedIn} judge={session?.p === "judge"} />
         <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
           Pick another park
         </Link>

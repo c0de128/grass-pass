@@ -19,7 +19,8 @@
     "eval:human-check": "vitest run --config evals/vitest.config.mts evals/cli/human-check.ts",
     "osm:snapshot": "vitest run --config evals/vitest.config.mts evals/cli/osm-snapshot.ts",
     "copy:gemma": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-revise.mts",
-    "copy:render": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-render.mts"
+    "copy:render": "vitest run --config scripts/copy/vitest.config.mts scripts/copy/gemma-render.mts",
+    "feedback:report": "vitest run --config scripts/feedback/vitest.config.mts scripts/feedback/report.mts"
   },
   "dependencies": {
     "lucide-react": "^1.52.0",

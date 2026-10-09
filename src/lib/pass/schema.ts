@@ -147,6 +147,17 @@ export const ParkDataSchema = z.object({
 });
 export type ParkData = z.infer<typeof ParkDataSchema>;
 
+/**
+ * Kevin 2026-10-08: a signed-out visitor's free pass was charged by THIS request. `left`: free passes left today.
+ * `receipt`: the new signed cookie value (src/lib/limits/free-pass.ts), sent when the cookie could not ride on the
+ * response headers (they had already gone out with the first step); the page posts it to POST /api/free-pass.
+ */
+export const FreeChargeSchema = z.object({
+  left: z.number().int().min(0).max(99),
+  receipt: z.string().regex(/^v1\.\d{8}\.\d{1,2}\.[A-Za-z0-9_-]{43}$/).optional(),
+});
+export type FreeCharge = z.infer<typeof FreeChargeSchema>;
+
 export const PassLineSchema = z.discriminatedUnion("type", [
   z.object({ type: z.literal("step"), step: PassStepSchema, text: z.string() }),
   /**
@@ -154,7 +165,7 @@ export const PassLineSchema = z.discriminatedUnion("type", [
    * how long the page should wait (ms, at most 20 min + 10 s). Never sent with the normal clock.
    */
   z.object({ type: z.literal("clock"), local: z.literal(true), waitMs: z.number().int().positive().max(1_210_000) }),
-  z.object({ type: z.literal("result"), pass: PassSchema, cached: z.boolean() }),
+  z.object({ type: z.literal("result"), pass: PassSchema, cached: z.boolean(), free: FreeChargeSchema.optional() }),
   /** No pass: the park has no usable data at all (SPEC §5.4 "All empty"). */
   z.object({
     type: z.literal("empty"),
@@ -162,12 +173,12 @@ export const PassLineSchema = z.discriminatedUnion("type", [
     message: z.string(),
     sections: z.object({ park: SectionStateSchema, wild: SectionStateSchema, lucky: SectionStateSchema }),
   }),
-  z.object({ type: z.literal("error"), status: z.number().int(), error: ApiErrorBody, parkData: ParkDataSchema.optional() }),
+  z.object({ type: z.literal("error"), status: z.number().int(), error: ApiErrorBody, parkData: ParkDataSchema.optional(), free: FreeChargeSchema.optional() }),
 ]);
 export type PassLine = z.infer<typeof PassLineSchema>;
 
 /** Non-streamed error body (guards, limits): `{ error: {...}, parkData? }`. */
-export const PassErrorResponseSchema = z.object({ error: ApiErrorBody, parkData: ParkDataSchema.optional() });
+export const PassErrorResponseSchema = z.object({ error: ApiErrorBody, parkData: ParkDataSchema.optional(), free: FreeChargeSchema.optional() });
 
 // ---------- copy (SPEC §5.4, §6.3) ----------
 

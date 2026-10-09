@@ -47,6 +47,7 @@ import { configuredModelId } from "@/lib/model";
 import { BUILT_WITH_LLAMA, isLlamaModel } from "@/lib/pass/format";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { REPO_URL } from "@/lib/site-url";
+import { accountPassesPerDay, freePassesPerDay } from "@/lib/accounts/config";
 
 export const metadata: Metadata = {
   title: "About Grass Pass: an open model, a real park and a pencil",
@@ -373,7 +374,7 @@ export default function AboutPage() {
             ))}
           </Disclosure>
 
-          <Disclosure id="accounts" icon={UserRound} title="Accounts and visitor reports" hint="New passes need sign-in (2 a day). Judges: Try as a judge.">
+          <Disclosure id="accounts" icon={UserRound} title="Accounts and visitor reports" hint={`${freePassesPerDay()} free pass a day; sign in for ${accountPassesPerDay()}. Judges: Try as a judge.`}>
             {accountNotes().map((n) => (
               <p key={n}>{n}</p>
             ))}

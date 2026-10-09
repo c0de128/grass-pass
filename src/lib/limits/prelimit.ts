@@ -24,7 +24,7 @@
  * search 15 with bookkeeping, a cached one 3; a saved-pass page 1 GET, then 0 while memoized; an impossible
  * pass id 0. So COSTS.apiPass = 4 covered every cheap /api/pass path.
  * Accounts (re-measured 2026-10-06): a new pass 113 (+ the account count and the report lookup), a signed-out
- * new-pass request 2, an account over its 2 a day 5 the first time (then 4 while the refusal is remembered), so
+ * new-pass request 2, an account over its daily passes 5 the first time (then 4 while the refusal is remembered), so
  * COSTS.apiPass = 5; a report 4 (a repeat 3, a not-safe that hides the item 4-5) = COSTS.apiReport 5; a signed-in
  * pass page 2 (the pass + the report counts) = passPage + passStats; a sign-in attempt 1.
  * Round 4 (re-measured 2026-10-06, SEC-4-07): a new pass that ALSO starts a fresh Lucky Finds lookup (SerpApi:
@@ -74,8 +74,11 @@ export const COSTS = {
    */
   passStats: 1,
   /**
-   * Accounts: 5 (was 4). An account over its 2 a day is refused after 5 commands the first time (burst,
-   * latest, per-IP minute, features MGET, the account reserve), then 4 while the refusal is remembered.
+   * Accounts: 5 (was 4). An account over its daily passes is refused after 5 commands the first time (burst,
+   * latest, per-IP minute, features MGET, the account reserve), then 4 while the refusal is remembered. Pass limits
+   * (2026-10-08): a signed-out visitor whose free pass is used (cookie) is refused after 2 (burst, latest); one over its
+   * connection's ANON_PASSES_PER_IP_PER_DAY after 5, like an account. A signed-out NEW pass is an expensive path like
+   * any other: it spends the same per-IP daily share (PASS_PER_IP_PER_DAY), so the monthly bound below is unchanged.
    */
   apiPass: 5,
   apiParks: 4,
@@ -87,6 +90,14 @@ export const COSTS = {
   apiMe: 0,
   /** GET /api/judge-passes (SEC-4-02): 1 MGET of the judge pool counters. */
   apiJudgePasses: 1,
+  /**
+   * Pass limits (Kevin, 2026-10-08): GET /api/passes-left: signed out 0 (the cookie only), an account 1 GET, the judge
+   * demo 1 MGET. POST /api/free-pass: 0 (it only checks the signed receipt and sets the cookie).
+   */
+  apiPassesLeft: 1,
+  apiFreePass: 0,
+  /** POST /api/feedback: 2 rate-limit EVALs + the pass read + the feedback EVAL (the judge demo: a dedupe INCR). */
+  apiFeedback: 4,
   apiOther: 1,
   /** A server action (sign in / sign out) posted to a page: the judge sign-in's rate-limit EVAL. */
   action: 1,
@@ -157,6 +168,9 @@ export function requestCost(pathname: string, now: number, opts: { action?: bool
   if (pathname === "/api/report") return { kind: "api", cost: COSTS.apiReport };
   if (pathname === "/api/me") return { kind: "api", cost: COSTS.apiMe };
   if (pathname === "/api/judge-passes") return { kind: "api", cost: COSTS.apiJudgePasses };
+  if (pathname === "/api/passes-left") return { kind: "api", cost: COSTS.apiPassesLeft };
+  if (pathname === "/api/free-pass") return { kind: "api", cost: COSTS.apiFreePass };
+  if (pathname === "/api/feedback") return { kind: "api", cost: COSTS.apiFeedback };
   // Only an OAuth start or callback spends a store command; the session/CSRF reads (header, every page) don't.
   if (pathname.startsWith("/api/auth/")) return { kind: "api", cost: /^\/api\/auth\/(signin|callback)\//.test(pathname) ? COSTS.apiAuth : 0 };
   if (pathname.startsWith("/api/")) return { kind: "api", cost: COSTS.apiOther };

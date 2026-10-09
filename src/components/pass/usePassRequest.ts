@@ -8,7 +8,7 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import type { ExampleLink } from "@/lib/parks/schema";
 import { AUTO_RETRY_CODES } from "@/lib/pass/constants";
-import type { ParkData, Pass, PassRequest, PassStep } from "@/lib/pass/schema";
+import type { FreeCharge, ParkData, Pass, PassRequest, PassStep } from "@/lib/pass/schema";
 
 /** UX-4-02: the answer's schemas (and zod) load on demand, with the request, not on first paint. */
 const loadSchemas = () => import("@/lib/pass/schema");
@@ -79,10 +79,29 @@ export function autoRetryWaitMs(retryAfterSec: number | undefined): number {
   return Math.min(AUTO_RETRY_MAX_MS, Math.max(AUTO_RETRY_MIN_MS, Number.isFinite(ms) ? ms : AUTO_RETRY_MIN_MS));
 }
 
+/**
+ * Kevin 2026-10-08: this request used the visitor's free pass. The server's signed receipt is posted to
+ * POST /api/free-pass (it sets the httpOnly cookie; the page can't), and the free passes left are returned. A failed
+ * post changes nothing here: the server still counts this connection's signed-out passes.
+ */
+export async function settleFreePass(free: FreeCharge | undefined): Promise<number | undefined> {
+  if (!free) return undefined;
+  if (free.receipt) {
+    await fetch("/api/free-pass", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      credentials: "same-origin",
+      body: JSON.stringify({ receipt: free.receipt }),
+    }).catch(() => undefined);
+  }
+  return free.left;
+}
+
 export type PassState =
   | { kind: "idle" }
   | { kind: "working"; steps: { step: PassStep; text: string }[]; startedAt: number; local?: { waitMs: number } }
-  | { kind: "done"; pass: Pass; cached: boolean }
+  /** `freeLeft`: set when THIS request used a free pass (signed out): the free passes left today. */
+  | { kind: "done"; pass: Pass; cached: boolean; freeLeft?: number }
   | { kind: "empty"; parkName: string; message: string; sections: Pass["sections"] }
   | {
       kind: "failed";
@@ -94,6 +113,8 @@ export type PassState =
       retryAfter?: number;
       /** When the one automatic retry starts (client clock ms), if one is planned. */
       autoRetryAt?: number;
+      /** Set when this request used a free pass anyway (the paid call started, then failed). */
+      freeLeft?: number;
     };
 
 export type RunOptions = {
@@ -178,7 +199,16 @@ export function usePassRequest() {
       const err = PassErrorResponseSchema.safeParse(json);
       if (!err.success) return finish(bad);
       const e = err.data.error;
-      return finish({ kind: "failed", message: e.message, code: e.code, parkData: err.data.parkData, example: e.example, retryAfter: e.retryAfter });
+      const freeLeft = await settleFreePass(err.data.free);
+      return finish({
+        kind: "failed",
+        message: e.message,
+        code: e.code,
+        parkData: err.data.parkData,
+        example: e.example,
+        retryAfter: e.retryAfter,
+        ...(freeLeft !== undefined ? { freeLeft } : {}),
+      });
     }
 
     const reader = res.body.getReader();
@@ -216,9 +246,11 @@ export function usePassRequest() {
             if (abortRef.current === ac) setState({ kind: "working", steps: [...steps], startedAt, ...(local ? { local } : {}) });
             continue;
           }
-          if (l.type === "result") return finish({ kind: "done", pass: l.pass, cached: l.cached });
           if (l.type === "empty") return finish({ kind: "empty", parkName: l.parkName, message: l.message, sections: l.sections });
-          return finish({ kind: "failed", message: l.error.message, code: l.error.code, parkData: l.parkData, example: l.error.example, retryAfter: l.error.retryAfter });
+          const freeLeft = await settleFreePass(l.free);
+          const f = freeLeft !== undefined ? { freeLeft } : {};
+          if (l.type === "result") return finish({ kind: "done", pass: l.pass, cached: l.cached, ...f });
+          return finish({ kind: "failed", message: l.error.message, code: l.error.code, parkData: l.parkData, example: l.error.example, retryAfter: l.error.retryAfter, ...f });
         }
         if (done) break;
       }

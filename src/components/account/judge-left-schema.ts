@@ -7,3 +7,10 @@ export const LeftSchema = z.object({
   left: z.number().int().nonnegative(),
   leftForYou: z.number().int().nonnegative(),
 });
+
+/** The GET /api/passes-left answer (src/lib/accounts/pass-limits.ts), loaded on demand like LeftSchema. */
+export const PassesLeftSchema = z.discriminatedUnion("kind", [
+  z.object({ kind: z.literal("free"), free: z.number().int().nonnegative(), left: z.number().int().nonnegative(), perDay: z.number().int().positive() }),
+  z.object({ kind: z.literal("account"), perDay: z.number().int().positive(), left: z.number().int().nonnegative() }),
+  LeftSchema.extend({ kind: z.literal("judge") }),
+]);

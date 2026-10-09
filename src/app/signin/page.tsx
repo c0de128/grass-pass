@@ -8,7 +8,8 @@ import { JudgeButton, OAuthButtons } from "@/components/account/SignInPageForms"
 import { buttonClassName } from "@/components/ui/Button";
 import {
   ACCOUNT_COPY,
-  ACCOUNT_PASSES_PER_DAY,
+  accountPassesPerDay,
+  freePassesPerDay,
   JUDGE_SESSION_MAX_AGE_SEC,
   judgeDailyCap,
   PROVIDER_LABELS,
@@ -44,14 +45,24 @@ function judgeNote(): string {
 }
 
 /** "Why sign in?" in three short lines (every fact from config/ACCOUNT_COPY: count, privacy, grown-ups). */
-const WHY: { title: string; detail: string }[] = [
-  {
-    title: `${ACCOUNT_PASSES_PER_DAY} new passes a day`,
-    detail: "Only to make a new pass or tell us what you found. Examples, shared links and printing work without it.",
-  },
-  { title: "We keep no email or name", detail: "Just a scrambled ID, to count your passes and reports." },
-  { title: "Grown-ups only", detail: "Kids just need the printed pass." },
-];
+function why(): { title: string; detail: string }[] {
+  const free = freePassesPerDay();
+  return [
+    {
+      title: `${accountPassesPerDay()} new passes a day`,
+      detail: `${free > 0 ? `After your ${free} free pass a day: to` : "To"} make more passes, tell us what you found and rate passes. Examples, shared links and printing work without it.`,
+    },
+    { title: "We keep no email or name", detail: "Just a scrambled ID, to count your passes, reports and ratings." },
+    { title: "Grown-ups only", detail: "Kids just need the printed pass." },
+  ];
+}
+
+/** The line under "Sign in" (Kevin 2026-10-08: 1 free pass a day without signing in). */
+function signInLead(): string {
+  const free = freePassesPerDay();
+  if (free <= 0) return "Each new pass wakes up a real AI model, so a grown-up signs in first.";
+  return `Each new pass wakes up a real AI model. Your first ${free === 1 ? "one" : free} each day is free; signed in, a grown-up gets ${accountPassesPerDay()} a day.`;
+}
 
 /**
  * Sign-in page (also Auth.js's sign-in and error page), Kevin's option A (2026-10-08): one ticket in the middle,
@@ -80,7 +91,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
               <h1 id="signin-title" className="text-4xl leading-tight font-extrabold tracking-tight text-ink">
                 Sign in
               </h1>
-              <p className="text-base text-muted-foreground text-pretty">Each new pass wakes up a real AI model, so a grown-up signs in first.</p>
+              <p className="text-base text-muted-foreground text-pretty">{signInLead()}</p>
             </div>
 
             {error ? (
@@ -135,7 +146,7 @@ export default async function SignInPage(props: PageProps<"/signin">) {
               Why sign in?
             </h2>
             <ul className="flex flex-col gap-3.5">
-              {WHY.map((w) => (
+              {why().map((w) => (
                 <li key={w.title} className="flex gap-3">
                   <span aria-hidden="true" className="mt-0.5 flex size-6 shrink-0 items-center justify-center rounded-full bg-primary text-primary-foreground">
                     <Check className="size-4" strokeWidth={3} />

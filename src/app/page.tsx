@@ -14,7 +14,7 @@ import { heroCard, readyExamples, spotQuote } from "@/lib/home/showcase";
 import { restingState } from "@/lib/limits/budget";
 import { exampleStatuses, prewarmEnabled, prewarmIdle, WARMUP_BUDGET_MS } from "@/lib/prewarm";
 import { signInOptions } from "@/lib/accounts/config";
-import { currentSession } from "@/lib/accounts/current";
+import { currentFreePassesLeft, currentSession } from "@/lib/accounts/current";
 
 /**
  * A background example refresh (one real pass, at most 85 s) may run after the page is sent; after() waits for it at
@@ -48,7 +48,9 @@ export default async function Home() {
   const resting = restingState();
   // Accounts: signed in or not (the session cookie only, no store command), and which sign-in buttons exist.
   const session = await currentSession();
-  const account = { signedIn: session !== null, judge: session?.p === "judge", options: signInOptions() };
+  // Kevin 2026-10-08: signed out, the free passes left today (the signed cookie only; read, never set here).
+  const freeLeft = session ? 0 : await currentFreePassesLeft();
+  const account = { signedIn: session !== null, judge: session?.p === "judge", options: signInOptions(), freeLeft };
   // Keep any background refresh this visit started alive after the response (serverless: Vercel waitUntil), inside a
   // time budget below maxDuration.
   after(() => prewarmIdle({ budgetMs: WARMUP_BUDGET_MS }));

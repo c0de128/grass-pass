@@ -26,7 +26,7 @@ import { buttonClassName } from "@/components/ui/Button";
 import { Disclosure } from "@/components/ui/Disclosure";
 import { OpenOnHash } from "@/components/ui/OpenOnHash";
 import { EVAL_RUN_ID, UNIT_TESTS, auditRoundsLine, costHighNote, howLimits, howPrivacyPoints, pct, secs, usd } from "@/lib/about/content";
-import { ACCOUNT_PASSES_PER_DAY, judgeShareCopy, signInWith } from "@/lib/accounts/config";
+import { accountPassesPerDay, anonPassesPerIpPerDay, freePassesPerDay, freePassRule, judgeShareCopy, signInWith } from "@/lib/accounts/config";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 import { EVAL_DAY, EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FIRST_CALL_P50_S, GEMMA_P50_EXACT_S, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_TOKENS_PER_S, PREVIOUS_RUN, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
 import { HARD_EXTRA } from "@/lib/ai/prompt";
@@ -380,7 +380,7 @@ export default function HowItWorksPage() {
       icon: Timer,
       who: "code",
       title: "Saved passes and fair limits",
-      summary: `Passes are saved for 30 days. A new pass needs a grown-up signed in (${ACCOUNT_PASSES_PER_DAY} a day); daily limits protect the model budget and the free map servers.`,
+      summary: `Passes are saved for 30 days. ${freePassRule(freePassesPerDay(), accountPassesPerDay())} Daily limits protect the model budget and the free map servers.`,
       more: (
         <>
           <p>
@@ -395,10 +395,14 @@ export default function HowItWorksPage() {
               {limits.parksPerIpPerDay} park searches; {limits.parksDailyCap} searches a day for everyone.
             </li>
             <li>Lucky Finds: {serp.daily} SerpApi searches a day, {serp.monthly} a month (free plan).</li>
-            <li>A pass made while a source was down is rebuilt at most 3 times a day, not counted toward anyone&apos;s {ACCOUNT_PASSES_PER_DAY}.</li>
+            <li>A pass made while a source was down is rebuilt at most 3 times a day, not counted toward anyone&apos;s daily passes.</li>
             <li>
-              A new pass needs a grown-up signed in{signInWith()}: {ACCOUNT_PASSES_PER_DAY} new passes a day each. Judges
-              can press &quot;Try as a judge&quot;: {judgeShareCopy()}
+              Without signing in: {freePassesPerDay()} free new pass a day per browser, counted by one small signed cookie (the
+              date and a count, no ID), and at most {anonPassesPerIpPerDay()} signed-out new passes a day per internet address.
+            </li>
+            <li>
+              Signed in{signInWith()}: {accountPassesPerDay()} new passes a day each. Judges can press &quot;Try as a judge&quot;:{" "}
+              {judgeShareCopy()}
             </li>
           </ul>
           <p>Reports: {REPORT_COPY.rule}</p>

@@ -5,7 +5,17 @@
  * one list, and tests can check every fact without rendering. Every number comes from the app's own constants
  * or the committed eval run (src/lib/about/eval-summary.ts, re-checked against the JSON by tests).
  */
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDemoEnabled, judgeShareCopy, oauthProviderNames, signInWith } from "@/lib/accounts/config";
+import {
+  ACCOUNT_COPY,
+  accountPassesPerDay,
+  anonPassesPerIpPerDay,
+  freePassesPerDay,
+  judgeDemoEnabled,
+  judgeShareCopy,
+  oauthProviderNames,
+  signInWith,
+} from "@/lib/accounts/config";
+import { FEEDBACK_KEEP_DAYS } from "@/lib/feedback/kinds";
 import { EVAL_PARKS, EVAL_SUMMARY_FILE, EVAL_THRESHOLDS, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN, SELFHOST, SMOKE_10_13, SMOKE_13PLUS, evalColumn } from "@/lib/about/eval-summary";
 import { SERPAPI_FREE_MONTHLY } from "@/lib/limits/config";
 import { serpapiCaps } from "@/lib/limits/serpapi";
@@ -159,7 +169,8 @@ export const TRIP_TIPS_ABOUT =
 /** Short ✓ lines on the Privacy card. */
 export const PRIVACY_POINTS: readonly string[] = [
   "No account or cookies needed to browse and print.",
-  "Sign-in is only for new passes. We keep a scrambled ID, no name or email.",
+  "Your free pass sets one small signed cookie: the date and a count, no ID.",
+  "Sign-in is for more new passes, reports and ratings. We keep a scrambled ID, no name or email.",
   "We never ask for info about your child.",
   "Your location is rounded to about 1 km in your browser.",
   "Your IP is kept only scrambled, for about a day.",
@@ -208,7 +219,18 @@ export function privacyRows(): PrivacyRow[] {
       what: `Signing in ${[names ? `with ${names}` : null, judgeDemoEnabled() ? `with "Try as a judge"` : null].filter(Boolean).join(" or ")} (grown-ups only)`.replace("Signing in  (", "Signing in ("),
       // SEC-5-04: what really arrives (the public profile), naming only the providers set up here (RULES-4-02).
       where: `${names ? `${names} ${names.includes(" or ") ? "send" : "sends"} your public profile (account number, name, picture link${names.includes("GitHub") ? "; for GitHub any public email" : ""}). ` : ""}We store only a scrambled ID made from the number; the rest is dropped at once, except your first name, which stays in your own encrypted cookie. Sign-in lasts 7 days; the judge demo sign-in stops working after 1 day.`,
-      why: "To count your 2 new passes a day and your reports.",
+      why: `To count your ${accountPassesPerDay()} new passes a day, your reports and your ratings.`,
+    },
+    {
+      what: "Your free pass (no sign-in)",
+      where:
+        "One cookie in your own browser, set only when you use a free pass: today's date (Dallas time) and how many free passes you used, signed so it can't be changed. No ID. It expires at midnight Dallas time. Our server keeps no copy.",
+      why: `To count your ${freePassesPerDay()} free new pass a day.`,
+    },
+    {
+      what: "Your pass ratings (1 to 5 stars and tags, no text; signed-in grown-ups)",
+      where: `Our storage: your latest rating per pass and its day, under an ID made for that park only. Deleted after ${FEEDBACK_KEEP_DAYS} days. Never shown publicly; only the site owner sees the totals.`,
+      why: "To learn which passes work for kids.",
     },
     {
       what: "Your reports (Found it, Didn't find it, Not safe)",
@@ -225,7 +247,7 @@ export function privacyRows(): PrivacyRow[] {
 
 /** The paragraph under the privacy table. */
 export const PRIVACY_NOTES: readonly string[] = [
-  `No names, no photos, no analytics; nothing about the child is asked for. Only a grown-up who signs in gets a cookie. ${ACCOUNT_COPY.privacy} Your browser keeps only your light or dark choice and the last age band.`,
+  `No names, no photos, no analytics; nothing about the child is asked for. Browsing and printing set no cookie. Using a free pass sets one small signed cookie (the date and a count, no ID), and a grown-up who signs in gets a sign-in cookie. ${ACCOUNT_COPY.privacy} Your browser keeps only your light or dark choice and the last age band.`,
   "The model runs on DigitalOcean servers in the US, so park facts and the age band leave your device.",
   "Our logs record which source or model ran, timing, outcome and pass id; never the prompt, your IP or what you typed.",
 ];
@@ -233,9 +255,10 @@ export const PRIVACY_NOTES: readonly string[] = [
 /** Accounts and visitor reports (Builder O, 2026-10-06): the rules, from the same constants the code uses. */
 export function accountNotes(): string[] {
   return [
-    `Anyone can search, open examples and shared links, and print. A NEW pass is a real model call, so a grown-up signs in${signInWith()} (judges: "Try as a judge"): ${ACCOUNT_PASSES_PER_DAY} new passes a day each, reset at midnight Dallas time. No password is stored.`,
+    `Anyone can search, open examples and shared links, and print. A NEW pass is a real model call. Without signing in you get ${freePassesPerDay()} free new pass a day (counted by one small signed cookie, and at most ${anonPassesPerIpPerDay()} signed-out new passes a day per internet connection). After that a grown-up signs in${signInWith()} (judges: "Try as a judge"): ${accountPassesPerDay()} new passes a day each, reset at midnight Dallas time. No password is stored.`,
     `Judges: "Try as a judge" is one click, no sign-up. ${judgeShareCopy()}`,
     `Signed-in grown-ups can report each find (Found it, Didn't find it, Not safe). ${REPORT_COPY.rule}`,
+    `Signed-in grown-ups can also rate a pass: 1 to 5 stars and tags (Too easy, Too hard, Kids loved it, Something was missing, Not safe), no text. One rating per account per pass (the newest counts), deleted after ${FEEDBACK_KEEP_DAYS} days. Judge demo ratings are only logged, never counted. The totals are never shown publicly.`,
   ];
 }
 
@@ -243,7 +266,8 @@ export function accountNotes(): string[] {
 export function howPrivacyPoints(): string[] {
   return [
     "No names, photos, or analytics. Browsing and printing set no cookie.",
-    `Signing in (grown-ups, only for new passes and reports): ${ACCOUNT_COPY.privacy} No password is stored.`,
+    "Using your free pass sets one small signed cookie: the date and a count, no ID. It expires at midnight Dallas time.",
+    `Signing in (grown-ups: more new passes, reports and ratings): ${ACCOUNT_COPY.privacy} No password is stored.`,
     "What you type goes to our server and OpenStreetMap, never into the web address.",
     "\"Use my location\" is rounded to about 1 km in your browser before it is sent.",
     "The AI sees park facts and the age band, nothing about you or your child.",
@@ -393,8 +417,8 @@ export function howLimits(): Limit[] {
       detail: selfHostDetail(),
     },
     {
-      title: "A new pass needs a grown-up to sign in.",
-      detail: `${ACCOUNT_PASSES_PER_DAY} a day each; judges can press "Try as a judge".`,
+      title: `After ${freePassesPerDay()} free pass a day, a grown-up signs in.`,
+      detail: `${accountPassesPerDay()} new passes a day each; judges can press "Try as a judge".`,
     },
     {
       title: "The model runs on DigitalOcean's servers.",

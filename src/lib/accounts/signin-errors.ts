@@ -10,7 +10,7 @@ export const ERRORS: Record<string, string> = {
   unavailable: "That sign-in option is not set up here. Try another one below.",
   AccessDenied: "Sign-in was cancelled. Nothing changed, but you can try again below.",
   OAuthCallbackError: "The sign-in page didn't finish. Please try again.",
-  Configuration: "Sign-in isn't set up right on this server. Examples and saved passes still work.",
+  Configuration: "Sign-in isn't set up right on this server. Examples and saved passes still work, and so does your free pass if you haven't used it today.",
   Verification: "That sign-in link didn't work. Please try again.",
 };
 export const GENERAL_ERROR = "Sign-in didn't work this time. Give it another try.";

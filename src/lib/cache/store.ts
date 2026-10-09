@@ -53,7 +53,25 @@ export interface Store {
    * the keep window. See REPORT_SCRIPT.
    */
   recordReport?(w: ReportWrite): Promise<ReportWritten>;
+  /**
+   * Optional, one round trip (pass feedback, src/lib/feedback): set one account's rating of one pass (the latest wins),
+   * refresh the park hash's expiry and drop ratings older than the keep window. See FEEDBACK_SCRIPT.
+   */
+  recordFeedback?(w: FeedbackWrite): Promise<{ replaced: boolean }>;
+  /** Optional (Kevin's private `pnpm feedback:report` only): every key matching a glob (`*` only), without the prefix. */
+  scanKeys?(match: string): Promise<string[]>;
 }
+
+/** One pass rating (keys are built in src/lib/feedback/index.ts `feedbackKeys`). */
+export type FeedbackWrite = {
+  /** The park's feedback hash: `<pass id>|<reporter id>` -> `<yyyymmdd>|<stars>|<tag mask>`. */
+  hashKey: string;
+  field: string;
+  value: string;
+  /** Fields whose day (the first 8 characters of their value) is before this yyyymmdd are deleted. */
+  cutoff: number;
+  ttlSec: number;
+};
 
 /** One item report (keys are built in src/lib/reports/index.ts `reportKeys`). */
 export type ReportWrite = {
@@ -262,6 +280,28 @@ export class MemoryStore implements Store {
     return { counted: true, unsafeAccounts, newlyHidden };
   }
 
+  /** Same steps as FEEDBACK_SCRIPT (the Upstash version), in one synchronous run. */
+  async recordFeedback(w: FeedbackWrite): Promise<{ replaced: boolean }> {
+    const expiresAt = this.now() + ttlMs(w.ttlSec);
+    const h = this.liveHash(w.hashKey) ?? { fields: new Map<string, string>(), expiresAt };
+    const replaced = h.fields.has(w.field);
+    h.fields.set(w.field, w.value);
+    h.expiresAt = expiresAt;
+    this.hashes.set(w.hashKey, h);
+    for (const [f, v] of [...h.fields]) {
+      const d = Number(v.slice(0, 8));
+      if (Number.isFinite(d) && d < w.cutoff) h.fields.delete(f);
+    }
+    return { replaced };
+  }
+
+  async scanKeys(match: string): Promise<string[]> {
+    const re = globRegExp(match);
+    const keys = [...this.map.keys()].filter((k) => this.live(k));
+    const hashes = [...this.hashes.keys()].filter((k) => this.liveHash(k));
+    return [...new Set([...keys, ...hashes])].filter((k) => re.test(k));
+  }
+
   get size() {
     return this.map.size;
   }
@@ -316,6 +356,25 @@ export const REPORT_SCRIPT =
   "for i = 1, #all, 2 do local d = tonumber(all[i + 1]) " +
   "if d and d < cut then redis.call('HDEL', KEYS[2], all[i]) end end " +
   "return {1, n, hid}";
+
+/**
+ * One pass rating (src/lib/feedback). KEYS = the park's feedback hash. ARGV = field, value (`yyyymmdd|stars|mask`),
+ * cutoff (yyyymmdd), keep ttl. Returns 1 when the field already existed (the account re-rated the pass), else 0.
+ * Fields whose day (the value's first 8 characters) is before the cutoff are deleted, so a hash never holds more than
+ * the keep window.
+ */
+export const FEEDBACK_SCRIPT =
+  "local old = redis.call('HEXISTS', KEYS[1], ARGV[1]) " +
+  "redis.call('HSET', KEYS[1], ARGV[1], ARGV[2]) redis.call('EXPIRE', KEYS[1], ARGV[4]) " +
+  "local all = redis.call('HGETALL', KEYS[1]) local cut = tonumber(ARGV[3]) " +
+  "for i = 1, #all, 2 do local d = tonumber(string.sub(all[i + 1], 1, 8)) " +
+  "if d and d < cut then redis.call('HDEL', KEYS[1], all[i]) end end " +
+  "return old";
+
+/** A `*`-only glob as a whole-string RegExp (every other character is literal). */
+export function globRegExp(match: string): RegExp {
+  return new RegExp(`^${match.split("*").map((p) => p.replace(/[.+?^${}()|[\]\\]/g, "\\$&")).join(".*")}$`);
+}
 
 /**
  * SEC-3-03/04: add N to the monthly counter (UTC month) and the daily counter (Chicago day) at once; a new
@@ -615,9 +674,34 @@ export class UpstashStore implements Store {
     if (a.length !== 3 || !a.every(Number.isFinite)) throw new StoreError("The shared store returned a bad report answer.");
     return { counted: a[0] === 1, unsafeAccounts: a[1], newlyHidden: a[2] === 1 };
   }
+
+  async recordFeedback(w: FeedbackWrite): Promise<{ replaced: boolean }> {
+    const r = await this.command(["EVAL", FEEDBACK_SCRIPT, 1, this.prefix + w.hashKey, w.field, w.value, Math.trunc(w.cutoff), Math.max(1, Math.ceil(w.ttlSec))]);
+    const n = Number(r);
+    if (!Number.isFinite(n)) throw new StoreError("The shared store returned a bad feedback answer.");
+    return { replaced: n === 1 };
+  }
+
+  /** SCAN with MATCH (Kevin's private report script only; never on a request path). */
+  async scanKeys(match: string): Promise<string[]> {
+    const out = new Set<string>();
+    let cursor = "0";
+    for (let i = 0; i < 1_000; i++) {
+      const r = await this.command(["SCAN", cursor, "MATCH", this.prefix + match, "COUNT", 500]);
+      if (!Array.isArray(r) || r.length !== 2 || !Array.isArray(r[1])) throw new StoreError("The shared store returned a bad SCAN answer.");
+      for (const k of r[1] as unknown[]) {
+        const key = String(k);
+        if (key.startsWith(this.prefix)) out.add(key.slice(this.prefix.length));
+      }
+      cursor = String(r[0]);
+      if (cursor === "0") break;
+    }
+    return [...out];
+  }
 }
 
 type StoreHolder = { upstash?: Store | null; memory: Map<string, MemoryStore> };
+
 const HOLDER_KEY = Symbol.for("grass-pass.stores");
 
 /** Kept on globalThis so route handlers and instrumentation share one instance (pattern: next-instrumentation-singletons). */

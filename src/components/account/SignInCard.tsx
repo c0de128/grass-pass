@@ -13,7 +13,7 @@ import { useEffect, useState } from "react";
 import { useFormStatus } from "react-dom";
 import { signInAction } from "@/app/actions/auth";
 import { buttonClassName } from "@/components/ui/Button";
-import { ACCOUNT_COPY, judgeLeftCopy, type SignInOptions } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, judgeLeftCopy, perDayWords, type SignInOptions } from "@/lib/accounts/config";
 import { OAUTH_ORDER, OAuthButton } from "./SignInPageForms";
 import { announceSessionChange } from "./session-event";
 
@@ -77,6 +77,7 @@ export function SignInCard({
   onBeforeSignIn,
   id,
   compact = false,
+  lead,
 }: {
   options: SignInOptions;
   returnTo: string;
@@ -86,6 +87,8 @@ export function SignInCard({
   id?: string;
   /** UX-5-06: /signin keeps the card to the reason, the buttons and the live counter; its "Why sign in?" list has the details. */
   compact?: boolean;
+  /** Kevin 2026-10-08: the line under the heading, when the caller has a better reason (e.g. "You used today's free pass"). */
+  lead?: string;
 }) {
   const H = headingLevel === 2 ? "h2" : "h3";
   // Google first (its button guidelines), then GitHub; only the ones set up on this server.
@@ -106,15 +109,13 @@ export function SignInCard({
       <H id={headingId} tabIndex={-1} className="text-xl font-extrabold text-ink focus:outline-none">
         {heading}
       </H>
-      <p className="text-base">
-        {compact ? (
-          "Each new pass wakes up a real AI model, so a grown-up signs in first."
-        ) : (
-          <>
-            Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved
-            passes need no sign-in. {ACCOUNT_COPY.grownUps}
-          </>
-        )}
+      <p className="text-base" data-testid="sign-in-lead">
+        {lead ??
+          (compact
+            ? "Each new pass wakes up a real AI model, so a grown-up signs in for more."
+            : `Each new pass wakes up a real AI model. ${
+                options.free > 0 ? `After ${options.free} free pass a day, a grown-up signs in: ` : "A grown-up signs in first: "
+              }${perDayWords(options.perDay)} each. Examples and saved passes need no sign-in. ${ACCOUNT_COPY.grownUps}`)}
       </p>
       {options.judge ? (
         <form action={submit} className="flex flex-col gap-2">

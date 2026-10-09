@@ -10,8 +10,9 @@
  * close button close it, focus goes back to what opened it, the page does not scroll behind it):
  *   1 Park: the real OpenStreetMap parks (skeleton while searching, the honest empty/error copy), search again inside.
  *   2 Explorer: "Who's exploring?", one card per age band (remembered in localStorage only).
- *   3 Make it: the choices on a little ticket, then "Make my pass" - or, signed out, the sign-in card (GitHub /
- *     Google / Try as a judge) and "Open a pass someone already made today". While the pass is made: the making
+ *   3 Make it: the choices on a little ticket, then "Make my pass" (signed out: the 1 free pass a day, Kevin 2026-10-08)
+ *     - or, once the free pass is used, the sign-in card (GitHub / Google / Try as a judge) and "Open a pass someone
+ *     already made today". The passes left today are said above the button (passes-left). While the pass is made: the making
  *     picture and the server's REAL progress steps (PassMaking.tsx); then "Your pass is ready!" and the pass opens.
  * Every failure keeps its exact copy (daily limits, resting, model down, map busy) inside the dialog.
  *
@@ -23,6 +24,7 @@ import Link from "next/link";
 import { useEffect, useId, useRef, useState, useSyncExternalStore, type FormEvent, type MouseEvent, type ReactNode } from "react";
 import { useRouter, useSearchParams } from "next/navigation";
 import { SignInCard } from "@/components/account/SignInCard";
+import { PassesLeftLine, signInPromptFor } from "@/components/account/PassesLeft";
 import { ParkStep } from "@/components/parks/ParkStep";
 import { checkQuery, useParkSearch } from "@/components/parks/useParkSearch";
 import type { SignInOptions } from "@/lib/accounts/config";
@@ -39,7 +41,20 @@ import { clientNow, LOCAL_WAIT_COPY, PASS_WAIT_COPY, retryFailsNow, usePassReque
 import { AgeChoices, StepTrail, stepAnnouncement, WIZARD_STEPS, stepIndex, type WizardStep } from "./WizardParts";
 
 /** Failures where an immediate retry can't help (a limit that resets later): no "Try again" button. */
-const NO_RETRY = new Set(["VARIANT_LIMIT", "IP_DAILY_LIMIT", "DAILY_LIMIT", "ACCOUNT_DAILY_LIMIT", "JUDGE_DAILY_LIMIT", "SIGN_IN_REQUIRED", "MODEL_QUOTA"]);
+export const NO_RETRY = new Set([
+  "VARIANT_LIMIT",
+  "IP_DAILY_LIMIT",
+  "DAILY_LIMIT",
+  "ACCOUNT_DAILY_LIMIT",
+  "JUDGE_DAILY_LIMIT",
+  "SIGN_IN_REQUIRED",
+  "MODEL_QUOTA",
+  "FREE_PASS_USED",
+  "ANON_IP_DAILY_LIMIT",
+]);
+
+/** Kevin 2026-10-08: codes that mean "this signed-out visitor has no free pass left today": show the sign-in step. */
+export const FREE_GONE_CODES: readonly string[] = ["FREE_PASS_USED", "ANON_IP_DAILY_LIMIT"];
 
 /** sessionStorage key: the park + age picked before signing in (this tab only, removed once restored). */
 export const RESUME_KEY = "grass-pass:resume";
@@ -110,8 +125,11 @@ export async function takeResume(): Promise<{ park: Park; band: AgeBand } | null
 }
 
 /** Who is making the pass (from the server page): signed in or not, and which sign-in buttons exist. */
-/** `judge`: signed in with "Try as a judge" (for the "Signed in as a judge" announcement, UX-4-03). */
-export type PassMakerAccount = { signedIn: boolean; judge?: boolean; options: SignInOptions };
+/**
+ * `judge`: signed in with "Try as a judge" (for the "Signed in as a judge" announcement, UX-4-03).
+ * `freeLeft`: signed out, the free passes left today when the page was made (from the signed cookie; Kevin 2026-10-08).
+ */
+export type PassMakerAccount = { signedIn: boolean; judge?: boolean; options: SignInOptions; freeLeft?: number };
 
 /** Said (polite live region) and shown after coming back from signing in, as focus moves to "Make my pass". */
 export function signedInNote(judge: boolean): string {
@@ -238,8 +256,14 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const { state, run, reset } = usePassRequest();
   const working = state.kind === "working";
   const secondsToRetry = useSecondsUntil(state.kind === "failed" ? state.autoRetryAt : undefined);
-  // Signed out (or the session ended): show the sign-in card instead of the make button.
-  const needsSignIn = account !== undefined && (!account.signedIn || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
+  // Kevin 2026-10-08: signed out, the free passes left today (the page's count, then each answer's own count).
+  const [freeLeftSeen, setFreeLeftSeen] = useState<number | undefined>(undefined);
+  const freeLeft = freeLeftSeen ?? account?.freeLeft ?? 0;
+  // Bumped after each finished request, so the passes-left line reads the count again.
+  const [madeCount, setMadeCount] = useState(0);
+  // Signed out with no free pass left (or the session ended): show the sign-in card instead of the make button.
+  const needsSignIn =
+    account !== undefined && ((!account.signedIn && freeLeft <= 0) || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
   const signedInNow = account?.signedIn === true && !needsSignIn;
   const judgeNow = account?.judge === true;
 
@@ -403,7 +427,13 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
     setNote(null);
     setStayed(false);
     setRunning({ parkId: park.id, parkName: safeParkName(park.name).name, band });
-    void run({ parkId: park.id, ageBand: band }, autoRetry ? { autoRetry: true } : {});
+    void run({ parkId: park.id, ageBand: band }, autoRetry ? { autoRetry: true } : {}).then((s) => {
+      // Kevin 2026-10-08: a used free pass (this request's own count, or the server saying none is left) moves a
+      // signed-out visitor to the sign-in step for the next pass.
+      if ((s.kind === "done" || s.kind === "failed") && s.freeLeft !== undefined) setFreeLeftSeen(s.freeLeft);
+      else if (s.kind === "failed" && FREE_GONE_CODES.includes(s.code)) setFreeLeftSeen(0);
+      if (s.kind !== "idle" && s.kind !== "working") setMadeCount((n) => n + 1);
+    });
   }
 
   const make = () => start(true);
@@ -624,6 +654,10 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                     {note}
                   </p>
 
+                  {account && !needsSignIn && (state.kind === "idle" || state.kind === "failed" || state.kind === "empty") ? (
+                    <PassesLeftLine signedIn={account.signedIn} judge={account.judge === true} freeLeft={freeLeft} options={account.options} refresh={madeCount} />
+                  ) : null}
+
                   {state.kind === "idle" || state.kind === "failed" || state.kind === "empty" ? (
                     needsSignIn ? (
                       <div className="flex flex-col gap-4">
@@ -635,11 +669,12 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                             id={`${ids}-signin`}
                             options={account.options}
                             returnTo="/?resume=1"
-                            heading={
-                              state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn
-                                ? "Please sign in again to make this pass"
-                                : "Sign in to make this pass"
-                            }
+                            {...signInPromptFor({
+                              options: account.options,
+                              signedIn: account.signedIn,
+                              code: state.kind === "failed" ? state.code : null,
+                              what: "this pass",
+                            })}
                             onBeforeSignIn={() => rememberForSignIn(park, band)}
                           />
                         ) : null}
@@ -692,7 +727,7 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
                     <div ref={resultRef} tabIndex={-1} className="flex flex-col gap-3 focus:outline-none">
                       <PassFailure
                         state={
-                          state.code === "SIGN_IN_REQUIRED" && account && !account.signedIn
+                          (state.code === "SIGN_IN_REQUIRED" || state.code === "FREE_PASS_USED") && account && !account.signedIn
                             ? { ...state, message: "No pass for this park and age was made today yet. Sign in above to make one." }
                             : state
                         }

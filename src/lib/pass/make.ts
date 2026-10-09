@@ -24,14 +24,25 @@ import { e2eFixturePass } from "./e2e-fixtures";
 import { waitText, type ApiError } from "@/lib/http/respond";
 import { log } from "@/lib/log";
 import type { ModelLogger } from "@/lib/model";
-import { localDay } from "@/lib/time";
+import { localDay, secondsUntilLocalMidnight } from "@/lib/time";
 import { buildPass, PASS_DEADLINE_MS, type BuildOutcome } from "@/lib/ai/build-pass";
 import type { TipsTrace } from "@/lib/tips/generate";
 import { localModelClock, resetLocalPassSlots, takeLocalPassSlot } from "./local-clock";
 import { isOctoberDay, OCTOBER_REASONS, type OctoberBoxData } from "@/lib/october";
 import { octoberBox, type OctoberPark } from "@/lib/sources/inat-monarch";
 import { SPOT_DEGRADED_MESSAGES } from "@/lib/spot/load";
-import { ACCOUNT_COPY, ACCOUNT_PASSES_PER_DAY, judgeDailyCap, judgeLimitMessage, JUDGE_PASSES_PER_IP_PER_DAY } from "@/lib/accounts/config";
+import {
+  accountLimitCopy,
+  accountPassesPerDay,
+  anonIpLimitCopy,
+  anonPassesPerIpPerDay,
+  freePassesPerDay,
+  freePassUsedCopy,
+  judgeDailyCap,
+  judgeLimitMessage,
+  JUDGE_PASSES_PER_IP_PER_DAY,
+  signInToMakeCopy,
+} from "@/lib/accounts/config";
 import { JUDGE_QUOTA } from "@/lib/accounts/judge-passes";
 import type { Account } from "@/lib/accounts/session";
 import { excludedRefs, parkReportStats } from "@/lib/reports";
@@ -201,15 +212,23 @@ export type MakeDeps = {
    */
   reserved?: boolean;
   /**
-   * Accounts (Kevin, 2026-10-06): the route sets `requireAccount`, so a NEW pass (a cache miss, "Make a
-   * different pass", or a rebuild of a degraded pass) needs a signed-in `account`; a saved pass for today
-   * is still served to anyone (it costs nothing). Each account may start ACCOUNT_PASSES_PER_DAY new passes
-   * per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP, at most JUDGE_PASSES_PER_IP_PER_DAY per
-   * connection (SEC-4-02). Counted only when a build really starts. Q-4-03: a rebuild of today's degraded
-   * pass is NOT counted against the account (the per-IP share, AI_DAILY_CAP and MAX_DEGRADED_REBUILDS bound it).
+   * Accounts (Kevin, 2026-10-06; limits 2026-10-08): the route sets `requireAccount`, so a NEW pass (a cache miss,
+   * "Make a different pass", or a rebuild of a degraded pass) needs a signed-in `account` OR a free pass left
+   * (`freePass`); a saved pass for today is still served to anyone (it costs nothing). Each account may start
+   * ACCOUNT_DAILY_PASSES (default 5) new passes per Chicago day; the judge demo shares JUDGE_DEMO_DAILY_CAP, at most
+   * JUDGE_PASSES_PER_IP_PER_DAY per connection (SEC-4-02). Counted only when a build really starts. Q-4-03: a rebuild
+   * of today's degraded pass is NOT counted against the account (the per-IP share, AI_DAILY_CAP and
+   * MAX_DEGRADED_REBUILDS bound it); a signed-out visitor is shown the degraded pass instead of a rebuild.
    */
   requireAccount?: boolean;
   account?: Account | null;
+  /**
+   * Signed out (Kevin, 2026-10-08): the free passes this browser already used today (its signed cookie,
+   * src/lib/limits/free-pass.ts), and a callback for the moment a free pass is CHARGED (the same moment an account's
+   * pass is counted). Signed-out new passes are also capped per connection (ANON_PASSES_PER_IP_PER_DAY). Without it a
+   * signed-out new pass is 401 SIGN_IN_REQUIRED.
+   */
+  freePass?: { used: number; onCharged: () => void };
   /** Trip tips: recording and tests only (what the tips call was sent and answered, src/lib/tips/generate.ts). */
   tipsTrace?: (t: TipsTrace) => void;
 };
@@ -237,11 +256,31 @@ export function resetPassMaking(): void {
 /** New passes counted per account (and the judge demo) in the shared store: never a cap for everyone. */
 const NO_GLOBAL_CAP = 1_000_000_000;
 
-const signInRequired = (): MakeOutcome => ({
+const signInRequired = (env: Record<string, string | undefined>): MakeOutcome => ({
   kind: "error",
   status: 401,
-  error: { code: "SIGN_IN_REQUIRED", message: ACCOUNT_COPY.signInToMake },
+  error: { code: "SIGN_IN_REQUIRED", message: signInToMakeCopy(env) },
 });
+
+/** Signed-out new passes per connection per day (the cookie's backstop): quota `anon-new`, keyed by the client IP. */
+export const ANON_QUOTA = "anon-new";
+
+/** A ticket that also calls `onCommit` once, the first time it is committed (the free-pass charge). */
+function onFirstCommit(t: QuotaTicket, onCommit: () => void): QuotaTicket {
+  let fired = false;
+  return {
+    commit() {
+      t.commit();
+      if (fired) return;
+      fired = true;
+      onCommit();
+    },
+    release: () => t.release(),
+    get committed() {
+      return t.committed;
+    },
+  };
+}
 
 /**
  * Accounts: reserve this account's share of today's new passes (the judge demo: its per-connection share of
@@ -255,12 +294,22 @@ async function reserveAccountShare(
   now: number,
   rebuild: boolean,
 ): Promise<null | { ok: true; ticket: QuotaTicket } | { ok: false; outcome: MakeOutcome }> {
-  if (deps.internal || !deps.account || rebuild) return null;
+  if (deps.internal || rebuild) return null;
+  if (!deps.account) {
+    // Signed out with a free pass left (checked in makePass): this connection's share of signed-out new passes today,
+    // so clearing the cookie can't drain the model budget. The free pass is charged when this ticket is committed.
+    if (!deps.requireAccount || !deps.freePass) return null;
+    const free = deps.freePass;
+    const r = await reserveQuota(store, { name: ANON_QUOTA, key: deps.ip, perKey: anonPassesPerIpPerDay(env), global: NO_GLOBAL_CAP, period: { kind: "day" }, now });
+    if (r.ok) return { ok: true, ticket: onFirstCommit(r.ticket, free.onCharged) };
+    log("anon_ip_daily_limit", { scope: r.scope }, "warn");
+    return { ok: false, outcome: { kind: "error", status: 429, error: { code: "ANON_IP_DAILY_LIMIT", message: anonIpLimitCopy(env), retryAfter: r.retryAfter } } };
+  }
   const judge = deps.account.judge;
   const r = await reserveQuota(store, {
     name: judge ? JUDGE_QUOTA : "acct-new",
     key: judge ? deps.ip : deps.account.key,
-    perKey: judge ? JUDGE_PASSES_PER_IP_PER_DAY : ACCOUNT_PASSES_PER_DAY,
+    perKey: judge ? JUDGE_PASSES_PER_IP_PER_DAY : accountPassesPerDay(env),
     global: judge ? judgeDailyCap(env) : NO_GLOBAL_CAP,
     period: { kind: "day" },
     now,
@@ -274,7 +323,7 @@ async function reserveAccountShare(
       status: 429,
       error: judge
         ? { code: "JUDGE_DAILY_LIMIT", message: judgeLimitMessage(r.scope, env), retryAfter: r.retryAfter }
-        : { code: "ACCOUNT_DAILY_LIMIT", message: ACCOUNT_COPY.accountLimit, retryAfter: r.retryAfter },
+        : { code: "ACCOUNT_DAILY_LIMIT", message: accountLimitCopy(env), retryAfter: r.retryAfter },
     },
   };
 }
@@ -331,8 +380,16 @@ export async function makePass(req: PassRequest, deps: MakeDeps): Promise<MakeOu
     if (req.fresh && latest >= MAX_VARIANTS) {
       return { kind: "error", status: 429, error: { code: "VARIANT_LIMIT", message: PASS_COPY.variantLimit } };
     }
-    // Accounts: a new pass needs a signed-in grown-up. A saved degraded pass is shown again instead.
-    if (deps.requireAccount && !deps.internal && !deps.account) return fallback ? { kind: "pass", pass: fallback, cached: true } : signInRequired();
+    // Accounts: a new pass needs a signed-in grown-up or a free pass left today (Kevin, 2026-10-08). A saved degraded
+    // pass is shown again instead (a signed-out visitor never starts a rebuild).
+    if (deps.requireAccount && !deps.internal && !deps.account) {
+      if (fallback) return { kind: "pass", pass: fallback, cached: true };
+      const free = freePassesPerDay(env);
+      if (!deps.freePass || free <= 0) return signInRequired(env);
+      if (deps.freePass.used >= free) {
+        return { kind: "error", status: 429, error: { code: "FREE_PASS_USED", message: freePassUsedCopy(env), retryAfter: secondsUntilLocalMidnight(startedAt) } };
+      }
+    }
     const variant = req.fresh ? latest + 1 : Math.max(1, latest);
     const id = passId(req.parkId, req.ageBand, day, variant);
     const flightKey = `${key}|${variant}`;
@@ -437,8 +494,9 @@ async function buildCounted(ctx: {
     return featuresPlan.outcome;
   }
 
-  // Accounts: this account's share of today's new passes (2; the judge demo: 3 per connection inside its
-  // shared cap). Q-4-03: a rebuild of today's degraded pass doesn't count against the account.
+  // Accounts: this account's share of today's new passes (ACCOUNT_DAILY_PASSES; the judge demo: 3 per connection inside
+  // its shared cap; signed out: this connection's ANON_PASSES_PER_IP_PER_DAY). Q-4-03: a rebuild of today's degraded
+  // pass doesn't count against the account.
   const acct = await reserveAccountShare(store, ctx.deps, ctx.env, now(), ctx.rebuildOf !== null);
   if (acct && !acct.ok) return acct.outcome as BuildOutcome;
   held.ticket = acct?.ticket ?? null;

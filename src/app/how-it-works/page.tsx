@@ -67,30 +67,30 @@ function Band({
   eyebrow,
   title,
   tone = "plain",
-  width = "max-w-5xl",
   children,
 }: {
   id: string;
   eyebrow: string;
   title: string;
   tone?: "plain" | "muted" | "dark";
-  width?: string;
   children: ReactNode;
 }) {
   const bg = tone === "dark" ? "gp-band bg-band text-band-foreground" : tone === "muted" ? "bg-muted/70" : "";
   return (
     <section id={id} aria-labelledby={`${id}-title`} className={`scroll-mt-28 sm:scroll-mt-16 ${bg}`}>
-      <div className={`mx-auto flex ${width} flex-col gap-8 px-5 py-16 md:px-8 lg:py-20`}>
-        <div className="flex max-w-3xl flex-col gap-3">
+      {/* Wide layout (2026-10-09): from 1280 px the head sits in a sticky left column and the content uses the rest of
+          the shared container; paragraphs keep their 65ch measure. Below 1280 px: one column, as before. */}
+      <div className="gp-container flex flex-col gap-8 py-16 lg:py-20 xl:grid xl:grid-cols-12 xl:gap-x-12">
+        <div className="flex max-w-3xl flex-col gap-3 xl:sticky xl:top-24 xl:col-span-4 xl:self-start">
           <p className={`text-xs font-bold tracking-widest uppercase ${tone === "dark" ? "text-sun" : tone === "muted" ? "text-link" : "text-primary"}`}>{eyebrow}</p>
           <h2
             id={`${id}-title`}
-            className={`text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl ${tone === "dark" ? "" : "text-ink"}`}
+            className={`text-4xl leading-[1] font-extrabold tracking-tight text-balance sm:text-5xl xl:text-[2.75rem] 2xl:text-5xl ${tone === "dark" ? "" : "text-ink"}`}
           >
             {title}
           </h2>
         </div>
-        {children}
+        <div className="flex min-w-0 flex-col gap-8 xl:col-span-8">{children}</div>
       </div>
     </section>
   );
@@ -427,7 +427,7 @@ export default function HowItWorksPage() {
       <OpenOnHash />
 
       <section aria-labelledby="how-title" className="grain">
-        <div className="mx-auto flex max-w-5xl flex-col gap-5 px-5 pt-14 pb-12 md:px-8 lg:pt-20">
+        <div className="gp-container flex flex-col gap-5 pt-14 pb-12 lg:pt-20">
           <p className="text-xs font-bold tracking-widest text-primary uppercase">How it works</p>
           <h1 id="how-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
             How a park becomes a pass.
@@ -460,7 +460,7 @@ export default function HowItWorksPage() {
         </div>
       </section>
 
-      <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted" width="max-w-4xl">
+      <Band id="steps" eyebrow="Step by step" title="From “which park?” to “found it!”" tone="muted">
         <p className="-mt-2 max-w-[65ch]">
           Each step is handled by <strong>code</strong>, <strong>the open model</strong>, or <strong>you</strong>. The AI has
           one job: picking the finds and writing the words.

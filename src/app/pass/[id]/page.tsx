@@ -72,47 +72,56 @@ export default async function PassPage(props: PageProps<"/pass/[id]">) {
   const weatherNow = await quickWeather(weather);
 
   return (
-    <main id="main" tabIndex={-1} className="mx-auto flex w-full max-w-3xl flex-1 flex-col gap-6 px-5 py-10 focus:outline-none sm:py-14">
-      {/* Print first: on a phone the pass is long, and printing is the point (R1 judge/UX). */}
-      <div className="flex flex-wrap items-center gap-3">
-        {/* Opens the one-page print layout, which opens the print dialog once (ADR 0004). */}
-        <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
-          Print pass
-        </Link>
-        <p className="text-base text-muted-foreground">
-          {/* Review MAJOR-3: a pass estimated to need 2 printed pages doesn't promise one (src/lib/pass/print-size.ts). */}
-          {passPagePrintLine(pass, ADULT_PRINT_LINE)}
-        </p>
-      </div>
-      <FocusPassHeading />
-      {/* Weather for the park (Kevin, Oct 8): screen only, streamed in so the pass never waits for it; real Open-Meteo
-          forecast + weather.gov alerts, or the honest "No weather data available" line (src/lib/weather). */}
-      {weatherNow ? (
-        <WeatherCard view={weatherNow} />
-      ) : (
-        <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
-          <ParkWeather view={weather} />
-        </Suspense>
-      )}
-      {/* Trip tips (Kevin, Oct 8): made once with the pass from that day's forecast, the park map and the sightings
-          (src/lib/tips); screen only. An older pass says it was made before trip tips existed. */}
-      <TripTips tips={pass.tripTips} today={today()} />
-      <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
-      <div className="flex flex-col gap-4">
-        <DifferentPassButton
-          parkId={pass.park.id}
-          ageBand={pass.ageBand}
-          variant={pass.variant}
-          madeToday={pass.day === today()}
-          example={sp.example === "1"}
-          account={{ signedIn, options: signInOptions(), freeLeft }}
-          returnTo={`/pass/${pass.id}`}
-        />
-        {/* Kevin 2026-10-08: signed-in grown-ups rate the pass (stars + tags, no text); signed out: a sign-in link. */}
-        <PassFeedback passId={pass.id} signedIn={signedIn} judge={session?.p === "judge"} adult={isAdultBand(pass.ageBand)} />
-        <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
-          Pick another park
-        </Link>
+    <main id="main" tabIndex={-1} className="gp-container flex flex-1 flex-col py-10 focus:outline-none sm:py-14">
+      {/* Wide layout (Kevin 2026-10-09): one column below 1280 px, as before. From 1280 px the trip side (Print, weather,
+          trip tips) is a left column and the pass a right one, in the same reading order; the pass keeps a comfortable width. */}
+      <div className="mx-auto flex w-full max-w-3xl flex-col gap-6 xl:grid xl:max-w-none xl:grid-cols-[minmax(0,25rem)_minmax(0,48rem)] xl:items-start xl:justify-center xl:gap-10 2xl:grid-cols-[minmax(0,28rem)_minmax(0,52rem)] 2xl:gap-14">
+        <div className="flex min-w-0 flex-col gap-6" data-testid="pass-trip-side">
+          {/* Print first: on a phone the pass is long, and printing is the point (R1 judge/UX). */}
+          <div className="flex flex-wrap items-center gap-3">
+            {/* Opens the one-page print layout, which opens the print dialog once (ADR 0004). */}
+            <Link href={`/pass/${pass.id}/print?print=1`} prefetch={false} className={buttonClassName("primary")}>
+              Print pass
+            </Link>
+            <p className="text-base text-muted-foreground">
+              {/* Review MAJOR-3: a pass estimated to need 2 printed pages doesn't promise one (src/lib/pass/print-size.ts). */}
+              {passPagePrintLine(pass, ADULT_PRINT_LINE)}
+            </p>
+          </div>
+          <FocusPassHeading />
+          {/* Weather for the park (Kevin, Oct 8): screen only, streamed in so the pass never waits for it; real Open-Meteo
+              forecast + weather.gov alerts, or the honest "No weather data available" line (src/lib/weather). */}
+          {weatherNow ? (
+            <WeatherCard view={weatherNow} />
+          ) : (
+            <Suspense fallback={<WeatherCardLoading parkName={parkName} />}>
+              <ParkWeather view={weather} />
+            </Suspense>
+          )}
+          {/* Trip tips (Kevin, Oct 8): made once with the pass from that day's forecast, the park map and the sightings
+              (src/lib/tips); screen only. An older pass says it was made before trip tips existed. */}
+          <TripTips tips={pass.tripTips} today={today()} />
+        </div>
+        <div className="flex min-w-0 flex-col gap-6">
+          <PassPreview pass={pass} reused={sp.reused === "1"} reports={{ signedIn, stats }} />
+          <div className="flex flex-col gap-4">
+            <DifferentPassButton
+              parkId={pass.park.id}
+              ageBand={pass.ageBand}
+              variant={pass.variant}
+              madeToday={pass.day === today()}
+              example={sp.example === "1"}
+              account={{ signedIn, options: signInOptions(), freeLeft }}
+              returnTo={`/pass/${pass.id}`}
+            />
+            {/* Kevin 2026-10-08: signed-in grown-ups rate the pass (stars + tags, no text); signed out: a sign-in link. */}
+            <PassFeedback passId={pass.id} signedIn={signedIn} judge={session?.p === "judge"} adult={isAdultBand(pass.ageBand)} />
+            <Link href="/" prefetch={false} className={buttonClassName("secondary", "self-start")}>
+              Pick another park
+            </Link>
+          </div>
+
+        </div>
       </div>
     </main>
   );

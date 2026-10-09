@@ -98,10 +98,11 @@
     },
     {
       "id": "home.pass.park.body",
-      "decision": "accepted",
+      "decision": "edited",
       "stage": "agent-review",
-      "reason": "True and shorter; it says code writes the counts. Straight quotes set as curly quotes in JSX.",
-      "shipped": "Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like \"2 basketball courts.\""
+      "reason": "True and shorter; it says code writes the counts. Straight quotes set as curly quotes in JSX. Owner edit (Kevin, 2026-10-09, not Gemma): the example count now matches the Oak Point pass shown beside it (8 bridges on its park map), so the accepted Gemma draft became \"edited\".",
+      "shipped": "Hoops, bridges and playgrounds pulled from OpenStreetMap. Code adds real counts, like \"8 bridges.\"",
+      "factFixAfterRun": true
     },
     {
       "id": "home.pass.lucky.body",

@@ -102,7 +102,7 @@ function ParkCard({ park }: { park: Park }) {
             alt={pic.alt}
             width={pic.width}
             height={pic.height}
-            sizes="(min-width: 1280px) 600px, (min-width: 768px) 46vw, 100vw"
+            sizes="(min-width: 1536px) 760px, (min-width: 768px) 46vw, 100vw"
             className="h-full w-full object-cover transition-transform duration-700 ease-out motion-safe:group-hover:scale-[1.03]"
           />
           {/* UX-6-04: plain text; the linked source and licence are in the one "Photo credits and licences" link. */}
@@ -149,11 +149,11 @@ function ParkCard({ park }: { park: Park }) {
 export function TwoParks() {
   return (
     <section id="why" aria-labelledby="why-title" className="scroll-mt-28 overflow-x-clip sm:scroll-mt-16">
-      <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 pt-16 pb-2 md:px-8 lg:gap-12 lg:pt-24 lg:pb-4">
+      <div className="gp-container flex flex-col gap-10 pt-16 pb-2 lg:gap-12 lg:pt-24 lg:pb-4">
         <div className="grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-x-14">
           <div className="flex flex-col gap-4 lg:col-span-6">
             <p className="text-xs font-bold tracking-widest text-link uppercase">The problem</p>
-            <h2 id="why-title" className="text-3xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-4xl lg:text-5xl">
+            <h2 id="why-title" className="text-3xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-4xl lg:text-5xl 2xl:text-6xl">
               Why &ldquo;Find a pinecone&rdquo;{" "}
               <span className="relative inline-block whitespace-nowrap">
                 fails.
@@ -165,7 +165,7 @@ export function TwoParks() {
             </h2>
           </div>
           <div className="flex flex-col gap-4 lg:col-span-6">
-            <p className="max-w-2xl text-base leading-relaxed text-pretty text-muted-foreground">
+            <p className="max-w-[68ch] text-base leading-relaxed text-pretty text-muted-foreground 2xl:text-lg">
               Generic scavenger hunts fail because parks aren&rsquo;t generic. A manicured city park has basketball hoops; a
               rugged nature preserve has butterflies. That&rsquo;s why Grass Pass builds every adventure from scratch using your
               park&rsquo;s exact map and the last two weeks of local wildlife sightings.
@@ -192,7 +192,7 @@ export function TwoParks() {
             <ParkCard park={TWO_PARKS[1]} />
           </div>
 
-          <p className="text-[13px] leading-snug text-pretty text-muted-foreground sm:text-sm" data-testid="two-parks-source">
+          <p className="max-w-[75ch] text-[13px] leading-snug text-pretty text-muted-foreground sm:text-sm" data-testid="two-parks-source">
             {TWO_PARKS_SOURCE}
           </p>
         </div>

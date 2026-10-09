@@ -301,19 +301,19 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
 
   return (
     <section id="pass" aria-labelledby="pass-title" className="gp-anatomy scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
-      <div className="mx-auto grid max-w-7xl gap-10 px-5 py-16 md:px-8 lg:grid-cols-12 lg:gap-x-14 lg:gap-y-10 lg:py-24">
+      <div className="gp-container grid gap-10 py-16 lg:grid-cols-12 lg:grid-rows-[auto_1fr] lg:gap-x-14 lg:gap-y-10 lg:py-24">
         <div className="flex flex-col gap-4 lg:col-span-5 lg:col-start-8 lg:row-start-1">
           <p className="text-xs font-bold tracking-widest text-link uppercase">What&apos;s a pass?</p>
-          <h2 id="pass-title" className="text-3xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-4xl lg:text-5xl">
+          <h2 id="pass-title" className="text-3xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-4xl lg:text-5xl 2xl:text-6xl">
             Proof in every clue.
           </h2>
-          <p className="max-w-lg text-base leading-relaxed text-pretty text-muted-foreground">
+          <p className="max-w-lg text-base leading-relaxed text-pretty text-muted-foreground 2xl:max-w-xl 2xl:text-lg">
             Every clue comes from a real, dated source, listed on the grown-up&apos;s stub. So nobody spends 40 minutes hunting
             for a heron that flew off in 2019.
           </p>
         </div>
 
-        <figure className="relative isolate flex flex-col gap-4 pl-6 sm:pl-9 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1" data-testid="anatomy-figure">
+        <figure className="relative isolate flex flex-col gap-4 pl-6 sm:pl-9 2xl:pl-11 lg:col-span-7 lg:col-start-1 lg:row-span-2 lg:row-start-1" data-testid="anatomy-figure">
           {a ? (
             <>
               <span aria-hidden="true" className="grain gp-anatomy-grain pointer-events-none absolute -inset-x-5 -top-8 bottom-10 -z-10 sm:-inset-x-10" />
@@ -341,7 +341,7 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
               <Mark part={it.part} className={`mt-0.5 ${it.missing ? "gp-mark-off" : ""}`} />
               <div className="flex min-w-0 flex-col gap-1.5">
                 <div className="flex flex-wrap items-baseline gap-x-2 gap-y-1">
-                  <h3 className="font-heading text-lg leading-tight font-extrabold text-ink">{NAME[it.part]}</h3>
+                  <h3 className="font-heading text-lg leading-tight font-extrabold text-ink 2xl:text-xl">{NAME[it.part]}</h3>
                   <p className="text-xs font-semibold tracking-wide text-muted-foreground">{it.source}</p>
                 </div>
                 {it.missing ? (
@@ -355,7 +355,7 @@ export function PassAnatomy({ anatomy: a }: { anatomy: PassAnatomyData | null })
                     {it.where}
                   </p>
                 ) : null}
-                <p className="text-[0.95rem] leading-relaxed text-pretty text-muted-foreground">{it.body}</p>
+                <p className="text-[0.95rem] leading-relaxed text-pretty text-muted-foreground 2xl:text-base">{it.body}</p>
                 {it.extra}
               </div>
             </li>

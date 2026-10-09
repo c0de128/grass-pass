@@ -44,8 +44,8 @@ export function SampleParks({
       aria-labelledby="examples-title"
       className="relative z-[1] scroll-mt-28 bg-background sm:scroll-mt-16"
     >
-      <div className="mx-auto flex max-w-7xl flex-col gap-12 px-5 pt-14 pb-24 sm:pt-16 md:px-8 lg:pt-8 lg:pb-32">
-        <div className="flex flex-col gap-6 md:flex-row md:items-end md:justify-between">
+      <div className="gp-container flex flex-col gap-12 pt-14 pb-24 sm:pt-16 lg:pt-8 lg:pb-32">
+        <div className="flex flex-col gap-6 xl:flex-row xl:items-end xl:justify-between">
           <div className="flex max-w-2xl flex-col gap-4 sm:max-w-none">
             <p className="text-xs font-bold tracking-widest text-primary uppercase">
               Explore
@@ -67,7 +67,7 @@ export function SampleParks({
           <p
             data-testid="examples-live"
             data-live={live.live ? "true" : "false"}
-            className="inline-flex w-fit items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold text-ink ring-1 ring-border"
+            className="inline-flex w-fit shrink-0 items-center gap-2 rounded-full bg-card px-4 py-2 text-sm font-semibold text-ink ring-1 ring-border"
           >
             <span className="relative flex size-2.5" aria-hidden="true">
               {live.live ? (
@@ -104,7 +104,7 @@ export function SampleParks({
                     alt={pic.alt}
                     width={pic.width}
                     height={pic.height}
-                    sizes="(min-width: 1280px) 290px, (min-width: 1024px) 22vw, (min-width: 640px) 45vw, 100vw"
+                    sizes="(min-width: 1536px) 500px, (min-width: 1024px) 32vw, (min-width: 640px) 45vw, 100vw"
                     className="h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
                   />
                   <span className="absolute right-3 bottom-3 left-3 w-fit rounded-full bg-paper/95 px-2.5 py-1 text-[11px] font-semibold text-ink">
@@ -192,7 +192,7 @@ export function SampleParks({
               ...TWO_PARKS.map((p) => p.slug),
             ]),
           ]}
-          className="-mt-6 text-xs text-muted-foreground"
+          className="-mt-6 max-w-[75ch] text-xs text-muted-foreground"
         />
       </div>
     </section>

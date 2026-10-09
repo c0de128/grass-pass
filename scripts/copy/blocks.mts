@@ -165,8 +165,8 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "Park Finds card body, 1-2 sentences",
     maxChars: 170,
     text: "Hoops, shelters, bridges and playground gear, straight from the park's OpenStreetMap map, with real counts like “2 basketball courts.”",
-    facts: ["Park Finds are things mapped inside the park on OpenStreetMap: hoops, shelters, bridges, playground gear.", "Code writes the real counts, for example \"2 basketball courts\"."],
-    keep: ["OpenStreetMap", "2 basketball courts"],
+    facts: ["Park Finds are things mapped inside the park on OpenStreetMap: hoops, shelters, bridges, playground gear.", "Code writes the real counts, for example \"8 bridges\" (the Oak Point pass on the home page has 8 on its park map)."],
+    keep: ["OpenStreetMap", "8 bridges"],
   },
   {
     id: "home.pass.lucky.body",

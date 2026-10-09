@@ -93,6 +93,30 @@
   }
 }
 
+/*
+ * Wide layout (Kevin 2026-10-09: "so much unused space on the left and right"). ONE shared page container, used by
+ * every page and section box: content up to 96rem (1536 px), with side gutters that grow with the screen. Phones keep
+ * 20 px; from 768 px the gutter is 32 px until 1280 px (so the 1280 px layout is unchanged), then grows to 64 px at
+ * 1920 px and wider. Reading text keeps its own measure (max-w-[65ch] and friends) inside the wider box.
+ */
+@layer base {
+  :root {
+    --gp-content: 96rem;
+    --gp-gutter: 1.25rem;
+  }
+  @media (min-width: 48rem) {
+    :root {
+      --gp-gutter: clamp(2rem, 5vw - 2rem, 4rem);
+    }
+  }
+}
+@utility gp-container {
+  width: 100%;
+  margin-inline: auto;
+  max-width: calc(var(--gp-content) + 2 * var(--gp-gutter));
+  padding-inline: var(--gp-gutter);
+}
+
 /* Dotted "grain" behind the hero (v0). */
 @utility grain {
   background-image: radial-gradient(color-mix(in oklab, var(--gp-foreground) 10%, transparent) 1px, transparent 1px);
@@ -156,6 +180,14 @@
     --hero-cta: clamp(1.75rem, 3.7svh, 2.375rem);
     --hero-input-h: clamp(3.5rem, 6.8svh, 4.25rem);
     --hero-card-pad: clamp(1.125rem, 2.4svh, 1.75rem);
+  }
+}
+/* Wide layout: from 1536 px the hero's left column is ~30% wider, so the type may grow ~20% (still capped by height). */
+@media (min-width: 96rem) {
+  .gp-hero {
+    --hero-h1: clamp(2.75rem, min(5.1vw, 8svh), 5.1rem);
+    --hero-lead: clamp(1.125rem, 2.3svh, 1.5rem);
+    --hero-cta: clamp(1.75rem, 3.9svh, 2.75rem);
   }
 }
 
@@ -959,6 +991,15 @@ dialog.gp-wizard::backdrop {
       0 0 0 1px rgb(0 0 0 / 0.3),
       0 18px 40px -16px rgb(0 0 0 / 0.7),
       0 50px 90px -40px rgb(0 0 0 / 0.8);
+  }
+}
+/*
+ * Wide layout (2026-10-09): from 1536 px the sheet's column is ~25% wider; the whole sheet (type, markers, map) is
+ * shown 12% larger so the real pass is easier to read, not just wider. CSS zoom keeps the layout consistent.
+ */
+@media screen and (min-width: 96rem) {
+  .gp-anatomy .gp-sheet {
+    zoom: 1.12;
   }
 }
 .gp-sheet-notch {

@@ -17,9 +17,13 @@ const SIZES = [
   [1366, 768],
   [1440, 900],
   [1536, 864],
+  // Wide layout (2026-10-09): the hero grows to a 1536 px box; check the in-between and ultra-wide short screens too.
+  [1600, 900],
+  [1680, 1050],
   [1920, 1080],
   [1920, 720],
   [2560, 1440],
+  [2560, 1080],
 ] as const;
 
 for (const [width, height] of SIZES) {

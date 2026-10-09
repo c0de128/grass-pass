@@ -60,7 +60,7 @@ export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS)
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 14 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 15 } as const;
 
 export type StatTile = {
   value: string;

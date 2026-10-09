@@ -51,7 +51,8 @@ export function Disclosure({
         </span>
         <ChevronDown aria-hidden="true" className="size-5 shrink-0 motion-safe:transition-transform group-open:rotate-180" />
       </summary>
-      <div className={`flex flex-col leading-relaxed ${inset ? "gap-3 px-4 pt-1 pb-4" : "gap-4 px-5 pt-1 pb-6 sm:px-6"}`}>{children}</div>
+      {/* Wide layout (2026-10-09): running text keeps a readable measure however wide the box gets. */}
+      <div className={`flex flex-col leading-relaxed [&>p]:max-w-[75ch] ${inset ? "gap-3 px-4 pt-1 pb-4" : "gap-4 px-5 pt-1 pb-6 sm:px-6"}`}>{children}</div>
     </details>
   );
 }

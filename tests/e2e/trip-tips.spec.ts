@@ -42,11 +42,11 @@ for (const width of [360, 1280]) {
     const today = new Date().toLocaleDateString("en-CA", { timeZone: "America/Chicago" });
     if (today > "2026-10-08") await expect(sec.getByTestId("trip-tips-stale")).toContainText("These tips were made for the weather on Thu, Oct 8.");
     else await expect(sec.getByTestId("trip-tips-stale")).toHaveCount(0);
-    // Order: weather card, then trip tips, then the pass.
+    // Order: weather card, then trip tips, then the pass (below them; from 1280 px, in the column to their right).
     const wx = await page.getByTestId("weather-card").boundingBox();
     const tips = await sec.boundingBox();
     const pass = await page.locator("#pass-title").boundingBox();
-    expect(wx && tips && pass && wx.y < tips.y && tips.y < pass.y).toBe(true);
+    expect(wx && tips && pass && wx.y < tips.y && (tips.y < pass.y || tips.x + tips.width <= pass.x)).toBe(true);
     expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(width);
   });
 }

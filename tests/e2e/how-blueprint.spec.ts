@@ -76,6 +76,8 @@ test("each model example on the page matches its real recording on disk", async 
 for (const width of [360, 1280] as const) {
   for (const scheme of ["light", "dark"] as const) {
     test(`axe is clean at every scroll position, ${width} px, ${scheme}`, async ({ browser }) => {
+      // About 15 axe runs on a phone-length page, while the rest of the suite runs in parallel.
+      test.setTimeout(150_000);
       const context = await browser.newContext({ colorScheme: scheme, viewport: { width, height: 900 }, reducedMotion: "reduce" });
       const page = await context.newPage();
       await page.goto("/how-it-works");

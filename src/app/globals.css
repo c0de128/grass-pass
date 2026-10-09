@@ -320,7 +320,7 @@ dialog.gp-wizard::backdrop {
 }
 @keyframes gp-wiz-shimmer {
   50% {
-    opacity: 0.55;
+    opacity: 0.9;
   }
 }
 @keyframes gp-wiz-draw {
@@ -772,79 +772,83 @@ dialog.gp-wizard::backdrop {
 
 
 /*
- * /signin (Kevin's option A, 2026-10-08): one ticket like the pass maker's dialog. The main part has round notches
- * at its bottom corners (Kevin 2026-10-08: no ink band or logo on top); the "Why sign in?" stub below has the
- * matching half notches and a tear line. Masks cut real holes (the page shows through); a drop shadow follows them.
+ * /signin v2 (Kevin's option A "show the reward", 2026-10-08): a compact sign-in card with a judge tear-off stub,
+ * next to a small tilted preview of a REAL pinned pass on a sunny stage. Flat brand colours, layered soft shadows.
  */
-.gp-signin-ticket {
-  --seam: 5rem;
-  --notch: 14px;
-  filter: drop-shadow(0 22px 36px var(--gp-shadow)) drop-shadow(0 2px 3px var(--gp-shadow));
-}
-.gp-signin-main {
-  border-radius: 2rem 2rem 0 0;
-  overflow: hidden;
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 100%, #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% 100%, #0000 97%, #000 100%);
-  -webkit-mask-composite: source-in;
-  mask:
-    radial-gradient(circle var(--notch) at 0 100%, #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% 100%, #0000 97%, #000 100%);
-  mask-composite: intersect;
-}
-.gp-signin-stub {
+.gp-signin-card {
+  --notch: 13px;
   position: relative;
-  border-radius: 0 0 2rem 2rem;
-  -webkit-mask:
-    radial-gradient(circle var(--notch) at 0 0, #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% 0, #0000 97%, #000 100%);
-  -webkit-mask-composite: source-in;
-  mask:
-    radial-gradient(circle var(--notch) at 0 0, #0000 97%, #000 100%),
-    radial-gradient(circle var(--notch) at 100% 0, #0000 97%, #000 100%);
-  mask-composite: intersect;
+  border-radius: 1.75rem;
+  box-shadow:
+    inset 0 0 0 1px var(--gp-border),
+    0 1px 2px var(--gp-shadow),
+    0 12px 24px -8px var(--gp-shadow),
+    0 32px 64px -24px var(--gp-shadow);
 }
-/* A hairline rim so the ticket's edge shows on the night page too (the band is darker than the page in dark mode). */
-.gp-signin-main,
+/* The judge stub: a shade of muted, a dashed tear line and two notches that show the page (decorative). */
 .gp-signin-stub {
-  box-shadow: inset 0 0 0 1px var(--gp-border);
+  margin: 0 1px 1px;
+  background: color-mix(in oklab, var(--gp-muted) 55%, var(--gp-card));
+  border-radius: 0 0 calc(1.75rem - 1px) calc(1.75rem - 1px);
 }
-.gp-signin-main > :first-child {
-  box-shadow: inset 0 1px 0 0 var(--gp-border), inset 1px 0 0 0 var(--gp-border), inset -1px 0 0 0 var(--gp-border);
-}
-/* The tear line between the ticket and its stub (decorative). */
 .gp-signin-stub::before {
   content: "";
   position: absolute;
   top: -1px;
-  left: calc(var(--notch) + 8px);
-  right: calc(var(--notch) + 8px);
-  border-top: 2px dashed var(--gp-line);
+  left: 1.25rem;
+  right: 1.25rem;
+  border-top: 2px dashed color-mix(in oklab, var(--gp-line) 70%, transparent);
+}
+/* Room for the live count (two short lines) before it arrives, so nothing below jumps (CLS). */
+.gp-signin-stub [data-testid="judge-left"] {
+  min-height: 2.5rem;
+  text-wrap: balance;
 }
 .gp-signin-grain {
-  -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 30%, #000 0%, #0000 75%);
-  mask-image: radial-gradient(ellipse 60% 55% at 50% 30%, #000 0%, #0000 75%);
-}
-/* A thin rule between the account buttons and the judge box. */
-.gp-signin-rule {
-  border: 0;
-  border-top: 1px solid var(--gp-border);
-  margin: 0.25rem 0;
-}
-.gp-signin-judge {
-  background: var(--gp-muted);
-}
-/* The stub is a shade of the judge box's fill, so it reads as its own tear-off part (text >= 5.7:1 on it, both themes). */
-.gp-signin-stub {
-  background: color-mix(in oklab, var(--gp-muted) 45%, var(--gp-card));
+  -webkit-mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, #000 0%, #0000 75%);
+  mask-image: radial-gradient(ellipse 70% 60% at 50% 35%, #000 0%, #0000 75%);
 }
 /* Error line: a light wash of the error colour behind ink text. */
 .gp-signin-error {
   background: color-mix(in oklab, var(--gp-destructive) 9%, var(--gp-card));
 }
-.gp-signin-judge [data-testid="judge-left"] {
-  text-wrap: balance;
+/* The preview ticket: a slight tilt and layered shadows, like a pass set down on the grass (decorative). */
+.gp-signin-tilt {
+  rotate: -2deg;
+}
+.gp-signin-pass {
+  box-shadow:
+    0 1px 2px var(--gp-shadow),
+    0 14px 28px -10px var(--gp-shadow),
+    0 40px 70px -30px var(--gp-shadow);
+}
+.gp-signin-notch {
+  background: var(--gp-background);
+}
+.gp-signin-spot {
+  background: var(--gp-muted);
+}
+/* A soft sun behind the preview ticket (decorative; the brand's stub sun). */
+.gp-signin-sun {
+  background: var(--gp-sun);
+}
+:root[data-theme="dark"] .gp-signin-sun {
+  opacity: 0.9;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .gp-signin-sun {
+    opacity: 0.9;
+  }
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-signin-tilt {
+    transition: rotate 300ms ease, translate 300ms ease;
+  }
+  .gp-signin-preview:hover .gp-signin-tilt,
+  .gp-signin-preview:focus-within .gp-signin-tilt {
+    rotate: 0deg;
+    translate: 0 -4px;
+  }
 }
 /* Google / GitHub buttons: Google's sign-in branding colours (neutral button, 1 px outline), both themes. */
 .gp-oauth-btn {

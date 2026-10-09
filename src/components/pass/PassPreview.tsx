@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { Chip, SECTION_LABELS } from "@/components/ui/Chip";
 import { TicketCard } from "@/components/ui/TicketCard";
-import { LUCKY_MAYBE } from "./KidPass";
+import { luckyLead } from "@/lib/pass/lucky-lead";
 import { ItemReport } from "./ItemReport";
 import { OctoberBox } from "./OctoberBox";
 import type { PassItemStats } from "@/lib/reports/stats";
@@ -9,7 +9,7 @@ import { WINDOW_DAYS } from "@/lib/reports/kinds";
 import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { safeParkName } from "@/lib/ai/validate";
-import { BUILT_WITH_LLAMA, formatDay, formatTime, isLlamaModel, modelLicence, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
+import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, passDayLine, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
 import { AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
 import { AGE_BAND_INFO, isAdultBand, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
@@ -57,7 +57,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
             {parkName}
           </h1>
           <p className="text-base text-muted-foreground">
-            {AGE_BAND_INFO[pass.ageBand].label} · {formatDay(pass.day)} · {pass.items.length} {pass.items.length === 1 ? "find" : "finds"}
+            {AGE_BAND_INFO[pass.ageBand].label} · {passDayLine(pass)} · {pass.items.length} {pass.items.length === 1 ? "find" : "finds"}
           </p>
         </header>
 
@@ -100,7 +100,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
                       <div className="flex flex-col gap-0.5">
                         <p className="text-lg font-semibold">
                           <span className="sr-only">Find {numbered.get(it)}: </span>
-                          {it.section === "lucky" ? <span>{LUCKY_MAYBE} </span> : null}
+                          {luckyLead(it) ? <span>{luckyLead(it)} </span> : null}
                           {it.clue}
                         </p>
                         {it.lookWhere ? <p className="text-base">Look: {it.lookWhere}</p> : null}

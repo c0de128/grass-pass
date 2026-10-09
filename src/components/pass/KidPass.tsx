@@ -1,4 +1,5 @@
 import { AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
+import { luckyLead } from "@/lib/pass/lucky-lead";
 import Image from "next/image";
 import type { ComponentType, ReactNode, SVGProps } from "react";
 import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icons";
@@ -38,8 +39,8 @@ const SECTION_ONE: Record<SectionId, string> = {
   lucky: SECTION_LABELS.lucky.replace(/s$/, ""),
 };
 
-/** S6: printed before a Lucky Find's clue, so the kid knows it may not be there today. */
-export const LUCKY_MAYBE = "Maybe!";
+/** S6: printed before a Lucky Find's clue (src/lib/pass/lucky-lead.ts), so the kid knows it may not be there today. */
+export { LUCKY_MAYBE } from "@/lib/pass/lucky-lead";
 
 /** Fixed kid safety line printed on every pass (ADR 0003); a 13+ pass prints its own line (src/lib/pass/audience.ts). */
 export const KID_STAY_CLOSE = AUDIENCE_COPY.kid.stayClose;
@@ -53,7 +54,8 @@ export function estimatedLines(items: readonly PassItem[]): number {
   return items.reduce((n, it) => {
     // The evidence is small print (8.5 pt) on the hint line: about 0.8 of a hint character each.
     const hint = (it.lookWhere ? it.lookWhere.length + 8 : 0) + (it.safety?.length ?? 0) + Math.ceil((it.evidence.length + 2) * 0.8);
-    const clue = it.clue.length + (it.section === "lucky" ? LUCKY_MAYBE.length + 1 : 0);
+    const lead = luckyLead(it);
+    const clue = it.clue.length + (lead ? lead.length + 1 : 0);
     return n + Math.ceil(clue / CLUE_CHARS_PER_LINE) + Math.ceil(hint / HINT_CHARS_PER_LINE);
   }, 0);
 }
@@ -153,7 +155,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
                       <span className="sr-only">
                         Find {i + 1}, {SECTION_ONE[it.section]}:{" "}
                       </span>
-                      {it.section === "lucky" ? <span className="gp-maybe">{LUCKY_MAYBE} </span> : null}
+                      {luckyLead(it) ? <span className="gp-maybe">{luckyLead(it)} </span> : null}
                       {it.clue}
                     </p>
                     <p className="gp-hint">

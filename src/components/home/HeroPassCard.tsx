@@ -1,6 +1,7 @@
 import { ArrowUpRight, Check } from "lucide-react";
 import Link from "next/link";
 import { bandLabel, placeLabel, type HeroCard } from "@/lib/home/showcase";
+import { luckyLead } from "@/lib/pass/lucky-lead";
 
 /**
  * The tilted pass card over the hero picture (Kevin's v0 design), filled from a REAL saved example pass:
@@ -54,7 +55,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className={`text-sm leading-snug font-medium ${done ? "line-through decoration-primary/70 decoration-2" : ""}`}>
-                      {find.section === "lucky" ? "Maybe! " : ""}
+                      {luckyLead(find) ? `${luckyLead(find)} ` : ""}
                       {find.clue}
                     </span>
                     <span className="text-[11px] text-muted-foreground">{find.evidence}</span>

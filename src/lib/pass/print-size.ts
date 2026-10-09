@@ -19,7 +19,7 @@
  * Limits: calibrated on 6-10 sheets only (4-6 and 10-13 use the same kid layout; a 13+ sheet has its own fonts and a
  * 0.87 floor, so it is not estimated: `likelyOnePage` answers null). Character counts stand in for real text widths.
  */
-import { LUCKY_MAYBE } from "@/components/pass/KidPass";
+import { luckyLead } from "./lucky-lead";
 import { STUB_LOOK_ONLY } from "@/components/pass/ParentStub";
 import { copyFor } from "./audience";
 import { AGE_BAND_INFO, type Pass } from "./schema";
@@ -84,7 +84,8 @@ function sourceLines(pass: Pass, passUrlLength: number): string[] {
  */
 export function estimatePrintPx(pass: Pass, passUrlLength: number = `grass-pass.vercel.app/pass/${pass.id}`.length): number {
   const rows = pass.items.reduce((sum, it) => {
-    const clue = `${it.section === "lucky" ? `${LUCKY_MAYBE} ` : ""}${it.clue}`;
+    const lead = luckyLead(it);
+    const clue = `${lead ? `${lead} ` : ""}${it.clue}`;
     return sum + ROW_PX + (hintText(it).length > HINT_ONE_LINE_CHARS ? ROW_WRAP_PX : 0) + (clue.length > CLUE_ONE_LINE_CHARS ? ROW_WRAP_PX : 0);
   }, 0);
   const spot = pass.spot?.status === "ok";

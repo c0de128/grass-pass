@@ -9,6 +9,9 @@ import { z } from "zod";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { OtherParks } from "@/components/pass/PassMaker";
 import AboutPage from "@/app/about/page";
+import { metadata as notFoundMetadata } from "@/app/not-found";
+import { LUCKY_MAYBE, luckyLead } from "@/lib/pass/lucky-lead";
+import { passDayLine } from "@/lib/pass/format";
 import { dataSources, WEATHER_SOURCES } from "@/lib/about/content";
 import { createJsonCache } from "@/lib/cache";
 import { getStore, resetStores } from "@/lib/cache/store";
@@ -253,5 +256,28 @@ describe("MINOR-3: /about counts every outside data service", () => {
     expect(html).not.toContain("4 real data sources");
     expect(html).not.toContain("Four real sources");
     for (const name of ["OpenStreetMap", "iNaturalist", "Wikipedia", "SerpApi", "Open-Meteo", "National Weather Service", "Nominatim"]) expect(html).toContain(name);
+  });
+});
+
+describe("NITs", () => {
+  it("NIT-1: the 404 page has its own title", () => {
+    expect(notFoundMetadata.title).toBe("Page not found · Grass Pass");
+  });
+
+  it("NIT-3: the code-written 'Maybe!' lead is left out when the model's clue already says maybe (the clue is unchanged)", () => {
+    expect(luckyLead({ section: "lucky", clue: "What is a moving thing with two wheels and pedals you maybe see today?" })).toBeNull();
+    expect(luckyLead({ section: "lucky", clue: "Spot a furry pet with a wagging tail." })).toBe(LUCKY_MAYBE);
+    expect(luckyLead({ section: "park", clue: "Maybe the slide?" })).toBeNull();
+    // Real recorded Lucky Finds keep their lead unless they say "maybe" themselves.
+    const pass = recordedPass("pass-celebration-lucky-live");
+    for (const it of pass.items.filter((i) => i.section === "lucky")) expect(luckyLead(it)).toBe(/maybe/i.test(it.clue) ? null : LUCKY_MAYBE);
+  });
+
+  it("NIT-5: an evening pass says the day it was made and the day its forecast is for", () => {
+    const pass = recordedPass("pass-celebration-6to10-tips-live");
+    expect(passDayLine(pass)).toMatch(/^[A-Z][a-z]+day, [A-Z][a-z]{2} \d{1,2}$/);
+    const t = pass.tripTips!;
+    expect(passDayLine({ day: "2026-10-08", tripTips: { ...t, forecast: true, forDate: "2026-10-09" } })).toBe("Made Thursday, Oct 8 for Friday, Oct 9");
+    expect(passDayLine({ day: "2026-10-08", tripTips: { ...t, forecast: false, forDate: "2026-10-08" } })).toBe("Thursday, Oct 8");
   });
 });

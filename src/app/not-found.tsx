@@ -1,6 +1,10 @@
+import type { Metadata } from "next";
 import Link from "next/link";
 import { buttonClassName } from "@/components/ui/Button";
 import { TicketCard } from "@/components/ui/TicketCard";
+
+/** Review 2026-10-08 NIT-1: the tab said the home page's title on a 404. */
+export const metadata: Metadata = { title: "Page not found · Grass Pass", robots: { index: false, follow: false } };
 
 /** Any address that isn't a page here (HTTP 404). */
 export default function NotFound() {

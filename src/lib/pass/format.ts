@@ -26,6 +26,16 @@ export function formatDay(day: string): string {
   return new Intl.DateTimeFormat("en-US", { weekday: "long", month: "short", day: "numeric", timeZone: "UTC" }).format(new Date(Date.UTC(y, m - 1, d)));
 }
 
+/**
+ * Review 2026-10-08 NIT-5: a pass made after 6 PM carries tomorrow's forecast and trip tips ("Fri, Oct 9") while its day
+ * is today ("Thursday, Oct 8"). The screen says both: "Made Thursday, Oct 8 for Friday, Oct 9". Same day: just the day.
+ */
+export function passDayLine(pass: { day: string; tripTips?: { forecast: boolean; forDate: string } | null }): string {
+  const t = pass.tripTips;
+  if (t && t.forecast && t.forDate !== pass.day) return `Made ${formatDay(pass.day)} for ${formatDay(t.forDate)}`;
+  return formatDay(pass.day);
+}
+
 /** Licence of an open model, from its id (shown next to the model that actually answered). */
 export function modelLicence(modelId: string): string | null {
   const l = modelId.toLowerCase();

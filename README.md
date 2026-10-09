@@ -35,8 +35,8 @@ Live demo: https://grass-pass.vercel.app (live since Oct 8, 2026; sign-in with G
    made, so it opens at once, with no sign-in.
 2. Press **Print pass**. One Letter page: the kid's pass on top, the grown-up's stub below.
 3. To make your own: search a park by name (for example "Arbor Hills Nature Preserve") or a town, pick a park and an
-   age, and press **Make my pass**. A new pass needs a grown-up to sign in (GitHub or Google, both live on the site; 2 a day);
-   judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
+   age, and press **Make my pass**. The first new pass each day needs no sign-in; after that a grown-up signs in (GitHub
+   or Google, both live on the site; 5 a day), and judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
    servers are slow.
 
 A town search lists the **10 nearest** named parks within 5 km, so a park you know may be missing ("Allen TX" lists 10
@@ -168,7 +168,7 @@ ollama create gemma4-e2b-8k -f evals/selfhost/Modelfile
 #    MODEL_REASONING_EFFORT=none     # Gemma 4 "thinking" off; Ollama turns it on by default
 #    LOCAL_MODEL_TIMEOUT_MS=270000   # longer clock for a model on THIS computer (off by default, never on Vercel):
 #                                    # 4.5 min a call, 10 min a pass; the page waits and says why
-#    AUTH_SECRET=...                 # npx auth secret (a new pass needs a sign-in; "Try as a judge" works)
+#    AUTH_SECRET=...                 # npx auth secret (1 free pass a day without it; more need a sign-in; "Try as a judge" works)
 pnpm dev
 #    Then open http://localhost:3000, press "Try as a judge", pick a park and "Make my pass" (96 s in our one try)
 # 4. Or measure it yourself, free, on the recorded parks (about 6 + 10 minutes on the laptop above)
@@ -332,18 +332,26 @@ checked against the results JSON by a unit test).
   ([details](#run-it-yourself-self-hosted-gemma-measured)).
 
 ## Accounts and reports
-Anyone can search, open the example passes and any shared link, and print. **A NEW pass needs a grown-up to sign in**
-with GitHub or Google (both set up on the live site; a self-hosted copy shows the ones it has keys for; Auth.js / next-auth v5; no password stored): **2 new passes a day per account** (Chicago
-day). A pass already made today for that park and age is served to anyone. **Try as a judge** signs in to a shared
-demo account in one click (`JUDGE_DEMO_DAILY_CAP`, default 60 a day for all judges, at most 3 per connection).
-Signed-in visitors can report each find (Found it / Didn't find it / Not safe); thresholds count different accounts,
-and judge demo reports are only logged. Limits, sessions, moderation and provider setup:
+Anyone can search, open the example passes and any shared link, and print. **Without signing in, a browser gets 1
+free new pass a day** (Chicago day), counted by one small signed cookie (below), and at most
+`ANON_PASSES_PER_IP_PER_DAY` (default 3) signed-out new passes a day come from one internet connection, so clearing
+cookies can't drain the model budget. **After that, a grown-up signs in** with GitHub or Google (both set up on the live
+site; a self-hosted copy shows the ones it has keys for; Auth.js / next-auth v5; no password stored): **5 new passes a
+day per account** (`ACCOUNT_DAILY_PASSES`). A pass already made today for that park and age is served to anyone and
+counts for nobody; a park without enough real data never uses up a pass. **Try as a judge** signs in to a shared demo
+account in one click (`JUDGE_DEMO_DAILY_CAP`, default 60 a day for all judges, at most 3 per connection). Signed-in
+visitors can report each find (Found it / Didn't find it / Not safe); thresholds count different accounts, and judge
+demo reports are only logged. Signed-in visitors can also **rate a pass**: 1 to 5 stars and tags (Too easy, Too hard,
+Kids loved it, Something was missing, Not safe), no free text; one rating per account per pass (the newest counts),
+kept 90 days, never shown publicly (the owner reads the totals with `pnpm feedback:report`); judge demo ratings are
+only logged. Limits, sessions, moderation and provider setup:
 [`docs/OPERATIONS.md`](docs/OPERATIONS.md#accounts-and-visitor-reports).
 
 ## Privacy
 No names, no photos, no analytics, and nothing about the child is asked for or sent. Browsing, examples, shared links
-and printing set no cookie; a grown-up who signs in gets one encrypted, httpOnly, SameSite=Lax cookie (Secure on
-https). What leaves the device (also on `/about`):
+and printing set no cookie. Using the free pass sets one small httpOnly, SameSite=Lax cookie (Secure on https) that
+holds only the date and a count, and a grown-up who signs in gets one encrypted, httpOnly, SameSite=Lax cookie (Secure
+on https). What leaves the device (also on `/about`):
 
 | What | Where it goes | Why |
 |---|---|---|
@@ -353,7 +361,9 @@ https). What leaves the device (also on `/about`):
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
 | Every request (IP, web address, time) | Vercel request logs, about 1 hour on the Hobby plan; searches are POSTs, so the logs never hold the typed place or location | running the site |
-| Signing in (grown-ups only) | GitHub or Google sends the public profile (account number, name, picture link; for GitHub any public email). We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`); the rest is dropped at once: no email, name or avatar is stored. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in; the judge demo sign-in stops working after 1 day | count 2 new passes a day and the reports |
+| Signing in (grown-ups only) | GitHub or Google sends the public profile (account number, name, picture link; for GitHub any public email). We store only an HMAC of provider + account number (keyed with `AUTH_SECRET`); the rest is dropped at once: no email, name or avatar is stored. A first name goes only into the person's own encrypted cookie. Scopes: GitHub `read:user`, Google `openid profile`. 7 days from sign-in; the judge demo sign-in stops working after 1 day | count 5 new passes a day, the reports and the ratings |
+| Free-pass cookie (signed out) | stays in the browser: `gp-free` (`__Host-gp-free` on https) = the Chicago date + how many free passes were used today + an HMAC signature (keyed from `AUTH_SECRET`, or `LIMITER_KEY_SECRET` without sign-in), so it can't be edited. No ID. httpOnly, SameSite=Lax, Secure on https, expires at the next Chicago midnight, set only when a free pass is really used. The server keeps no copy (only the per-connection count above, as a keyed hash) | count 1 free new pass a day |
+| Pass ratings (signed in) | per park, each account's latest stars, tags and day per pass under the same per-park reporter ID as item reports; no text; judge demo ratings only logged; deleted after 90 days; never shown publicly | learn which passes work for kids |
 | Item reports | per park and item, each visitor's latest kind and day under a per-park reporter ID (an HMAC, so IDs can't be linked across parks); judge demo reports only logged; deleted after 90 days | learn what is findable, leave out unfindable or unsafe finds |
 | The finished pass | Upstash Redis, 30 days | the pass link and print page |
 

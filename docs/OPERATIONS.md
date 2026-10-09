@@ -43,12 +43,15 @@ store command:
   prefetch (`prefetch={false}`), so one click is one request. An e2e (`pnpm e2e:limits`) walks home, every example
   pass and its print page three times at the default limits and expects no 429.
 - **Store cost:** each request is charged about the store commands it can cause (a saved-pass page 1, plus 1 for a
-  signed-in visitor's report counts; `/api/pass` 5, `/api/parks` 4, `/api/report` 5, a sign-in start/callback or a
-  sign-in button 1, the judge passes left 1, the header's "who is signed in" check 0; measured in
+  signed-in visitor's report counts; `/api/pass` 5, `/api/parks` 4, `/api/report` 5, `/api/feedback` 4, a sign-in
+  start/callback or a sign-in button 1, the judge passes left 1, the passes left 1, `/api/free-pass` 0, the header's
+  "who is signed in" check 0; measured in
   `tests/unit/store-cost.test.ts`): 60 at once, then 45 an hour per IP. Measured with the real store code
   (2026-10-06, round 4): a cache hit 3, a cached failure (not a park, too big, too slow, OpenStreetMap resting) 4,
-  a signed-out new-pass request 2, an account over its 2 a day 5 the first time then 4, a judge over its 3 per
-  connection 5, a report 4 (a repeat 3, a judge demo report 4), a cached park search 3; a new pass 113 with the
+  a signed-out visitor whose free pass is used 2, a signed-out connection over its free passes 5, an account over
+  its 5 a day 5 the first time then 4, a judge over its 3 per connection 5, a report 4 (a repeat 3, a judge demo
+  report 4), a rating 4 (a re-rating 3, a judge demo rating 3), the passes left 1 (signed out 0), a cached park
+  search 3; re-measured 2026-10-08: a signed-out new pass 115 and a signed-in one 117; a new pass 113 with the
   usage bookkeeping (the biggest test park, Connemara), 118 when it also starts a fresh Lucky Finds lookup (4
   SerpApi searches; Celebration Park 55), and an uncached park search 15, which only an address's daily share of
   new passes (20) and searches (60) can reach.
@@ -87,18 +90,46 @@ This is a decision for the project owner (see `ACCEPTED-RISKS.md` / the decision
 Vercel.
 
 ## Accounts and visitor reports
-Kevin's rules (2026-10-06): anyone can search parks, open the example passes and any shared pass link, and print.
-**Making a NEW pass needs a grown-up to sign in** with GitHub, or Google when configured (OAuth through Auth.js / next-auth v5; no
-password is ever stored), **2 new passes a day per account** (Chicago day). A pass already made today for that park
-and age is served to anyone (it costs nothing). The order on `POST /api/pass` is: signed in? -> the account's daily
-count -> the existing per-IP and global limits; the account's count is given back unless an upstream call really
-started (a failed build that did call the model still counts). A rebuild of today's pass after a source was down
-(at most 3 a day per park and age) does not count toward anyone's 2.
+Kevin's rules (2026-10-06, limits changed 2026-10-08): anyone can search parks, open the example passes and any shared
+pass link, and print. **Without signing in, a browser gets 1 free NEW pass per Chicago day.** After that **a grown-up
+signs in** with GitHub, or Google when configured (OAuth through Auth.js / next-auth v5; no password is ever stored):
+**`ACCOUNT_DAILY_PASSES` new passes a day per account** (default 5; it was 2 until 2026-10-08). A pass already made today
+for that park and age is served to anyone (it costs nothing and counts for nobody). The order on `POST /api/pass` is:
+cached? -> signed in, or a free pass left? -> the account's (or this connection's signed-out) daily count -> the existing
+per-IP and global limits; the count is given back unless an upstream call really started (a failed build that did call
+the model still counts; a park without enough real data does not). A rebuild of today's pass after a source was down
+(at most 3 a day per park and age) does not count toward anyone's passes; a signed-out visitor is shown the saved pass
+instead of a rebuild.
+
+**The free-pass cookie** (`src/lib/limits/free-pass.ts`): `gp-free` on http, `__Host-gp-free` on https, value
+`v1.<yyyymmdd>.<count>.<HMAC-SHA256>` (only the Chicago date and a count; no ID), keyed from `AUTH_SECRET` (or the limiter
+key when sign-in is off), httpOnly, SameSite=Lax, Path=/, Secure on https, expiring at the next Chicago midnight. A
+missing, edited, forged or other-day cookie means 0 used. It is set **only when a free pass is charged**: on the
+response itself when nothing was streamed yet, otherwise the stream's last line carries the signed value
+(`free.receipt`) and the page posts it to `POST /api/free-pass`, which checks the signature and sets the cookie (it can
+only raise today's count). `GET /api/passes-left` gives the wizard its "passes left today" line (signed out: from the
+cookie, 0 store commands; an account 1 GET; the judge demo 1 MGET). **Cookies are easy to clear**, so every backstop
+still applies: `ANON_PASSES_PER_IP_PER_DAY` (default 3; quota `anon-new`, keyed by the hashed IP; 0 switches free passes
+off), the per-IP store-cost limits, the per-IP daily share of new passes (`PASS_PER_IP_PER_DAY`), `AI_DAILY_CAP`, the
+Upstash pace and budget, the breakers and the SerpApi caps. Codes: `FREE_PASS_USED` (429, until midnight),
+`ANON_IP_DAILY_LIMIT` (429), `SIGN_IN_REQUIRED` (401, only when free passes are off).
+
+**Pass ratings** (Kevin, 2026-10-08; `src/lib/feedback`): on the screen pass a signed-in grown-up picks 1-5 stars and
+any of the tags Too easy / Too hard / Kids loved it / Something was missing / Not safe (no free text: the request schema
+is strict). `POST /api/feedback`: same-origin + JSON + 2 KB guard, signed in (401), 60 an hour per IP, the pass must be
+saved (404), 30 an hour per account (the judge demo: per judge sign-in), then ONE store command: the park's hash
+`fb:{<park>}:h`, field `<pass id>|<per-park reporter id>` = `<yyyymmdd>|<stars>|<tag mask>`, so one rating per account
+per pass and the latest wins; the hash expires 90 days after its last write and each write drops older fields. Judge
+demo ratings are only logged (`feedback_judge`), once per judge sign-in per pass per day. A rating with "Not safe" logs
+`feedback_not_safe` (park, pass, stars; nothing about the person). Nothing is shown publicly. To read the counts:
+`pnpm feedback:report` (reads `UPSTASH_REDIS_REST_URL`/`_TOKEN` from the shell or `.env.local`; one SCAN plus 1 HGETALL
+and 1 GET per park; says "No data available" without Upstash or ratings).
 
 A sign-in lasts **7 days** (GitHub, or Google when configured) or **1 day** (the judge demo), counted from signing in however much it is
 used; the cookie expires at the same time. GitHub is asked only for `read:user` (no email scope, and the email
 lookup is skipped), Google only for `openid profile`. The header reads who is signed in from `GET /api/me`, which only
-decodes the cookie: browsing without signing in sets no cookie at all.
+decodes the cookie: browsing without signing in sets no cookie at all (only using a free pass sets the free-pass
+cookie above).
 
 **Try as a judge:** a big one-click button signs in to a shared demo account (no OAuth, no typing). All judges
 together get `JUDGE_DEMO_DAILY_CAP` new passes a day (default 60), at most 3 of them from one connection (IP), on top

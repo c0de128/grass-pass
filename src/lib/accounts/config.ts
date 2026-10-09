@@ -158,7 +158,7 @@ export function signInToMakeCopy(env: Env = process.env): string {
 /** ACCOUNT_DAILY_LIMIT: the account used its passes for today. */
 export function accountLimitCopy(env: Env = process.env): string {
   const n = accountPassesPerDay(env);
-  return `You used your ${n} new ${n === 1 ? "pass" : "passes"} for today. Saved passes and examples still work. You get ${n} more after midnight Dallas time.`;
+  return `You used your ${n} new passes for today. Saved passes and examples still work. You get ${n} more after midnight Dallas time.`;
 }
 
 /** What a signed-out visitor can do next: only the sign-in options this server really has (RULES-4-02). */

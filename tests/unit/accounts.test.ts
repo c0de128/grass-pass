@@ -1,12 +1,13 @@
 /**
  * Accounts (Kevin, 2026-10-06): the account key, the session cookie, which sign-in buttons exist, the
- * return-path allowlist, the sign-in gate on new passes, the 2-a-day account share (atomic, counted only when
+ * return-path allowlist, the sign-in gate on new passes, the daily account share (5 since 2026-10-08) (atomic, counted only when
  * a build really starts), the judge demo's shared cap, and the jwt/session callbacks (nothing but the key,
  * the provider and a first name).
  */
 import { afterEach, beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import { authConfig, firstName, keepToken, sessionMaxAgeFor, sessionToken } from "@/auth";
-import { ACCOUNT_COPY, enabledOAuthProviders, judgeDailyCap, judgeLeftCopy, judgeLimitMessage, JUDGE_DEMO_DAILY_CAP_DEFAULT, signInOptions } from "@/lib/accounts/config";
+import { accountLimitCopy, enabledOAuthProviders, freePassUsedCopy, judgeDailyCap, judgeLeftCopy, judgeLimitMessage, JUDGE_DEMO_DAILY_CAP_DEFAULT, signInOptions, signInToMakeCopy } from "@/lib/accounts/config";
+import { FREE_PASS_COOKIES, signFreePass } from "@/lib/limits/free-pass";
 import { judgePassesLeft } from "@/lib/accounts/judge-passes";
 import { OCTOBER_REASONS } from "@/lib/october";
 import { accountKey, judgeAccountKey, ACCOUNT_KEY_PATTERN, JUDGE_SESSION_PATTERN, reporterId } from "@/lib/accounts/key";
@@ -171,9 +172,11 @@ describe("which sign-in buttons exist", () => {
   });
 
   it("the judge button is on by default, off with JUDGE_DEMO=0; nothing at all without AUTH_SECRET", () => {
-    expect(signInOptions(ENV)).toEqual({ configured: true, providers: [], judge: true });
+    expect(signInOptions(ENV)).toEqual({ configured: true, providers: [], judge: true, perDay: 5, free: 1 });
     expect(signInOptions({ ...ENV, JUDGE_DEMO: "0" }).judge).toBe(false);
-    expect(signInOptions({ AUTH_GITHUB_ID: "x", AUTH_GITHUB_SECRET: "y" })).toEqual({ configured: false, providers: [], judge: false });
+    expect(signInOptions({ AUTH_GITHUB_ID: "x", AUTH_GITHUB_SECRET: "y" })).toEqual({ configured: false, providers: [], judge: false, perDay: 5, free: 1 });
+    // Kevin 2026-10-08: ACCOUNT_DAILY_PASSES sets the account number; ANON_PASSES_PER_IP_PER_DAY=0 switches free passes off.
+    expect(signInOptions({ ...ENV, ACCOUNT_DAILY_PASSES: "7", ANON_PASSES_PER_IP_PER_DAY: "0" })).toMatchObject({ perDay: 7, free: 0 });
   });
 
   it("the Auth.js providers follow the same env (a missing provider is not registered)", () => {
@@ -319,7 +322,7 @@ async function outcome(res: Response): Promise<{ status: number; code?: string; 
 const connemara = { parkId: PARKS.connemara.id, ageBand: "6-10" as const };
 const today = () => localDay(Date.now());
 
-describe("POST /api/pass: sign-in gate, 2 a day, judge cap", () => {
+describe("POST /api/pass: sign-in gate, 1 free pass, 5 a day, judge cap", () => {
   let replay: ReturnType<typeof passReplay>;
   let restoreLog: () => void;
   let logs: string[];
@@ -343,9 +346,10 @@ describe("POST /api/pass: sign-in gate, 2 a day, judge cap", () => {
     restoreLog();
   });
 
-  it("signed out: a new pass is 401 SIGN_IN_REQUIRED with no upstream call", async () => {
+  it("signed out with free passes switched off (ANON_PASSES_PER_IP_PER_DAY=0): 401 SIGN_IN_REQUIRED with no upstream call", async () => {
+    vi.stubEnv("ANON_PASSES_PER_IP_PER_DAY", "0");
     const o = await outcome(await route.POST(post(connemara, null)));
-    expect([o.status, o.code, o.message]).toEqual([401, "SIGN_IN_REQUIRED", ACCOUNT_COPY.signInToMake]);
+    expect([o.status, o.code, o.message]).toEqual([401, "SIGN_IN_REQUIRED", signInToMakeCopy()]);
     expect(replay.calls).toHaveLength(0);
   });
 
@@ -357,23 +361,29 @@ describe("POST /api/pass: sign-in gate, 2 a day, judge cap", () => {
     const again = await outcome(await route.POST(post(connemara, null)));
     expect(again.line?.type === "result" && again.line.cached).toBe(true);
     expect(replay.calls.length).toBe(calls);
-    // "Make a different pass" is a new pass: sign-in needed.
-    const fresh = await outcome(await route.POST(post({ ...connemara, fresh: true }, null)));
-    expect([fresh.status, fresh.code]).toEqual([401, "SIGN_IN_REQUIRED"]);
+    // "Make a different pass" is a new pass: with today's free pass used (the signed cookie), sign-in is needed.
+    const used = `${FREE_PASS_COOKIES[1]}=${signFreePass(1, Date.now())}`;
+    const fresh = await outcome(await route.POST(post({ ...connemara, fresh: true }, used)));
+    expect([fresh.status, fresh.code, fresh.message]).toEqual([429, "FREE_PASS_USED", freePassUsedCopy()]);
+    expect(replay.calls.length).toBe(calls);
   });
 
-  it("an account makes 2 new passes a day; the 3rd is refused with Kevin's copy and no upstream call", async () => {
+  it("an account makes 5 new passes a day (Kevin 2026-10-08); the 6th is refused with Kevin's copy and no upstream call", async () => {
     const a = await newAccountCookie();
-    expect((await outcome(await route.POST(post(connemara, a.cookie)))).line?.type).toBe("result");
-    expect((await outcome(await route.POST(post({ ...connemara, fresh: true }, a.cookie)))).line?.type).toBe("result");
+    const five = [connemara, { ...connemara, fresh: true }, { ...connemara, fresh: true }, { ...connemara, ageBand: "4-6" as const }, { ...connemara, ageBand: "10-13" as const }];
+    for (const p of five) {
+      const o = await outcome(await route.POST(post(p, a.cookie)));
+      expect(o.line?.type, `${JSON.stringify(p)}: ${o.code} ${o.message}`).toBe("result");
+    }
     const calls = replay.calls.length;
-    const third = await outcome(await route.POST(post({ ...connemara, fresh: true }, a.cookie)));
-    expect([third.status, third.code, third.message]).toEqual([429, "ACCOUNT_DAILY_LIMIT", ACCOUNT_COPY.accountLimit]);
+    const sixth = await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, a.cookie)));
+    expect([sixth.status, sixth.code, sixth.message]).toEqual([429, "ACCOUNT_DAILY_LIMIT", accountLimitCopy()]);
+    expect(sixth.message).toBe("You used your 5 new passes for today. Saved passes and examples still work. You get 5 more after midnight Dallas time.");
     expect(replay.calls.length).toBe(calls);
-    expect(Number(await getStore("limits").get(`q:{acct-new:${today()}}:k:${a.key}`))).toBe(2);
-    // Another account is not affected.
+    expect(Number(await getStore("limits").get(`q:{acct-new:${today()}}:k:${a.key}`))).toBe(5);
+    // Another account is not affected (Connemara 6-10 already has its 3 variants for today).
     const b = await newAccountCookie();
-    expect((await outcome(await route.POST(post({ ...connemara, fresh: true }, b.cookie)))).line?.type).toBe("result");
+    expect((await outcome(await route.POST(post({ parkId: PARKS.celebration.id, ageBand: "6-10" }, b.cookie)))).line?.type).toBe("result");
   });
 
   it("counted only when a build really starts: a refusal before any upstream call gives the share back", async () => {

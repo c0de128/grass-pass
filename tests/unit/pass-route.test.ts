@@ -18,7 +18,7 @@ const FAKE_KEY = "test-key-not-real";
 let n = 0;
 const nextIp = () => `203.0.113.${(++n % 250) + 1}`;
 
-/** A signed-in grown-up (a new account per request, so the 2-a-day account share never interferes). */
+/** A signed-in grown-up (a new account per request, so the daily account share never interferes). */
 function post(body: unknown, headers: Record<string, string> = {}, ip = nextIp()) {
   return new Request("http://localhost:3123/api/pass", {
     method: "POST",

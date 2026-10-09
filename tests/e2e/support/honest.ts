@@ -25,9 +25,11 @@ export const HONEST_SKIP_CODES = new Set([
   "RATE_LIMITED",
   "IP_DAILY_LIMIT",
   "DAILY_LIMIT",
-  // Accounts: the judge demo's shared daily cap, or the account's 2 a day (tests share the demo account).
+  // Accounts: the judge demo's shared daily cap, or the account's daily passes (tests share the demo account); a signed-out visitor's free pass or connection share.
   "JUDGE_DAILY_LIMIT",
   "ACCOUNT_DAILY_LIMIT",
+  "FREE_PASS_USED",
+  "ANON_IP_DAILY_LIMIT",
   "STORE_UNAVAILABLE",
   // The page stopped waiting after 95 s and said so.
   "CLIENT_TIMEOUT",

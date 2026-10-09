@@ -309,7 +309,9 @@ describe("/about", () => {
     // 650, +10 for the Q-5-02 cost caveat on the cost tile (honesty over brevity), +20 for the 5th photo credit (judge R7
     // T1: Oak Point is an example now; Connemara's photo stays in the "two parks" band, and every photo is credited).
     // Review 2026-10-08 MINOR-3: +25 so the data card lists all 6 real sources (Open-Meteo and weather.gov too).
-    expect(visible.split(" ").length).toBeLessThanOrEqual(715);
+    // Kevin 2026-10-08 pass limits: +20 for the Privacy card's free-pass cookie line (date + count, no ID) and the
+    // "1 free pass a day; sign in for 5" hint.
+    expect(visible.split(" ").length).toBeLessThanOrEqual(735);
   });
 
   it("v3: every privacy row and every source is rendered from the shared data", () => {

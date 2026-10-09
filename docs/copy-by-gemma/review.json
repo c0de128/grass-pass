@@ -487,7 +487,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Drops that a new pass needs a grown-up signed in, and ties the per-account limit to the map servers.",
-      "shipped": "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers."
+      "shipped": "Passes are saved for 30 days. A new pass needs a grown-up signed in ({perDay} a day); daily limits protect the model budget and the free map servers.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "how.ai.title",
@@ -846,7 +847,8 @@
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Sign-in is only for new passes. We keep a scrambled ID, no name or email."
+      "shipped": "Sign-in is only for new passes. We keep a scrambled ID, no name or email.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "about.privacy.3",
@@ -944,7 +946,8 @@
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Sign-in isn't set up right on this server. Examples and saved passes still work."
+      "shipped": "Sign-in isn't set up right on this server. Examples and saved passes still work.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "signin.err.verify",
@@ -988,7 +991,8 @@
       "decision": "rejected",
       "stage": "agent-review",
       "reason": "Loses the 'wakes up a real AI model' line.",
-      "shipped": "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in."
+      "shipped": "Each new pass wakes up a real AI model, so a grown-up signs in first: 2 new passes a day each. Examples and saved passes need no sign-in.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "signin.judge.unknown",
@@ -1002,7 +1006,8 @@
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name."
+      "shipped": "We only keep a scrambled ID to count your 2 passes a day and reports. No email, no name.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "account.grownups",
@@ -1030,7 +1035,8 @@
       "decision": "accepted",
       "stage": "agent-review",
       "reason": "True, on tone, at least as clear as before.",
-      "shipped": "Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work."
+      "shipped": "Sign-in isn't set up here yet, so we can't make new passes. Examples and saved passes still work.",
+      "removedAfterRun": "Kevin changed the pass limits on 2026-10-08 (1 free pass a day without sign-in, 5 a day signed in, pass ratings), so this text was rewritten by hand; the decision is kept as history."
     },
     {
       "id": "maker.signedin",

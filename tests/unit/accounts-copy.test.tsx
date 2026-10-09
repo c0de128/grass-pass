@@ -1,12 +1,12 @@
 /**
- * Accounts: /about and /how-it-works say the real rules (sign-in only for new passes, 2 a day, the judge
- * demo's shared cap, the report rule and the privacy promise), taken from the same constants the code uses.
+ * Accounts: /about and /how-it-works say the real rules (Kevin 2026-10-08: 1 free pass a day without signing in, 5 a day
+ * signed in, the judge demo's shared cap, the report rule and the privacy promise), from the same constants the code uses.
  */
 import { renderToStaticMarkup } from "react-dom/server";
 import { describe, expect, it } from "vitest";
 import AboutPage from "@/app/about/page";
 import HowItWorksPage from "@/app/how-it-works/page";
-import { ACCOUNT_COPY, judgeDailyCap, judgeLimitMessage, oauthProviderNames, signInWith } from "@/lib/accounts/config";
+import { ACCOUNT_COPY, accountPassesPerDay, judgeDailyCap, judgeLimitMessage, oauthProviderNames, signInWith } from "@/lib/accounts/config";
 import { signedInNote } from "@/components/pass/PassMaker";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 
@@ -24,11 +24,16 @@ describe("accounts copy on /about and /how-it-works", () => {
     ["/about", <AboutPage key="a" />],
     ["/how-it-works", <HowItWorksPage key="h" />],
   ] as const) {
-    it(`${name}: the report rule, the privacy promise, 2 a day and the judge cap`, () => {
+    it(`${name}: the report rule, the privacy promise, 1 free pass, 5 a day and the judge cap`, () => {
       const t = text(renderToStaticMarkup(el));
       expect(t).toContain(REPORT_COPY.rule);
       expect(t).toContain(ACCOUNT_COPY.privacy);
-      expect(t).toMatch(/2 new passes a day/);
+      expect(accountPassesPerDay()).toBe(5);
+      expect(t).toContain("5 new passes a day");
+      expect(t).toMatch(/1 free new pass a day/);
+      expect(t).toMatch(/signed cookie/);
+      // The old limit is gone everywhere.
+      expect(t).not.toMatch(/\b2 new passes a day|\(2 a day\)/);
       expect(t).toContain(`${judgeDailyCap()} new passes a day`);
       expect(t).toContain("Try as a judge");
       // The old promise is no longer true for signed-in grown-ups.

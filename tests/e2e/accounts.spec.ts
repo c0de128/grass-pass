@@ -3,8 +3,8 @@ import { expect, test, type Browser, type BrowserContext, type Page } from "@pla
 import { skipIfHonestAlert } from "./support/honest";
 import { judgeAddress } from "./support/judge";
 
-// Accounts (Kevin, 2026-10-06), against the real server: signed out you can search, open passes and print, but a
-// NEW pass asks a grown-up to sign in; "Try as a judge" signs in with one click (no OAuth), comes back to the same
+// Accounts (Kevin, 2026-10-06; limits 2026-10-08), against the real server: signed out you can search, open passes and
+// print, and make 1 free new pass a day; "Or sign in" opens the sign-in card; "Try as a judge" signs in with one click (no OAuth), comes back to the same
 // park + age, makes the pass, and reports finds; then sign out. Live data and the open model: an outside failure
 // is checked and reported as SKIPPED with its code (support/honest.ts), never as passed.
 // Round 4: judge demo reports are only logged (they never change a pass or the counts), so this spec is safe to run
@@ -34,6 +34,13 @@ async function searchAndPick(page: Page) {
   await expect(page.getByRole("dialog", { name: "Make your pass" })).toBeVisible();
 }
 
+/** Signed out with today's free pass left, the sign-in card is one click away ("Or sign in for 5 a day"). */
+async function openSignInCard(page: Page) {
+  const instead = page.getByTestId("sign-in-instead");
+  if (await instead.isVisible()) await instead.click();
+  await expect(page.getByTestId("sign-in-card")).toBeVisible();
+}
+
 async function axeClean(browser: Browser, path: string, signedInState: Awaited<ReturnType<BrowserContext["storageState"]>> | undefined, ready: (p: Page) => Promise<void>) {
   for (const width of [360, 1280]) {
     for (const scheme of ["light", "dark"] as const) {
@@ -50,24 +57,24 @@ async function axeClean(browser: Browser, path: string, signedInState: Awaited<R
   }
 }
 
-test("signed out: a new pass asks a grown-up to sign in (card with Try as a judge); the API says 401", async ({ page, request, baseURL }) => {
+test("signed out: 1 free pass is offered with no sign-in, and the sign-in card (Try as a judge) is one click away; browsing sets no cookie", async ({ page, request }) => {
   test.setTimeout(WAIT + 30_000);
-  const api = await request.post("/api/pass", {
-    headers: { "content-type": "application/json", origin: new URL(baseURL!).origin },
-    data: { parkId: "way/306191453", ageBand: "10-13", fresh: true },
-  });
-  expect(api.status()).toBe(401);
-  expect(((await api.json()) as { error: { code: string } }).error.code).toBe("SIGN_IN_REQUIRED");
+  // Kevin 2026-10-08: the passes left come from the (absent) free-pass cookie: 1 free, and no cookie is set by asking.
+  const left = await request.get("/api/passes-left");
+  expect(await left.json()).toEqual({ kind: "free", free: 1, left: 1, perDay: 5 });
+  expect(left.headers()["set-cookie"]).toBeUndefined();
 
   await page.goto("/");
   await expect(page.getByTestId("header-sign-in")).toBeVisible();
   await searchAndPick(page);
+  await expect(page.getByTestId("passes-left")).toHaveText("No sign-in needed: you have 1 free pass left today. A grown-up who signs in gets 5 new passes a day.");
+  await expect(page.getByRole("button", { name: "Make my pass" })).toBeVisible();
+  await openSignInCard(page);
   const card = page.getByTestId("sign-in-card");
-  await expect(card.getByRole("heading", { name: "Sign in to make this pass" })).toBeVisible();
+  await expect(card.getByRole("heading", { name: "Sign in instead" })).toBeVisible();
   await expect(card.getByRole("button", { name: "Try as a judge" })).toBeVisible();
   await expect(card.getByText("We only keep a scrambled ID")).toBeVisible();
   await expect(card.getByText("Sign-in is for grown-ups, not kids")).toBeVisible();
-  await expect(page.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
   // SEC-4-02: the real number of judge passes left today (from the store), never made up.
   await expect(card.getByTestId("judge-left")).toHaveText(/\d+ of \d+ judge passes left today|0 judge passes left today for your connection/);
   // SEC-4-04: browsing, searching and the sign-in card set no cookie at all.
@@ -91,6 +98,7 @@ test("judge: Try as a judge -> back to the same park + age -> make the pass -> r
   test.setTimeout(2 * WAIT + 120_000);
   await page.goto("/");
   await searchAndPick(page);
+  await openSignInCard(page);
   await page.getByTestId("sign-in-card").getByRole("button", { name: "Try as a judge" }).click();
 
   // SEC-4-05: the judge sign-in cookie lasts 1 day (from signing in), not 7 or 30.
@@ -174,10 +182,10 @@ test("signed out: anyone can open that pass, print it, and open the examples' li
   await page.getByRole("link", { name: "Print pass" }).click();
   await expect(page).toHaveURL(/\/print\?print=1$/);
   await expect(page.locator(".gp-sheet")).toHaveCount(1);
-  // "Make a different pass" is a new pass: the sign-in card shows instead of a request.
+  // "Make a different pass" is a new pass. Kevin 2026-10-08: signed out it may use today's free pass, so it is not
+  // pressed here (that would start a real build); the free-pass flow is tests/e2e/pass-limits.spec.ts.
   await page.goto(passPath!);
-  await page.getByRole("button", { name: "Make a different pass" }).click();
-  await expect(page.getByTestId("sign-in-card").getByRole("heading", { name: "Sign in to make a different pass" })).toBeVisible();
+  await expect(page.getByRole("button", { name: "Make a different pass" })).toBeVisible();
 });
 
 test("the header's sign-in / sign-out control fits a 320 px phone (no sideways scroll), signed out and as the judge", async ({ page }) => {

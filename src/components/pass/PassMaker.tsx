@@ -261,6 +261,8 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
   const freeLeft = freeLeftSeen ?? account?.freeLeft ?? 0;
   // Bumped after each finished request, so the passes-left line reads the count again.
   const [madeCount, setMadeCount] = useState(0);
+  // Signed out with a free pass left: "Or sign in for 5 a day" opens the sign-in card (judges keep "Try as a judge").
+  const [signInInstead, setSignInInstead] = useState(false);
   // Signed out with no free pass left (or the session ended): show the sign-in card instead of the make button.
   const needsSignIn =
     account !== undefined && ((!account.signedIn && freeLeft <= 0) || (state.kind === "failed" && state.code === "SIGN_IN_REQUIRED" && account.signedIn));
@@ -656,6 +658,33 @@ export function PassMaker({ account, notice }: { account?: PassMakerAccount; not
 
                   {account && !needsSignIn && (state.kind === "idle" || state.kind === "failed" || state.kind === "empty") ? (
                     <PassesLeftLine signedIn={account.signedIn} judge={account.judge === true} freeLeft={freeLeft} options={account.options} refresh={madeCount} />
+                  ) : null}
+
+                  {account && !account.signedIn && !needsSignIn && account.options.configured && (account.options.judge || account.options.providers.length > 0) &&
+                  (state.kind === "idle" || state.kind === "failed" || state.kind === "empty") ? (
+                    <div className="flex flex-col gap-3">
+                      <button
+                        type="button"
+                        aria-expanded={signInInstead}
+                        aria-controls={`${ids}-signin-instead`}
+                        onClick={() => setSignInInstead((v) => !v)}
+                        className="inline-flex min-h-11 items-center self-start text-sm font-semibold text-link underline underline-offset-4"
+                        data-testid="sign-in-instead"
+                      >
+                        {signInInstead ? "Hide sign-in" : `Or sign in for ${account.options.perDay} a day`}
+                      </button>
+                      <div id={`${ids}-signin-instead`} hidden={!signInInstead}>
+                        {signInInstead ? (
+                          <SignInCard
+                            id={`${ids}-signin-alt`}
+                            options={account.options}
+                            returnTo="/?resume=1"
+                            heading="Sign in instead"
+                            onBeforeSignIn={() => rememberForSignIn(park, band)}
+                          />
+                        ) : null}
+                      </div>
+                    </div>
                   ) : null}
 
                   {state.kind === "idle" || state.kind === "failed" || state.kind === "empty" ? (

@@ -24,7 +24,8 @@ import { stepText } from "@/lib/ai/build-pass";
 const env = { DO_INFERENCE_API_KEY: "", MODEL_API_KEY: "" } as unknown as NodeJS.ProcessEnv;
 const real = (step: PassStep) => ({ step, text: stepText(step, env) });
 
-const account = { signedIn: false, options: { providers: ["github" as const], judge: true, configured: true } };
+// Signed out with today's free pass used (freeLeft 0): the sign-in card shows, as before Kevin's 2026-10-08 free pass.
+const account = { signedIn: false, freeLeft: 0, options: { providers: ["github" as const], judge: true, configured: true, perDay: 5, free: 1 } };
 
 describe("the hero card and the dialog markup", () => {
   const html = renderToStaticMarkup(<PassMaker account={account} />);

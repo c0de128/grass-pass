@@ -3,7 +3,7 @@
  * EVAL scripts of src/lib/cache/store.ts (and HGETALL for item reports) from a MemoryStore, so the app's real UpstashStore code
  * runs unchanged and every command it would send to Upstash is counted.
  */
-import { MemoryStore, REPORT_SCRIPT } from "@/lib/cache/store";
+import { FEEDBACK_SCRIPT, MemoryStore, REPORT_SCRIPT } from "@/lib/cache/store";
 
 export const FAKE_UPSTASH_URL = "https://counting-test.upstash.io";
 export const FAKE_UPSTASH_TOKEN = "counting-test-token-not-real"; // gitleaks:allow
@@ -30,6 +30,8 @@ export function countingUpstash() {
       await mem.del(String(rest[0]));
       return 1;
     }
+    // Kevin's private feedback report only (one page: cursor 0 back at once).
+    if (cmd === "SCAN") return ["0", await mem.scanKeys(String(rest[2]))];
     if (cmd === "EVAL") {
       const script = String(rest[0]);
       const n = Number(rest[1]);
@@ -52,6 +54,11 @@ export function countingUpstash() {
           otherField: a[9] ?? "",
         });
         return [r.counted ? 1 : 0, r.unsafeAccounts, r.newlyHidden ? 1 : 0];
+      }
+      if (script === FEEDBACK_SCRIPT) {
+        const a = rest.slice(2 + n).map(String);
+        const r = await mem.recordFeedback({ hashKey: keys[0], field: a[0], value: a[1], cutoff: Number(a[2]), ttlSec: Number(a[3]) });
+        return r.replaced ? 1 : 0;
       }
       const argv = rest.slice(2 + n).map(Number);
       if (script.startsWith("local v = redis.call('INCRBY'")) return mem.incr(keys[0], argv[0], argv[1]);

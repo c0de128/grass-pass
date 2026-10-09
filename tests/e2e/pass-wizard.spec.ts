@@ -151,9 +151,10 @@ test("sign-in resume: the park + age come back on step 3; Back walks to Explorer
   // Kevin 2026-10-08: the park name was squeezed to one letter wide by the age column; both get room.
   const cols = dialog.getByTestId("choice-ticket").locator("dl > div");
   for (const i of [0, 1]) expect((await cols.nth(i).boundingBox())?.width ?? 0, `ticket column ${i} width`).toBeGreaterThan(150);
-  // Signed out: the sign-in card (GitHub / Google / judge) instead of "Make my pass".
-  await expect(dialog.getByTestId("sign-in-card").getByRole("heading", { name: "Sign in to make this pass" })).toBeVisible();
-  await expect(dialog.getByRole("button", { name: "Make my pass" })).toHaveCount(0);
+  // Signed out with today's free pass left (Kevin 2026-10-08): "Make my pass" and the count; the sign-in card is one click away.
+  await expect(dialog.getByTestId("passes-left")).toHaveText(/^No sign-in needed: you have 1 free pass left today\./);
+  await expect(dialog.getByRole("button", { name: "Make my pass" })).toBeVisible();
+  await expect(dialog.getByTestId("sign-in-card")).toHaveCount(0);
 
   await expect(dialog.getByRole("heading", { level: 2, name: "Make your pass" })).toBeFocused();
   await dialog.getByRole("button", { name: "Back" }).click();
@@ -249,12 +250,15 @@ test.describe("making the pass (replayed real progress, no model call)", () => {
     );
   });
 
-  test("signed out on step 3: axe is clean with the sign-in card (360/1280, light/dark)", async ({ browser }) => {
+  test("signed out on step 3: axe is clean with the free-pass line and with the sign-in card (360/1280, light/dark)", async ({ browser }) => {
     test.setTimeout(120_000);
     await eachSize(browser, async (page, label) => {
       const dialog = await resumeOnStep3(page);
+      await expect(dialog.getByTestId("passes-left")).not.toHaveText("", UNDER_LOAD);
+      await axeDialog(page, `${label} step 3 signed out, free pass`);
+      await dialog.getByTestId("sign-in-instead").click();
       await expect(dialog.getByTestId("judge-left")).not.toHaveText("", UNDER_LOAD);
-      await axeDialog(page, `${label} step 3 signed out`);
+      await axeDialog(page, `${label} step 3 signed out, sign-in card`);
     });
   });
 });

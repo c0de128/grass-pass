@@ -29,6 +29,9 @@ import { localDay } from "@/lib/time";
 import { clientIp } from "@/lib/limits";
 import { recordedSerp, serpBody, serpFixture, serpReplay } from "./support/serpapi-replay";
 import { judgePassesResponse, meResponse } from "@/lib/accounts/endpoints";
+import { freePassReceiptResponse, passesLeftResponse } from "@/lib/accounts/pass-limits";
+import { submitFeedback } from "@/lib/feedback/submit";
+import { FREE_PASS_COOKIES, signFreePass } from "@/lib/limits/free-pass";
 
 beforeAll(() => primeAccountCookies(300));
 
@@ -270,7 +273,7 @@ describe("cached failures cost no more than COSTS.apiPass (SEC-3-02)", () => {
 
 /**
  * Accounts (2026-10-06): the new paths and what they cost. A signed-out new-pass request and an account
- * over its 2 a day stay within COSTS.apiPass; a report within COSTS.apiReport (a hidden item adds its
+ * over its daily passes stay within COSTS.apiPass; a report within COSTS.apiReport (a hidden item adds its
  * counter); a signed-in pass page within COSTS.passPage + COSTS.passStats; a sign-in attempt COSTS.apiAuth.
  */
 describe("accounts: Upstash commands per request (measured)", () => {
@@ -289,36 +292,101 @@ describe("accounts: Upstash commands per request (measured)", () => {
 
   beforeEach(() => forgetReportStats());
 
-  it("signed out: a new pass is refused (401) after <= COSTS.apiPass commands and no upstream call", async () => {
+  it("signed out with today's free pass used (the signed cookie): refused (429) after <= COSTS.apiPass commands and no upstream call", async () => {
     vi.stubGlobal("fetch", up.fetchWith(async (url) => {
       throw new Error(`no upstream call expected: ${url}`);
     }));
     await getStore("limits").prime?.();
     const before = up.work();
-    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.60", null));
-    expect(res.status).toBe(401);
-    expect(((await res.json()) as { error: { code: string } }).error.code).toBe("SIGN_IN_REQUIRED");
-    report("signed-out new pass (401)", up.work() - before);
+    const used = `${FREE_PASS_COOKIES[1]}=${signFreePass(1, Date.now())}`;
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.60", used));
+    expect(res.status).toBe(429);
+    expect(((await res.json()) as { error: { code: string } }).error.code).toBe("FREE_PASS_USED");
+    report("signed-out new pass, free pass used (429)", up.work() - before);
     expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass);
   });
 
-  it("an account over its 2 a day: refused (429) within COSTS.apiPass", async () => {
+  it("signed out over this connection's ANON_PASSES_PER_IP_PER_DAY (cookies cleared): refused (429) within COSTS.apiPass", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(async (url) => {
+      throw new Error(`no upstream call expected: ${url}`);
+    }));
+    const ip = "203.0.113.63";
+    await up.mem.set(`gp:q:{anon-new:${localDay(Date.now())}}:k:${clientIp(new Request("http://x/", { headers: { "x-forwarded-for": ip } }))}`, "3", 3600);
+    await getStore("limits").prime?.();
+    const before = up.work();
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, ip, null));
+    const body = (await res.json()) as { error: { code: string } };
+    expect([res.status, body.error.code]).toEqual([429, "ANON_IP_DAILY_LIMIT"]);
+    report("signed-out over the per-connection free passes (429)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPass);
+  });
+
+  it("a signed-out NEW pass stays within COSTS.apiPass + EXTRA.newPass (the anon reserve adds 1)", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(passReplay().fetchImpl));
+    const before = up.counts.total;
+    const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.64", null));
+    expect(await res.text()).toContain('"type":"result"');
+    await settle();
+    const n = up.counts.total - before;
+    report("signed-out new pass (Connemara, incl. budget bookkeeping)", n);
+    expect(n).toBeLessThanOrEqual(COSTS.apiPass + EXTRA.newPass);
+  });
+
+  it("pass limits: GET /api/passes-left, POST /api/free-pass and POST /api/feedback stay within their COSTS", async () => {
+    vi.stubGlobal("fetch", up.fetchWith(passReplay().fetchImpl));
+    const made = await passRoute.POST(req("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.65"));
+    const passId = JSON.parse((await made.text()).trim().split("\n").at(-1)!).pass.id as string;
+    await settle();
+    const get = (path: string, cookie: string | null) =>
+      new Request(`http://localhost:3123${path}`, { headers: { ...(cookie ? { cookie } : {}), host: "localhost:3123", "sec-fetch-site": "same-origin", "x-forwarded-for": "203.0.113.66" } });
+    // Signed out: the cookie only.
+    let before = up.work();
+    expect((await passesLeftResponse(get("/api/passes-left", null))).status).toBe(200);
+    expect(up.work() - before).toBe(0);
+    // An account: 1 GET.
+    const a = await newAccountCookie();
+    before = up.work();
+    expect((await passesLeftResponse(get("/api/passes-left", a.cookie))).status).toBe(200);
+    report("GET /api/passes-left (account)", up.work() - before);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPassesLeft);
+    // The judge demo: 1 MGET.
+    const j = await judgeCookie();
+    before = up.work();
+    expect((await passesLeftResponse(get("/api/passes-left", j.cookie))).status).toBe(200);
+    expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiPassesLeft);
+    // The free-pass receipt: no store command at all.
+    before = up.work();
+    const r = await freePassReceiptResponse(reqAs("/api/free-pass", { receipt: signFreePass(1, Date.now()) }, "203.0.113.66", null));
+    expect(r.status).toBe(200);
+    expect(up.work() - before).toBe(COSTS.apiFreePass);
+    // A rating (account), a re-rating, and a judge rating (logged only).
+    resetPassReads();
+    for (const [label, cookie] of [["feedback (account, first)", a.cookie], ["feedback (account, again)", a.cookie], ["feedback (judge)", j.cookie]] as const) {
+      before = up.work();
+      const res = await submitFeedback(reqAs("/api/feedback", { passId, stars: 4, tags: ["kids_loved"] }, "203.0.113.67", cookie));
+      expect(res.status).toBe(200);
+      report(label, up.work() - before);
+      expect(up.work() - before).toBeLessThanOrEqual(COSTS.apiFeedback);
+    }
+  });
+
+  it("an account over its 5 a day: refused (429) within COSTS.apiPass", async () => {
     vi.stubGlobal("fetch", up.fetchWith(async (url) => {
       throw new Error(`no upstream call expected: ${url}`);
     }));
     const a = await newAccountCookie();
-    await up.mem.set(`gp:q:{acct-new:${localDay(Date.now())}}:k:${a.key}`, "2", 3600);
+    await up.mem.set(`gp:q:{acct-new:${localDay(Date.now())}}:k:${a.key}`, "5", 3600);
     await getStore("limits").prime?.();
     let before = up.work();
     const res = await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.61", a.cookie));
     const body = (await res.json()) as { error: { code: string } };
     expect([res.status, body.error.code]).toEqual([429, "ACCOUNT_DAILY_LIMIT"]);
     const first = up.work() - before;
-    report("account over its 2 a day (first)", first);
+    report("account over its 5 a day (first)", first);
     before = up.work();
     await (await passRoute.POST(reqAs("/api/pass", { parkId: PARKS.connemara.id, ageBand: "6-10" }, "203.0.113.61", a.cookie))).text();
     const again = up.work() - before;
-    report("account over its 2 a day (again)", again);
+    report("account over its 5 a day (again)", again);
     expect(first).toBeLessThanOrEqual(COSTS.apiPass);
     expect(again).toBeLessThanOrEqual(COSTS.apiPass);
   });

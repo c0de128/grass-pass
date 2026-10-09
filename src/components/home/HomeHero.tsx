@@ -30,7 +30,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
   return (
     <section id="find" aria-labelledby="hero-title" className="gp-hero relative z-[2] scroll-mt-28 overflow-x-clip sm:scroll-mt-16">
       <div className="grain absolute inset-0 opacity-60" aria-hidden="true" />
-      <div className="relative mx-auto grid max-w-7xl gap-14 px-5 pt-3 pb-10 sm:pt-12 sm:pb-28 md:px-8 lg:min-h-(--hero-h) lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] lg:content-center lg:gap-x-8 lg:gap-y-0 lg:pt-(--hero-pt) lg:pb-(--hero-pb)">
+      <div className="gp-container relative grid gap-14 pt-3 pb-10 sm:pt-12 sm:pb-28 lg:min-h-(--hero-h) lg:grid-cols-[minmax(0,1.85fr)_minmax(0,1fr)] 2xl:grid-cols-[minmax(0,1.65fr)_minmax(0,1fr)] lg:content-center lg:gap-x-8 lg:gap-y-0 lg:pt-(--hero-pt) lg:pb-(--hero-pb)">
         <div className="flex min-w-0 flex-col gap-4 sm:gap-8 lg:gap-(--hero-gap)">
 
           <h1 id="hero-title" className="flex w-fit max-w-full flex-col text-[3.25rem] leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-(length:--hero-h1)">
@@ -82,7 +82,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
                 // UX-4-02: no preload/eager. On phones this picture sits below the search card (the LCP there is the
                 // lead text), and an eager preload competed with the first paint; on desktop it loads at layout.
                 loading="lazy"
-                sizes="(min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
+                sizes="(min-width: 1536px) 600px, (min-width: 1280px) 560px, (min-width: 1024px) 40vw, (min-width: 448px) 448px, 90vw"
                 className="h-full w-full object-cover lg:absolute lg:inset-0 lg:object-left"
               />
               {/* Kevin 2026-10-08: the honest AI label sits inside the picture, bottom right, in white (a soft dark
@@ -93,7 +93,7 @@ export function HomeHero({ card, examples, children }: { card: HeroCard | null; 
             </div>
             {/* Phones: in the flow, overlapping the picture's lower part (a real pass is taller than v0's sample, so an
                 absolute card would cover the search card). From 640 px: v0's absolute, tilted placement. */}
-            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:bottom-[calc(1.75rem-var(--hero-pb))] lg:left-4 lg:w-[17rem] lg:origin-bottom-left lg:scale-[0.66] xl:scale-[0.8]">
+            <div className="gp-rise relative z-10 -mt-44 w-[88%] max-w-80 -rotate-6 sm:absolute sm:-bottom-24 sm:-left-10 sm:mt-0 sm:w-60 lg:bottom-[calc(1.75rem-var(--hero-pb))] lg:left-4 lg:w-[17rem] lg:origin-bottom-left lg:scale-[0.66] xl:scale-[0.8] [@media(min-width:96rem)_and_(min-height:56rem)]:scale-[0.88]">
               <HeroPassCard card={card} />
             </div>
           </div>

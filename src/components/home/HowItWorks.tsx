@@ -81,7 +81,8 @@ const PHASES: Record<Phase, { label: string; fill: string; node: string; stroke:
 };
 
 /*
- * Desktop diagram geometry (from 1280 px the box is always 1216 px wide: max-w-7xl minus padding).
+ * Desktop diagram geometry, drawn for a 1216 px box (the box at 1280 px). Wide layout (2026-10-09): from 1280 px the box
+ * grows with the shared container (up to 1536 px); positions and card widths are fractions of the box, so it scales as one.
  * The nodes sit on an arc around (CX, CY); every card is pinned by its anchor point (where its leader line ends).
  */
 const BOX_W = 1216;
@@ -240,7 +241,7 @@ function Card({ step, index, children }: { step: DiagramStep; index: number; chi
   // On the phone/tablet stepper the phase chip shows once, on the first step of each phase (screen readers hear it on every step).
   const first = index === 0 || DIAGRAM[index - 1].phase !== step.phase;
   const { cx, cy, w, anchor } = step.layout;
-  const style = { "--cx": pct(cx, BOX_W), "--cy": pct(cy, BOX_H), "--cw": `${w}px` } as CSSProperties;
+  const style = { "--cx": pct(cx, BOX_W), "--cy": pct(cy, BOX_H), "--cw": pct(w, BOX_W) } as CSSProperties;
   const ai = step.phase === "ai" && step.big;
   return (
     <div
@@ -253,11 +254,11 @@ function Card({ step, index, children }: { step: DiagramStep; index: number; chi
         {PHASES[step.phase].label}
       </p>
       <span aria-hidden="true" className={`absolute top-6 left-0 hidden h-7 w-1.5 rounded-r-full xl:block ${PHASES[step.phase].fill}`} />
-      <h3 className={`font-extrabold text-ink ${ai ? "text-2xl" : step.big ? "text-xl" : "text-lg"} leading-tight`}>
+      <h3 className={`font-extrabold text-ink ${ai ? "text-2xl 2xl:text-[1.75rem]" : step.big ? "text-xl 2xl:text-2xl" : "text-lg 2xl:text-xl"} leading-tight`}>
         <span className="sr-only">Step {index + 1}: </span>
         {step.title}
       </h3>
-      <p className="text-sm leading-relaxed text-muted-foreground">{step.body}</p>
+      <p className="text-sm leading-relaxed text-muted-foreground 2xl:text-[0.95rem]">{step.body}</p>
       {children}
     </div>
   );
@@ -266,7 +267,7 @@ function Card({ step, index, children }: { step: DiagramStep; index: number; chi
 export function HowItWorks() {
   return (
     <section id="how" aria-labelledby="how-title" className="relative scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
-      <div className="mx-auto flex max-w-7xl flex-col gap-14 px-5 py-24 md:px-8 lg:py-32 xl:gap-12">
+      <div className="gp-container flex flex-col gap-14 py-24 lg:py-32 xl:gap-12">
         <div className="flex max-w-3xl flex-col gap-4">
           {/* Kevin 2026-10-07: same font and size as the hero's "Family time is back!" (HomeHero h1 sizes x 1.25). */}
           <h2 id="how-title" className="text-6xl leading-[0.95] font-extrabold tracking-tighter text-ink sm:text-7xl lg:text-[clamp(2.75rem,4.1vw,3.75rem)]">

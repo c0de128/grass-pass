@@ -80,7 +80,7 @@ export default function AboutPage() {
 
       {/* 1. Hero: one promise, two ways in. */}
       <section aria-labelledby="about-title" className="grain">
-        <div className="mx-auto flex max-w-7xl flex-col gap-6 px-5 pt-14 pb-16 md:px-8 lg:pt-20 lg:pb-20">
+        <div className="gp-container flex flex-col gap-6 pt-14 pb-16 lg:pt-20 lg:pb-20">
           <Eyebrow>About</Eyebrow>
           <h1 id="about-title" className="-mt-2 text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance text-ink sm:text-6xl lg:text-7xl">
             An open model, a real park and a pencil.
@@ -118,7 +118,7 @@ export default function AboutPage() {
 
       {/* 2. Stat tiles: real measured numbers, misses marked. */}
       <section id="measured" aria-labelledby="measured-title" className="gp-band scroll-mt-28 bg-band text-band-foreground sm:scroll-mt-16">
-        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-20 md:px-8 lg:py-24">
+        <div className="gp-container flex flex-col gap-10 py-20 lg:py-24">
           <div className="grid gap-5 lg:grid-cols-2 lg:items-end">
             <div className="flex flex-col gap-4">
               <Eyebrow onBand>What we measured</Eyebrow>
@@ -170,7 +170,7 @@ export default function AboutPage() {
 
       {/* 3. The five cards. */}
       <section aria-labelledby="inside-title" className="scroll-mt-28 sm:scroll-mt-16">
-        <div className="mx-auto flex max-w-7xl flex-col gap-10 px-5 py-20 md:px-8 lg:py-24">
+        <div className="gp-container flex flex-col gap-10 py-20 lg:py-24">
           <div className="flex max-w-2xl flex-col gap-4">
             <Eyebrow>In one look</Eyebrow>
             <h2 id="inside-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
@@ -293,13 +293,15 @@ export default function AboutPage() {
 
       {/* 4. Details on demand: everything else, folded. */}
       <section aria-labelledby="details-title" className="scroll-mt-28 bg-muted/70 sm:scroll-mt-16">
-        <div className="mx-auto flex max-w-4xl flex-col gap-6 px-5 py-20 md:px-8 lg:py-24">
-          <div className="flex flex-col gap-4">
+        {/* Wide layout (2026-10-09): from 1280 px the head sits in a sticky left column, the folded details on the right. */}
+        <div className="gp-container flex flex-col gap-6 py-20 lg:py-24 xl:grid xl:grid-cols-12 xl:gap-x-12">
+          <div className="flex flex-col gap-4 xl:sticky xl:top-24 xl:col-span-4 xl:self-start">
             <Eyebrow>The fine print</Eyebrow>
             <h2 id="details-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
               Details, one click away.
             </h2>
           </div>
+          <div className="flex min-w-0 flex-col gap-6 xl:col-span-8">
 
           <Disclosure id="measured-table" icon={Table2} title="Why open: the full measured table" hint="Gemma 4, Llama 4 and a no-AI template, side by side">
             <p>
@@ -419,19 +421,20 @@ export default function AboutPage() {
             </p>
             <p>Every Wild Find carries a fixed &quot;look, don&apos;t touch&quot; line written by code.</p>
           </Disclosure>
+          </div>
         </div>
       </section>
 
       {/* 5. Credits: photos visible as thumbnails, everything else folded. */}
       <section id="credits" aria-labelledby="credits-title" className="scroll-mt-28 sm:scroll-mt-16">
-        <div className="mx-auto flex max-w-7xl flex-col gap-8 px-5 py-20 md:px-8 lg:py-24">
+        <div className="gp-container flex flex-col gap-8 py-20 lg:py-24">
           <div className="flex max-w-2xl flex-col gap-4">
             <Eyebrow>Thank you</Eyebrow>
             <h2 id="credits-title" className="text-4xl leading-[1] font-extrabold tracking-tight text-balance text-ink sm:text-5xl">
               Credits and licences
             </h2>
           </div>
-          <ul aria-label="Park photo credits" data-testid="about-photo-credits" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
+          <ul aria-label="Park photo credits" data-testid="about-photo-credits" className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4 2xl:grid-cols-5">
             {Object.values(PARK_PHOTOS).map((p) => (
               <li key={p.src} className="flex gap-3 rounded-2xl bg-card p-3 ring-1 ring-border">
                 <Image src={p.src} alt={p.alt} width={p.width} height={p.height} sizes="80px" className="size-20 shrink-0 rounded-xl object-cover" />

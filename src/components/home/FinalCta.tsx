@@ -3,8 +3,8 @@ import { ArrowRight } from "lucide-react";
 /** The big closing banner at the end of the home page (Kevin 2026-10-07: same sage background as "What's a pass?"). Kevin 2026-10-08: top space, so it never runs into the sage band above it. */
 export function FinalCta() {
   return (
-    <section aria-labelledby="cta-title" className="px-5 pt-20 pb-24 md:px-8 lg:pt-28">
-      <div className="relative mx-auto max-w-7xl overflow-hidden rounded-[2.5rem] bg-muted/70 text-ink">
+    <section aria-labelledby="cta-title" className="gp-container pt-20 pb-24 lg:pt-28">
+      <div className="relative overflow-hidden rounded-[2.5rem] bg-muted/70 text-ink">
         <div className="relative flex flex-col items-center gap-8 px-6 py-20 text-center sm:py-24">
           <h2 id="cta-title" className="max-w-4xl text-5xl leading-[0.95] font-extrabold tracking-tighter text-balance sm:text-6xl lg:text-7xl">
             Print the pass. Pocket the pencil. Leave the phone.

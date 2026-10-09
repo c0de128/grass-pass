@@ -81,7 +81,7 @@ function ParkTicket({ park }: { park: Park }) {
           alt={pic.alt}
           width={pic.width}
           height={pic.height}
-          sizes="(min-width: 1536px) 620px, (min-width: 768px) 46vw, 100vw"
+          sizes="(min-width: 1536px) 760px, (min-width: 768px) 46vw, 100vw"
           className="h-full w-full object-cover transition-transform duration-700 motion-safe:group-hover:scale-105"
         />
         <div aria-hidden="true" className="absolute inset-x-0 bottom-0 h-3/4 bg-gradient-to-t from-black/75 via-black/30 to-transparent" />
@@ -125,12 +125,12 @@ function ParkTicket({ park }: { park: Park }) {
 export function TwoParks() {
   return (
     <section id="why" aria-labelledby="why-title" className="scroll-mt-28 overflow-x-clip px-3 py-4 sm:scroll-mt-16 sm:px-5 lg:py-5">
-      <div className="relative mx-auto max-w-[1600px] rounded-[2rem] bg-why text-why-foreground sm:rounded-[2.5rem]">
+      <div className="relative mx-auto max-w-[106rem] rounded-[2rem] bg-why text-why-foreground sm:rounded-[2.5rem]">
         {/* The logo ticket's notches, blown up. */}
         <span aria-hidden="true" className="absolute top-1/2 -left-4 size-8 -translate-y-1/2 rounded-full bg-background sm:-left-6 sm:size-12" />
         <span aria-hidden="true" className="absolute top-1/2 -right-4 size-8 -translate-y-1/2 rounded-full bg-background sm:-right-6 sm:size-12" />
 
-        <div className="relative mx-auto flex max-w-7xl flex-col gap-7 px-5 pt-9 pb-7 sm:px-8 lg:gap-9 lg:pt-12 lg:pb-9">
+        <div className="gp-container relative flex flex-col gap-7 pt-9 pb-7 lg:gap-9 lg:pt-12 lg:pb-9">
           <div className="grid gap-5 lg:grid-cols-12 lg:items-end lg:gap-8">
             <div className="flex flex-col gap-4 lg:col-span-5">
               <p className="w-fit rounded-full bg-sun px-3.5 py-1.5 text-xs font-bold tracking-widest text-sun-foreground uppercase">The problem</p>
@@ -144,7 +144,7 @@ export function TwoParks() {
               </h2>
             </div>
             <div className="flex flex-col gap-3 lg:col-span-7">
-              <p className="text-base leading-relaxed text-pretty text-why-muted">
+              <p className="max-w-[68ch] text-base leading-relaxed text-pretty text-why-muted 2xl:text-lg">
                 Generic scavenger hunts fail because parks aren&rsquo;t generic. A manicured city park has basketball hoops; a
                 rugged nature preserve has butterflies. That&rsquo;s why Grass Pass builds every adventure from scratch using your
                 park&rsquo;s exact map and the last two weeks of local wildlife sightings.

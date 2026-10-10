@@ -34,7 +34,10 @@ test("the recorded 13+ run replays to the same passes (no model, no network)", a
     const rec = results.runs.find((x) => x.caseN === r.caseN && x.model === "gemma-4-31B-it")!;
     expect(r.unrecorded, r.slug).toEqual([]);
     expect(r.kind, r.slug).toBe("pass");
-    expect(r.items.map((i) => i.clue), r.slug).toEqual(rec.items.map((i) => i.clue));
+    // Kid voice (2026-10-10): a rewritten stock frame now opens with a new plain word ("Notice 25 ..." -> "Find 25 ...").
+    // Only that first word may differ from what printed live; the rest of every clue must match.
+    const body = (c: string) => c.replace(/^(Notice|Peek at|Check for|Watch for|Spot|Find|Look for|Hunt for|Search for)\s+/, "");
+    expect(r.items.map((i) => body(i.clue)), r.slug).toEqual(rec.items.map((i) => body(i.clue)));
     expect(r.pass?.ageBand).toBe("13+");
   }
   process.stdout.write(`13+ replay: ${runs.map((r) => `${r.parkName} ${r.items.length}/${r.n}`).join(", ")}\n`);

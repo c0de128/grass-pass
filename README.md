@@ -2,6 +2,8 @@
 
 > Your ticket to get outside. Pick a park. Print a pass. Phone away.
 
+**Read the write-up:** [our DEV submission post](https://dev.to/kev_6c7aceafbcfde2a03ae39/one-park-one-sheet-of-paper-gemma-4-writes-a-treasure-hunt-from-the-parks-real-map-n40) · **Watch the 90-second tour:** [YouTube](https://youtu.be/JRNFnu2VWZ0)
+
 **Try it live:** https://grass-pass.vercel.app (live since Oct 8, 2026). The example passes open with no
 sign-in. Your first new pass each day needs no sign-in either; for more, press **Try as a judge** (one click, no
 sign-up) or sign in with GitHub or Google.

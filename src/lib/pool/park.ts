@@ -108,7 +108,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "Many are {shiny|smooth} metal or {bright|colourful} plastic.",
   ],
   swing: [
-    "It is a seat that hangs from {chains|ropes} and moves back and forth.",
+    // Official eval 2026-10-10 (M10): "look for a seat that" on 3 parks.
+    "It is a seat {that hangs from|hung on|dangling from} {chains|ropes} that {moves|rocks|sways} back and forth.",
     "A {tall|high} {frame|metal frame|bar frame} holds it up from above.",
     "Some seats are flat, and some are a {big|wide} round {basket|nest} you can lie in.",
   ],
@@ -163,7 +164,7 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
   bench: [
     // Audit R3-C1: "long outdoor seats" and "metal box on a post" were printed on several example parks.
     // Kid voice: "for resting" read stiff on paper.
-    "It is a {long outdoor seat|long seat out in the open|wide seat outside|long seat outdoors} where you can {sit and rest|take a break|rest your legs}.",
+    "It is a {long outdoor seat|long seat out in the open|wide seat outside|long seat outdoors} where you can {sit and rest|take a break|rest your legs|sit for a while|catch your breath|stop and sit}.",
     "Many face a {path|trail|walkway} or a {nice|pretty} view.",
     // Audit R4 (M10): "has armrests at the ends" was printed on 3 parks.
     "Some have a {back|backrest|tall back} to lean on and {arms|armrests|side rails|handles|elbow rests} at {the ends|each end|both ends|its two ends}.",
@@ -242,7 +243,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "It is {still|calm|quiet} water where you may {see|spot} {ducks, turtles or fish|turtles, fish or ducks|fish, ducks or turtles}.",
     "Its edge may have {reeds, rocks or mud|rocks, mud or reeds|mud, reeds or rocks}.",
     "On a calm day it {shines like a mirror|is smooth as glass|shows the sky like a mirror}.",
-    "Ripples spread across it when a fish jumps or a bird lands.",
+    // Official eval 2026-10-10 (M10): "ripples when a fish jumps" on 4 parks. The event and the ripple words now vary.
+    "When {a fish jumps|a duck lands|a bird splashes down|the wind blows}, {ripples|rings|tiny waves} {spread across it|roll across it|move out over it}.",
   ],
   creek: [
     // Audit R4 (M10): "a narrow ribbon of moving" and "a thin line of moving" were printed on 3 parks each.
@@ -252,7 +254,8 @@ export const KIND_FACTS: Record<FeatureKind, readonly string[]> = {
     "{Running|Flowing|Moving} water in it can make a {soft|gentle|quiet|low} {rushing|bubbling|gurgling|trickling} sound.",
     "After rain it runs fast, and in dry weather it may be just puddles.",
     "{Rocks|Stones|Pebbles} and {sticks|twigs|fallen branches} {poke up|poke out|peek out} of its water where it is {shallow|low}.",
-    "{Leaves|Twigs|Bits of bark} {float|drift|ride} along on top of its water.",
+    // Official eval 2026-10-10 (M10): "on top of the water" on 3 parks.
+    "{Leaves|Twigs|Bits of bark} {float|drift|ride} {along on top of its water|past with the current|by on its water|slowly downhill on it}.",
     "{Trees|Bushes|Tall weeds} {lean over|hang over|shade} its {banks|edges|sides}.",
   ],
   bridge: [
@@ -365,7 +368,8 @@ export function setRecordedFactsForTests(facts: ReadonlyMap<string, string> | nu
  * version (evals/run.ts meta.factBank); a replay of an older run builds its pools from the bank the model really saw
  * (evals/legacy-facts.ts) through this hook. Eval tooling only: never set in the app.
  */
-export const FACT_BANK_VERSION = "kid-voice-2026-10-10";
+// "kid-voice-2026-10-10b": the M10 fixes after the official eval of 2026-10-10 (pond ripples, creek float, bench, swing).
+export const FACT_BANK_VERSION = "kid-voice-2026-10-10b";
 let factBankForReplay: Record<FeatureKind, readonly string[]> | null = null;
 export function setFactBankForReplay(bank: Record<FeatureKind, readonly string[]> | null): void {
   factBankForReplay = bank;

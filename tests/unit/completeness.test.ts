@@ -107,7 +107,8 @@ describe("M10: worn-out clue frames and the bolted-on count sentence (run 2026-1
         .reduce<string[]>((acc, w) => acc.flatMap((a) => w.split("/").map((alt) => (a ? `${a} ${alt}` : alt))), [""]);
     const all = new Set(STOCK_FRAMES_PROMPT.flatMap(readings));
     for (const f of STOCK_FRAMES) expect(all.has(f), f).toBe(true);
-    expect(sys).toContain('After "Somewhere" or "Where", go straight to the thing\'s own detail.');
+    // M8 (official eval 2026-10-10): "Somewhere" is no longer an opener; the line is shorter.
+    expect(sys).toContain('After "Where", go straight to the detail.');
     expect(sys).toContain("never switches to the thing talking (I, me, my) in a later sentence");
   });
 

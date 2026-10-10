@@ -289,6 +289,8 @@ export const STOCK_PHRASES = [
   // make a quiet gurgling sound."). These go first when a spare exists.
   "the water that", "water that you can hear", "water that makes a", "water that can make", "hear splashing", "hear it splashing",
   "hear the water", "rushing sound", "gurgling sound", "splashing sound", "bubbling sound",
+  // Official eval 2026-10-10 (M10): "Walk to the place where ..." on 3 parks.
+  "the place where",
 ] as const;
 
 /**
@@ -475,7 +477,7 @@ export function readingRules(band: AgeBand, grade: string): string[] {
   // Kid voice (Kevin 2026-10-10): the 4-6 and 6-10 line now says how a fun grown-up sounds (it was "short words, short
   // sentences, fun and friendly", which wrote "flat smooth areas" and "strung across its center").
   if (band === "4-6") return [`- Reading level grade ${grade}. A grown-up reads each clue aloud: one very short sentence in the simplest words, about what the child will see; it may end with a tiny question ("Is it big or small?").`];
-  if (band !== "10-13") return [`- Reading level grade ${grade}. Sound like a fun grown-up on a hunt: one full sentence a parent reads aloud, with ONE thing to do (Find, Point to, Walk to) or a full question.`];
+  if (band !== "10-13") return [`- Reading level grade ${grade}. Sound like a fun grown-up on a hunt: one full sentence a parent reads aloud, with ONE thing to do or a full question.`];
   return [
     `- Write for a 10-13-year-old at reading level grade ${grade} to 6, never babyish: each clue is one or two complete sentences of 10 to 18 words in all.`,
     // Audit R5-C3: "use the SOURCE's exact describing words" wrote "stiffly erect, branching square stems" and
@@ -500,7 +502,8 @@ export function voiceRules(band: AgeBand): string[] {
   }
   return [
     ...(band === "10-13" ? ["- Talk like a fun guide giving a bit of a challenge: ONE thing to do per clue, and for a hard find a puzzle-like hint."] : []),
-    '- No sign words (area, center, strung, structure, surface, notice, "Check for"), no word twice in a clue, never people who may not be there ("players waiting").',
+    // M8 (official eval 2026-10-10): shorter; the fact sheets no longer hold the sign words (pool/park.ts).
+    '- No sign words (area, center, "Check for"), no word twice in a clue, never people who may not be there.',
   ];
 }
 
@@ -585,7 +588,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
     // Round 8 (Q-8-04): a 13+ clue is checked by eye ("What rushing sound does the running water make?" was printed).
-    `- A good clue gives the ${who} ONE thing to check with their ${adult ? "eyes" : "eyes or ears"} that is special to that item and written in its SOURCE: a colour, shape, mark, size, ${adult ? "" : "sound, "}what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.`,
+    `- A good clue gives the ${who} ONE thing to check with their ${adult ? "eyes" : "eyes or ears"} that is special to that item and written in its SOURCE: a colour, shape, mark, size, ${adult ? "" : "sound, "}what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper (say what sort of thing it is).`,
     // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches at Celebration
     // (the roof and pillars were the Find This Spot shelter's facts). Each clue's facts come from its own item only.
     // Short on purpose (prompt budget M8); the SPOT line below says its facts are for the riddle only.
@@ -593,7 +596,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
     ...(ctx?.openers && ctx.openers.length > 0
       ? [
-          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "I dare you", "Do you see" or these worn-out starts: ${STOCK_FRAMES_PROMPT.join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
+          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "I dare you", "Do you see" or these worn-out starts: ${STOCK_FRAMES_PROMPT.join(", ")}. After "Where", go straight to the detail.`,
         ]
       : ["- Start each clue with a different first word."]),
     // Audit R3-C1: filler openers and sound clues for silent things.
@@ -602,14 +605,16 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     adult
       ? "- Never ask the explorer to listen or describe a sound: every clue is something to see. For water, say what the explorer can see."
       : `- Ask the ${who} to listen ONLY when the item's SOURCE says it makes a sound (plants, fungi, spiders, snails, butterflies, moths and dragonflies make none), in at most ONE clue per pass. For water, say what the ${who} can see.`,
-    `- Never write "a place with", "a place where" or "a spot where": say what the ${who} will see.`,
+    // Official eval 2026-10-10 (M10): "Walk to the place where ..." on 3 parks.
+    `- Never write "a/the place with/where" or "a spot where": say what the ${who} will see.`,
     // Audit R4-C2: "me; I am ..." on 6 of 8 clues; "Which roof ...? Count 4 of them."
     // r7 follow-ups (M8): merged with the voice-switch rule below (one line, same two rules).
     `- Write every clue to the ${who}: a clue never switches to the thing talking (I, me, my) in a later sentence. At most ONE clue on the pass may be a riddle in which the thing talks as itself.`,
     // r7 follow-ups (M8): "How many" joins this line; the Park Finds count line no longer repeats it.
     '- A count clue is a task ("Count the ..."), never a "How many", "Which" or "What" question with the number in it, and never a question followed by "Count ...".',
     // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." on 4 parks.
-    '- Put a count inside the clue\'s own sentence, with its number and what to count. Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".',
+    // M8 (official eval 2026-10-10): shorter; code takes such a sentence off anyway (validate.ts trimCountTrailer).
+    '- Put a count inside the clue\'s own sentence, never in an added one ("Count them.", "There are 2.").',
     // Quick win (run 2026-10-06-5): "Watch for a plant with white blooms. I am poisonous!" switched voice mid-clue (now in the "Write every clue to the child" line).
     ...(ctx?.refill ? refillRules(ctx.refill, band) : []),
     ...(ctx?.voice ? [`- ${ctx.voice}`] : []),

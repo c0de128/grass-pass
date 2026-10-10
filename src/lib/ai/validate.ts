@@ -1171,6 +1171,9 @@ const firstWords = (clue: string, k: number) => (sentencesOf(clue)[0] ?? []).sli
 const EXTRA_FRAMES = [
   "somewhere you might see", "somewhere you may see", "somewhere you see", "somewhere you might find", "somewhere you will spot",
   "somewhere there are", "where can you count", "where can you spot", "where do you see",
+  // Official eval 2026-10-10 (M10): "Where is the water that ..." on 3 parks although the prompt names it. Only its first
+  // two words are rewritten ("Spot the water that pours into a bowl."), so the rest still says what to see.
+  "where is the water that",
 ] as const;
 
 /**
@@ -1223,7 +1226,7 @@ const NOT_PLURAL = new Set(["this", "is", "was", "has", "its", "his", "hers", "o
 export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answer: string): string {
   const frame = stockFrame(clue);
   if (frame === null || !REWRITABLE_FRAMES.includes(frame)) return clue;
-  const words = frame.split(" ").length;
+  const words = frame === "where is the water that" ? 2 : frame.split(" ").length;
   const m = clue.trim().match(new RegExp(`^(?:\\S+\\s+){${words}}`));
   if (!m) return clue;
   let rest = clue.trim().slice(m[0].length);
@@ -1295,7 +1298,10 @@ const TAIL_WORDS = new Set([
  * changes (plus "on"); the first word, the trait and the kind stay. Returns the clue unchanged when the trait has a tail
  * ("... in the fall", "... shaped like a ball") or is longer than 6 words.
  */
-export function kindFirstRewrite(clue: string): string {
+export function kindFirstRewrite(raw: string): string {
+  // Official eval 2026-10-10 (M10): "Walk to the place where ..." on 3 parks. "Walk to where kids use ladders ..." says
+  // the same with two words fewer (only words are removed).
+  const clue = raw.replace(/\bto the (?:place|spot) where\b/i, "to where");
   // "Look for a bird that is pale brown and grey." -> "Look for a pale brown and grey bird." (describing words only).
   const that = KIND_THAT_IS_RE.exec(clue.trim());
   if (that) {

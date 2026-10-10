@@ -113,8 +113,9 @@ describe("openers (M10: 'I dare you to find' on 16 clues, 'Find a place with a' 
     expect(sys).toContain('Never start with "Can you find", "I dare you", "Do you see" or these worn-out starts: "Somewhere you will/can see/hear/find"');
     // Completeness + M10 (run 2026-10-06-5): the frames Gemma repeated across parks are named, and so is the count trailer.
     for (const f of ["Where can you hear/find/see/spot", "Somewhere you will/can see/hear/find", "Hunt for a tree", "Where is the water that"]) expect(sys).toContain(`"${f}"`);
-    expect(sys).toContain('Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".');
-    expect(sys).toContain('Never write "a place with", "a place where" or "a spot where"');
+    // M8 (official eval 2026-10-10): the same two rules in fewer words ("the place where" added).
+    expect(sys).toContain('Put a count inside the clue\'s own sentence, never in an added one ("Count them.", "There are 2.").');
+    expect(sys).toContain('Never write "a/the place with/where" or "a spot where"');
     expect(sys).toContain("never copy 3 or more words in a row from the SOURCE");
     expect(sys).not.toMatch(/dares/);
   });

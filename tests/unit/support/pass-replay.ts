@@ -217,6 +217,10 @@ const EDITED_RULE_PREFIXES = [
   "- Some first-try clues used field-guide words",
   // Kid voice (Kevin 2026-10-10): the Lucky Finds line asks for a full question or instruction after the printed "Maybe!".
   "- Lucky Finds (section",
+  // M8 (official eval 2026-10-10): three rule lines said the same in fewer words; the "place" line also names "the place".
+  "- A good clue gives the child",
+  "- Put a count inside the clue",
+  '- Never write "a',
 ] as const;
 
 /**

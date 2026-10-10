@@ -139,7 +139,7 @@ describe("the prompt says it, per band", () => {
   it("kid bands: a fun grown-up's voice, no sign words, a full sentence after 'Maybe!'", () => {
     for (const band of ["4-6", "6-10", "10-13"] as const) {
       const s = systemPrompt(band, mix, null, { month: 10 });
-      expect(s, band).toContain('- No sign words (area, center, strung, structure, surface, notice, "Check for")');
+      expect(s, band).toContain('- No sign words (area, center, "Check for"), no word twice in a clue, never people who may not be there.');
       expect(s, band).toContain('never a sentence piece such as "Where you might see ..."');
     }
     expect(readingRules("4-6", AGE_BAND_INFO["4-6"].grade)[0]).toContain("A grown-up reads each clue aloud");
@@ -374,6 +374,25 @@ describe("older eval runs replay against the facts their model saw (evals/legacy
       setFactBankForReplay(null);
     }
     expect(factsFor("bench", "way/188145317", 4)).toEqual(now);
-    expect(FACT_BANK_VERSION).toBe("kid-voice-2026-10-10");
+    expect(FACT_BANK_VERSION).toBe("kid-voice-2026-10-10b");
+  });
+});
+
+describe("official eval 2026-10-10 (M10 6.4%): the repeated frames and fact phrases", () => {
+  it("'Where is the water that ...?' gets a plain verb; the rest still says what to see", () => {
+    const none = new Set<string>();
+    expect(rewriteStockFrame("Where is the water that pours into a bowl?", none, "Fountains")).toBe("Spot the water that pours into a bowl.");
+    expect(rewriteStockFrame("Where is the water that shows the sky like a mirror?", new Set(["spot"]), "Pond or lake")).toBe("Find the water that shows the sky like a mirror.");
+  });
+
+  it("'the place where' is a stock phrase (a preference), and the shared fact runs have more wordings", () => {
+    expect(stockOpening("Walk to the place where you can slide and climb.")).toBe("the place where");
+    expect(kindFirstRewrite("Walk to the place where kids use ladders to get to the top.")).toBe("Walk to where kids use ladders to get to the top.");
+    expect(kindFirstRewrite("Find the place where you can slide.")).toBe("Find the place where you can slide.");
+    const all = (kind: keyof typeof KIND_FACTS) => KIND_FACTS[kind].flatMap((t) => expandAll(t));
+    expect(all("water").filter((f) => /ripples spread across it when a fish jumps/i.test(f))).toHaveLength(0);
+    expect(new Set(all("bench").map((f) => (/where you can (.*)\.$/.exec(f) ?? [])[1]).filter(Boolean)).size).toBe(6);
+    expect(all("swing").some((f) => /^It is a seat that hangs/.test(f))).toBe(true);
+    expect(all("swing").some((f) => /^It is a seat (hung on|dangling from)/.test(f))).toBe(true);
   });
 });

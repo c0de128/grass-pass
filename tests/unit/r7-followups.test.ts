@@ -351,7 +351,8 @@ describe("round-6 judge C4: listening clues and water facts", () => {
     expect([sound(KIND_FACTS.fountain), KIND_FACTS.fountain.length]).toEqual([1, 5]);
     // Word variety: the sound fact itself has 3 x 4 x 4 wordings.
     expect(new Set(expandAll(KIND_FACTS.creek.find((f) => /sound/.test(f))!)).size).toBe(48);
-    expect(chooseWords(KIND_FACTS.creek[4], "x")).toMatch(/along on top of its water\.$/);
+    // Official eval 2026-10-10 (M10): the floating fact ends 4 ways now ("on top of the water" repeated on 3 parks).
+    expect(chooseWords(KIND_FACTS.creek[4], "x")).toMatch(/(?:along on top of its water|past with the current|by on its water|slowly downhill on it)\.$/);
   });
   it("the prompt asks for at most one listening clue and sight for water, and names the water frame", () => {
     const sys = systemPrompt("6-10", computeMix({ park: 6, wild: 6, lucky: 0 }, "6-10")!, null, { month: 10, openers: ["Spot"] });

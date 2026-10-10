@@ -33,7 +33,7 @@ import { caseDataOrNull, createReplayFetch, fixturePath, loadCases, loadFixture,
 import { existsSync } from "node:fs";
 import { passIdFor, runTemplateCase, type EvalResults } from "./run";
 import { TEMPLATE_MODEL } from "./baseline";
-import { LEGACY_FACT_BANK } from "./legacy-facts";
+import { FACT_BANKS_BY_VERSION, LEGACY_FACT_BANK } from "./legacy-facts";
 import { FACT_BANK_VERSION, setFactBankForReplay } from "@/lib/pool/park";
 import { caseContext, isComplete, scoreModel, type CallRecord, type CaseContext, type ModelScore, type RunRecord } from "./score";
 
@@ -246,7 +246,8 @@ export async function replayResults(
   const band = results.meta.ageBand;
   // Kid voice option A (2026-10-10): a run recorded with the older Park Finds facts replays against them (the model
   // quoted those words); a run without meta.factBank predates the rewrite.
-  setFactBankForReplay(results.meta.factBank === FACT_BANK_VERSION ? null : LEGACY_FACT_BANK);
+  const version = results.meta.factBank;
+  setFactBankForReplay(version === FACT_BANK_VERSION ? null : (version ? FACT_BANKS_BY_VERSION[version] : undefined) ?? LEGACY_FACT_BANK);
   try {
     return await replayResultsWith(results, models, opts, band);
   } finally {

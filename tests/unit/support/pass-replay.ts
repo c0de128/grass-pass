@@ -215,6 +215,8 @@ const EDITED_RULE_PREFIXES = [
   "- lookWhere is a plain place",
   "- Each clue is at most",
   "- Some first-try clues used field-guide words",
+  // Kid voice (Kevin 2026-10-10): the Lucky Finds line asks for a full question or instruction after the printed "Maybe!".
+  "- Lucky Finds (section",
 ] as const;
 
 /**
@@ -226,11 +228,23 @@ const ADDED_RULE_LINES: readonly string[] = ["- Each clue uses facts ONLY from i
 export const ADDED_SPOT_SENTENCE = " The SPOT facts are for this riddle only, never for a POOL clue.";
 export const SPOT_LABEL_NOW = "SPOT (for the riddle only, not a POOL item):";
 
+/**
+ * Kid voice (Kevin 2026-10-10): the 4-6 / 6-10 reading line now also says how a fun grown-up sounds ("- Reading level
+ * grade 2. Sound like ..."; it was "- Write at reading level grade 2: ..."), and the plain-words line is new (left out on
+ * both sides). The recorded answers are answers to the older wording.
+ */
+const READING_LINE_RE = /^- (?:Write at reading level grade|Reading level grade) \S+/;
+const ADDED_VOICE_PREFIXES = ["- No sign words (", "- Talk like a fun guide giving a bit of a challenge", "- Sound like a sharp naturalist's challenge"] as const;
+
 function shapeOfSystemLine(line: string): string | null {
   if (line === kidWordsRule()) return null;
+  if (ADDED_VOICE_PREFIXES.some((p) => line.startsWith(p))) return null;
+  if (READING_LINE_RE.test(line) && !line.startsWith("- Write for a")) return "- reading level line (kid voice 2026-10-10)";
   if (ADDED_RULE_LINES.includes(line)) return null;
   if (line.startsWith("- spot: one riddle")) return line.replace(ADDED_SPOT_SENTENCE, "");
-  if (line.startsWith("- Start each clue with a different first word.")) return line.split(". Never start with")[0];
+  // Kid voice (Kevin 2026-10-10): the opener bank changed ("Notice", "Check", "Peek", "Somewhere" out; "Find", "Look",
+  // "Walk", "Can" in), so the recorded park's first words differ from today's; the line is compared without them.
+  if (line.startsWith("- Start each clue with a different first word.")) return "- Start each clue with a different first word.";
   const edited = EDITED_RULE_PREFIXES.find((p) => line.startsWith(p));
   // The voice-switch rule was merged into the "Write every clue" line: compared as one rule.
   if (edited === "- A clue that talks to the child never switches") return null;

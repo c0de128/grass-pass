@@ -25,7 +25,7 @@ import { hasUrlOrMarkup } from "@/lib/safety/contact";
 import { blockedBy, blockedWordIn, dangerClueWord, SAFETY_LINES } from "@/lib/safety/danger-taxa";
 import { isAdultBand, type AgeBand } from "@/lib/pass/constants";
 import { otherFeatureWord } from "./feature-words";
-import { fixPlantWho, jargonProblem, kidWordingProblem, triviaKind, wrongKindWord } from "./jargon";
+import { fixPlantWho, jargonProblem, triviaKind, voiceProblem, wrongKindWord } from "./jargon";
 import { handlingInstruction } from "@/lib/safety/handling";
 import type { PoolItem, Section } from "@/lib/pool/types";
 import { looksScore, namePart } from "@/lib/pool/wild";
@@ -669,7 +669,10 @@ export function validateDraft(
     if (stockFrame(d.clue) !== null) style ??= "stock_frame";
     // Round 8 (Q-8-04): kid wording on a 13+ pass ("a ride with two wheels", "Who has …?", "!"): the first to go when a
     // spare can replace it. A plant's "Who" is checked as printed ("What", build-pass.ts fixPlantWho), so it is fine.
-    if (opts.band && isAdultBand(opts.band) && kidWordingProblem(item.section === "wild" ? fixPlantWho(d.clue, item) : d.clue) !== null) {
+    // Kid voice (Kevin 2026-10-10): the same preference for wording that doesn't fit the band's reader: grown-up words on
+    // a kid pass ("flat smooth areas", "strung across its center"), "Check for", a sentence piece, one word twice in a
+    // clue ("low benches in low dugouts"), people who may not be there ("players waiting"). jargon.ts `voiceProblem`.
+    if (voiceProblem(item.section === "wild" ? fixPlantWho(d.clue, item) : d.clue, opts.band, item.section) !== null) {
       style ??= "kid_wording";
     }
     // A stock opening ("Can you find ..."): only a preference.
@@ -1185,7 +1188,11 @@ export function stockFrame(clue: string): string | null {
 /** Frames that are a question or a "there is" (they become a plain command); "Hunt for a tree" and bare "somewhere" are not. */
 const REWRITABLE_FRAMES: readonly string[] = [...STOCK_FRAMES.filter((f) => !f.startsWith("Hunt")).map((f) => f.toLowerCase()), ...EXTRA_FRAMES];
 /** Plain first words for a rewritten frame, in order of preference (the first one not used on the pass wins). */
-export const FRAME_VERBS = ["Spot", "Notice", "Peek at", "Watch for", "Check for"] as const;
+/**
+ * Kid voice (Kevin 2026-10-10): "Notice", "Peek at" and "Check for" read stiff on paper; these fit every band (a kid's
+ * pass and a teen's or adult's alike). "Spot" stays first (the /how-it-works example).
+ */
+export const FRAME_VERBS = ["Spot", "Find", "Look for", "Hunt for", "Search for"] as const;
 
 /** Q-7-01: the rest of a rewritten clue must start with a noun phrase: one of these words within its first 3 words. */
 const DETERMINERS = new Set(["a", "an", "the", "some", "two", "three", "four", "five", "six", "seven", "eight", "nine", "ten", "many", "lots", "one"]);

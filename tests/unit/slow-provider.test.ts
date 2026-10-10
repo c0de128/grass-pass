@@ -214,7 +214,7 @@ describe("the real pass builder on run -8's recorded calls, on the replay's virt
 
   it("M10: run -8's printed 'Somewhere you will see ...' clues now print with a plain first word (Allen Station r2, Zilker r1)", async () => {
     const allen = await replay(rec("allen-station-park", 2));
-    expect(allen.items.map((i) => i.clue)).toContain("Notice 2 still areas of water.");
+    expect(allen.items.map((i) => i.clue)).toContain("Find 2 still areas of water."); // kid voice 2026-10-10: "Find", not "Notice" (FRAME_VERBS)
     const zilker = await replay(rec("zilker-metropolitan-park", 1));
     expect(zilker.items.map((i) => i.clue)).toContain("Spot a low dirt hill in the center.");
     for (const i of [...allen.items, ...zilker.items]) {
@@ -311,7 +311,7 @@ describe("M10: banned frames get a plain first word; the bridge fact rotates", (
   it("real run -8 clues", () => {
     expect(rewriteStockFrame("Somewhere you will see a low dirt hill in the center.", none, "Baseball field")).toBe("Spot a low dirt hill in the center.");
     expect(rewriteStockFrame("Somewhere you will see a vine with large, purple blooms.", new Set(["spot"]), "Purple passionflower")).toBe(
-      "Notice a vine with large, purple blooms.",
+      "Find a vine with large, purple blooms.",
     );
     expect(rewriteStockFrame("Somewhere there is a bug with blue on its tail end?", none, "Rambur's Forktail")).toBe("Spot a bug with blue on its tail end.");
     // Round-7 quality Q-7-01: a clause after the frame ("a spray of water bob up") gets "Watch", never "Spot".
@@ -327,7 +327,7 @@ describe("M10: banned frames get a plain first word; the bridge fact rotates", (
     // The two printed on the example passes, from their likely originals:
     expect(rewriteStockFrame("Where can you see a great distance?", none, "Viewpoint")).toBe("Where can you see a great distance?");
     expect(rewriteStockFrame("Where can you find 2 spots with metal bars for stretching?", none, "Exercise stations")).toBe(
-      "Notice 2 spots with metal bars for stretching.",
+      "Find 2 spots with metal bars for stretching.",
     );
     // Run -8's broken or awkward outputs and the auditor's edge probes: the clue stays as the model wrote it, or gets "Watch".
     expect(rewriteStockFrame("Somewhere you can see far away from a place higher than the land.", none, "Viewpoint")).toBe(
@@ -358,7 +358,7 @@ describe("M10: banned frames get a plain first word; the bridge fact rotates", (
   it("leaves other clues alone, skips a verb that starts like the answer, and keeps the clue when every word is taken", () => {
     expect(rewriteStockFrame("Hunt for a tree with bumpy, yellow-green fruit.", none, "Osage-orange")).toBe("Hunt for a tree with bumpy, yellow-green fruit.");
     expect(rewriteStockFrame("Somewhere a green back has brownish markings.", none, "American Bullfrog")).toBe("Somewhere a green back has brownish markings.");
-    expect(rewriteStockFrame("Somewhere you will see a bird that bobs its tail.", none, "Spotted Sandpiper")).toBe("Notice a bird that bobs its tail.");
+    expect(rewriteStockFrame("Somewhere you will see a bird that bobs its tail.", none, "Spotted Sandpiper")).toBe("Find a bird that bobs its tail.");
     const all = new Set(FRAME_VERBS.map((v) => v.split(" ")[0].toLowerCase()));
     expect(rewriteStockFrame("Somewhere you will see a bench.", all, "Benches")).toBe("Somewhere you will see a bench.");
     expect(DROP_REASON_INFO.stock_frame.kind).toBe("preference");

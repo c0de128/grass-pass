@@ -109,7 +109,8 @@ describe("openers (M10: 'I dare you to find' on 16 clues, 'Find a place with a' 
     const sys = buildMessages("Celebration Park", celebration, "6-10", planRequest(celebration, "6-10", "Celebration Park")!.ask, null, { month: 10 })[0].content;
     expect(sys).toContain(`For this park use these, one per clue, in any order: ${openersFor("Celebration Park", 8).join(", ")}.`);
     // r7 follow-ups (M8): the worn-out starts are named in a short form (STOCK_FRAMES_PROMPT), plus the round-6 water shape.
-    expect(sys).toContain('Never start with "Can you find", "Find a", "Look for", "I dare you", "Do you see" or these worn-out starts: "Somewhere you will/can see/hear/find"');
+    // Kid voice (Kevin 2026-10-10): "Find a ..." and "Look for ..." are how a grown-up talks on a hunt; no longer banned.
+    expect(sys).toContain('Never start with "Can you find", "I dare you", "Do you see" or these worn-out starts: "Somewhere you will/can see/hear/find"');
     // Completeness + M10 (run 2026-10-06-5): the frames Gemma repeated across parks are named, and so is the count trailer.
     for (const f of ["Where can you hear/find/see/spot", "Somewhere you will/can see/hear/find", "Hunt for a tree", "Where is the water that"]) expect(sys).toContain(`"${f}"`);
     expect(sys).toContain('Never end a clue with an added sentence such as "Count them.", "Count the 2 of them." or "There are 2.".');

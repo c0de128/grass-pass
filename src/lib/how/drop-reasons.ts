@@ -73,7 +73,7 @@ export const DROP_REASON_INFO: Record<DropReason, DropReasonInfo> = {
   },
   kid_wording: {
     kind: "preference",
-    plain: "On a teens & adults (13+) pass: kid-style wording, such as \"a ride with two wheels\" for a bike, a \"Who has ...?\" question, an exclamation mark, or \"little\" or \"friends\".",
+    plain: "Wording that doesn't fit the age band: sign words on a kid pass (\"flat smooth areas\", \"strung across its center\"), kid-style wording on a teens & adults (13+) pass (\"a ride with two wheels\", \"Who has ...?\", \"little\"), \"Check for\", a sentence piece, one word twice in a clue, or people who may not be there.",
   },
   over_section_max: { kind: "always", plain: "Its section already has as many finds as the mix allows." },
 };

@@ -389,10 +389,12 @@ describe("Q-6-03: a hint that contradicts its clue is left out", () => {
 });
 
 describe("prompt budget (M8): run -7's first calls averaged 3,084 prompt tokens; the goal is about 2,850", () => {
-  it("the 6-10 system prompt of a full mixed pass stays under 6,300 characters (7,154 in run -7)", () => {
+  // Kid voice (Kevin 2026-10-10): the voice and plain-words lines add about 250 characters (about 60 prompt tokens a call);
+  // prompt tokens are not what sets the latency (prompt.ts PROMPT_SPARES), so the budget moved from 6,300 to 6,600.
+  it("the 6-10 system prompt of a full mixed pass stays under 6,600 characters (7,154 in run -7)", () => {
     const mix = { n: 8, min: { park: 2, wild: 2, lucky: 0 }, max: { park: 6, wild: 6, lucky: 0 }, hardMin: 0 };
     const s = systemPrompt("6-10", mix, null, { month: 10, openers: openersFor("Arbor Hills", 8), voice: voiceFor("Arbor Hills", "6-10"), hasSeasonNotes: true });
-    expect(s.length).toBeLessThan(6_300);
+    expect(s.length).toBeLessThan(6_600);
   });
   it("the kid-words rule keeps its five kinds of words, the bare colour and two BAD phrases in under 450 characters", () => {
     const r = kidWordsRule();

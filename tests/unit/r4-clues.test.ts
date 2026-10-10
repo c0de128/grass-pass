@@ -121,7 +121,9 @@ describe("C2: clue voice", () => {
     for (const v of [...CLUE_VOICES, ...OLDER_VOICES]) expect(v).not.toMatch(/\bI and my\b|talks about itself/);
     const sys = systemPrompt("6-10", { n: 8, min: { park: 2, wild: 2, lucky: 1 }, max: { park: 5, wild: 5, lucky: 1 }, hardMin: 0 });
     expect(sys).toContain("At most ONE clue on the pass may be a riddle");
-    expect(sys).toContain('never as a one-word opener such as "Maybe!"');
+    // Kid voice (Kevin 2026-10-10): the pass prints "Maybe!" (code); the clue is one full question or instruction after it.
+    expect(sys).toContain('the pass prints "Maybe!" in front of each one: write ONE full question or instruction');
+    expect(sys).toContain('never a sentence piece such as "Where you might see ..."');
     expect(sys).toContain("for a red-tailed hawk never say a red tail");
   });
 

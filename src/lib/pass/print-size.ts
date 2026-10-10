@@ -84,7 +84,7 @@ function sourceLines(pass: Pass, passUrlLength: number): string[] {
  */
 export function estimatePrintPx(pass: Pass, passUrlLength: number = `grass-pass.vercel.app/pass/${pass.id}`.length): number {
   const rows = pass.items.reduce((sum, it) => {
-    const lead = luckyLead(it);
+    const lead = luckyLead(it, pass.ageBand);
     const clue = `${lead ? `${lead} ` : ""}${it.clue}`;
     return sum + ROW_PX + (hintText(it).length > HINT_ONE_LINE_CHARS ? ROW_WRAP_PX : 0) + (clue.length > CLUE_ONE_LINE_CHARS ? ROW_WRAP_PX : 0);
   }, 0);

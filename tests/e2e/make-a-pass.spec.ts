@@ -93,8 +93,9 @@ test("Celebration Park: park finds, and Wild Finds shows the exact 'No data avai
   await makePassOrHonestError(page, "Celebration Park");
   const pass = page.getByRole("article", { name: "Celebration Park" });
   const wild = pass.locator("section", { has: page.getByRole("heading", { name: "Wild Finds" }) });
-  // The live count can change during the week; the sentence shape is the SPEC 5.4 copy with N from iNaturalist.
-  const empty = wild.getByText(/^No data available: (no research-grade sightings within 1\.5 km in the last 14 days on iNaturalist\.|only \d+ research-grade sightings? within 1\.5 km in the last 14 days on iNaturalist\.|\d+ research-grade sightings)/);
+  // The live count can change during the week. Kid voice (2026-10-10): the hunt side says it simply; the SPEC 5.4 copy
+  // with N from iNaturalist is in the grown-up's stub (data-testid="wild-empty-reason").
+  const empty = wild.getByText(/^(No|Not enough) animal or plant sightings were reported here in the last 2 weeks, so today is all about the park!$/);
   const finds = wild.locator("ol > li");
   await expect(empty.or(finds.first())).toBeVisible();
   if (await finds.first().isVisible()) {

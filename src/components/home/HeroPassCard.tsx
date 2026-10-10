@@ -55,7 +55,7 @@ export function HeroPassCard({ card }: { card: HeroCard | null }) {
                   </span>
                   <span className="flex min-w-0 flex-col">
                     <span className={`text-sm leading-snug font-medium ${done ? "line-through decoration-primary/70 decoration-2" : ""}`}>
-                      {luckyLead(find) ? `${luckyLead(find)} ` : ""}
+                      {luckyLead(find, card.ex.pass.ageBand) ? `${luckyLead(find, card.ex.pass.ageBand)} ` : ""}
                       {find.clue}
                     </span>
                     <span className="text-[11px] text-muted-foreground">{find.evidence}</span>

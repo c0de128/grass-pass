@@ -155,7 +155,7 @@ export function planRequest(fullPool: readonly PoolItem[], band: AgeBand, seed =
   // Audit R4 (Q-4-04): ask for one hard item more than the pass promises, so one dropped hard clue still
   // leaves the promised number (validate.ts fitToMix keeps hard items last to go).
   const ask = mix.hardMin > 0 ? { ...asked, hardMin: Math.min(asked.n, mix.hardMin + HARD_EXTRA) } : asked;
-  return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n), validate: { hasMap: false, ask, lowData, band } };
+  return { pool, mix, ask, lowData, openers: openersFor(seed, ask.n, band), validate: { hasMap: false, ask, lowData, band } };
 }
 
 /**
@@ -253,8 +253,16 @@ export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[
  * grown-up writing a scavenger hunt would use, and a question word or "Somewhere" for variety.
  */
 export const OPENER_BANK = [
-  "Spot", "Hunt", "Watch", "Check", "Notice", "Point", "Peek", "Who", "What", "Which", "Where", "Somewhere",
+  // Kid voice (Kevin 2026-10-10): "Check for", "Notice" and "Peek at" read stiff on the live Celebration pass; a fun grown-up
+  // says "Find", "Look for", "Walk to", "Can you spot ...?". "Somewhere" only ever led to a stock frame (validate.ts).
+  "Find", "Spot", "Look", "Hunt", "Point", "Search", "Walk", "Watch", "Can", "Which", "Who", "Where",
 ] as const;
+
+/**
+ * Kid voice for teens & adults (13+): a naturalist's first words. No "Can" or "Who" (a kid's riddle, `kidWordingProblem`),
+ * no "Walk" (one clear thing to see); "Study" fits a field-guide challenge.
+ */
+export const ADULT_OPENER_BANK = ["Find", "Spot", "Look", "Watch", "Search", "Hunt", "Point", "Study", "Which", "What", "Where"] as const;
 
 /**
  * Completeness + M10 (run 2026-10-06-5): 21 of the 36 clues that repeated across parks repeated their
@@ -294,17 +302,20 @@ export const STOCK_FRAMES_PROMPT = [
 
 /** Stock openings the model falls back to: a clue starting with one is the first to go when there are spares (validate.ts). */
 export const STOCK_OPENINGS = [
-  "can you find", "can you spot", "can you see", "can you hear", "find a", "find an", "find the", "look for", "i dare you",
-  "do you see", "try to find", "try to spot", "search for", "see if you",
+  // Kid voice (Kevin 2026-10-10): "Find a ...", "Look for ..." and "Can you spot ...?" are how a grown-up talks to a kid on
+  // a hunt; each park gets them only as one of its own first words (`openersFor`), so they are no longer stock.
+  "can you find", "can you see", "can you hear", "i dare you",
+  "do you see", "try to find", "try to spot", "see if you",
   ...STOCK_FRAMES.map((f) => f.toLowerCase()),
 ] as const;
 
-/** `k` different first words for a park, picked by a hash of its name (stable). */
-export function openersFor(seed: string, k: number): string[] {
-  const bank: string[] = [...OPENER_BANK];
+/** `k` different first words for a park, picked by a hash of its name (stable); teens & adults use ADULT_OPENER_BANK. */
+export function openersFor(seed: string, k: number, band?: AgeBand): string[] {
+  const bank: string[] = band && isAdultBand(band) ? [...ADULT_OPENER_BANK] : [...OPENER_BANK];
+  const size = bank.length;
   let h = hash32(`openers|${seed}`);
   const out: string[] = [];
-  while (out.length < Math.min(k, OPENER_BANK.length)) {
+  while (out.length < Math.min(k, size)) {
     h = (Math.imul(h, 1664525) + 1013904223) >>> 0;
     out.push(bank.splice(h % bank.length, 1)[0]);
   }
@@ -452,19 +463,42 @@ export const ADULT_VOICES = [
 ] as const;
 
 /**
- * The reading-level rule. 4-6 and 6-10 keep the original line (the recorded fixtures and eval runs use
- * it). R3: for 10-13 the old "short words, short sentences" wrote grade-2 clues (median FK 2.2 in the
+ * The reading-level rule. Kid voice (2026-10-10): 4-6 and 6-10 also say how a fun grown-up sounds (the line was "short
+ * words, short sentences, fun and friendly"; the recorded fixtures were made with that one). R3: for 10-13 the old "short words, short sentences" wrote grade-2 clues (median FK 2.2 in the
  * 2026-10-06 smoke), so the older band is asked for fuller sentences with the SOURCE's exact describing
  * words; the length cap, grounding and every other check are unchanged.
  */
 export function readingRules(band: AgeBand, grade: string): string[] {
   if (isAdultBand(band)) return adultReadingRules();
-  if (band !== "10-13") return [`- Write at reading level grade ${grade}: short words, short sentences, fun and friendly.`];
+  // Kid voice (Kevin 2026-10-10): the 4-6 and 6-10 line now says how a fun grown-up sounds (it was "short words, short
+  // sentences, fun and friendly", which wrote "flat smooth areas" and "strung across its center").
+  if (band === "4-6") return [`- Reading level grade ${grade}. A grown-up reads each clue aloud: one very short sentence in the simplest words, about what the child will see; it may end with a tiny question ("Is it big or small?").`];
+  if (band !== "10-13") return [`- Reading level grade ${grade}. Sound like a fun grown-up on a hunt: one full sentence a parent reads aloud, with ONE thing to do (Find, Point to, Walk to) or a full question.`];
   return [
     `- Write for a 10-13-year-old at reading level grade ${grade} to 6, never babyish: each clue is one or two complete sentences of 10 to 18 words in all.`,
     // Audit R5-C3: "use the SOURCE's exact describing words" wrote "stiffly erect, branching square stems" and
     // "a typical length of 16 cm and a mass of 24-39.5 g". Richer words, yes; a field guide's words, no.
     "- Use the SOURCE's facts (shapes, textures, colours, parts) in words a 12-year-old uses on a walk, and add a comparison or what the part is for when the SOURCE says it. No filler words: every word helps the child check the find.",
+  ];
+}
+
+/**
+ * Kid voice (Kevin 2026-10-10): the live Celebration Park pass (ages 6-10) printed true clues that read like a sign:
+ * "Spot 2 flat smooth areas with a metal ring on a tall post.", "Point to the flat area with a low net strung across its
+ * center.", "Which place has players waiting on low benches in low dugouts?". One voice line per band, then the words to
+ * avoid (code checks them too: jargon.ts `voiceProblem`, a preference). The 4-6 and 6-10 voice is in `readingRules`
+ * (one line, prompt budget M8). A mix of clue kinds is already asked for by the Park Finds rule ("a detail to find, or
+ * a count to check"), and counts still come only from the map's own number (validate.ts `countProblem`).
+ */
+export function voiceRules(band: AgeBand): string[] {
+  if (isAdultBand(band)) {
+    return [
+      `- Sound like a sharp naturalist's challenge, a little witty, never childish: one clear thing to do per clue. Real terms are fine (dugout, backstop), stiff sign words are not (located, facility, "Check for"). No word twice in a clue; never people who may not be there ("players waiting").`,
+    ];
+  }
+  return [
+    ...(band === "10-13" ? ["- Talk like a fun guide giving a bit of a challenge: ONE thing to do per clue, and for a hard find a puzzle-like hint."] : []),
+    '- No sign words (area, center, strung, structure, surface, notice, "Check for"), no word twice in a clue, never people who may not be there ("players waiting").',
   ];
 }
 
@@ -557,7 +591,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // Content tuning (M10): per-park first words instead of the stock "Find a place with a ...".
     ...(ctx?.openers && ctx.openers.length > 0
       ? [
-          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "Find a", "Look for", "I dare you", "Do you see" or these worn-out starts: ${STOCK_FRAMES_PROMPT.join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
+          `- Start each clue with a different first word. For this park use these, one per clue, in any order: ${ctx.openers.join(", ")}. Never start with "Can you find", "I dare you", "Do you see" or these worn-out starts: ${STOCK_FRAMES_PROMPT.join(", ")}. After "Somewhere" or "Where", go straight to the thing's own detail.`,
         ]
       : ["- Start each clue with a different first word."]),
     // Audit R3-C1: filler openers and sound clues for silent things.
@@ -583,7 +617,8 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
           adult
             ? // Round 8 (Q-8-04): "Point to a ride with two wheels, pedals and handlebars" read like a kid's riddle on a 13+ pass.
               `- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the explorer might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!". Describe the person or animal in plain adult words from its SOURCE (a rider in a helmet passing on the trail, a pet on a leash), never as a riddle about its parts ("a ride with two wheels").`
-            : `- Lucky Finds (section "lucky") come and go: the clue must say inside its sentence that the ${who} might see it today ("you might see", "maybe"), never as a one-word opener such as "Maybe!", and describe how it looks, sounds or moves from its SOURCE.`,
+            : // Kid voice (Kevin 2026-10-10): "Maybe! Where you might see a furry pet ..." printed a sentence piece after the code's "Maybe!".
+              `- Lucky Finds (section "lucky") come and go, and the pass prints "Maybe!" in front of each one: write ONE full question or instruction to the ${who} that reads right after it (it may start "Can you spot"), never a sentence piece such as "Where you might see ...", and describe how it looks, sounds or moves from its SOURCE.`,
         ]
       : []),
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
@@ -611,6 +646,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     `- Bad: "a kind of oak" for a bur oak, "flowers like trumpets" for a trumpet vine, "a big tree squirrel" for a fox squirrel, "a dirt diamond" for a baseball field, "a sculpture" for public art.`,
     `- lookWhere is a plain place in a park: "near the water", "on tree trunks", "in tall grass", "by the path", "on bushes", "on a fence", "on the ground", "up in the sky". It must not use a word from the item's name either. Bad: "at the pond" for a pond, "by the stream" for a creek, "in a garden" for a garden spider. Park Finds are built things: leave their lookWhere empty ("") unless the SOURCE says where it is, and never "on the ground", "in the grass" or "up in the sky" for them.`,
     ...readingRules(band, info.grade),
+    ...voiceRules(band),
     kidWordsRule(band),
     `- Each clue is at most ${CLUE_MAX} characters; lookWhere at most ${LOOK_WHERE_MAX}.`,
     `- Never tell the ${who} to touch, pick, eat, catch or chase anything. Looking is the game.`,
@@ -644,7 +680,7 @@ export function buildMessages(parkName: string, pool: readonly PoolItem[], band:
     ...ctx,
     hasSeasonNotes: pool.some((p) => p.season !== undefined),
     voice: ctx.voice ?? voiceFor(parkName, band),
-    openers: ctx.openers ?? openersFor(parkName, mix.n),
+    openers: ctx.openers ?? openersFor(parkName, mix.n, band),
   };
   return [
     { role: "system" as const, content: systemPrompt(band, mix, spot, full) },

@@ -16,7 +16,7 @@
  * These checks only read the clue; they never rewrite it. (The four small edits code does make to a printed clue, a
  * filler opener, "?" after a command, a stock frame and "What", not "Who", for a plant, fungus or lichen, are in build-pass.ts and validate.ts.)
  */
-import type { AgeBand } from "@/lib/pass/constants";
+import { isAdultBand, type AgeBand } from "@/lib/pass/constants";
 
 const norm = (s: string) => s.normalize("NFKC").replace(/[‘’]/g, "'");
 
@@ -337,6 +337,102 @@ export function kidWordingProblem(clue: string): string | null {
   if (word) return word[0];
   if (t.includes("!")) return "!";
   if (/^\s*who\b(?!\s+(?:can|could|will)\b)/i.test(t)) return "a Who question";
+  return null;
+}
+
+/**
+ * Kid voice (Kevin 2026-10-10): the live Celebration Park pass (ages 6-10) printed "Spot 2 flat smooth areas with a metal
+ * ring on a tall post.", "Point to the flat area with a low net strung across its center.", "Check for a big grass area
+ * with a goal and its net at each end.", "Which place has players waiting on low benches in low dugouts?" and the Lucky
+ * Find "Where you might see a furry pet ...". True and grounded, but they read like a sign, not a fun grown-up. The code
+ * side of the prompt's voice rules (prompt.ts `voiceRules`), checked per band (drop reason `kid_wording`, a preference:
+ * the first to go when a spare can replace it; never a reason a pass prints short).
+ */
+/** Every band: words nobody says out loud on a walk. */
+const STIFF_WORDS_RE = /\b(?:located|situated|facilit(?:y|ies)|designated|utili[sz](?:e|es|ed)|amenit(?:y|ies)|vicinity)\b/i;
+/** Ages 4-10: grown-up words for places and things ("areas", "the center": say "places", "the middle"). */
+const GROWN_UP_WORDS_YOUNG_RE =
+  /\b(?:cent(?:er|re)s?|strung|structures?|surfaces?|observe[sd]?|observing|region|apparatus|equipment|recreational|approximately)\b/i;
+/** Ages 10-13: the same, but "surface", "structure" and "observe" are fine for an older reader. */
+const GROWN_UP_WORDS_OLDER_RE = /\b(?:cent(?:er|re)s?|strung|region|apparatus|equipment|recreational|approximately)\b/i;
+/**
+ * "area" as the thing itself ("flat smooth areas", "a big grass area") is a sign's word; a named kind of place a family
+ * says out loud ("a play area", "a picnic area", "a bench area dug into the ground") is fine.
+ */
+const AREA_RE = /\b([\p{L}']+)\s+(areas?)\b/giu;
+const AREA_OK_BEFORE = new Set(["play", "picnic", "bench", "sitting", "seating", "dog", "splash", "grill", "barbecue", "bbq", "playground", "kids", "kids'", "swing", "sandbox", "climbing"]);
+export function grownUpArea(clue: string): string | null {
+  for (const m of norm(clue).matchAll(AREA_RE)) if (!AREA_OK_BEFORE.has(m[1].toLowerCase())) return m[2].toLowerCase();
+  return /^\s*areas?\b/i.test(clue) ? "area" : null;
+}
+/** "Check for ..." / "Check out ..." reads like a to-do list (every band). */
+const CHECK_OPENING_RE = /^\s*check\s+(?:for|out)\b/i;
+/**
+ * A sentence piece: "Where you might see a furry pet ..." (no question mark, no comma: not a question, not "When you see
+ * X, count Y"). "Somewhere a big bird is soaring." is a whole sentence (a stock frame, checked elsewhere).
+ */
+const FRAGMENT_RE = /^\s*(?:where|wherever|when|if)\s+(?:you|people|someone|a|an|the)\b/i;
+/** Function words a clue may repeat ("a tree with a ... and a ..."). */
+const REPEAT_OK = new Set([
+  "the", "and", "you", "your", "its", "it's", "with", "for", "that", "this", "are", "has", "have", "had", "from", "can", "not", "but",
+  "out", "one", "all", "any", "how", "who", "what", "which", "where", "when", "there", "they", "them", "then", "than", "his", "her",
+  "our", "too", "very", "more", "most", "some", "each", "other", "into", "onto", "over", "under", "near", "was", "were", "will",
+  "may", "might", "could", "would", "about", "also", "just", "own", "off", "both", "these", "those", "their", "let",
+]);
+const plainSingular = (w: string) =>
+  /(?:x|ch|sh|ss)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") && !w.endsWith("us") ? w.slice(0, -1) : w;
+/** The first content word a clue says twice ("low benches in low dugouts" -> "low"), or null. */
+export function repeatedWord(clue: string): string | null {
+  const seen = new Set<string>();
+  // "side by side", "one by one", "step by step" are one idiom, not a repeat (recorded run -9: "boards laid side by side").
+  const plain = norm(clue).toLowerCase().replace(/\b(\p{L}+) by \1\b/gu, "$1");
+  for (const t of plain.match(/\p{L}+(?:'\p{L}+)?/gu) ?? []) {
+    if (t.length < 3 || REPEAT_OK.has(t)) continue;
+    const w = plainSingular(t);
+    if (seen.has(w)) return w;
+    seen.add(w);
+  }
+  return null;
+}
+/** "players waiting", "kids climbing": the clue says people are there right now (a Saturday morning may have nobody). */
+const PEOPLE_NOW_RE = /\b(?:players?|people|kids|children|families|swimmers|skaters|runners|teams?|crowds?|fans|visitors)\s+(?:are\s+)?(\p{L}{3,}ing)\b/iu;
+const NOT_A_DOING_WORD = new Set(["string", "spring", "during", "nothing", "something", "everything", "anything", "ceiling", "railing", "building", "evening", "morning", "sling", "swing", "bring", "thing"]);
+export function peopleNow(clue: string): string | null {
+  const m = PEOPLE_NOW_RE.exec(norm(clue));
+  return m && !NOT_A_DOING_WORD.has(m[1].toLowerCase()) ? m[0] : null;
+}
+
+/**
+ * Wording that does not fit the band's reader, or null (`kid_wording`). No band (older callers and tests): null.
+ * - Teens & adults (13+): kid-style wording (`kidWordingProblem`) and stiff sign words (located, facility); real terms
+ *   (dugout, backstop, canopy, surface, area, "strung across the center") are fine.
+ * - Kid bands: grown-up words ("areas" as the thing itself, "center", "strung"; ages 4-10 also "surface", "structure",
+ *   "observe"). A play, picnic or bench area is fine (`grownUpArea`).
+ * - Every band: "Check for ...", a sentence piece ("Where you might see ..."), the same content word twice in one
+ *   clue ("low benches in low dugouts"), and on a Park Find, people who may not be there ("players waiting").
+ * "Notice" is not on the code list: it is a gentle word ("Notice water that glitters in the sun as it falls." is a good
+ * clue on the live pass); the prompt no longer offers it as a first word.
+ */
+export function voiceProblem(clue: string, band: AgeBand | undefined, section: "park" | "wild" | "lucky" = "wild"): string | null {
+  if (!band) return null;
+  const t = norm(clue);
+  if (isAdultBand(band)) {
+    const kid = kidWordingProblem(t);
+    if (kid !== null) return kid;
+  } else {
+    const grown = (band === "10-13" ? GROWN_UP_WORDS_OLDER_RE : GROWN_UP_WORDS_YOUNG_RE).exec(t);
+    if (grown) return grown[0].toLowerCase();
+    const area = grownUpArea(t);
+    if (area) return area;
+  }
+  const stiff = STIFF_WORDS_RE.exec(t);
+  if (stiff) return stiff[0].toLowerCase();
+  if (CHECK_OPENING_RE.test(t)) return "check for";
+  const first = t.split(/(?<=[.!?])\s+/u)[0] ?? t;
+  if (FRAGMENT_RE.test(first) && !/[?,]/.test(first)) return "a sentence piece";
+  const twice = repeatedWord(t);
+  if (twice !== null) return `"${twice}" twice`;
+  if (section === "park") return peopleNow(t);
   return null;
 }
 

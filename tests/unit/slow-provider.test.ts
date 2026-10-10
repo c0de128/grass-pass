@@ -31,7 +31,8 @@ import { callModel, errorIdOf, FORBIDDEN_BACKOFF_MS, ModelError, modelTimeoutCap
 import { planRequest, shortRetryPlan } from "@/lib/ai/prompt";
 import { FRAME_VERBS, nothingToSee, rewriteStockFrame, stockFrame } from "@/lib/ai/validate";
 import { DROP_REASON_INFO } from "@/lib/how/drop-reasons";
-import { factsFor, KIND_FACTS } from "@/lib/pool/park";
+import { factsFor, KIND_FACTS, setFactBankForReplay } from "@/lib/pool/park";
+import { LEGACY_FACT_BANK } from "../../evals/legacy-facts";
 import { setLogSink } from "@/lib/log";
 import { caseDataOrNull, loadFixture, type CaseData } from "../../evals/fixture";
 import { replayRun, type ReplayRun } from "../../evals/replay";
@@ -166,6 +167,10 @@ describe("the rules, on a fake clock (pure functions of the time left)", () => {
 });
 
 describe("the real pass builder on run -8's recorded calls, on the replay's virtual clock", () => {
+  // Kid voice option A (2026-10-10): run -8 was answered for the Park Finds facts before the plain-words rewrite; its
+  // answers are judged against those (evals/legacy-facts.ts), like `pnpm eval:replay` does for every older run.
+  beforeAll(() => setFactBankForReplay(LEGACY_FACT_BANK));
+  afterAll(() => setFactBankForReplay(null));
   const data: Record<string, CaseData> = {};
   const replay = async (r: RunRecord, opts: { tps?: number } = {}): Promise<ReplayRun> => {
     const fx = loadFixture(r.slug);

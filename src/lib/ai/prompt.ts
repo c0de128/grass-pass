@@ -563,7 +563,7 @@ export function kidWordsRule(band?: AgeBand): string {
   if (band && isAdultBand(band)) {
     return `- Never a family, genus or species word, a Latin group name, a numbered body segment, a weight, a field-guide or diet word (operculum, pterostigma, arboreal, semiaquatic, herbivorous) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}, "blue on abdominal segments 8 and 9".`;
   }
-  return `- Use a kid's words: what it looks like (a colour plus the part it is on), its shape or what it does. Never a family, genus or species word, a Latin group name, a weight, a field-guide word (operculum, tarsomere, arboreal) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}.`;
+  return `- Use a kid's words: what it looks like (a colour plus the part it is on), its shape or what it does. Never a family, genus or species word, a Latin group name, a weight or size in cm, a field-guide word (operculum, tarsomere, arboreal) or where in the world it lives; never poisonous, venomous or stings. One colour alone ("a bird that is black") is not a clue. Bad: ${bad}.`;
 }
 
 export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = null, ctx: PromptContext | null = null): string {

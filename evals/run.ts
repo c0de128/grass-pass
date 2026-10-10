@@ -23,6 +23,7 @@ import { AGE_BAND_INFO, AGE_BANDS, AgeBandSchema, type AgeBand } from "@/lib/pas
 import type { FetchLike } from "@/lib/sources/common";
 import { parseParkId } from "@/lib/sources/overpass-features";
 import { localDay } from "@/lib/time";
+import { FACT_BANK_VERSION } from "@/lib/pool/park";
 import { TEMPLATE_MODEL, templatePass } from "./baseline";
 import { evalEnv, envList } from "./env";
 import {
@@ -451,6 +452,8 @@ export type EvalResults = {
     modelSpecs: ModelSpec[];
     keyPresent: boolean;
     notes: string[];
+    /** The Park Finds fact bank the run's prompts used (src/lib/pool/park.ts FACT_BANK_VERSION); absent = the bank before 2026-10-10. */
+    factBank?: string;
   };
   cases: EvalCaseInfo[];
   runs: RunRecord[];
@@ -560,6 +563,7 @@ export async function runEval(settings: EvalSettings, env: Record<string, string
         modelSpecs: settings.models,
         keyPresent,
         notes,
+        factBank: FACT_BANK_VERSION,
       },
       cases,
       runs: runs.sort((a, b) => a.model.localeCompare(b.model) || a.run - b.run || a.caseN - b.caseN),

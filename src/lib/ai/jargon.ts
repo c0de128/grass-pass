@@ -374,6 +374,9 @@ const CHECK_OPENING_RE = /^\s*check\s+(?:for|out)\b/i;
 const FRAGMENT_RE = /^\s*(?:where|wherever|when|if)\s+(?:you|people|someone|a|an|the)\b/i;
 /** A one-sentence "Which tiny frog is dark colored?" / "What bird is black?" (no has/does/can: nothing to look at). */
 const QUIZ_RE = /^(?:which|what)\s+(?:[\p{L}'-]+\s+){1,3}(?:is|are)\s+[\p{L}'-]+(?:\s+[\p{L}'-]+)?\s*\?$/iu;
+/** A number followed by a unit ("8 to 15 centimetres", "3 inches", "2 m", "10-20 cm"). */
+const SIZE_IN_UNITS_RE =
+  /\b\d+(?:[.,]\d+)?(?:\s*(?:to|-|–)\s*\d+(?:[.,]\d+)?)?\s*(?:cm|mm|km|ft|centimet(?:er|re)s?|millimet(?:er|re)s?|met(?:er|re)s?|inch(?:es)?|feet|foot|kg|grams?|g|pounds?|lbs?|ounces?|oz)\b/i;
 /** Function words a clue may repeat ("a tree with a ... and a ..."). */
 const REPEAT_OK = new Set([
   "the", "and", "you", "your", "its", "it's", "with", "for", "that", "this", "are", "has", "have", "had", "from", "can", "not", "but",
@@ -388,7 +391,8 @@ export function repeatedWord(clue: string): string | null {
   const seen = new Set<string>();
   // "side by side", "one by one", "step by step" are one idiom, not a repeat (recorded run -9: "boards laid side by side").
   const plain = norm(clue).toLowerCase().replace(/\b(\p{L}+) by \1\b/gu, "$1");
-  for (const t of plain.match(/\p{L}+(?:'\p{L}+)?/gu) ?? []) {
+  // A hyphenated word is one word ("pull-ups, push-ups", "yellow-green").
+  for (const t of plain.match(/\p{L}+(?:['-]\p{L}+)*/gu) ?? []) {
     if (t.length < 3 || REPEAT_OK.has(t)) continue;
     const w = plainSingular(t);
     if (seen.has(w)) return w;
@@ -435,6 +439,12 @@ export function voiceProblem(clue: string, band: AgeBand | undefined, section: "
   // Live eval 2026-10-10-partial-0835 (6-10): "Which tiny frog is dark colored?" is a quiz with nothing to find. On a kid
   // pass a lone "Which/What ... is/are <word>?" question goes first when a spare can replace it.
   if (!isAdultBand(band) && QUIZ_RE.test(t.trim())) return "a quiz question";
+  // Live eval 2026-10-10 (10-13): "Can you spot a bumpy, yellow-green sphere that is 8 to 15 centimetres wide?" A size in
+  // units (from a Wikipedia summary) is nothing a kid can check on a walk; ages 4-13 only (13+ may keep it).
+  if (!isAdultBand(band)) {
+    const size = SIZE_IN_UNITS_RE.exec(t);
+    if (size) return size[0].toLowerCase();
+  }
   const twice = repeatedWord(t);
   if (twice !== null) return `"${twice}" twice`;
   if (section === "park") return peopleNow(t);

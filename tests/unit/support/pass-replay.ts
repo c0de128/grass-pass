@@ -8,7 +8,7 @@
  */
 import { kidWordsRule } from "@/lib/ai/prompt";
 import { setRecordedFactsForTests } from "@/lib/pool/park";
-import { PARK_FILTER } from "@/lib/sources/overpass-features";
+import { FEATURE_KINDS, PARK_FILTER } from "@/lib/sources/overpass-features";
 import { withoutMaxsize } from "@/lib/sources/overpass";
 import { fixture } from "./osm-replay";
 
@@ -255,7 +255,9 @@ function shapeOfSystemLine(line: string): string | null {
  * Round-6 C4: the water kinds whose fact banks gained sight facts (their recorded sources are the older facts).
  * Slow-provider fix (run 2026-10-06-8, M10): the bridge bank changed too.
  */
-const WATER_FACT_IDS = /^(?:osm-creek|osm-fountain|osm-bridge)$/;
+// Kid voice option A (Kevin 2026-10-10): every Park Finds fact bank was reworded in plain words, so every recorded park
+// fact sheet is the older text now. All Park Finds are compared and replayed this way (it was creek, fountain, bridge).
+const WATER_FACT_IDS = /^osm-/;
 
 const unescapeSource = (s: string) => s.replace(/&quot;/g, '"').replace(/&lt;/g, "<").replace(/&gt;/g, ">").replace(/&amp;/g, "&");
 
@@ -284,6 +286,25 @@ export function recordedParkFacts(): Map<string, string> {
       const facts = text.replace(/^.*?\(OpenStreetMap\)\.(?: Mapped names?: [^.]*\.)?\s*/, "");
       out.set(`${p.id}|${id.replace(/^osm-/, "").replace(/-/g, "_")}`, facts);
     }
+    // Kid voice option A: the Find This Spot source holds the same park-seeded facts (spot/pick-target.ts factsFor);
+    // its recorded facts are the text between "the X marks ...". and the "It is about N m ..." walk sentence.
+    for (const [kind, facts] of recordedSpotFacts(p.slug)) if (!out.has(`${p.id}|${kind}`)) out.set(`${p.id}|${kind}`, facts);
+  }
+  return out;
+}
+
+/** The recorded SPOT source's facts, keyed by feature kind (from its kind label). */
+function recordedSpotFacts(slug: string): Map<string, string> {
+  const user = modelRec(slug).request.messages.find((m) => m.role === "user")?.content ?? "";
+  const out = new Map<string, string>();
+  for (const m of user.matchAll(/<source id="[^"]*" section="spot" kind="([^"]*)">([^<]*)<\/source>/g)) {
+    const kind = (Object.entries(FEATURE_KINDS) as [string, { label: string }][]).find(([, info]) => info.label === unescapeSource(m[1]))?.[0];
+    if (!kind) continue;
+    const facts = unescapeSource(m[2])
+      .replace(/^On the map of .*?\(OpenStreetMap\), the X marks [^.]*\.\s*/, "")
+      .replace(/\s*It is about \d+ m .*$/, "")
+      .trim();
+    if (facts) out.set(kind, facts);
   }
   return out;
 }

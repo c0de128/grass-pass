@@ -147,7 +147,7 @@ describe("Park Finds facts vary their words per park (M10: copied fact phrases o
     expect(texts.size).toBeGreaterThanOrEqual(5);
     // Real parks: Celebration's bench fact reads differently from the old one fixed sentence.
     // Audit R3-C1: the old fixed words "long outdoor seat" now have choices too.
-    expect(byId("osm-bench").sourceText).toContain("Each one is a long seat outdoors for resting.");
+    expect(byId("osm-bench").sourceText).toContain("Each one is a long seat outdoors where you can sit and rest."); // kid voice 2026-10-10
     const sheets = new Set(Array.from({ length: 20 }, (_, i) => factsFor("playground", `way/${3000 + i * 104729}`, 1).join(" ")));
     expect(sheets.size).toBeGreaterThanOrEqual(8);
   });
@@ -192,7 +192,7 @@ describe("the checks (style is a preference, truth and safety are not)", () => {
     const bench = byId("osm-bench");
     const fountain = byId("osm-fountain");
     const bridge = byId("osm-bridge");
-    const copy = draftItem(bench, "Psst, find a long seat outdoors for resting.", "a long seat outdoors for resting");
+    const copy = draftItem(bench, "Psst, find a long seat outdoors where you can sit.", "a long seat outdoors where you can sit and rest");
     // Round-6 C4: Celebration's fountain facts are things to see now (the sound fact is 1 of 5), so its clue is a sight clue.
     const items = [copy, draftItem(fountain, "Peek at a basin where water pours down.", "water"), draftItem(bridge, "Wander over a path that crosses a dip.", "cross over water")];
     // test input: the fountain/bridge quotes are checked like any other (short ones fail grounding), so use real source text

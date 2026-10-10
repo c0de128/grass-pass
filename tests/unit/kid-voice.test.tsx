@@ -18,6 +18,8 @@ import { AUDIENCE_COPY, wildEmptyLine } from "@/lib/pass/audience";
 import { LUCKY_MAYBE, luckyLead } from "@/lib/pass/lucky-lead";
 import { AGE_BAND_INFO, AGE_BANDS, PassSchema, type AgeBand, type Pass } from "@/lib/pass/schema";
 import type { PoolItem } from "@/lib/pool/types";
+import { FACT_BANK_VERSION, factsFor, KIND_FACTS, setFactBankForReplay } from "@/lib/pool/park";
+import { LEGACY_FACT_BANK } from "../../evals/legacy-facts";
 import { handlingInstruction } from "@/lib/safety/handling";
 
 const ROOT = path.resolve(__dirname, "../..");
@@ -249,8 +251,8 @@ describe("validateDraft: a stiff clue goes first when a spare can replace it, an
   it("the live basketball clue loses to a spare; alone it still prints (never a short pass for wording)", () => {
     // The live clue also copies "ring on a tall post" from its fact sheet (a copies_source preference, checked first),
     // so the same stiff wording without the copied run shows the kid_wording reason on its own.
-    expect(validateDraft({ items: [draft(item("osm-basketball"), LIVE.basketball, "a metal ring")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" }).items[0].style).toBe("copies_source");
-    const bad = draft(item("osm-basketball"), "Spot 2 flat smooth areas with a hoop up high.", "a metal ring");
+    expect(validateDraft({ items: [draft(item("osm-basketball"), LIVE.basketball, "made of metal")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" }).items[0].style).toBe("copies_source");
+    const bad = draft(item("osm-basketball"), "Spot 2 flat smooth areas with a hoop up high.", "made of metal");
     // (The live tower clue copies a 4-word run of its fact sheet, a style preference of its own, so a fresh one is the spare.)
     const spare = "Walk to the tall play tower with ladders and steps.";
     const good = draft(item("osm-playground"), spare, "Kids climb ladders and steps on it");
@@ -265,15 +267,15 @@ describe("validateDraft: a stiff clue goes first when a spare can replace it, an
   });
 
   it("'count 4 of them' prints as 'count all 4' and still passes the count check (the map counts 4 benches)", () => {
-    const out = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 4 of them.", "a long seat outdoors for resting")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
+    const out = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 4 of them.", "a long seat outdoors where you can sit and rest")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
     expect(out.items.map((v) => v.clue)).toEqual(["Walk to the long seats and count all 4."]);
-    const wrong = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 5 of them.", "a long seat outdoors for resting")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
+    const wrong = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 5 of them.", "a long seat outdoors where you can sit and rest")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
     expect(wrong.items).toHaveLength(0); // 5 is not the map count (dropped: a number not in its source)
   });
 
   it("the safety checks are unchanged: a touch clue is still a hard drop in every band", () => {
     for (const band of AGE_BANDS) {
-      const out = validateDraft({ items: [draft(item("osm-bench"), "Touch the 4 long seats used for resting.", "a long seat outdoors for resting")] }, data.pool, parkMix(1), { hasMap: true, band });
+      const out = validateDraft({ items: [draft(item("osm-bench"), "Touch the 4 long seats used for resting.", "a long seat outdoors where you can sit and rest")] }, data.pool, parkMix(1), { hasMap: true, band });
       expect(out.drops.handling, band).toBe(1);
     }
     expect(handlingInstruction("Walk to a long seat made of wood.")).toBeNull();
@@ -321,5 +323,57 @@ describe("empty Wild Finds: a friendly line on the hunt side, the full reason fo
   it("the printed kid half invents no wildlife (no Wild Finds rows on a pass without them)", () => {
     const t = text(renderToStaticMarkup(<KidPass pass={fixture("pass-celebration-complete-live")} />));
     expect(t).not.toMatch(/seen (once|\d+ times) since/);
+  });
+});
+
+function expandAll(template: string): string[] {
+  const m = /\{([^{}]*)\}/.exec(template);
+  if (!m) return [template];
+  return m[1].split("|").flatMap((alt) => expandAll(template.slice(0, m.index) + alt + template.slice(m.index + m[0].length)));
+}
+
+describe("option A (Kevin 2026-10-10): the code-written Park Finds facts are words a warm grown-up says out loud", () => {
+  it("every expansion of every fact template passes the kid-band voice check (the model quotes these word for word)", () => {
+    let n = 0;
+    for (const [kind, bank] of Object.entries(KIND_FACTS)) {
+      for (const t of bank) {
+        for (const f of expandAll(t)) {
+          n++;
+          for (const band of ["4-6", "6-10", "10-13"] as const) expect(voiceProblem(f, band, "park"), `${kind} ${band}: ${f}`).toBeNull();
+        }
+      }
+    }
+    expect(n).toBeGreaterThan(1000);
+  });
+
+  it("the live stiff phrases are gone from the bank", () => {
+    const all = Object.values(KIND_FACTS).flat().join(" ");
+    for (const bad of [/strung/, /\bcent(?:er|re)\b/, /\bareas?\b/, /\bstructure\b/, /\bsurface\b/, /\blofty\b/, /for resting/, /\{low\|sunken\} dugouts/, /low benches/]) {
+      expect(all, String(bad)).not.toMatch(bad);
+    }
+  });
+
+  it("sizes in units are a kid-band preference (live 10-13: '8 to 15 centimetres wide'); 13+ may keep them", () => {
+    expect(voiceProblem("Can you spot a bumpy, yellow-green sphere that is 8 to 15 centimetres wide?", "10-13", "wild")).toBe("8 to 15 centimetres");
+    expect(voiceProblem("Find a leaf about 10 cm long.", "6-10", "wild")).toBe("10 cm");
+    expect(voiceProblem("Find a fruit that is 8 to 15 centimetres wide.", "13+", "wild")).toBeNull();
+    expect(voiceProblem("Count the 4 courts in a row.", "6-10", "park")).toBeNull();
+  });
+});
+
+describe("older eval runs replay against the facts their model saw (evals/legacy-facts.ts)", () => {
+  it("the legacy bank is the pre-rewrite text, kind for kind, and the hook switches factsFor to it and back", () => {
+    expect(Object.keys(LEGACY_FACT_BANK).sort()).toEqual(Object.keys(KIND_FACTS).sort());
+    for (const k of Object.keys(KIND_FACTS) as (keyof typeof KIND_FACTS)[]) expect(LEGACY_FACT_BANK[k].length, k).toBe(KIND_FACTS[k].length);
+    expect(LEGACY_FACT_BANK.tennis[0]).toContain("strung across its center");
+    const now = factsFor("bench", "way/188145317", 4);
+    setFactBankForReplay(LEGACY_FACT_BANK);
+    try {
+      expect(factsFor("bench", "way/188145317", 4).join(" ")).toMatch(/for (resting|taking a break|a rest)\./);
+    } finally {
+      setFactBankForReplay(null);
+    }
+    expect(factsFor("bench", "way/188145317", 4)).toEqual(now);
+    expect(FACT_BANK_VERSION).toBe("kid-voice-2026-10-10");
   });
 });

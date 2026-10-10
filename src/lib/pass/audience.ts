@@ -27,6 +27,14 @@ export type AudienceCopy = {
   reportHelps: string;
   /** Q-8-05: added after "Report find N as not safe?" (a kid pass asks for a grown-up; a 13+ pass has none). */
   unsafeConfirmNote: string;
+  /** S6 + kid voice (2026-10-10): the code-written lead printed before a Lucky Find's clue (src/lib/pass/lucky-lead.ts). */
+  luckyLead: string;
+  /**
+   * Kid voice (2026-10-10): the friendly Wild Finds line on the hunt side when iNaturalist had no sightings near the
+   * park (`none`) or too few we could use (`few`). The full reason ("No data available: no research-grade sightings
+   * within 1.5 km ...") stays on the grown-up's stub and the screen's stub (src/lib/pool/wild.ts `wildEmptyCopy`).
+   */
+  wildEmpty: { none: string; few: string };
   /**
    * The printed tear-line words and the print hints on /pass/[id] and its print page are in those files (the Gemma
    * copy check, tests/unit/copy-check.test.ts, finds the kid wording there); the 13+ wording is here.
@@ -45,6 +53,11 @@ export const AUDIENCE_COPY: Record<Audience, AudienceCopy> = {
     nearWaterTip: "stay close",
     reportHelps: "It helps the next family",
     unsafeConfirmNote: " Grown-ups only, please.",
+    luckyLead: "Maybe!",
+    wildEmpty: {
+      none: "No animal or plant sightings were reported here in the last 2 weeks, so today is all about the park!",
+      few: "Not enough animal or plant sightings were reported here in the last 2 weeks, so today is all about the park!",
+    },
   },
   adult: {
     stayClose: "Stay on the paths. Tell someone where you will be.",
@@ -57,6 +70,11 @@ export const AUDIENCE_COPY: Record<Audience, AudienceCopy> = {
     nearWaterTip: "stay on the path",
     reportHelps: "It helps the next explorer",
     unsafeConfirmNote: "",
+    luckyLead: "If you're lucky:",
+    wildEmpty: {
+      none: "No wildlife sightings were reported near this park in the last 2 weeks, so this pass sticks to park features.",
+      few: "Too few usable wildlife sightings were reported near this park in the last 2 weeks, so this pass sticks to park features.",
+    },
   },
 };
 
@@ -78,4 +96,14 @@ export function safetyForBand(line: string | null, band: AgeBand): string | null
   if (!line) return line;
   const c = copyFor(band);
   return c.waterLine === SAFETY_LINES.water ? line : line.split(SAFETY_LINES.water).join(c.waterLine);
+}
+
+/**
+ * Kid voice (2026-10-10): the hunt side's Wild Finds line for an "empty" section (iNaturalist answered, but nothing
+ * printable). Which line depends on the code-written reason (src/lib/pool/wild.ts): "no research-grade sightings" means
+ * none at all; any other reason means a few, but too few to use. Never a made-up sighting.
+ */
+export function wildEmptyLine(message: string, band: AgeBand | undefined): string {
+  const c = copyFor(band).wildEmpty;
+  return /:\s*no research-grade sightings\b/i.test(message) ? c.none : c.few;
 }

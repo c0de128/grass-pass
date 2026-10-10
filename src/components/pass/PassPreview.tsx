@@ -10,7 +10,7 @@ import { SpotMap } from "./SpotMap";
 import { SAFETY_FOOTNOTE } from "@/lib/safety/danger-taxa";
 import { safeParkName } from "@/lib/ai/validate";
 import { BUILT_WITH_LLAMA, formatTime, isLlamaModel, modelLicence, passDayLine, WIKIPEDIA_CREDIT } from "@/lib/pass/format";
-import { AUDIENCE_COPY, copyFor } from "@/lib/pass/audience";
+import { AUDIENCE_COPY, copyFor, wildEmptyLine } from "@/lib/pass/audience";
 import { AGE_BAND_INFO, isAdultBand, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 const SECTIONS: SectionId[] = ["park", "wild", "lucky"];
@@ -100,7 +100,7 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
                       <div className="flex flex-col gap-0.5">
                         <p className="text-lg font-semibold">
                           <span className="sr-only">Find {numbered.get(it)}: </span>
-                          {luckyLead(it) ? <span>{luckyLead(it)} </span> : null}
+                          {luckyLead(it, pass.ageBand) ? <span>{luckyLead(it, pass.ageBand)} </span> : null}
                           {it.clue}
                         </p>
                         {it.lookWhere ? <p className="text-base">Look: {it.lookWhere}</p> : null}
@@ -118,6 +118,11 @@ export function PassPreview({ pass, reused = false, reports }: { pass: Pass; reu
                     </li>
                   ))}
                 </ol>
+              ) : s === "wild" && state.status === "empty" ? (
+                // Kid voice (2026-10-10): a friendly, honest line on the hunt side; the full reason is in the stub below.
+                <p className="rounded-control border-2 border-dashed border-line px-3 py-2" data-testid="wild-empty">
+                  {wildEmptyLine(state.message, pass.ageBand)}
+                </p>
               ) : state.status !== "ok" ? (
                 <p className="rounded-control border-2 border-dashed border-line px-3 py-2">{state.message}</p>
               ) : (
@@ -191,6 +196,11 @@ function ParentStub({ pass, numbered }: { pass: Pass; numbered: Map<PassItem, nu
         {SECTIONS.map((s) => pass.sections[s]).map((st, i) =>
           st.status === "off" ? (
             <li key={`off-${i}`}>{st.message}</li>
+          ) : st === pass.sections.wild && st.status === "empty" ? (
+            // Kid voice (2026-10-10): the full iNaturalist reason for the grown-up (the hunt side says it simply).
+            <li key={`wild-empty-${i}`} data-testid="wild-empty-reason">
+              {st.message}
+            </li>
           ) : st.status === "ok" && st.note ? (
             <li key={`note-${i}`} data-testid="section-note">
               {st.note}

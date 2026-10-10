@@ -245,7 +245,7 @@ full run with time limits sized to each call (ages 6-10; the 10-13 and 13+ check
   at `SERPAPI_DAILY_CAP` (12) a day and `SERPAPI_MONTHLY_CAP` (200, never above 250) a month, counted from the plan's
   renewal day (`SERPAPI_RENEWS_DAY`), and keeps counts 30 days. Over a limit, the pass says Lucky Finds are off for
   today (or this month). A count means visitors wrote about it, not that it is there today, so the pass prints
-  "Maybe!". A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
+  "Maybe!" ("If you're lucky:" on a teens & adults pass). A review counts only if its own text names the thing; a page holds 20 reviews, so a busy park can read "at
   least 20". Without `SERPAPI_API_KEY` the section says "not connected". No photos are printed. A park whose map and
   wildlife data can't fill a pass sends no SerpApi search (Lucky Finds are only extras).
 - **Self-hosting is slow on a laptop CPU.** Measured with Gemma 4 E2B on Ollama, no GPU, 5 parks, $0: with the app's

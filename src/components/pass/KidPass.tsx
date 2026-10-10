@@ -6,7 +6,7 @@ import { HoopIcon, MagnifierIcon, PawIcon, PinIcon } from "@/components/art/icon
 import { SECTION_LABELS } from "@/components/ui/Chip";
 import { safeParkName } from "@/lib/ai/validate";
 import { formatDay } from "@/lib/pass/format";
-import { AGE_BAND_INFO, type Audience, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
+import { AGE_BAND_INFO, type AgeBand, type Audience, type Pass, type PassItem, type SectionId } from "@/lib/pass/schema";
 
 /**
  * The 1-colour black logo for print (ADR 0004). Referenced by path, never inlined: the brand
@@ -50,11 +50,11 @@ const CLUE_CHARS_PER_LINE = 62;
 const HINT_CHARS_PER_LINE = 80;
 
 /** Estimated printed lines of the finds list (clue, then look/safety/evidence, per row). */
-export function estimatedLines(items: readonly PassItem[]): number {
+export function estimatedLines(items: readonly PassItem[], band?: AgeBand): number {
   return items.reduce((n, it) => {
     // The evidence is small print (8.5 pt) on the hint line: about 0.8 of a hint character each.
     const hint = (it.lookWhere ? it.lookWhere.length + 8 : 0) + (it.safety?.length ?? 0) + Math.ceil((it.evidence.length + 2) * 0.8);
-    const lead = luckyLead(it);
+    const lead = luckyLead(it, band);
     const clue = it.clue.length + (lead ? lead.length + 1 : 0);
     return n + Math.ceil(clue / CLUE_CHARS_PER_LINE) + Math.ceil(hint / HINT_CHARS_PER_LINE);
   }, 0);
@@ -76,8 +76,8 @@ export type Density = "roomy" | "snug" | "tight";
  * Round 8 (Q-8-01): a teens & adults (13+) sheet is never "tight" (the 0.86 zoom): it is "snug" instead and may scale
  * down to PrintFit's ADULT_MIN_FIT, so its 11.5 pt clue still prints >= 10 pt (SPEC §8.4). Kid passes are unchanged.
  */
-export function passDensity(items: readonly PassItem[], hasExtras: boolean, audience: Audience = "kid"): Density {
-  const lines = estimatedLines(items);
+export function passDensity(items: readonly PassItem[], hasExtras: boolean, audience: Audience = "kid", band?: AgeBand): Density {
+  const lines = estimatedLines(items, band);
   if (lines > TIGHT_LINE_BUDGET) return audience === "adult" ? "snug" : "tight";
   return hasExtras || lines > SNUG_LINE_BUDGET ? "snug" : "roomy";
 }
@@ -98,7 +98,7 @@ export type KidPassProps = {
 export function KidPass({ pass, spot, october }: KidPassProps) {
   const hasExtras = Boolean(spot) || Boolean(october);
   const audience = AGE_BAND_INFO[pass.ageBand].audience;
-  const density = passDensity(pass.items, hasExtras, audience);
+  const density = passDensity(pass.items, hasExtras, audience, pass.ageBand);
   const logoHeight = 48;
   const n = pass.items.length;
 
@@ -155,7 +155,7 @@ export function KidPass({ pass, spot, october }: KidPassProps) {
                       <span className="sr-only">
                         Find {i + 1}, {SECTION_ONE[it.section]}:{" "}
                       </span>
-                      {luckyLead(it) ? <span className="gp-maybe">{luckyLead(it)} </span> : null}
+                      {luckyLead(it, pass.ageBand) ? <span className="gp-maybe">{luckyLead(it, pass.ageBand)} </span> : null}
                       {it.clue}
                     </p>
                     <p className="gp-hint">

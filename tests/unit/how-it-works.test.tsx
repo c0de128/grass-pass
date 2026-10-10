@@ -67,7 +67,7 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
   it("quotes the measured numbers of the full run and the newest smoke, and marks the misses", () => {
     const g = evalColumn("gemma-4-31B-it");
     expect(t).toContain(`$${g.costPerPass.toFixed(5)}`);
-    expect(t).toContain("2026-10-06-9");
+    expect(t).toContain("2026-10-10-3");
     expect(t).toContain("2026-10-06-partial-2320");
     expect(t).toContain(`about $${SMOKE_10_13.costPerFinishedPass.toFixed(5)}, which is over`);
     expect(t).toContain(`${SMOKE_10_13.complete} of ${SMOKE_10_13.parks} passes complete in ${SMOKE_10_13.calls} model calls`);
@@ -78,15 +78,15 @@ describe("/how-it-works (Kevin, 2026-10-06): the app and the AI process in detai
     expect(SMOKE_10_13.p95s).toBeLessThanOrEqual(EVAL_THRESHOLDS.p95s);
     expect(t).toMatch(new RegExp(`${SMOKE_10_13.p50s} s typical \\( ?over the ${EVAL_THRESHOLDS.p50s} s target\\) and ${SMOKE_10_13.p95s} s slow \\(under ${EVAL_THRESHOLDS.p95s} s\\)`));
     expect(t).toMatch(new RegExp(`${SMOKE_10_13.nameLeakPct}% of its clues named their answer \\( ?over the ${EVAL_THRESHOLDS.nameLeakPct}% target\\)`));
-    // Run 2026-10-06-9 (the first with sized time limits): cost and speed (the slow calls) missed, complete passes and
+    // Run 2026-10-10-3 (after the Oct 10 wording rewrite): cost and speed (the slow calls) missed, complete passes and
     // repetition met; the table says so.
     const rows = [...html.matchAll(/<tr [^>]*><th scope="row"[^>]*>([^<]+)<\/th>(?:<td[^>]*>[^<]*<\/td>){2}<td[^>]*>(Met|Missed)<\/td>/g)].map((m) => [m[1], m[2]]);
     expect(rows).toContainEqual(["Model time per call, typical / slow", "Missed"]);
     expect(rows).toContainEqual(["Cost per pass for the clues (DigitalOcean list prices; trip tips add one more short call)", "Missed"]);
-    expect(t).toContain("$0.00108 (up to $0.00109 if 2 timed-out calls were billed in full)");
+    expect(t).toContain("$0.00107 (up to $0.00111 if 4 timed-out calls were billed in full)");
     expect(rows).toContainEqual(["Complete passes (at most 1 find missing)", "Met"]);
-    expect(t).toContain("Speed is met for a typical call and missed for the slow ones: the typical call took 9.91 s, first calls alone 12.8 s, with DigitalOcean answering at 39.5 answer tokens a second (28.1 the run before, when speed was missed)");
-    expect(t).toContain("This is the first full run with time limits sized to each call (up to 40 s for a first call; the run before had a fixed 30 s).");
+    expect(t).toContain("Speed is met for a typical call and missed for the slow ones: the typical call took 9.47 s, first calls alone 11 s, with DigitalOcean answering at 44.8 answer tokens a second (39.5 the run before, when speed was missed)");
+    expect(t).toContain("Time limits are sized to each call (up to 40 s for a first call). This is the first full run after the Oct 10 clue-wording rewrite; the run before is 2026-10-06-9.");
     expect(rows).toContainEqual(["Clues repeated across parks", "Met"]);
     expect(rows).toContainEqual(["Blocked species printed", "Met"]);
     expect(g.repeatPct).toBeLessThanOrEqual(EVAL_THRESHOLDS.repeatPct);

@@ -103,7 +103,8 @@ describe("RULES-10-02 / Q-10-03: model-call counts include the trip-tips call", 
     const s = read("README.md").replace(/\s+/g, " ");
     expect(s).toContain("a pass makes 2-4: 1-3 for the clues plus 1 for the trip tips, so about 100-200 passes a day");
     expect(s).toContain("1 to 3 model calls for the clues, plus 1 for the trip tips (2 to 4 in all");
-    expect(s).toContain("This counts the clue calls only: it was measured on Oct 6, before trip tips existed.");
+    // Eval run 2026-10-10-3: the eval still measures the clue calls only (no trip-tips call in the eval).
+    expect(s).toContain("This counts the clue calls only; the trip tips add one more short call per pass.");
   });
 });
 

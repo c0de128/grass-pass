@@ -316,11 +316,11 @@ export function aboutLimits(): Limit[] {
   return [
     {
       title: `Speed: the typical call ${metWord(p50Met)} the goal, the slow ones ${metWord(p95Met)} it (${secs(g.p50s)} typical, ${secs(g.p95s)} slow).`,
-      detail: `Target ${t.p50s} s / ${t.p95s} s. The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second (${GEMMA_TOKENS_PER_S.before} in the run before, when the typical call took ${secs(PREVIOUS_RUN.p50s)}). Run ${EVAL_RUN_ID} is the first full run with time limits sized to each call (a first call gets up to ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s; the run before had a fixed ${PREVIOUS_RUN.firstCallLimitS} s): ${f.savedBySizedLimit} first calls took longer than ${PREVIOUS_RUN.firstCallLimitS} s and still answered, ${f.timeouts === 1 ? "1 first call" : `${f.timeouts} first calls`} hit the limit and the retry saved ${f.rescued === 1 ? "that pass" : `${f.rescued} passes`}, and ${f.lost === 0 ? "no test run was lost" : `${f.lost} test runs were lost`} (${PREVIOUS_RUN.lostRuns} in the run before). Llama 4 Maverick is too slow to be the default: ${l.timeouts} of its ${l.runs} test runs ran out of time, ${pct(l.completePct)} complete passes.`,
+      detail: `Target ${t.p50s} s / ${t.p95s} s. The typical call took ${GEMMA_P50_EXACT_S} s; first calls alone took ${GEMMA_FIRST_CALL_P50_S} s. DigitalOcean answered at ${GEMMA_TOKENS_PER_S.now} answer tokens a second (${GEMMA_TOKENS_PER_S.before} in the run before, ${PREVIOUS_RUN.id}, when the typical call took ${secs(PREVIOUS_RUN.p50s)}). A first call gets up to ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s: ${(f.timeouts as number) === 1 ? "1 first call" : `${f.timeouts} first calls`} hit that limit, the whole retry answered for ${f.timeouts - f.retryTimeouts - f.retry403} of them (${f.rescued} complete), and ${(f.lost as number) === 0 ? "no test run was lost" : f.lost === 1 ? "1 test run was lost (its retry timed out too)" : `${f.lost} test runs were lost`} (${PREVIOUS_RUN.lostRuns} in the run before). Llama 4 Maverick completes more passes (${pct(l.completePct)}) but takes about twice as long (${secs(l.p50s)} typical), costs more (${usd(l.costPerPass)} a pass) and names its own answer in ${pct(l.nameLeakPct)} of its clues before the checks, so Gemma stays the default.`,
     },
     {
       title: `Some passes still come out short: ${sh.printedShort} of ${g.dataRichRuns} (${pct(g.completePct)} complete; goal ${t.completePct}%: ${metWord(completeMet)}).`,
-      detail: `${pct(PREVIOUS_RUN.completePct)} in the run before. ${f.lost === 0 ? "Every data-rich test run made a pass." : `${f.lost} test runs made no pass.`} The ${sh.printedShort} short passes are on ${sh.printedShortParks} parks: ${sh.printedShort - sh.refillTimedOut} because the park's wildlife data has little to see (every call answered, the refills found too few good clues), ${sh.refillTimedOut} because a refill ran out of time. A short pass says how many finds are missing. A pass makes 1 to 3 model calls for the clues, plus 1 for the trip tips.`,
+      detail: `${pct(PREVIOUS_RUN.completePct)} in the run before. ${(f.lost as number) === 0 ? "Every data-rich test run made a pass." : f.lost === 1 ? "1 test run made no pass: both of its model calls timed out." : `${f.lost} test runs made no pass.`} The ${sh.printedShort} short passes are on ${sh.printedShortParks} parks: ${sh.printedShort - sh.refillTimedOut - sh.afterFirstTimeout} because the park's wildlife data has little to see (every call answered, the refills found too few good clues)${sh.afterFirstTimeout > 0 ? `, ${sh.afterFirstTimeout} after its first call timed out` : ""}${sh.refillTimedOut > 0 ? `, ${sh.refillTimedOut} because a refill ran out of time` : ""}. A short pass says how many finds are missing. A pass makes 1 to 3 model calls for the clues, plus 1 for the trip tips.`,
     },
     {
       title: `Cost missed the goal: Gemma ${usd(g.costPerPass)} a pass.`,
@@ -348,7 +348,7 @@ export function aboutLimits(): Limit[] {
     },
     {
       title: "Kid check not done yet.",
-      detail: "Reading 10 clues as a 7-year-old would is planned for the real walk.",
+      detail: "Reading 10 clues as a 7-year-old would is planned for Sunday, Oct 11, on Kevin's park walk; still pending.",
     },
     {
       title: "Lucky Finds run on a free plan.",
@@ -399,7 +399,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "Model speed depends on DigitalOcean.",
-      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s: typical ${(g.p50s ?? Infinity) <= t.p50s ? "met" : "missed"}, slow ${(g.p95s ?? Infinity) <= t.p95s ? "met" : "missed"}; ${secs(PREVIOUS_RUN.p50s)} typical the run before). The first full run with sized time limits (a first call up to ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s; it was a fixed ${PREVIOUS_RUN.firstCallLimitS} s): in ${g.runs} test runs (${GEMMA_RUN_COUNTS.passes} passes; ${GEMMA_RUN_COUNTS.noDataRuns} runs on the ${GEMMA_RUN_COUNTS.noDataParks} no-data parks made none), ${GEMMA_FAILED_FIRST_CALLS.timeouts} first call hit its limit and ${GEMMA_RUN_COUNTS.lostRuns} runs were lost (${PREVIOUS_RUN.lostRuns} the run before).`,
+      detail: `${secs(g.p50s)} typical, ${secs(g.p95s)} slow (target ${t.p50s} s / ${t.p95s} s: typical ${(g.p50s ?? Infinity) <= t.p50s ? "met" : "missed"}, slow ${(g.p95s ?? Infinity) <= t.p95s ? "met" : "missed"}; ${secs(PREVIOUS_RUN.p50s)} typical the run before). A first call gets up to ${GEMMA_RUN_FIRST_CALL_LIMIT_S} s: in ${g.runs} test runs (${GEMMA_RUN_COUNTS.passes} passes; ${GEMMA_RUN_COUNTS.noDataRuns} runs on the ${GEMMA_RUN_COUNTS.noDataParks} no-data parks made none), ${(GEMMA_FAILED_FIRST_CALLS.timeouts as number) === 1 ? "1 first call" : `${GEMMA_FAILED_FIRST_CALLS.timeouts} first calls`} hit the limit and ${GEMMA_RUN_COUNTS.lostRuns === 1 ? "1 run was" : `${GEMMA_RUN_COUNTS.lostRuns} runs were`} lost (${PREVIOUS_RUN.lostRuns} the run before).`,
     },
     {
       title: "Some passes come out short.",
@@ -407,7 +407,7 @@ export function howLimits(): Limit[] {
     },
     {
       title: "The kid check is not done yet.",
-      detail: "Planned for the real walk.",
+      detail: "Planned for Sunday, Oct 11, on Kevin's park walk; still pending.",
     },
     {
       title: "Lucky Finds run on a free plan.",

@@ -13,7 +13,7 @@ import { DO_BASE_URL, DO_HOST, modelEndpoint } from "@/lib/model";
  * - Key-to-host rule (SEC-F-01): src/lib/model.ts resolveModelTarget sends DO_INFERENCE_API_KEY only to that host.
  * - Billing: per token on prepaid DigitalOcean credit (README "Cost", src/lib/limits/config.ts aiDailyCap comment);
  *   the daily model-call cap is limitsConfig().aiDailyCap (AI_DAILY_CAP, default 400).
- * - Speed and cost: eval run 2026-10-06-9 (src/lib/about/eval-summary.ts, re-checked against the JSON by about.test).
+ * - Speed and cost: eval run 2026-10-10-3 (src/lib/about/eval-summary.ts, re-checked against the JSON by about.test).
  *   Cost counts the clue calls only (measured before trip tips existed); the tips add one short call (RULES-10-02).
  * - Swap: MODEL_BASE_URL / MODEL_ID (src/lib/model.ts modelEndpoint). Llama 4 Maverick ran the same app code and checks
  *   on DigitalOcean in the same eval (evalColumn("llama-4-maverick"), 20 runs).

@@ -3,8 +3,8 @@
 Judge item G1 asked: "run it yourself" is claimed but not measured. This is the measurement. **Two partial runs, 5 parks,
 one run each, age band 6-10, $0 (no paid call).** Not the frozen numbers. The comparison column below is the 20-park hosted run
 [`2026-10-06-7`](2026-10-06-7.md), the frozen run when this was written (this file first compared against run `-6`).
-**The pages now quote run [`2026-10-06-9`](2026-10-06-9.md)** (eval sync, Builder AD, RULES-7-03): hosted Gemma 4 31B
-there took 9.9 s / 27.1 s per call (p50 / p95) at 39.5 answer tokens/s, with 90.2% complete passes (46 of 51). Each
+**The pages now quote run [`2026-10-10-3`](2026-10-10-3.md)** (eval sync, 2026-10-10, RULES-7-03): hosted Gemma 4 31B
+there took 9.5 s / 25.3 s per call (p50 / p95) at 44.8 answer tokens/s, with 90.2% complete passes (46 of 51). Each
 eval run's number sync updates this paragraph.
 
 **Which limit is "the app clock".** The app-clock run gave each call 70 s (the eval lane's `timeoutMs: 70_000` in `evals/run.ts`,

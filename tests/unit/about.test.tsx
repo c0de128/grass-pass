@@ -7,7 +7,7 @@ import { SiteFooter, parkPhotoCreditText } from "@/components/SiteFooter";
 import { PARK_PHOTOS } from "@/data/photo-credits";
 import { SiteHeader } from "@/components/SiteHeader";
 import { AGENT_BUILT_OCT_8_9, KEVIN_OWN_WORDS, privacyRows, UNIT_TESTS, aboutStatTiles, dataSources } from "@/lib/about/content";
-import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, PREVIOUS_RUN } from "@/lib/about/eval-summary";
+import { EVAL_COLUMNS, EVAL_RESULTS_FILE, EVAL_SUMMARY_FILE, EVAL_TOTAL_USD, GEMMA_FAILED_FIRST_CALLS, GEMMA_FIRST_CALL_P50_S, GEMMA_FIRST_PROMPT_TOKENS, GEMMA_COST_RANGE, GEMMA_P50_EXACT_S, GEMMA_RUN_COUNTS, GEMMA_RUN_FIRST_CALL_LIMIT_S, GEMMA_SHORT_PASSES, GEMMA_TOKENS_PER_S, GEMMA_TOP_REPEAT, GEMMA_VAGUE_CLUES, GEMMA_WATER_BY_EAR, FIXED_FIRST_CALL_LIMIT_BEFORE_SIZING_S, PREVIOUS_RUN } from "@/lib/about/eval-summary";
 import { jargonProblem, triviaProblem } from "@/lib/ai/jargon";
 import { BLOCKED_TAXA } from "@/lib/safety/danger-taxa";
 import { PASS_MAX_TOKENS } from "@/lib/ai/build-pass";
@@ -160,8 +160,11 @@ describe("about page numbers come from the committed eval run", () => {
     expect(new Set(printedShort.map((r) => r.slug)).size).toBe(GEMMA_SHORT_PASSES.printedShortParks);
     const refillTimedOut = printedShort.filter((r) => (r.calls ?? []).some((c, i) => i > 0 && c.status === null && (r.calls ?? [])[0]?.status === 200));
     expect(refillTimedOut).toHaveLength(GEMMA_SHORT_PASSES.refillTimedOut);
+    // Run 2026-10-10-3: printed-short passes whose first call timed out (the whole retry answered and printed short).
+    const afterFirstTimeout = printedShort.filter((r) => !refillTimedOut.includes(r) && (r.calls ?? [])[0]?.status === null);
+    expect(afterFirstTimeout).toHaveLength(GEMMA_SHORT_PASSES.afterFirstTimeout);
     // The rest answered every call (short on content).
-    expect(printedShort.filter((r) => !refillTimedOut.includes(r)).every((r) => (r.calls ?? []).every((c) => c.status === 200))).toBe(true);
+    expect(printedShort.filter((r) => !refillTimedOut.includes(r) && !afterFirstTimeout.includes(r)).every((r) => (r.calls ?? []).every((c) => c.status === 200))).toBe(true);
     // "1 first call hit the limit and the retry saved that pass, and no test run was lost; 1 refill timed out"
     expect({ MODEL_TIMEOUT: 0, MODEL_PROVIDER: 0, ...gemma.errors }).toEqual({ MODEL_TIMEOUT: GEMMA_FAILED_FIRST_CALLS.retryTimeouts, MODEL_PROVIDER: GEMMA_FAILED_FIRST_CALLS.retry403 });
     const failed = gemmaRuns.flatMap((r) => (r.calls ?? []).map((c, i) => ({ i, c, r }))).filter(({ c }) => c.status !== 200);
@@ -180,7 +183,7 @@ describe("about page numbers come from the committed eval run", () => {
     // Run -9 (sized limits): first calls timed out at their own sized limit, never above GEMMA_RUN_FIRST_CALL_LIMIT_S.
     for (const { c } of first.filter(({ c }) => c.status === null)) expect(c.latencyMs).toBeLessThanOrEqual(GEMMA_RUN_FIRST_CALL_LIMIT_S * 1000 + 500);
     // "3 first calls took longer than 30 s and still answered"
-    const slowAnswered = gemmaRuns.map((r) => (r.calls ?? [])[0]).filter((c) => c && c.status === 200 && c.latencyMs > PREVIOUS_RUN.firstCallLimitS * 1000);
+    const slowAnswered = gemmaRuns.map((r) => (r.calls ?? [])[0]).filter((c) => c && c.status === 200 && c.latencyMs > FIXED_FIRST_CALL_LIMIT_BEFORE_SIZING_S * 1000);
     expect(slowAnswered).toHaveLength(GEMMA_FAILED_FIRST_CALLS.savedBySizedLimit);
     // "DigitalOcean answered at 39.5 answer tokens a second (28.1 in the run before ...)"
     const tps = (rr: RunRow[]) =>
@@ -275,22 +278,22 @@ describe("/about", () => {
     const g = EVAL_COLUMNS.find((c) => c.model === "gemma-4-31B-it")!;
     // RULES-8-04: the tiles' header says which age band the numbers are for.
     expect(t).toContain(`Gemma 4 on 20 real parks, ages 6-10, ${g.runs} runs`);
-    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["99.8%", "0", "$0.00108", "Grade 2.3", "90.2%", "9.9 s", "4.1%", String(UNIT_TESTS.passed)]));
-    // Run 2026-10-06-9 (the first with sized time limits): cost and speed (the slow calls, p95 27.1 s) are Missed;
-    // complete passes (90.2%) and repeats (4.1%) are Met.
-    expect(tiles.find((x) => x.value === "9.9 s")?.met).toBe(false); // p50 9.9 s met, p95 27.1 s missed
-    expect(tiles.find((x) => x.value === "9.9 s")?.label).toBe("typical model wait, 27.1 s slow");
+    expect(tiles.map((x) => x.value)).toEqual(expect.arrayContaining(["98%", "0", "$0.00107", "Grade 2.5", "90.2%", "9.5 s", "1.6%", String(UNIT_TESTS.passed)]));
+    // Run 2026-10-10-3 (after the Oct 10 wording rewrite): cost and speed (the slow calls, p95 25.3 s) are Missed;
+    // complete passes (90.2%) and repeats (1.6%) are Met.
+    expect(tiles.find((x) => x.value === "9.5 s")?.met).toBe(false); // p50 9.5 s met, p95 25.3 s missed
+    expect(tiles.find((x) => x.value === "9.5 s")?.label).toBe("typical model wait, 25.3 s slow");
     expect(tiles.find((x) => x.value === "90.2%")?.met).toBe(true);
-    expect(tiles.find((x) => x.value === "$0.00108")?.met).toBe(false);
-    expect(tiles.find((x) => x.value === "$0.00108")?.label).toBe("per pass for the clues (list price; up to $0.00109 if 2 timed-out calls were billed in full)");
+    expect(tiles.find((x) => x.value === "$0.00107")?.met).toBe(false);
+    expect(tiles.find((x) => x.value === "$0.00107")?.label).toBe("per pass for the clues (list price; up to $0.00111 if 4 timed-out calls were billed in full)");
     expect(tiles.filter((x) => x.met === false)).toHaveLength(2);
     expect(tiles.find((x) => x.value === `${g.repeatPct}%`)?.met).toBe(true);
-    expect(tiles.find((x) => x.value === "99.8%")?.met).toBe(true);
+    expect(tiles.find((x) => x.value === "98%")?.met).toBe(true);
     expect(tiles.find((x) => x.value === "0")?.met).toBe(true);
     const list = html.match(/<ul aria-label="Measured results"[\s\S]*?<\/ul>/)?.[0] ?? "";
     expect((list.match(/<li /g) ?? []).length).toBe(tiles.length);
     expect((text(list).match(/Missed/g) ?? []).length).toBe(tiles.filter((x) => x.met === false).length);
-    expect(t).toContain("run 2026-10-06-9 (2026-10-06)");
+    expect(t).toContain("run 2026-10-10-3 (2026-10-10)");
   });
 
   it("v3: the unit-test tile is dated, and its file count matches tests/unit (re-count when tests are added)", () => {
@@ -334,40 +337,40 @@ describe("/about", () => {
 
   it("quotes the measured numbers, failures included", () => {
     for (const s of [
-      "99.8% (568/569)",
+      "98% (541/552)",
       "90.2% (46/51)",
-      "4% (clue only 4%)",
-      "9.9 s / 27.1 s",
-      "$0.00108",
-      "2.3",
-      "2.8",
-      "64.7% complete passes",
-      "3 of its 20 test runs ran out of time",
-      "Gemma passes (4% of its clues",
-      "Llama 4 Maverick does not (10.3%)",
-      "Speed: the typical call met the goal, the slow ones missed it (9.9 s typical, 27.1 s slow).",
-      "The typical call took 9.91 s; first calls alone took 12.8 s. DigitalOcean answered at 39.5 answer tokens a second (28.1 in the run before, when the typical call took 15.3 s).",
-      "Run 2026-10-06-9 is the first full run with time limits sized to each call (a first call gets up to 40 s; the run before had a fixed 30 s): 3 first calls took longer than 30 s and still answered, 1 first call hit the limit and the retry saved that pass, and no test run was lost (4 in the run before).",
-      "Some passes still come out short: 5 of 51 (90.2% complete; goal 90%: met).",
-      "82.4% in the run before. Every data-rich test run made a pass. The 5 short passes are on 3 parks: 4 because the park's wildlife data has little to see (every call answered, the refills found too few good clues), 1 because a refill ran out of time.",
-      "Cost missed the goal: Gemma $0.00108 a pass.",
-      "$0.00111 in the run before (2026-10-06-8). Only 2 calls timed out this time, so the miss is the real price of the answered calls: $0.00106 a pass even if those were free.",
-      "Most of it is the prompt (2,844 prompt tokens on a first call, 2,872 before).",
-      "Each timed-out call is priced at its prompt size, up to $0.00109 if 2 timed-out calls were billed in full.",
+      "3.3% (clue only 2.9%)",
+      "9.5 s / 25.3 s",
+      "$0.00107",
+      "2.5",
+      "Gemma passes (3.3% of its clues",
+      "Llama 4 Maverick does not (12.7%)",
+      "Speed: the typical call met the goal, the slow ones missed it (9.5 s typical, 25.3 s slow).",
+      "The typical call took 9.47 s; first calls alone took 11 s. DigitalOcean answered at 44.8 answer tokens a second (39.5 in the run before, 2026-10-06-9, when the typical call took 9.9 s).",
+      "A first call gets up to 40 s: 3 first calls hit that limit, the whole retry answered for 2 of them (1 complete), and 1 test run was lost (its retry timed out too) (0 in the run before).",
+      "Llama 4 Maverick completes more passes (94.1%) but takes about twice as long (20.6 s typical), costs more ($0.00188 a pass) and names its own answer in 12.7% of its clues before the checks, so Gemma stays the default.",
+      "Some passes still come out short: 4 of 51 (90.2% complete; goal 90%: met).",
+      "90.2% in the run before. 1 test run made no pass: both of its model calls timed out. The 4 short passes are on 2 parks: 3 because the park's wildlife data has little to see (every call answered, the refills found too few good clues), 1 after its first call timed out.",
+      "Cost missed the goal: Gemma $0.00107 a pass.",
+      "$0.00108 in the run before (2026-10-06-9). Only 4 calls timed out this time, so the miss is the real price of the answered calls: $0.00104 a pass even if those were free.",
+      "Most of it is the prompt (2,936 prompt tokens on a first call, 2,844 before).",
+      "Each timed-out call is priced at its prompt size, up to $0.00111 if 4 timed-out calls were billed in full.",
       // RULES-8-04: the headline numbers are for ages 6-10; the other bands' cost misses are named.
       "These numbers are for ages 6-10. Longer passes cost more in their small checks: a 10-13 pass $0.00145 and a 13+ pass $0.00162, both over the goal.",
       // RULES-8-08 (a): the examples are chosen complete passes.
       "The example passes are real Gemma passes, but we keep complete ones as examples, so they show a good day, not a typical one.",
-      "Some clues are still vague: 11 of 119 Wild Finds.",
-      "8 of 112 in the run before, counted with the same checks",
+      "Some clues are still vague: 13 of 123 Wild Finds.",
+      "11 of 119 in the run before, counted with the same checks",
       "Check for a small bird that is yellow.",
       "Spot a vine with flowers that are not white.",
-      "Some clues repeat across parks: 4.1% (goal 5% or lower: met).",
-      "16 of 387 printed clues share 5 words",
-      'The top one is "the still water where you" (4 parks).',
-      "14 of 54 passes (11 of 50 before)",
-      "4.1% (16/387)",
-      "0 of 97 count clues (11 removed)",
+      "Some clues repeat across parks: 1.6% (goal 5% or lower: met).",
+      "6 of 383 printed clues share 5 words",
+      'The top one is "point to the still water" (3 parks).',
+      "15 of 53 passes (14 of 54 before)",
+      "1.6% (6/383)",
+      "0 of 74 count clues (15 removed)",
+      // Kevin walks Sunday: the kid check is still pending.
+      "planned for Sunday, Oct 11, on Kevin's park walk; still pending.",
       "One to three calls per pass for the clues, plus one for the trip tips.",
       "and Lucky Finds (the test parks have no recorded Google Maps review counts",
       // RULES-7-02: the 70 s self-host limit is not called the app's normal limit.

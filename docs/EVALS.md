@@ -4,16 +4,82 @@ Moved from the README on 2026-10-06 (no numbers changed). The README keeps the s
 
 Measured on 20 real parks (recorded live from OpenStreetMap and iNaturalist on Oct 5, 2026; taxa and season counts
 were appended on Oct 6 when the blocklist grew), age band 6-10, with the real pass builder. Current numbers:
+[`evals/results/2026-10-10-3.md`](../evals/results/2026-10-10-3.md), one full run on Oct 10 (app commit `731d357`), the
+first full run after that day's clue-wording rewrite. No closed model was run (open models only; the closed models on
+our DigitalOcean tier answered 403 on Oct 5). Find This Spot and Lucky Finds are not in the eval (no map or SerpApi
+recordings for the test parks; SerpApi was switched off for the run).
+
+## Current run: 2026-10-10-3 (Oct 10, after the kid-voice rewrite)
+
+What changed in the app on Oct 10 (branch `kid-voice`, report in the factory repo):
+- **Kid voice for every age band.** The prompt asks for a voice per band (4-6 read aloud, 6-10 a fun grown-up with one
+  thing to do, 10-13 a bit of challenge, 13+ a naturalist's challenge), new first-word lists, and a full question or
+  instruction after the printed "Maybe!" on Lucky Finds. Code flags sign words on kid passes ("areas", "center",
+  "strung"), "Check for", sentence pieces, one word twice in a clue, people who may not be there, and sizes in units on
+  kid passes (`kid_wording`, a preference). Printed clues that start with the kind ("Spot a bird with a reddish-orange
+  breast.") lead with the trait instead ("Spot a reddish-orange breast on a bird."), "Where is the water that" and
+  "Walk to the place where" get plain words, and "count 25 of them" prints as "count all 25".
+- **Plain-words Park Finds fact sheets** (`src/lib/pool/park.ts`, bank `kid-voice-2026-10-10b`): the model quotes them
+  word for word, so "strung across its center", "low benches in low dugouts" and "for resting" are gone. Older runs
+  replay against the facts they were recorded with (`evals/legacy-facts.ts`, keyed by `meta.factBank`).
+- **Generic check:** a kid's colour word ("gold", "crimson", "charcoal") counts as the source's colour when the source
+  names it (a synonym of the name's own colour is the `name_trait` preference).
+
+| | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, `2026-10-06-9` |
+|---|---|---|---|---|
+| M1 Blocked taxa printed (target 0) | 0 | 0 | 0 | 0 |
+| M2 Clues quoting their source word for word, before the filter (target 85%) | 98.0% (541/552) | 94.4% (201/213) | 100% (by construction) | 99.8% (568/569) |
+| M3 Passes with >= n-1 items (target 90%) | **90.2% (46/51), PASS** | 94.1% (16/17) | 17.6% (FAIL) | 90.2% |
+| M4 Honest empty sections (target 100%) | 100% | 100% | 100% | 100% |
+| M5 Reading level, FK grade median (target <= 3.5) | 2.5 (383 clues) | 2.5 | 2.5 | 2.3 |
+| M6 Name leaks in clue or hint, before the filter (target <= 5%) | 3.3% (clue only 2.9%) | 12.7% (FAIL) | 1.4% | 4.0% |
+| M7 Model call p50 / p95 (target 10 s / 20 s) | **9.5 s / 25.3 s, p95 FAIL** (p50 9.47 s; first calls alone 11 s) | 20.6 s / 31.3 s (FAIL) | none | 9.9 s / 27.1 s |
+| Median answer tokens/s (provider speed) | 44.8 | 22.9 | none | 39.5 |
+| M8 Cost per pass (target $0.001) | **$0.00107 to $0.00111, FAIL** (4 timed-out calls; $0.00104 if they were free) | $0.00188 (FAIL) | $0 | $0.00108 to $0.00109 |
+| Mean prompt tokens, answered first calls | 2,936 | | | 2,844 |
+| M10 Printed clues repeated across parks (target <= 5%) | **1.6% (6/383), PASS** (top: "point to the still water", 3 parks) | 2.3% (3/130) | 20.7% (FAIL) | 4.1% |
+| M11 Printed clues with a wrong count (target 0) | 0 of 74 (15 removed by the check) | 0 of 12 (5 removed) | 0 of 3 | 0 of 97 (11 removed) |
+| Printed Wild Finds flagged jargon or trivia by today's checks | 13 of 123 | | n/a | 11 of 119 |
+| Passes with a water-by-ear clue | 15 of 53 (6 parks) | | | 14 of 54 (6 parks) |
+| Test runs lost (no pass) | **1** (Celebration r3: first call and retry both timed out) | 0 | 0 | 0 |
+| Calls that timed out | 4 of 87 (3 first calls at 40 s, 1 retry) | 0 | | 2 |
+
+Short passes: Connemara Meadow 6/8, 6/8 and 5/8 (the last after its first call timed out) and Spring Creek Forest 6/8.
+Spend for the whole run: $0.0916.
+
+**Same-day runs that missed (kept):**
+- [`2026-10-10.md`](../evals/results/2026-10-10.md) (on `6e80879`): M3 86.3% (44/51), M10 6.4%. Two runs were lost
+  because the first call and the whole retry both hung for 40 s (Allen Station r1, White Rock r1); the short passes were
+  the weak-data parks Connemara Meadow and Klyde Warren. Repeats came from fact-sheet phrases ("ripples when a fish
+  jumps", "you can rest your legs") and frames ("Walk to the place where", "Where is the water that"), fixed in
+  `0efb344` (more fact wordings, code rewrites, a shorter prompt).
+- [`2026-10-10-2.md`](../evals/results/2026-10-10-2.md) (on `0efb344`): M3 78.4% (40/51), M10 0.8%. Two runs lost to the
+  same double timeouts (Frisco r1, Zilker r1), and Connemara and Klyde Warren short in all 6 runs. Many dropped clues
+  used a kid's colour word the generic check could not match ("a gold bird" for Yellow Warbler), and one prompt line had
+  been trimmed ("say what sort of thing to look for ..."); `731d357` matched colour words to the source's colours and
+  restored that line.
+- Replays of the recorded answers (`pnpm eval:replay`, a lower bound for M3) gave 84.3% for `-2` and 88.2% for the first
+  run with `731d357`'s checks; the live re-run measured 90.2%.
+
+**Other age bands (partial, same day, 6 parks, one Gemma run each; run on the fact sheets before `731d357`'s last
+fixes):**
+
+| Band | Run | Complete | Risky printed | FK grade | p50 / p95 | Cost per pass | Hard finds kept |
+|---|---|---|---|---|---|---|---|
+| 4-6 | [`2026-10-10-partial-1051.md`](../evals/results/2026-10-10-partial-1051.md) | 6 of 6 | 0 | 0.6 | 8.0 s / 14.2 s | $0.00094 | n/a |
+| 10-13 | [`2026-10-10-partial-1052.md`](../evals/results/2026-10-10-partial-1052.md) | 6 of 6 | 0 | 3.7 | 10.4 s / 28.3 s | $0.00113 | 5 of 6 (2 each) |
+| 13+ | [`2026-10-10-partial-1054.md`](../evals/results/2026-10-10-partial-1054.md) | 6 of 6 | 0 | 3.7 | 9.2 s / 13.2 s | $0.00145 | 3 of 6 (3 each) |
+
+## Previous run: 2026-10-06-9 (Oct 6, kept as history)
+
 [`evals/results/2026-10-06-9.md`](../evals/results/2026-10-06-9.md) (what changed and why:
 [`2026-10-06-9-notes.md`](../evals/results/2026-10-06-9-notes.md)), one full run on Oct 6 after the slow-provider fix (app
-commit `43ceae0`), not re-run. **It is the first full run with time limits sized to each call** (`src/lib/pass/budget.ts`:
+commit `43ceae0`). **It was the first full run with time limits sized to each call** (`src/lib/pass/budget.ts`:
 a first call 30-40 s, the whole retry the time left, a refill 15-30 s; every run before had a fixed 30 s a call and 20 s
 a refill). The earlier runs ([`2026-10-05.md`](../evals/results/2026-10-05.md),
 [`-2`](../evals/results/2026-10-05-2.md), [`-3`](../evals/results/2026-10-05-3.md), [`-4`](../evals/results/2026-10-05-4.md),
 [`2026-10-06.md`](../evals/results/2026-10-06.md) and [`2026-10-06-2.md`](../evals/results/2026-10-06-2.md) to
-[`2026-10-06-8.md`](../evals/results/2026-10-06-8.md)) are kept for comparison. No closed model was run (open models
-only; the closed models on our DigitalOcean tier answered 403 on Oct 5). Find This Spot and Lucky Finds are not in the
-eval (no map or SerpApi recordings for the test parks; SerpApi was switched off for the run).
+[`2026-10-06-8.md`](../evals/results/2026-10-06-8.md)) are kept for comparison.
 
 | | Gemma 4 31B (3 runs) | Llama 4 Maverick (1 run) | No-AI template | Gemma, previous run (`2026-10-06-8`) | Gemma, first run |
 |---|---|---|---|---|---|

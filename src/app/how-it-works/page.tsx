@@ -647,8 +647,8 @@ export default function HowItWorksPage() {
             Speed is {speedMet ? "met" : p50Met ? "met for a typical call and missed for the slow ones" : "missed"}: the typical
             call took {GEMMA_P50_EXACT_S} s, first calls alone {GEMMA_FIRST_CALL_P50_S} s, with DigitalOcean answering at{" "}
             {GEMMA_TOKENS_PER_S.now} answer tokens a second ({GEMMA_TOKENS_PER_S.before} the run before, when speed was{" "}
-            {speedMetBefore ? "met" : "missed"}). This is the first full run with time limits sized to each call (up to{" "}
-            {GEMMA_RUN_FIRST_CALL_LIMIT_S} s for a first call; the run before had a fixed {PREVIOUS_RUN.firstCallLimitS} s). Lucky
+            {speedMetBefore ? "met" : "missed"}). Time limits are sized to each call (up to {GEMMA_RUN_FIRST_CALL_LIMIT_S} s for a
+            first call). This is the first full run after the Oct 10 clue-wording rewrite; the run before is {PREVIOUS_RUN.id}. Lucky
             Finds and Find This Spot are not in this test.
           </p>
           <p>

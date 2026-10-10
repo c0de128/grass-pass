@@ -118,6 +118,13 @@ describe("per band: one bad and one good clue each", () => {
     expect(repeatedWord("Find a bird with a black cap and a black tail.")).toBe("black");
     expect(repeatedWord("Find the bench that is next to the path.")).toBeNull();
     expect(repeatedWord("Find a tree with a hole, and a bird in it.")).toBeNull();
+    // Recorded run -9 (6-10): "boxes and short boxes".
+    expect(repeatedWord("Where are the boxes and short boxes painted on the ground?")).toBe("box");
+    expect(repeatedWord("Point to 4 paths made of wooden boards laid side by side.")).toBeNull();
+    // "Somewhere a big bird is soaring." is a whole sentence (recorded run -9), not a sentence piece.
+    expect(voiceProblem("Somewhere a big bird is soaring.", "6-10", "wild")).toBeNull();
+    // 13+ (recorded run 2026-10-07): "strung across the center" is plain adult English.
+    expect(voiceProblem("Count the 4 flat courts where a low net is strung across the center.", "13+", "park")).toBeNull();
     expect(peopleNow("Spot the field where kids are playing tag.")).toBe("kids are playing");
     expect(peopleNow("Find a swing where kids swing high.")).toBeNull();
     // A people word on a Lucky Find (a rider passing) is not checked: that find is about who might come by.

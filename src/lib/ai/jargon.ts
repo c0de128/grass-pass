@@ -349,7 +349,7 @@ export function kidWordingProblem(clue: string): string | null {
  * the first to go when a spare can replace it; never a reason a pass prints short).
  */
 /** Every band: words nobody says out loud on a walk. */
-const STIFF_WORDS_RE = /\b(?:located|situated|facilit(?:y|ies)|designated|utili[sz](?:e|es|ed)|amenit(?:y|ies)|vicinity|strung\s+across)\b/i;
+const STIFF_WORDS_RE = /\b(?:located|situated|facilit(?:y|ies)|designated|utili[sz](?:e|es|ed)|amenit(?:y|ies)|vicinity)\b/i;
 /** Ages 4-10: grown-up words for places and things ("areas", "the center": say "places", "the middle"). */
 const GROWN_UP_WORDS_YOUNG_RE =
   /\b(?:cent(?:er|re)s?|strung|structures?|surfaces?|observe[sd]?|observing|region|apparatus|equipment|recreational|approximately)\b/i;
@@ -367,8 +367,11 @@ export function grownUpArea(clue: string): string | null {
 }
 /** "Check for ..." / "Check out ..." reads like a to-do list (every band). */
 const CHECK_OPENING_RE = /^\s*check\s+(?:for|out)\b/i;
-/** A sentence piece: "Where you might see a furry pet ..." (no question mark, no comma: not a question, not "When you see X, count Y"). */
-const FRAGMENT_RE = /^\s*(?:where|wherever|when|somewhere|if)\s+(?:you|people|someone|a|an|the)\b/i;
+/**
+ * A sentence piece: "Where you might see a furry pet ..." (no question mark, no comma: not a question, not "When you see
+ * X, count Y"). "Somewhere a big bird is soaring." is a whole sentence (a stock frame, checked elsewhere).
+ */
+const FRAGMENT_RE = /^\s*(?:where|wherever|when|if)\s+(?:you|people|someone|a|an|the)\b/i;
 /** Function words a clue may repeat ("a tree with a ... and a ..."). */
 const REPEAT_OK = new Set([
   "the", "and", "you", "your", "its", "it's", "with", "for", "that", "this", "are", "has", "have", "had", "from", "can", "not", "but",
@@ -376,11 +379,14 @@ const REPEAT_OK = new Set([
   "our", "too", "very", "more", "most", "some", "each", "other", "into", "onto", "over", "under", "near", "was", "were", "will",
   "may", "might", "could", "would", "about", "also", "just", "own", "off", "both", "these", "those", "their", "let",
 ]);
-const plainSingular = (w: string) => (w.length > 3 && w.endsWith("s") && !w.endsWith("ss") && !w.endsWith("us") ? w.slice(0, -1) : w);
+const plainSingular = (w: string) =>
+  /(?:x|ch|sh|ss)es$/.test(w) ? w.slice(0, -2) : w.length > 3 && w.endsWith("s") && !w.endsWith("ss") && !w.endsWith("us") ? w.slice(0, -1) : w;
 /** The first content word a clue says twice ("low benches in low dugouts" -> "low"), or null. */
 export function repeatedWord(clue: string): string | null {
   const seen = new Set<string>();
-  for (const t of norm(clue).toLowerCase().match(/\p{L}+(?:'\p{L}+)?/gu) ?? []) {
+  // "side by side", "one by one", "step by step" are one idiom, not a repeat (recorded run -9: "boards laid side by side").
+  const plain = norm(clue).toLowerCase().replace(/\b(\p{L}+) by \1\b/gu, "$1");
+  for (const t of plain.match(/\p{L}+(?:'\p{L}+)?/gu) ?? []) {
     if (t.length < 3 || REPEAT_OK.has(t)) continue;
     const w = plainSingular(t);
     if (seen.has(w)) return w;
@@ -398,8 +404,8 @@ export function peopleNow(clue: string): string | null {
 
 /**
  * Wording that does not fit the band's reader, or null (`kid_wording`). No band (older callers and tests): null.
- * - Teens & adults (13+): kid-style wording (`kidWordingProblem`) and stiff sign words; real terms (dugout, backstop,
- *   canopy, surface, area) are fine.
+ * - Teens & adults (13+): kid-style wording (`kidWordingProblem`) and stiff sign words (located, facility); real terms
+ *   (dugout, backstop, canopy, surface, area, "strung across the center") are fine.
  * - Kid bands: grown-up words ("areas" as the thing itself, "center", "strung"; ages 4-10 also "surface", "structure",
  *   "observe"). A play, picnic or bench area is fine (`grownUpArea`).
  * - Every band: "Check for ...", a sentence piece ("Where you might see ..."), the same content word twice in one

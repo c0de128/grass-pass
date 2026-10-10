@@ -132,3 +132,4 @@ passes through `makePass` (scratch Vitest harness, call cap 6): Arbor Hills 2 ca
 Rock 3 calls (8 of 8, code riddle) = **5 calls**, 11.0 + 5.8 + 10.2 + 9.2 + 6.4 s. Token counts were not captured; at the
 13+ run's average (about $0.0008 a call) that is **about $0.004**. SerpApi: 0 searches (key blanked, requests refused).
 Both passes are stored in tests/fixtures (`pass-*-13plus-r8-live.json`).
+| 2026-10-10T13:35:24.518Z | 2026-10-10-partial-0835.md | 91 | 244292 | 33411 | $0.0607 |

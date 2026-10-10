@@ -133,3 +133,7 @@ Rock 3 calls (8 of 8, code riddle) = **5 calls**, 11.0 + 5.8 + 10.2 + 9.2 + 6.4 
 13+ run's average (about $0.0008 a call) that is **about $0.004**. SerpApi: 0 searches (key blanked, requests refused).
 Both passes are stored in tests/fixtures (`pass-*-13plus-r8-live.json`).
 | 2026-10-10T13:35:24.518Z | 2026-10-10-partial-0835.md | 91 | 244292 | 33411 | $0.0607 |
+| 2026-10-10T14:03:57.529Z | 2026-10-10-partial-0903.md | 82 | 222659 | 30938 | $0.0555 |
+| 2026-10-10T14:16:05.744Z | 2026-10-10-partial-0916.md | 6 | 18396 | 2258 | $0.0044 |
+| 2026-10-10T14:17:05.964Z | 2026-10-10-partial-0917.md | 8 | 27152 | 3493 | $0.0066 |
+| 2026-10-10T14:18:35.115Z | 2026-10-10-partial-0918.md | 12 | 40150 | 4742 | $0.0096 |

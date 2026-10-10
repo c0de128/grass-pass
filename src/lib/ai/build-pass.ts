@@ -75,7 +75,7 @@ import type { SpotTarget } from "@/lib/spot/pick-target";
 import { buildMessages, mixFor, openingWord, planRequest, refillPlan, shortRetryPlan, type Mix, type RefillNotes, type RequestPlan } from "./prompt";
 import { fixPlantWho } from "./jargon";
 import { passJsonSchema, PassDraftEnvelope } from "./schema";
-import { capDifficulty, mergeResults, parentNoteFor, retryThreshold, rewriteStockFrame, soundNotFirst, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
+import { capDifficulty, kindFirstRewrite, mergeResults, parentNoteFor, retryThreshold, rewriteStockFrame, soundNotFirst, validateDraft, validateSpot, type DropReason, type SpotReason, type ValidateOptions, type ValidationResult } from "./validate";
 
 type Env = Record<string, string | undefined>;
 
@@ -756,7 +756,8 @@ async function buildWithDeadline(input: BuildInput, data: BuildDeps, deps: Build
   const firstWords = new Set(best.items.map((v) => openingWord(v.clue)));
   let framesRewritten = 0;
   const clueOf = (v: ValidationResult["items"][number]): string => {
-    const out = rewriteStockFrame(v.clue, firstWords, v.item.answer);
+    // Live eval 2026-10-10-partial-0835 (M10): "Spot a bird with a red breast." -> "Spot a red breast on a bird." (validate.ts).
+    const out = kindFirstRewrite(rewriteStockFrame(v.clue, firstWords, v.item.answer));
     if (out !== v.clue) {
       framesRewritten++;
       firstWords.add(openingWord(out));

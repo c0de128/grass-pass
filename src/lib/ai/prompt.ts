@@ -255,7 +255,9 @@ export const openingWord = (clue: string) => (clue.trim().match(/[\p{L}']+/u)?.[
 export const OPENER_BANK = [
   // Kid voice (Kevin 2026-10-10): "Check for", "Notice" and "Peek at" read stiff on the live Celebration pass; a fun grown-up
   // says "Find", "Look for", "Walk to", "Can you spot ...?". "Somewhere" only ever led to a stock frame (validate.ts).
-  "Find", "Spot", "Look", "Hunt", "Point", "Search", "Walk", "Watch", "Can", "Which", "Who", "Where",
+  // Live eval 2026-10-10-partial-0835 (M10 9.8%): "Search", "Look", "Hunt" + "for a bird with a" repeated across parks.
+  // "Search" is out (a third "for" verb); "What" is back.
+  "Find", "Spot", "Look", "Hunt", "Point", "Walk", "Watch", "Can", "Which", "Who", "Where", "What",
 ] as const;
 
 /**
@@ -624,7 +626,7 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     // R3 (example passes): "white flowers" for White Morning-glory, "amber wings" for Eastern Amberwing.
     ...(mix.max.wild > 0
       ? [
-          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for an amberwing never say amber), and never the describing phrase its name is made of (for a red-tailed hawk never say a red tail). Bad: ${bad(0)}, ${bad(1)}.`,
+          `- Wild Finds: the clue must hold a trait from its SOURCE that would NOT fit most other plants or animals, and the trait must not be a word of its name (colours too: for a white morning-glory never say white, for an amberwing never say amber), and never the describing phrase its name is made of (for a red-tailed hawk never say a red tail). Bad: ${bad(0)}, ${bad(1)}. Lead with the trait, never "a bird/plant/tree with" or "a bird that is".`,
         ]
       : []),
     // R1-M4: a plant's flowers or fruit only when the code-written season sentence in its SOURCE says they are out now.

@@ -408,7 +408,7 @@ export function validateDraft(
     if (punctuated !== trimmed) questionsFixed++;
     // Completeness + M10 (run 2026-10-06-5): "Notice the long seats for a rest. Count the 2 of them." The
     // bolted-on count sentence is taken off (code only removes words; the count checks then see the rest).
-    const untailed = trimCountTrailer(punctuated);
+    const untailed = fixCountOfThem(trimCountTrailer(punctuated));
     if (untailed !== punctuated) trailersTrimmed++;
     const d = { ...parsed.data, clue: untailed };
     // Content tuning: a clue cut off mid-sentence ("Hunt for a ", seen 4 times in one answer of the
@@ -1255,13 +1255,71 @@ export function rewriteStockFrame(clue: string, taken: ReadonlySet<string>, answ
   return nothingToSee(out) ? clue : out;
 }
 
+/**
+ * Live eval 2026-10-10-partial-0835 (M10 9.8%, 6-10): the kind first, then "with" / "that": "Spot a bird with a ...",
+ * "Look for a plant with ...", "Search for a tree with bumpy ...", "Hunt for a bird that is ..." on 3+ parks each. A clue
+ * whose first words are a verb (up to 2 words), "a/an" + a kind word and "with"/"that" is a stock opening (a preference).
+ */
+const KIND_FIRST_RE =
+  /^(?:\p{L}+\s+){1,2}(?:a|an)\s+(?:(?:big|small|tiny|little|tall|short|large)\s+)?(?:bird|plant|tree|bug|insect|flower|vine|bush|shrub|animal|butterfly|moth|spider|lizard|frog|toad|fish|turtle|snake|mushroom|fungus|weed|grass|herb|beetle)s?\s+(?:with|that)\b/iu;
+export function kindFirstOpening(clue: string): string | null {
+  const m = KIND_FIRST_RE.exec(sentencesOf(clue)[0]?.join(" ") ?? "");
+  return m ? m[0].toLowerCase() : null;
+}
+
+/** First words a kind-first clue may start with for `kindFirstRewrite` (the clue's own first word is kept). */
+const KIND_FIRST_VERB = String.raw`(?:spot|find|look\s+for|hunt\s+for|search\s+for|watch\s+for|point\s+to)`;
+const KIND_WORDS = String.raw`(?:bird|plant|tree|bug|insect|flower|vine|bush|shrub|butterfly|moth|spider|lizard|frog|toad|turtle|beetle|mushroom|weed|herb)`;
+const KIND_FIRST_REWRITE_RE = new RegExp(
+  String.raw`^(${KIND_FIRST_VERB})\s+(a|an)\s+((?:(?:big|small|tiny|little|tall|short|large)\s+)?${KIND_WORDS})\s+with\s+([^.!?;:]+?)\s*([.!])$`,
+  "iu",
+);
+const KIND_THAT_IS_RE = new RegExp(
+  String.raw`^(${KIND_FIRST_VERB})\s+(a|an)\s+((?:(?:big|small|tiny|little|tall|short|large)\s+)?${KIND_WORDS})\s+that\s+is\s+([^.!?;:,]+?)\s*([.!])$`,
+  "iu",
+);
+/** Words that make "that is ..." more than describing words ("a large aquatic soaring kind", "about to land"). */
+const NOT_DESCRIBING = new Set(["a", "an", "the", "kind", "type", "sort", "one", "not", "about", "very", "also", "often", "usually", "mostly", "all", "with"]);
+/** Words that start a tail the moved trait can't carry ("... in the fall", "... shaped like a ball", "... that ..."). */
+const TAIL_WORDS = new Set([
+  "in", "on", "at", "near", "by", "when", "while", "that", "which", "who", "where", "as", "from", "under", "over", "above",
+  "below", "during", "after", "before", "if", "to", "into", "along", "around", "like", "shaped", "looks", "looking", "you", "it",
+  "its", "they", "this", "is", "are", "can", "will",
+]);
+
+/**
+ * Live eval 2026-10-10-partial-0835 (M10 9.8%): "Spot a bird with a reddish-orange breast.", "Look for a plant with white
+ * flowers." printed the same "<verb> a bird with a" start on 3+ parks, and with no spare the stock-opening preference
+ * can't replace them. On the finished pass (build-pass.ts, like `rewriteStockFrame`) such a one-sentence clue leads with
+ * its trait instead: "Spot a reddish-orange breast on a bird.", "Look for white flowers on a plant." Only the word order
+ * changes (plus "on"); the first word, the trait and the kind stay. Returns the clue unchanged when the trait has a tail
+ * ("... in the fall", "... shaped like a ball") or is longer than 6 words.
+ */
+export function kindFirstRewrite(clue: string): string {
+  // "Look for a bird that is pale brown and grey." -> "Look for a pale brown and grey bird." (describing words only).
+  const that = KIND_THAT_IS_RE.exec(clue.trim());
+  if (that) {
+    const [, verb, , kind, desc, end] = that;
+    const words = desc.toLowerCase().match(/[\p{L}'-]+/gu) ?? [];
+    if (words.length === 0 || words.length > 4 || words.some((w) => TAIL_WORDS.has(w) || NOT_DESCRIBING.has(w)) || /\d/.test(desc)) return clue;
+    const article = /^[aeiou]/i.test(desc.trim()) ? "an" : "a";
+    return `${verb} ${article} ${desc.trim()} ${kind}${end}`;
+  }
+  const m = KIND_FIRST_REWRITE_RE.exec(clue.trim());
+  if (!m) return clue;
+  const [, verb, article, kind, trait, end] = m;
+  const words = trait.toLowerCase().match(/[\p{L}'-]+/gu) ?? [];
+  if (words.length === 0 || words.length > 6 || words.some((w) => TAIL_WORDS.has(w)) || /\d/.test(trait)) return clue;
+  return `${verb} ${trait.trim()} on ${article.toLowerCase()} ${kind}${end}`;
+}
+
 /** The stock opening a clue starts with ("can you find"), or null (prompt.ts STOCK_OPENINGS). */
 export function stockOpening(clue: string): string | null {
   const start = `${firstWords(clue, 4)} `;
   const opening = STOCK_OPENINGS.find((o) => start.startsWith(`${o} `));
   if (opening) return opening;
   const all = ` ${sentencesOf(clue).flat().join(" ")} `;
-  return STOCK_PHRASES.find((p) => all.includes(` ${p} `)) ?? null;
+  return STOCK_PHRASES.find((p) => all.includes(` ${p} `)) ?? kindFirstOpening(clue);
 }
 
 /** Two clues that start with the same 3 words. */
@@ -1449,6 +1507,16 @@ const COUNT_TASK_RE = /\b(?:count(?:ing)?|how\s+many)\b/iu;
  * count task itself ("Count the benches. There are 9." stays) and keeps at least MIN_CLUE_WORDS words.
  * "count the 2 of them" was on 4 parks' passes (M10). Code only removes words.
  */
+/**
+ * Live eval 2026-10-10-partial-0835: "Walk to the outdoor seats and count 25 of them." reads as if there were more. Inside
+ * a sentence, "count 25 of them" becomes "count all 25" (only the words change; the number is the model's and the count
+ * checks see the new text). "count 2 of the benches" is left alone.
+ */
+const COUNT_OF_THEM_RE = new RegExp(`\\b(count)\\s+(${COUNT_WORD})\\s+of\\s+them\\b`, "iu");
+export function fixCountOfThem(clue: string): string {
+  return clue.replace(COUNT_OF_THEM_RE, (_m, c: string, n: string) => `${c} all ${n}`);
+}
+
 export function trimCountTrailer(clue: string): string {
   const sentences = clue.trim().split(/(?<=[.!?])\s+/u).filter(Boolean);
   let cut = sentences.length;

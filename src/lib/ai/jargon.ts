@@ -372,6 +372,8 @@ const CHECK_OPENING_RE = /^\s*check\s+(?:for|out)\b/i;
  * X, count Y"). "Somewhere a big bird is soaring." is a whole sentence (a stock frame, checked elsewhere).
  */
 const FRAGMENT_RE = /^\s*(?:where|wherever|when|if)\s+(?:you|people|someone|a|an|the)\b/i;
+/** A one-sentence "Which tiny frog is dark colored?" / "What bird is black?" (no has/does/can: nothing to look at). */
+const QUIZ_RE = /^(?:which|what)\s+(?:[\p{L}'-]+\s+){1,3}(?:is|are)\s+[\p{L}'-]+(?:\s+[\p{L}'-]+)?\s*\?$/iu;
 /** Function words a clue may repeat ("a tree with a ... and a ..."). */
 const REPEAT_OK = new Set([
   "the", "and", "you", "your", "its", "it's", "with", "for", "that", "this", "are", "has", "have", "had", "from", "can", "not", "but",
@@ -430,6 +432,9 @@ export function voiceProblem(clue: string, band: AgeBand | undefined, section: "
   if (CHECK_OPENING_RE.test(t)) return "check for";
   const first = t.split(/(?<=[.!?])\s+/u)[0] ?? t;
   if (FRAGMENT_RE.test(first) && !/[?,]/.test(first)) return "a sentence piece";
+  // Live eval 2026-10-10-partial-0835 (6-10): "Which tiny frog is dark colored?" is a quiz with nothing to find. On a kid
+  // pass a lone "Which/What ... is/are <word>?" question goes first when a spare can replace it.
+  if (!isAdultBand(band) && QUIZ_RE.test(t.trim())) return "a quiz question";
   const twice = repeatedWord(t);
   if (twice !== null) return `"${twice}" twice`;
   if (section === "park") return peopleNow(t);

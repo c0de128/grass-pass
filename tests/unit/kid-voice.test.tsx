@@ -13,7 +13,7 @@ import { KidPass } from "@/components/pass/KidPass";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { kidWordingProblem, peopleNow, repeatedWord, voiceProblem } from "@/lib/ai/jargon";
 import { OPENER_BANK, ADULT_OPENER_BANK, openersFor, readingRules, STOCK_OPENINGS, systemPrompt, type Mix } from "@/lib/ai/prompt";
-import { FRAME_VERBS, rewriteStockFrame, stockOpening, validateDraft, validateSpot } from "@/lib/ai/validate";
+import { FRAME_VERBS, fixCountOfThem, kindFirstOpening, kindFirstRewrite, rewriteStockFrame, stockOpening, validateDraft, validateSpot } from "@/lib/ai/validate";
 import { AUDIENCE_COPY, wildEmptyLine } from "@/lib/pass/audience";
 import { LUCKY_MAYBE, luckyLead } from "@/lib/pass/lucky-lead";
 import { AGE_BAND_INFO, AGE_BANDS, PassSchema, type AgeBand, type Pass } from "@/lib/pass/schema";
@@ -170,6 +170,67 @@ describe("the prompt says it, per band", () => {
   });
 });
 
+describe("live eval 2026-10-10-partial-0835 (6-10, M10 9.8%): kind-first openings, quiz questions, 'count 25 of them'", () => {
+  // Real printed clues that repeated a 5-word run on 3+ parks.
+  const KIND_FIRST = [
+    "Spot a bird with a reddish-orange breast.",
+    "Look for a plant with white flowers.",
+    "Search for a tree with bumpy, yellow-green balls.",
+    "Hunt for a bird with a black head and upper body.",
+    "Look for a bird that is pale brown and grey.",
+    "Spot a tree with bumpy, yellow-green balls in the fall.",
+  ];
+  it("a verb + 'a bird/plant/tree with/that' start is a stock opening (a preference: it goes first when a spare exists)", () => {
+    for (const c of KIND_FIRST) expect(kindFirstOpening(c), c).not.toBeNull();
+    for (const c of KIND_FIRST) expect(stockOpening(c), c).not.toBeNull();
+    for (const c of [
+      "Find a big grass field with a goal at each end.",
+      "Find a court with a low net right across the middle.",
+      "Spot the reddish-orange breast on a bird hopping in the grass.",
+      "Point to the bumpy yellow-green balls hanging in a tree.",
+    ]) expect(kindFirstOpening(c), c).toBeNull();
+  });
+
+  it("on the finished pass a kind-first clue leads with its trait (real live clues; word order only)", () => {
+    expect(kindFirstRewrite("Spot a bird with a reddish-orange breast.")).toBe("Spot a reddish-orange breast on a bird.");
+    expect(kindFirstRewrite("Look for a plant with white flowers.")).toBe("Look for white flowers on a plant.");
+    expect(kindFirstRewrite("Search for a tree with bumpy, yellow-green balls.")).toBe("Search for bumpy, yellow-green balls on a tree.");
+    expect(kindFirstRewrite("Hunt for a turtle with a yellow bottom shell.")).toBe("Hunt for a yellow bottom shell on a turtle.");
+    expect(kindFirstRewrite("Look for a bird that is pale brown and grey.")).toBe("Look for a pale brown and grey bird.");
+    expect(kindFirstRewrite("Search for a bird that is orange and black.")).toBe("Search for an orange and black bird.");
+    // Left alone: a tail the trait can't carry, a non-describing "that is", a question, a number, other first words.
+    for (const c of [
+      "Spot a tree with bumpy, yellow-green balls in the fall.",
+      "Look for a tree with bumpy fruit that is yellow-green.",
+      "Look for a bird that is a large aquatic soaring kind.",
+      "Which one of these is a tree with bumpy, yellow-green fruit in the fall?",
+      "Walk to a tree with bark like puzzle pieces.",
+      "Spot a bird with 2 white bars on each wing.",
+      "Find a big grass field with a goal at each end.",
+    ]) expect(kindFirstRewrite(c), c).toBe(c);
+  });
+
+  it("the prompt asks to lead with the trait, and 'Search' (a third 'for' verb) left the kid opener bank", () => {
+    const s = systemPrompt("6-10", { n: 8, min: { park: 2, wild: 2, lucky: 0 }, max: { park: 6, wild: 6, lucky: 0 }, hardMin: 0 }, null, { month: 10 });
+    expect(s).toContain('Lead with the trait, never "a bird/plant/tree with" or "a bird that is".');
+    expect(OPENER_BANK as readonly string[]).not.toContain("Search");
+    expect(OPENER_BANK.length).toBeGreaterThanOrEqual(10);
+  });
+
+  it("'Which tiny frog is dark colored?' is a quiz with nothing to find (kid bands only)", () => {
+    expect(voiceProblem("Which tiny frog is dark colored?", "6-10", "wild")).toBe("a quiz question");
+    expect(voiceProblem("What bird is black?", "4-6", "wild")).toBe("a quiz question");
+    expect(voiceProblem("Which tree has bark like puzzle pieces?", "6-10", "wild")).toBeNull();
+    expect(voiceProblem("Which frog is dark colored?", "13+", "wild")).toBeNull();
+  });
+
+  it("'count 25 of them' becomes 'count all 25' (the number is unchanged)", () => {
+    expect(fixCountOfThem("Walk to the outdoor seats and count 25 of them.")).toBe("Walk to the outdoor seats and count all 25.");
+    expect(fixCountOfThem("Walk to the benches and count two of them.")).toBe("Walk to the benches and count all two.");
+    expect(fixCountOfThem("Count 2 of the benches by the path.")).toBe("Count 2 of the benches by the path.");
+  });
+});
+
 describe("validateDraft: a stiff clue goes first when a spare can replace it, and prints when none can", () => {
   let data: CaseData;
   beforeAll(async () => {
@@ -201,6 +262,13 @@ describe("validateDraft: a stiff clue goes first when a spare can replace it, an
     expect(alone.items[0].style).toBe("kid_wording");
     // The same clue on a 13+ pass: "areas" is a normal word there.
     expect(validateDraft({ items: [bad] }, data.pool, parkMix(1), { hasMap: true, band: "13+" }).items[0].style).toBeUndefined();
+  });
+
+  it("'count 4 of them' prints as 'count all 4' and still passes the count check (the map counts 4 benches)", () => {
+    const out = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 4 of them.", "a long seat outdoors for resting")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
+    expect(out.items.map((v) => v.clue)).toEqual(["Walk to the long seats and count all 4."]);
+    const wrong = validateDraft({ items: [draft(item("osm-bench"), "Walk to the long seats and count 5 of them.", "a long seat outdoors for resting")] }, data.pool, parkMix(1), { hasMap: true, band: "6-10" });
+    expect(wrong.items).toHaveLength(0); // 5 is not the map count (dropped: a number not in its source)
   });
 
   it("the safety checks are unchanged: a touch clue is still a hard drop in every band", () => {

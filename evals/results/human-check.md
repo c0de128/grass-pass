@@ -1,18 +1,18 @@
 # M9 kid check (human)
 
-10 printed gemma-4-31B-it clues picked from `2026-10-10-2.md`. Kevin: for each clue, would a 7-year-old get it? Write yes or no. Pass mark: 8 of 10 (SPEC 6.4). Status: **not done yet**.
+10 printed gemma-4-31B-it clues picked from `2026-10-10-3.md`. Kevin: for each clue, would a 7-year-old get it? Write yes or no. Pass mark: 8 of 10 (SPEC 6.4). Status: **not done yet**.
 
 | # | Park | Clue | Look where | Answer | 7-year-old gets it? |
 |---|---|---|---|---|---|
-| 1 | Towne Lake Park | Point to the calm blue surface where turtles swim. |  | Pond or lake (Towne Lake) | |
-| 2 | White Rock Lake Park | Who has blue parts on the end of a green belly? | near the water | Rambur's Forktail (Ischnura ramburii) | |
-| 3 | Klyde Warren Park | Count the 25 long outdoor seats. |  | Benches | |
-| 4 | White Rock Lake Park | Spot the metal cookers that are dark from old fires. |  | Barbecue grills | |
-| 5 | Bob Woodruff Park (North) | Look for a tiny white heron! | near the water | Snowy Egret (Egretta thula) | |
-| 6 | Allen Station Park | Where are 4 buildings with open sides that block rain? |  | Picnic shelters | |
-| 7 | Breckinridge Park | Can you find the 3 places that give shade and have open sides? |  | Picnic shelters | |
-| 8 | Klyde Warren Park | Hunt for a bird that is greenish above and yellow below. | up in the sky | Wilson's Warbler (Cardellina pusilla) | |
-| 9 | Connemara Meadow Preserve | What floats past on the water? |  | Creek or stream (Rowlett Creek) | |
-| 10 | Bob Woodruff Park (North) | Who has small white spots on orange wings? | on bushes | Queen (Danaus gilippus) | |
+| 1 | Arbor Hills Nature Preserve | Count the 2 long seats outdoors. |  | Benches | |
+| 2 | Spring Creek Forest Preserve Park | Who is the large wading bird by the water? | near the water | Great Blue Heron (Ardea herodias) | |
+| 3 | Bethany Lakes Park | Count the 10 flat tops with seats bolted to the sides. |  | Picnic tables | |
+| 4 | Central Park | Hunt for a field with a reddish dirt infield. |  | Baseball fields (Heckscher Ballfield 5, Heckscher Ballfield 4, Heckscher Ballfield 3) | |
+| 5 | Connemara Meadow Preserve | Find bright-orange shapes with tiny spikes around the rim. | on tree trunks | Golden-eye Lichen (Teloschistes chrysophthalmus) | |
+| 6 | Breckinridge Park | Walk to the boards that make a thump under your feet. |  | Bridges (Breckinridge Park Nature Trail) | |
+| 7 | Breckinridge Park | What has a low spout for kids or a dish for dogs? |  | Drinking fountains | |
+| 8 | Spring Creek Forest Preserve Park | Which insect is orange or yellow with black spots? | on flowers | Fiery Skipper (Hylephila phyleus) | |
+| 9 | Cedar Ridge Preserve | Which water has a short stream that bobs up from its spout? |  | Drinking fountain | |
+| 10 | Klyde Warren Park | Hunt for a creature with a rust colored body. | up in the sky | Eastern Red Bat (Lasiurus borealis) | |
 
 Result: _ / 10

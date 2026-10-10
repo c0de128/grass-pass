@@ -13,7 +13,7 @@ import { KidPass } from "@/components/pass/KidPass";
 import { PassPreview } from "@/components/pass/PassPreview";
 import { kidWordingProblem, peopleNow, repeatedWord, voiceProblem } from "@/lib/ai/jargon";
 import { OPENER_BANK, ADULT_OPENER_BANK, openersFor, readingRules, STOCK_OPENINGS, systemPrompt, type Mix } from "@/lib/ai/prompt";
-import { FRAME_VERBS, fixCountOfThem, kindFirstOpening, kindFirstRewrite, rewriteStockFrame, stockOpening, validateDraft, validateSpot } from "@/lib/ai/validate";
+import { colourOfName, FRAME_VERBS, fixCountOfThem, isGenericClue, kindFirstOpening, kindFirstRewrite, rewriteStockFrame, stockOpening, validateDraft, validateSpot } from "@/lib/ai/validate";
 import { AUDIENCE_COPY, wildEmptyLine } from "@/lib/pass/audience";
 import { LUCKY_MAYBE, luckyLead } from "@/lib/pass/lucky-lead";
 import { AGE_BAND_INFO, AGE_BANDS, PassSchema, type AgeBand, type Pass } from "@/lib/pass/schema";
@@ -394,5 +394,28 @@ describe("official eval 2026-10-10 (M10 6.4%): the repeated frames and fact phra
     expect(new Set(all("bench").map((f) => (/where you can (.*)\.$/.exec(f) ?? [])[1]).filter(Boolean)).size).toBe(6);
     expect(all("swing").some((f) => /^It is a seat that hangs/.test(f))).toBe(true);
     expect(all("swing").some((f) => /^It is a seat (hung on|dangling from)/.test(f))).toBe(true);
+  });
+});
+
+describe("official re-run 2026-10-10-2 (M3 78.4%): a kid's colour word for a colour the source names is not generic", () => {
+  const warbler = "Northern Yellow Warbler (Setophaga aestiva). The yellow warbler (Setophaga petechia) is a New World warbler species.";
+  const bat = "Eastern Red Bat (Lasiurus borealis). The eastern red bat (Lasiurus borealis) is a species of bat.";
+  const bw = "Black-and-white Warbler (Mniotilta varia). The black-and-white warbler (Mniotilta varia) is a species of New World warbler.";
+  it("real dropped clues now pass the generic check, and only when the source says that colour", () => {
+    expect(isGenericClue("Watch for a gold bird in the leaves.", warbler)).toBe(false);
+    expect(isGenericClue("Hunt for a mammal with a crimson hue.", bat)).toBe(false);
+    expect(isGenericClue("Watch for a bird with stripes of charcoal and snow.", bw)).toBe(false);
+    // No such colour in the source: still generic.
+    expect(isGenericClue("Watch for a gold bird in the leaves.", bat)).toBe(true);
+    // Truly vague clues from the same run stay generic.
+    for (const c of ["Where are the seeds on this tree?", "Which bird is a large songbird?", "Where is a medium-sized bird of prey?", "Find a grass that has seeds in October."]) {
+      expect(isGenericClue(c, "Bur oak (Quercus macrocarpa). A large songbird and a medium-sized bird of prey; a tree with seeds."), c).toBe(true);
+    }
+  });
+  it("a synonym of the name's own colour is a name-trait preference (it goes first when a spare exists)", () => {
+    expect(colourOfName("Watch for a gold bird.", ["yellow"])).toBe("gold");
+    expect(colourOfName("Hunt for a mammal with a crimson hue.", ["red"])).toBe("crimson");
+    expect(colourOfName("Watch for a gold bird.", ["red"])).toBeNull();
+    expect(colourOfName("Watch for a gold bird.", [])).toBeNull();
   });
 });

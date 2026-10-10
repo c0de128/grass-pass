@@ -588,7 +588,9 @@ export function systemPrompt(band: AgeBand, mix: Mix, spot: PromptSpot | null = 
     "- Prefer things that stay put (plants, fungi, landmarks) over birds that fly away.",
     // R2-M5: the qualities of a good clue, with no good example to copy.
     // Round 8 (Q-8-04): a 13+ clue is checked by eye ("What rushing sound does the running water make?" was printed).
-    `- A good clue gives the ${who} ONE thing to check with their ${adult ? "eyes" : "eyes or ears"} that is special to that item and written in its SOURCE: a colour, shape, mark, size, ${adult ? "" : "sound, "}what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper (say what sort of thing it is).`,
+    // Official re-run 2026-10-10-2 (M3 78.4%): the 0efb344 trim of the last sentence ("say what sort of thing it is") is
+    // undone; the run after it printed more clues with no kind ("Which one has a gold chest?"). Kept word for word.
+    `- A good clue gives the ${who} ONE thing to check with their ${adult ? "eyes" : "eyes or ears"} that is special to that item and written in its SOURCE: a colour, shape, mark, size, ${adult ? "" : "sound, "}what it does, or a count. Say it in your own words: never copy 3 or more words in a row from the SOURCE into the clue (copied words go in sourceQuote; a number is fine). Each clue must make sense alone on paper: say what sort of thing to look for (a tree, a seat, a bird) unless that word is part of its name.`,
     // Bench/shelter fix (2026-10-07): "Spot a place with a roof and pillars where people eat." for Benches at Celebration
     // (the roof and pillars were the Find This Spot shelter's facts). Each clue's facts come from its own item only.
     // Short on purpose (prompt budget M8); the SPOT line below says its facts are for the riddle only.

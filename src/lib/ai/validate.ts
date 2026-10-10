@@ -478,7 +478,8 @@ export function validateDraft(
     // white flowers" for White Morning-glory) is a preference, not a hard leak: the item is the first to go
     // when a spare can replace it (as a hard leak it cut complete first answers on low-data parks).
     const traits = item.nameTraits ?? [];
-    const traitHit = traits.length > 0 && nameLeak(d.clue, traits) !== null;
+    // Official re-run 2026-10-10-2: "a gold bird" for Yellow Warbler is the name's colour in other words: a preference too.
+    const traitHit = traits.length > 0 && (nameLeak(d.clue, traits) !== null || colourOfName(d.clue, traits) !== null);
     // ... but a clue that says the trait word is in its NAME ("Sneak up on a tree with a white name." for
     // American elm, also called white elm: builder N's live refill, 2026-10-06) gives the name away: a hard leak.
     // Audit R4-C2: a Wild Find clue about its NAME ("a tree with a name like a pencil" for pencil cedar, "flowers that
@@ -1106,7 +1107,36 @@ export function isGenericClue(clue: string, sourceText: string): boolean {
   const src = traitWords(sourceText);
   const first4 = new Set(src.map(traitStem));
   const stems = new Set(src.map(suffixStem));
-  return !traitWords(clue).some((w) => first4.has(traitStem(w)) || stems.has(suffixStem(w)));
+  const inSource = (w: string) => first4.has(traitStem(w)) || stems.has(suffixStem(w));
+  // Official re-run 2026-10-10-2: a kid's colour word for a colour the source names ("a gold bird" for "yellow",
+  // "stripes of charcoal and snow" for "black-and-white") is that source colour, not a guess.
+  return !traitWords(clue).some((w) => inSource(w) || (COLOUR_SYNONYMS[w] ?? []).some(inSource));
+}
+
+/**
+ * Official re-run 2026-10-10-2 (M3 78.4%): on the low-data parks (Klyde Warren, Connemara) 60 Wild Finds were dropped as
+ * generic, many because the clue said the source's colour in a kid's word: "Watch for a gold bird." (Yellow Warbler),
+ * "a mammal with a crimson hue" (Eastern Red Bat), "stripes of charcoal and snow" (Black-and-white Warbler). Each word
+ * here stands for the plain colours listed; it only counts when the source itself says one of them (grounding and every
+ * other check unchanged). A synonym of a colour in the find's NAME is a name-trait preference (validate `colourOfName`).
+ */
+export const COLOUR_SYNONYMS: Readonly<Record<string, readonly string[]>> = {
+  gold: ["yellow"], golden: ["yellow"], lemon: ["yellow"], sunny: ["yellow"], butter: ["yellow"], mustard: ["yellow"],
+  crimson: ["red"], ruby: ["red"], scarlet: ["red"], cherry: ["red"], rosy: ["red", "pink"], fiery: ["red", "orange"],
+  rust: ["orange", "red", "brown"], rusty: ["orange", "red", "brown"], copper: ["orange", "brown"], tawny: ["orange", "brown"],
+  charcoal: ["black", "grey", "gray"], ink: ["black"], inky: ["black"], coal: ["black"], jet: ["black"], sooty: ["black"],
+  snow: ["white"], snowy: ["white"], ivory: ["white"], cream: ["white"], creamy: ["white"], pearl: ["white"], milky: ["white"],
+  chocolate: ["brown"], chestnut: ["brown"], coffee: ["brown"], cinnamon: ["brown", "orange"],
+  navy: ["blue"], sapphire: ["blue"], violet: ["purple"], lavender: ["purple"], plum: ["purple"],
+  silver: ["grey", "gray"], silvery: ["grey", "gray"], ash: ["grey", "gray"], slate: ["grey", "gray", "blue"],
+};
+
+/** A kid's colour word in the clue that stands for a colour word of the find's name ("gold" for Yellow Warbler), or null. */
+export function colourOfName(clue: string, nameTraits: readonly string[]): string | null {
+  if (nameTraits.length === 0) return null;
+  const traits = new Set(nameTraits.map((t) => t.toLowerCase()));
+  for (const w of traitWords(clue)) if ((COLOUR_SYNONYMS[w] ?? []).some((c) => traits.has(c))) return w;
+  return null;
 }
 
 /**

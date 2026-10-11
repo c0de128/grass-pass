@@ -1078,3 +1078,96 @@ dialog.gp-wizard::backdrop {
   -webkit-mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, #0000 75%);
   mask-image: radial-gradient(ellipse 60% 55% at 50% 40%, #000 0%, #0000 75%);
 }
+
+/*
+ * Search v2 (2026-10-10): the park search "radar" (src/components/parks/SearchRadar.tsx). With motion: a beam sweeps
+ * the chosen circle and two ripples go out from the place. Reduced motion: no sweep, no ripples; only the circle
+ * fades gently in and out, so the picture still shows that something is working.
+ */
+.gp-radar-sweep,
+.gp-radar-ripple {
+  transform-box: view-box;
+  transform-origin: 200px 120px;
+}
+.gp-radar-ripple {
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-radar-sweep {
+    animation: gp-radar-spin 2.8s linear infinite;
+  }
+  .gp-radar-ripple {
+    animation: gp-radar-ripple 2.8s cubic-bezier(0.2, 0.6, 0.35, 1) infinite;
+  }
+  .gp-radar-ripple-late {
+    animation-delay: 1.4s;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .gp-radar-motion {
+    display: none;
+  }
+  .gp-radar-breathe {
+    animation: gp-radar-breathe 2.4s ease-in-out infinite;
+  }
+}
+@keyframes gp-radar-spin {
+  to {
+    transform: rotate(-360deg);
+  }
+}
+@keyframes gp-radar-ripple {
+  0% {
+    opacity: 0.55;
+    transform: scale(0.12);
+  }
+  100% {
+    opacity: 0;
+    transform: scale(1);
+  }
+}
+@keyframes gp-radar-breathe {
+  50% {
+    opacity: 0.55;
+  }
+}
+
+/* Search v2: the results map's pins (src/components/parks/ParkResultsMap.tsx). */
+.gp-map-pin {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 9999px;
+  background: #137838;
+  border: 2.5px solid #ffffff;
+  box-shadow: 0 2px 6px rgb(16 41 26 / 0.35);
+  cursor: pointer;
+}
+.gp-map-pin > span {
+  color: #ffffff;
+  font: 800 13px/1 var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+}
+.gp-map-pin[data-active="true"] {
+  background: #ffc72c;
+  border-color: #10291a;
+  scale: 1.3;
+  z-index: 2;
+}
+.gp-map-pin[data-active="true"] > span {
+  color: #10291a;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .gp-map-pin {
+    transition: scale 150ms ease, background-color 150ms ease;
+  }
+}
+.gp-map-home {
+  width: 22px;
+  height: 22px;
+  border-radius: 9999px;
+  background: #ffc72c;
+  border: 3px solid #10291a;
+  box-shadow: 0 0 0 5px rgb(255 199 44 / 0.35);
+}

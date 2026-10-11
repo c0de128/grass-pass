@@ -1,7 +1,10 @@
 // Security headers applied to every route via next.config.ts.
 // CSP follows the "Without Nonces" recipe in node_modules/next/dist/docs/01-app/02-guides/content-security-policy.md.
 // 'unsafe-inline' for scripts is needed by Next's inline bootstrap scripts when no nonce middleware is used.
-// No third-party scripts, fonts or images: fonts are self-hosted by next/font, all data is server-proxied.
+// No third-party scripts or fonts: fonts are self-hosted by next/font, all data is server-proxied. One exception
+// (search v2, 2026-10-10): the results map fetches its street style, tiles, sprites and map fonts from OpenFreeMap
+// (connect-src + img-src for that one origin). MapLibre's worker is served from our own origin (worker-src 'self').
+import { OPENFREEMAP_ORIGIN } from "./parks/map-config";
 
 export type Header = { key: string; value: string };
 
@@ -10,9 +13,10 @@ export function buildCsp(opts: { isDev: boolean; upgradeInsecure: boolean }): st
     "default-src 'self'",
     `script-src 'self' 'unsafe-inline'${opts.isDev ? " 'unsafe-eval'" : ""}`,
     "style-src 'self' 'unsafe-inline'",
-    "img-src 'self' blob: data:",
+    `img-src 'self' blob: data: ${OPENFREEMAP_ORIGIN}`,
     "font-src 'self'",
-    "connect-src 'self'",
+    `connect-src 'self' ${OPENFREEMAP_ORIGIN}`,
+    "worker-src 'self'",
     "object-src 'none'",
     "base-uri 'self'",
     // Sign-in buttons are forms: without JavaScript their redirect goes to the OAuth provider's page.

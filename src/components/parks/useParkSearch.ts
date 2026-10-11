@@ -4,11 +4,13 @@
  * F1 "Find a park" logic (the wizard, Kevin 2026-10-07): a place search (submit only, no autocomplete) or "Use my
  * location" (rounded to 2 decimals, ~1 km, in the browser before it is sent), then a list of real OpenStreetMap
  * parks nearest first. The hero card and the wizard's "Pick your park" step share one instance of this hook.
+ * Search v2 (2026-10-10): the visitor picks how far to look (1, 3, 5 or 10 mi, default 3); changing it after a search
+ * runs the same search again with the new distance.
  * Field errors are returned with an `attempt` counter so the alert is re-mounted (re-announced) on every failure.
  */
 import { useEffect, useRef, useState } from "react";
 import { roundCoord } from "@/lib/geo";
-import { LOCATION_DECIMALS, PlaceQueryLimits } from "@/lib/parks/constants";
+import { DEFAULT_RADIUS_MILES, LOCATION_DECIMALS, PlaceQueryLimits, radiusShort, type RadiusMiles } from "@/lib/parks/constants";
 import type { ExampleLink, ParksResult } from "@/lib/parks/schema";
 
 /**
@@ -37,7 +39,7 @@ const SLOW_AFTER_MS = 8_000;
 export type ParkSearchPhase =
   | { kind: "idle" }
   | { kind: "locating" }
-  | { kind: "searching"; label: string }
+  | { kind: "searching"; label: string; radiusMi: RadiusMiles; place: string | null }
   | { kind: "done"; result: ParksResult }
   | { kind: "failed"; message: string; code: string; example?: ExampleLink };
 
@@ -54,16 +56,23 @@ export function cleanQuery(raw: string): string {
   return raw.replace(/\s+/g, " ").trim();
 }
 
-export function searchingLabel(q: string): string {
-  return `Searching OpenStreetMap for “${q}” and parks within 5 km…`;
+export function searchingLabel(q: string, mi: RadiusMiles = DEFAULT_RADIUS_MILES): string {
+  return `Finding “${q}” on OpenStreetMap, then looking for parks within ${radiusShort(mi)}…`;
 }
 
-export const LOCATION_SEARCHING_LABEL = "Searching OpenStreetMap for parks within 5 km of you…";
+export function locationSearchingLabel(mi: RadiusMiles = DEFAULT_RADIUS_MILES): string {
+  return `Looking on OpenStreetMap for parks within ${radiusShort(mi)} of you…`;
+}
+
+type SearchBody = { q: string } | { lat: string; lng: string };
 
 export type FieldProblem = { message: string; attempt: number };
 
 export function useParkSearch() {
   const [phase, setPhase] = useState<ParkSearchPhase>({ kind: "idle" });
+  const [radiusMi, setRadiusMi] = useState<RadiusMiles>(DEFAULT_RADIUS_MILES);
+  /** The last search sent (place text or rounded location), so a new distance can run it again. */
+  const lastRef = useRef<{ body: SearchBody; from: "q" | "location" } | null>(null);
   const [slow, setSlow] = useState(false);
   /** A problem with the typed place (shown on the wizard's search field). */
   const [fieldError, setFieldError] = useState<FieldProblem | null>(null);
@@ -97,11 +106,13 @@ export function useParkSearch() {
   }
 
   /** POST, so what was typed (or the rounded location) never goes in a URL or a request log (SEC-1-03). */
-  async function runSearch(body: { q: string } | { lat: string; lng: string }, label: string, from: "q" | "location") {
+  async function runSearch(body: SearchBody, from: "q" | "location", mi: RadiusMiles) {
     abortRef.current?.abort();
     const ac = new AbortController();
     abortRef.current = ac;
-    setPhase({ kind: "searching", label });
+    lastRef.current = { body, from };
+    const place = "q" in body ? body.q : null;
+    setPhase({ kind: "searching", label: place ? searchingLabel(place, mi) : locationSearchingLabel(mi), radiusMi: mi, place });
     stopSlowTimer();
     slowTimer.current = setTimeout(() => setSlow(true), SLOW_AFTER_MS);
     const timeout = setTimeout(() => ac.abort(), CLIENT_TIMEOUT_MS);
@@ -114,7 +125,7 @@ export function useParkSearch() {
         fetch("/api/parks", {
           method: "POST",
           headers: { Accept: "application/json", "Content-Type": "application/json" },
-          body: JSON.stringify(body),
+          body: JSON.stringify({ ...body, radiusMi: mi }),
           signal: ac.signal,
         }),
         loadSchemas(),
@@ -171,8 +182,19 @@ export function useParkSearch() {
     }
     setFieldError(null);
     const clean = cleanQuery(raw);
-    void runSearch({ q: clean }, searchingLabel(clean), "q");
+    void runSearch({ q: clean }, "q", radiusMi);
     return true;
+  }
+
+  /**
+   * A new distance. After a finished (or failed) search, the same place is searched again with it; before any
+   * search, it is just remembered for the next one. Ignored while a search is running.
+   */
+  function chooseRadius(mi: RadiusMiles): void {
+    if (busy || mi === radiusMi) return;
+    setRadiusMi(mi);
+    const last = lastRef.current;
+    if (last && (phase.kind === "done" || phase.kind === "failed")) void runSearch(last.body, last.from, mi);
   }
 
   function locate(): void {
@@ -186,7 +208,7 @@ export function useParkSearch() {
         // Rounded here, before anything leaves the device (~1 km).
         const lat = roundCoord(pos.coords.latitude, LOCATION_DECIMALS);
         const lng = roundCoord(pos.coords.longitude, LOCATION_DECIMALS);
-        void runSearch({ lat: lat.toFixed(LOCATION_DECIMALS), lng: lng.toFixed(LOCATION_DECIMALS) }, LOCATION_SEARCHING_LABEL, "location");
+        void runSearch({ lat: lat.toFixed(LOCATION_DECIMALS), lng: lng.toFixed(LOCATION_DECIMALS) }, "location", radiusMi);
       },
       (err) => {
         setPhase({ kind: "idle" });
@@ -209,6 +231,8 @@ export function useParkSearch() {
     phase,
     busy,
     progress,
+    radiusMi,
+    chooseRadius,
     fieldError,
     locError,
     search,

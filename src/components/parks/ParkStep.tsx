@@ -1,20 +1,35 @@
 "use client";
 
 /**
- * The wizard's step 1 "Pick your park": a compact "search somewhere else" row, the honest search status (with a
- * skeleton while OpenStreetMap answers: grey placeholders, never made-up parks), then the real parks as big
- * tappable cards. Errors keep their exact copy (field errors on the field, outside failures as an alert carrying
+ * The wizard's step 1 "Pick your park": a compact "search somewhere else" row with the distance choice (search v2:
+ * 1, 3, 5 or 10 mi), the honest search status (with a paper-map "radar" while OpenStreetMap answers: decoration only,
+ * never made-up parks), then the real parks: a street map with numbered pins (loaded only now) and the same parks as
+ * big numbered cards. Errors keep their exact copy (field errors on the field, outside failures as an alert carrying
  * the server's code).
  */
 import { ChevronRight, LoaderCircle, LocateFixed, MapPin, Search } from "lucide-react";
+import dynamic from "next/dynamic";
 import Link from "next/link";
-import { useEffect, useId, useRef, type FormEvent } from "react";
+import { useEffect, useId, useRef, useState, type FormEvent } from "react";
 import { buttonClassName } from "@/components/ui/Button";
 import { distanceLabel } from "@/lib/geo";
 import { parkMetaLine } from "@/lib/parks/kind-label";
+import { resultsSummary } from "@/lib/parks/results-view";
 import type { Park, ParksResult } from "@/lib/parks/schema";
 import { safeParkName } from "@/lib/safety/contact";
+import { RadiusChoice } from "./RadiusChoice";
+import { SearchRadar } from "./SearchRadar";
 import type { ParkSearch } from "./useParkSearch";
+
+/** The street map and its library load only when a result list is on screen (client only, its own chunk). */
+const ParkResultsMap = dynamic(() => import("./ParkResultsMap"), {
+  ssr: false,
+  loading: () => (
+    <div className="flex h-64 items-center justify-center rounded-2xl bg-[#edf4e2] text-sm font-semibold text-[#10291a] ring-1 ring-border sm:h-80" data-testid="park-map-loading">
+      Loading the street map…
+    </div>
+  ),
+});
 
 function formatChecked(iso: string): string {
   const d = new Date(iso);
@@ -41,7 +56,7 @@ export function ParkStep({
   const locErrorId = `${ids}-loc-error`;
   const inputRef = useRef<HTMLInputElement>(null);
   const locRef = useRef<HTMLButtonElement>(null);
-  const { phase, busy, fieldError, locError, progress } = search;
+  const { phase, busy, fieldError, locError, progress, radiusMi } = search;
 
   // A field problem (or "no such place") moves focus to the field; a location problem to its button.
   const fieldAttempt = fieldError?.attempt;
@@ -100,6 +115,9 @@ export function ParkStep({
             {fieldError.message}
           </p>
         ) : null}
+        <div className="pt-2">
+          <RadiusChoice value={radiusMi} onChange={search.chooseRadius} busy={busy} rerun={phase.kind === "done" || phase.kind === "failed"} />
+        </div>
         <button
           ref={locRef}
           type="button"
@@ -122,11 +140,11 @@ export function ParkStep({
         ) : null}
       </form>
 
-      <p role="status" aria-live="polite" className="text-base empty:hidden" data-testid="park-search-status">
+      {busy ? <SearchRadar key={phase.kind === "searching" ? phase.label : "locating"} radiusMi={radiusMi} /> : null}
+
+      <p role="status" aria-live="polite" className="-mt-2 text-base font-semibold empty:hidden" data-testid="park-search-status">
         {progress}
       </p>
-
-      {busy ? <ParkSkeleton /> : null}
 
       {phase.kind === "failed" ? (
         <div role="alert" data-error-code={phase.code} className="flex flex-col gap-3 rounded-2xl bg-muted p-4">
@@ -148,24 +166,14 @@ export function ParkStep({
   );
 }
 
-/** Grey placeholder cards while the real list loads (decorative, hidden from screen readers; the status says what is happening). */
-function ParkSkeleton() {
-  return (
-    <ul aria-hidden="true" className="flex flex-col gap-2.5" data-testid="park-skeleton">
-      {[0, 1, 2, 3].map((i) => (
-        <li key={i} className="gp-skeleton flex h-[4.5rem] flex-col justify-center gap-2 rounded-2xl bg-muted px-4" style={{ animationDelay: `${i * 120}ms` }}>
-          <span className="block h-4 w-1/2 rounded-full bg-foreground/10" />
-          <span className="block h-3 w-1/3 rounded-full bg-foreground/10" />
-        </li>
-      ))}
-    </ul>
-  );
-}
-
 function ParkCards({ result, picked, onPick }: { result: ParksResult; picked: Park | null; onPick: (p: Park) => void }) {
   const where = result.query.kind === "text" ? (result.query.matched ?? result.query.text) : "your location";
   const checked = formatChecked(result.checkedAt);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  /** The park whose card (or pin) is hovered or focused: its pin and card light up together. */
+  const [activeId, setActiveId] = useState<string | null>(null);
+  const center = result.center;
+  const mapParks = result.parks.map((p) => ({ id: p.id, lat: p.lat, lng: p.lng, distanceM: p.distanceM, label: safeParkName(p.name).name }));
   // A new list: move focus to its heading (as the page did before the wizard), so it is read out.
   useEffect(() => {
     headingRef.current?.focus({ preventScroll: true });
@@ -185,25 +193,45 @@ function ParkCards({ result, picked, onPick }: { result: ParksResult; picked: Pa
         <p className="rounded-2xl bg-muted p-4 font-semibold">{result.empty?.message}</p>
       ) : (
         <>
-          <p className="text-sm text-muted-foreground">
-            {result.parks.length < result.totalFound
-              ? `The ${result.parks.length} nearest of ${result.totalFound} named parks within 5 km.`
-              : `${result.parks.length} named ${result.parks.length === 1 ? "park" : "parks"} within 5 km.`}{" "}
-            Pick one.
+          <p className="text-sm text-muted-foreground" data-testid="parks-summary">
+            {resultsSummary(result.parks.length, result.totalFound, result.radiusMi)} Pick one.
           </p>
+          {center ? (
+            <ParkResultsMap
+              key={`${result.checkedAt}|${result.radiusMi}|${center.lat},${center.lng}|${result.parks.length}`}
+              center={center}
+              radiusM={result.radiusM}
+              parks={mapParks}
+              activeId={activeId}
+              onActive={setActiveId}
+              onPick={(id) => {
+                const p = result.parks.find((x) => x.id === id);
+                if (p) onPick(p);
+              }}
+            />
+          ) : null}
           <ol className="flex flex-col gap-2.5" aria-label={`Parks near ${where}`}>
             {result.parks.map((p, i) => {
               const name = safeParkName(p.name).name;
+              const active = activeId === p.id;
               return (
                 <li key={p.id} className="gp-wiz-rise" style={{ animationDelay: `${Math.min(i, 8) * 40}ms` }}>
                   <button
                     type="button"
                     onClick={() => onPick(p)}
+                    onMouseEnter={() => setActiveId(p.id)}
+                    onMouseLeave={() => setActiveId(null)}
+                    onFocus={() => setActiveId(p.id)}
+                    onBlur={() => setActiveId(null)}
                     aria-pressed={picked?.id === p.id}
-                    className="group flex min-h-[4.5rem] w-full items-center gap-3 rounded-2xl border-2 border-transparent bg-muted px-4 py-3 text-left text-foreground transition-[border-color,transform,box-shadow] hover:border-line motion-safe:hover:-translate-y-0.5 hover:shadow-md hover:shadow-shadow aria-pressed:border-ink aria-pressed:bg-sun aria-pressed:text-sun-foreground"
+                    data-active={active || undefined}
+                    className="group flex min-h-[4.5rem] w-full items-center gap-3 rounded-2xl border-2 border-transparent bg-muted px-4 py-3 text-left text-foreground transition-[border-color,transform,box-shadow] hover:border-line data-active:border-line motion-safe:hover:-translate-y-0.5 hover:shadow-md hover:shadow-shadow aria-pressed:border-ink aria-pressed:bg-sun aria-pressed:text-sun-foreground"
                   >
-                    <span className="flex size-10 shrink-0 items-center justify-center rounded-xl bg-card text-primary ring-1 ring-border group-aria-pressed:bg-ink group-aria-pressed:text-on-ink" aria-hidden="true">
-                      <MapPin className="size-5" />
+                    <span
+                      className="flex size-10 shrink-0 items-center justify-center rounded-full bg-primary font-heading text-base font-extrabold text-primary-foreground ring-2 ring-card group-data-active:bg-sun group-data-active:text-sun-foreground group-aria-pressed:bg-ink group-aria-pressed:text-on-ink"
+                      aria-hidden="true"
+                    >
+                      {i + 1}
                     </span>
                     <span className="flex min-w-0 flex-1 flex-col">
                       <span className="font-heading text-lg leading-tight font-extrabold">{name}</span>

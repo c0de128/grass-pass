@@ -36,7 +36,13 @@ describe("the hero card and the dialog markup", () => {
     expect(html).toContain('placeholder="Your town, ZIP or park name"');
     expect(html).toContain("Find parks");
     expect(html).toContain("Use my location");
-    expect(html).not.toContain('type="radio"');
+    // The hero card (before the dialog) has no radio; the only radios on first paint are the wizard's step-1
+    // distance chips (search v2: 1, 3, 5, 10 mi), not an age choice.
+    const hero = html.slice(0, html.indexOf("<dialog"));
+    expect(hero).not.toContain('type="radio"');
+    const radios = [...html.matchAll(/<input type="radio"[^>]*>/g)].map((m) => m[0]);
+    expect(radios).toHaveLength(4);
+    for (const r of radios) expect(r).toMatch(/name="[^"]*-radius"/);
   });
 
   it("is a native dialog, closed on first paint, labelled by its step heading, with a named close button", () => {

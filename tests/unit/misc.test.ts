@@ -67,6 +67,16 @@ describe("security headers", () => {
     expect(csp).not.toContain("upgrade-insecure-requests");
   });
 
+  it("search v2: lets only the OpenFreeMap origin feed the results map, and workers only from our own origin", () => {
+    const csp = buildCsp({ isDev: false, upgradeInsecure: false });
+    const dir = (name: string) => csp.split("; ").find((d) => d.startsWith(`${name} `));
+    expect(dir("connect-src")).toBe("connect-src 'self' https://tiles.openfreemap.org");
+    expect(dir("img-src")).toBe("img-src 'self' blob: data: https://tiles.openfreemap.org");
+    expect(dir("worker-src")).toBe("worker-src 'self'");
+    expect(dir("script-src")).toBe("script-src 'self' 'unsafe-inline'");
+    expect(csp.match(/openfreemap/g)).toHaveLength(2);
+  });
+
   it("adds upgrade-insecure-requests only on HTTPS deploys, unsafe-eval only in dev", () => {
     expect(buildCsp({ isDev: false, upgradeInsecure: true })).toContain("upgrade-insecure-requests");
     expect(buildCsp({ isDev: true, upgradeInsecure: false })).toContain("'unsafe-eval'");

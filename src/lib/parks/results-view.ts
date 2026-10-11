@@ -57,14 +57,16 @@ export function resultsBounds(center: { lat: number; lng: number }, parks: reado
 
 /**
  * The honest line above the list: how many named parks were found within the chosen distance and, when the list
- * stops at MAX_PARKS, that it was cut.
+ * stops at MAX_PARKS, that it was cut. `placeSearch`: the list came from the Nominatim fallback, which answers at most
+ * 40 places ranked by importance, so the count is what that search found, not every park in the circle.
  */
-export function resultsSummary(shown: number, totalFound: number, radiusMi: RadiusMiles): string {
+export function resultsSummary(shown: number, totalFound: number, radiusMi: RadiusMiles, placeSearch = false): string {
   const within = `within ${radiusShort(radiusMi)}`;
+  const lead = placeSearch ? "The place search found " : "";
   if (shown < totalFound) {
-    return `${totalFound} named parks ${within}. Showing the ${shown} nearest (the list stops at ${MAX_PARKS}).`;
+    return `${lead}${totalFound} named parks ${within}. Showing the ${shown} nearest (the list stops at ${MAX_PARKS}).`;
   }
-  return `${shown} named ${shown === 1 ? "park" : "parks"} ${within}.`;
+  return `${lead}${shown} named ${shown === 1 ? "park" : "parks"} ${within}.`;
 }
 
 /** "0.4 mi" / "12 mi": a distance in miles for the map pins' hover text. */

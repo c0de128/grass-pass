@@ -135,6 +135,9 @@ describe("results view", () => {
     expect(resultsSummary(7, 7, 1)).toBe("7 named parks within 1 mi.");
     expect(resultsSummary(1, 1, 3)).toBe("1 named park within 3 mi.");
     expect(resultsSummary(MAX_PARKS, 312, 10)).toBe(`312 named parks within 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
+    // Nominatim fallback (at most 40 places, by importance): the count is what that search found.
+    expect(resultsSummary(MAX_PARKS, 27, 10, true)).toBe(`The place search found 27 named parks within 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
+    expect(resultsSummary(4, 4, 1, true)).toBe("The place search found 4 named parks within 1 mi.");
   });
 
   it("the empty copy names the distance and offers a longer one only below 10 mi", () => {

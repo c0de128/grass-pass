@@ -194,7 +194,7 @@ function ParkCards({ result, picked, onPick }: { result: ParksResult; picked: Pa
       ) : (
         <>
           <p className="text-sm text-muted-foreground" data-testid="parks-summary">
-            {resultsSummary(result.parks.length, result.totalFound, result.radiusMi)} Pick one.
+            {resultsSummary(result.parks.length, result.totalFound, result.radiusMi, result.fallback?.kind === "nominatim")} Pick one.
           </p>
           {center ? (
             <ParkResultsMap

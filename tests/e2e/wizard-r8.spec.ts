@@ -142,7 +142,8 @@ test.describe("wizard state (replayed answers, no model call)", () => {
         body: JSON.stringify({
           query: { kind: "text", text: "Allen TX", matched: "Allen, Collin County, Texas, United States" },
           center: { lat: 33.1032, lng: -96.6706 },
-          radiusM: 5000,
+          radiusMi: 3,
+          radiusM: 4828,
           parks: [CELEBRATION, OAK_POINT],
           totalFound: 2,
           empty: null,

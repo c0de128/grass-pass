@@ -50,15 +50,17 @@ test("keyboard only: 'Allen TX' lists real parks nearest first", async ({ page }
   await page.keyboard.type("Allen TX");
   await page.keyboard.press("Enter");
 
-  await expect(page.getByRole("status").filter({ hasText: "Searching OpenStreetMap" })).toBeVisible();
+  // Search v2: the status names the place and the default distance (3 mi) while the radar picture runs.
+  await expect(page.getByRole("status").filter({ hasText: /Finding “Allen TX” on OpenStreetMap, then looking for parks within 3 mi/ })).toBeVisible();
   const list = page.getByRole("list", { name: /^Parks near Allen/ });
   await parksOrBusy(page, list);
   const heading = page.getByRole("heading", { name: /^Parks near Allen, Collin County, Texas/ });
   await expect(heading).toBeFocused();
 
   const items = list.getByRole("button");
-  await expect(items).toHaveCount(10);
+  await expect(items).toHaveCount(20);
   await expect(items.first()).toContainText(/ mi \(\d+(\.\d)? km\) away/);
+  await expect(page.getByTestId("parks-summary")).toContainText(/named parks within 3 mi\. Showing the 20 nearest/);
   await expect(page.getByRole("link", { name: "© OpenStreetMap contributors" })).toBeVisible();
 
   // The wizard: the list is inside the dialog, which says which step it is.
@@ -66,8 +68,9 @@ test("keyboard only: 'Allen TX' lists real parks nearest first", async ({ page }
   await expect(dialog).toBeVisible();
   await expect(dialog.getByRole("form", { name: "Search for a park" })).toBeVisible();
 
-  // Tab reaches the first park; Enter picks it and moves on to "Who's exploring?"; Back shows it picked.
-  await page.keyboard.press("Tab");
+  // Tab reaches the first park (past the map's three attribution links at most; the map itself has no tab stop);
+  // Enter picks it and moves on to "Who's exploring?"; Back shows it picked.
+  for (let i = 0; i < 5 && !(await items.first().evaluate((el) => el === document.activeElement)); i++) await page.keyboard.press("Tab");
   await expect(items.first()).toBeFocused();
   await page.keyboard.press("Enter");
   const age = page.getByRole("dialog", { name: "Who's exploring?" });
@@ -113,7 +116,7 @@ test.describe("Use my location", () => {
     // A POST with a JSON body: the location never appears in the address (or in request logs).
     expect(sent.method()).toBe("POST");
     expect(new URL(sent.url()).search).toBe("");
-    expect(sent.postDataJSON()).toEqual({ lat: "33.09", lng: "-96.70" });
+    expect(sent.postDataJSON()).toEqual({ lat: "33.09", lng: "-96.70", radiusMi: 3 });
     await expect(page.getByRole("dialog", { name: "Pick your park" })).toBeVisible();
     const list = page.getByRole("list", { name: "Parks near your location" });
     await parksOrBusy(page, list);
@@ -137,4 +140,34 @@ test.describe("Use my location, blocked", () => {
     const errorId = await alert.getAttribute("id");
     expect((await button.getAttribute("aria-describedby"))?.split(" ")).toContain(errorId);
   });
+});
+
+test("search v2: a new distance searches the same place again, and the map pins match the list", async ({ page }) => {
+  test.setTimeout(2 * RESULT_TIMEOUT + 20_000);
+  await page.goto("/");
+  await page.getByLabel("Town, ZIP or park name").fill("75013");
+  await page.getByRole("button", { name: "Find parks" }).click();
+  const dialog = page.getByRole("dialog", { name: "Pick your park" });
+  const list = dialog.getByRole("list", { name: /^Parks near 75013/ });
+  await parksOrBusy(page, list);
+  const group = dialog.getByRole("group", { name: "How far to look" });
+  await expect(group.getByRole("radio", { name: /3 mi/ })).toBeChecked();
+
+  const request = page.waitForRequest((r) => r.url().endsWith("/api/parks"));
+  // The radio itself is visually hidden; people click its chip (the label).
+  await group.locator("label").filter({ hasText: /^1 mi/ }).click();
+  await expect(group.getByRole("radio", { name: /^1 mi/ })).toBeChecked();
+  expect((await request).postDataJSON()).toEqual({ q: "75013", radiusMi: 1 });
+  await parksOrBusy(page, list);
+  await expect(dialog.getByTestId("parks-summary")).toContainText(/within 1 mi\./);
+
+  // The map is a labelled picture of the list: either drawn with one pin per park, or an honest note.
+  const map = dialog.getByRole("region", { name: "Map of the parks in the list" });
+  const note = dialog.getByTestId("park-map-unavailable");
+  const ready = dialog.locator('[data-testid="park-map"][data-state="ready"]');
+  await expect(ready.or(note)).toBeVisible({ timeout: 30_000 });
+  if (await map.isVisible()) {
+    await expect(map.locator(".gp-map-pin")).toHaveCount(await list.getByRole("button").count());
+    await expect(map.locator(".gp-map-pin").first()).toHaveAttribute("aria-hidden", "true");
+  }
 });

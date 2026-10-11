@@ -1164,6 +1164,8 @@ dialog.gp-wizard::backdrop {
   }
 }
 .gp-map-home {
+  /* The searched place stays on top of the park pins. */
+  z-index: 3;
   width: 22px;
   height: 22px;
   border-radius: 9999px;

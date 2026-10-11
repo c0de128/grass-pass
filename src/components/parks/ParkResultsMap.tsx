@@ -83,6 +83,12 @@ export default function ParkResultsMap({ center, radiusM, parks, activeId, onAct
       });
       map.touchZoomRotate.disableRotation();
       map.addControl(new NavigationControl({ showCompass: false }), "top-right");
+      // The zoom buttons are for mouse and touch only: the map is a picture of the list, so keyboard users go
+      // straight from the summary to the list (no extra tab stops, nothing focusable hidden from screen readers).
+      for (const group of box.querySelectorAll<HTMLElement>(".maplibregl-ctrl-group")) {
+        group.setAttribute("aria-hidden", "true");
+        for (const b of group.querySelectorAll("button")) b.setAttribute("tabindex", "-1");
+      }
       // The canvas is a picture of the list: out of the tab order and hidden from screen readers (the region is labelled).
       const canvas = map.getCanvas();
       canvas.setAttribute("tabindex", "-1");
@@ -180,7 +186,7 @@ export default function ParkResultsMap({ center, radiusM, parks, activeId, onAct
         data-testid="park-map"
         data-state={state}
       >
-        <div ref={boxRef} className="absolute inset-0" />
+        <div ref={boxRef} className="h-full w-full" />
         {state === "loading" ? (
           <p className="absolute inset-0 flex items-center justify-center text-sm font-semibold text-[#10291a]">Loading the street map…</p>
         ) : null}

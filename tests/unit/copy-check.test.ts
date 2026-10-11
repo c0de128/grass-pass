@@ -101,7 +101,8 @@ describe("the shipped copy is really in the code", () => {
   });
 
   it("hand edits still pass the code check", () => {
-    for (const d of review.decisions.filter((x) => x.decision === "edited")) {
+    // Text the owner later took off the site (removedAfterRun) is history: its block may now hold newer facts.
+    for (const d of review.decisions.filter((x) => x.decision === "edited" && !x.removedAfterRun)) {
       expect(checkDraft(byId.get(d.id)!, d.shipped), d.id).toEqual({ ok: true, reasons: [] });
     }
   });

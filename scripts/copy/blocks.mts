@@ -523,8 +523,13 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "step summary, 2 sentences",
     maxChars: 190,
     text: "Type a town, ZIP or park name, or tap Use my location (we round it to about 1 km). Code lists the parks within 5 km, from OpenStreetMap.",
-    facts: ["Search by town, ZIP or park name, or Use my location.", "Your location is rounded to about 1 km in your browser.", "Code lists parks within 5 km from OpenStreetMap."],
-    keep: ["Use my location", "1 km", "5 km", "OpenStreetMap"],
+    facts: [
+      "Search by town, ZIP or park name, or Use my location.",
+      "Your location is rounded to about 1 km in your browser.",
+      "Search v2 (2026-10-10): you pick how far to look, 1, 3, 5 or 10 miles (default 3).",
+      "Code lists the parks within that distance from OpenStreetMap.",
+    ],
+    keep: ["Use my location", "1 km", "10 miles", "OpenStreetMap"],
   },
   {
     id: "how.step.data.title",
@@ -1588,8 +1593,8 @@ export const BLOCKS: readonly CopyBlock[] = [
     role: "empty state, 1 sentence",
     maxChars: 60,
     text: "No parks found within 5 km in OpenStreetMap.",
-    facts: ["No parks within 5 km in OpenStreetMap."],
-    keep: ["5 km", "OpenStreetMap"],
+    facts: ["No parks within the chosen distance (1, 3, 5 or 10 mi) in OpenStreetMap.", "A longer distance can be picked (not after 10 mi)."],
+    keep: ["OpenStreetMap"],
   },
   {
     id: "parks.overpassDown",

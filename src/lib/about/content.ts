@@ -43,7 +43,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 2706, files: 97, day: "Oct 10, 2026" } as const;
+export const UNIT_TESTS = { passed: 2752, files: 98, day: "Oct 10, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 // Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md); rounds 11 (full) and 12 (confirm) ran on Oct 9 before the Oct 9 deploy. RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
@@ -60,7 +60,7 @@ export function auditRoundsLine(r: { done: number; day: string } = AUDIT_ROUNDS)
  * and how many of those were edited by hand. tests/unit/copy-check.test.ts checks these against
  * docs/copy-by-gemma/review.json.
  */
-export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 15, live: 80 } as const;
+export const GEMMA_COPY = { sent: 184, shipped: 90, edited: 15, live: 78 } as const;
 
 /**
  * RULES-11-03 (round 11): who wrote and built what, after Oct 8. One wording for /about and the README (about.test
@@ -119,7 +119,7 @@ export function dataSources(): DataSource[] {
       gives: "Nominatim search, parks and what's mapped",
       licence: "ODbL 1.0",
       detail:
-        "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within 5 km and what is mapped inside them. Code draws the Find This Spot map from it.",
+        "© OpenStreetMap contributors, via Nominatim and public Overpass servers: parks within the distance you pick (1 to 10 miles) and what is mapped inside them. Code draws the Find This Spot map from it.",
     },
     {
       name: "iNaturalist",
@@ -202,6 +202,13 @@ export function privacyRows(): PrivacyRow[] {
       what: "\"Use my location\"",
       where: "Rounded in your browser to about 1 km, then our server, then OpenStreetMap's Overpass.",
       why: "To list parks near you.",
+    },
+    {
+      // Search v2 (2026-10-10): the results map. Checked on openfreemap.org/privacy on 2026-10-10.
+      what: "The map area of your search results",
+      where:
+        "Your browser asks the OpenFreeMap tile server (tiles.openfreemap.org, served through Cloudflare) for the streets of that area, so like any website it sees your IP address. No account, no cookies. OpenFreeMap says its logs keep no IP address and are deleted after 7 days.",
+      why: "To draw the street map behind the park pins.",
     },
     {
       what: "The park you pick (a public place)",

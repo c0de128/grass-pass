@@ -527,6 +527,17 @@ export default function AboutPage() {
                 Fonts: Bricolage Grotesque and DM Sans (site), Fredoka and Nunito (printed pass), all SIL OFL 1.1, served from
                 this site.
               </li>
+              <li data-testid="map-credit">
+                Search results map (Oct 10, 2026, built by an AI coding agent (Claude Code) at Kevin&apos;s direction):{" "}
+                <a className={ext} href="https://maplibre.org/">
+                  MapLibre GL JS
+                </a>{" "}
+                (BSD-3-Clause) with{" "}
+                <a className={ext} href="https://openfreemap.org/">
+                  OpenFreeMap
+                </a>{" "}
+                street tiles (© OpenMapTiles, data from © OpenStreetMap contributors).
+              </li>
               <li>
                 App code: MIT. A few generic building blocks (model client, rate limits, request guards, in-flight
                 de-duplication) were adapted from the same author&apos;s unpublished practice project, written on Oct 2, 2026,

@@ -142,11 +142,12 @@ export default function HowItWorksPage() {
       icon: Search,
       who: "code",
       title: "Pick your park",
-      summary: "Search by town, ZIP, park name, or tap Use my location (rounded to about 1 km). Code finds parks within 5 km using OpenStreetMap.",
+      summary: "Search by town, ZIP, park name, or tap Use my location (rounded to about 1 km). Pick 1, 3, 5 or 10 miles, and code finds the parks in that circle using OpenStreetMap.",
       more: (
         <>
           <p>
-            Nominatim finds the place; the Overpass API lists the 10 nearest named parks and nature reserves. If Overpass takes
+            Nominatim finds the place; the Overpass API lists the 20 nearest named parks and nature reserves within the
+            distance you picked, as numbered cards and pins on a street map (MapLibre with OpenFreeMap tiles). If Overpass takes
             over 10 s, code falls back to a saved list of 1,321 Dallas-area parks, then a Nominatim park search, and says so.
           </p>
         </>

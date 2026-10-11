@@ -43,8 +43,10 @@ Live demo: https://grass-pass.vercel.app (live since Oct 8, 2026; sign-in with G
    or Google, both live on the site; 5 a day), and judges press **Try as a judge** (one click, no sign-up). It usually takes 10-30 seconds, up to about a minute and a half when the free map
    servers are slow.
 
-A town search lists the **10 nearest** named parks within 5 km, so a park you know may be missing ("Allen TX" lists 10
-of its 53 nearby parks, not Connemara). Search the park's own name, or press "Use my location".
+You pick how far to look: **1, 3, 5 or 10 miles** (3 by default). The list shows the **20 nearest** named parks in that
+circle on a street map and as numbered cards, so a park you know may be missing (measured Oct 10, 2026: "Allen, TX" at
+3 miles found 46 named parks and listed the 20 nearest, without Connemara Meadow Preserve; at 10 miles it found 302).
+Search the park's own name, or press "Use my location".
 
 ## How it works
 The app's **How it works** page (`/how-it-works`) has every step, what the model is and isn't given, every reason a
@@ -354,6 +356,7 @@ on https). What leaves the device (also on `/about`):
 |---|---|---|
 | Typed place text | our server (in the request body, never the web address), then Nominatim; cached 30 days in Upstash Redis by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
+| The map area of your search results | your browser, straight to the OpenFreeMap tile server (tiles.openfreemap.org, served through Cloudflare), so it sees your IP address like any website; no account, no cookies; OpenFreeMap says its logs keep no IP address and are deleted after 7 days | draw the street map of the results |
 | The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only); the pass page, and making a pass, send only the position, rounded to about 1 km, to Open-Meteo and (US parks) api.weather.gov | park map, sightings, monarch counts, review counts, the weather card and trip tips |
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
@@ -398,7 +401,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
 - **Oct 8-9, 2026:** the full-screen hero, "What's a pass?" (its layout and its copy), the redesigned "The problem" section, map v2, sign-in v2, the wide layout, pass limits and feedback, and the new How it works page were built, and partly written, by AI coding agents (Claude Code) at Kevin's direction.
 - **Kevin's own words:** the home hero headline and paragraphs, "Why Find a pinecone fails" and its paragraphs, the nav labels, the button labels "Make a free pass" and "Create your pass now", the footer's closing line, and the idea for the hero offer line.
 - **Site copy (Oct 6, 2026):** Gemma 4 (the app's own model, on DigitalOcean) redrafted 184 blocks of the site's
-  text; 90 of its drafts shipped (15 with small edits; 80 are still on the site after later redesigns) after a code
+  text; 90 of its drafts shipped (15 with small edits; 78 are still on the site after later redesigns) after a code
   check and a review by an AI coding agent (Claude Code), and the rest kept their old text. No person has reviewed the
   drafts yet. Every block, old and new, with the reason: [docs/COPY-BY-GEMMA.md](docs/COPY-BY-GEMMA.md)
   (re-run with `pnpm copy:gemma`, ~$0.01). Kevin's own words (above) are his.
@@ -435,6 +438,11 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   via [Nominatim](https://nominatim.org/) and the public Overpass instances at overpass-api.de, maps.mail.ru (VK Maps)
   and overpass.private.coffee (under their usage policies). The saved park data in `src/data/osm/` is OpenStreetMap
   data too (ODbL).
+- Results map (search v2): [MapLibre GL JS](https://maplibre.org/) 6.13.0
+  ([BSD-3-Clause](https://github.com/maplibre/maplibre-gl-js/blob/v6.13.0/LICENSE.txt); its prebuilt web worker is
+  copied unchanged to `public/vendor/`) draws [OpenFreeMap](https://openfreemap.org/) street tiles (Positron style;
+  free, no key, no cookies), shown with their attribution under the map: "OpenFreeMap © OpenMapTiles Data from
+  OpenStreetMap".
 - Wildlife sightings and monarch counts: [iNaturalist](https://www.inaturalist.org/) observers (research-grade; names
   and counts only, no photos).
 - Species facts: Wikipedia (CC BY-SA), via the iNaturalist API. Wild Find clues quote these summaries; the printed stub
@@ -457,3 +465,4 @@ The code is [MIT](LICENSE). MIT covers the code only; recorded data keeps its so
 - iNaturalist observations and taxa in those fixtures: each keeps the licence its observer chose (shown on iNaturalist).
 - Wikipedia summaries (via iNaturalist) in those fixtures: [CC BY-SA](https://creativecommons.org/licenses/by-sa/4.0/).
 - Fonts keep their OFL licences (see Credits).
+- `public/vendor/maplibre-gl-worker-6.13.0.mjs` is MapLibre GL JS's own build, BSD-3-Clause (see Credits).

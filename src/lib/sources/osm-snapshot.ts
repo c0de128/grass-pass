@@ -112,7 +112,7 @@ export function savedIndexInfo(): SavedIndexInfo | null {
   return { fetchedAt: Date.parse(d._recording.fetchedAt), cities: d._recording.cities, bbox: d._recording.bbox, count: d.parks.length };
 }
 
-/** True when the whole 5 km circle around `p` lies inside the saved index box. */
+/** True when the whole search circle (default 3 mi) around `p` lies inside the saved index box. */
 export function indexCovers(p: LatLng, radiusM: number = PARK_RADIUS_M): boolean {
   const info = savedIndexInfo();
   if (!info || !isValidLatLng(p)) return false;
@@ -123,16 +123,16 @@ export function indexCovers(p: LatLng, radiusM: number = PARK_RADIUS_M): boolean
 }
 
 /**
- * The nearest named parks within 5 km from the saved index (same parsing, merging and order as a
+ * The nearest named parks within the chosen circle from the saved index (same parsing, merging and order as a
  * live search), or null when the index doesn't cover the whole circle around this point.
  */
-export function savedParksNear(center: LatLng): { parks: Park[]; totalFound: number; fetchedAt: number } | null {
+export function savedParksNear(center: LatLng, radiusM: number = PARK_RADIUS_M): { parks: Park[]; totalFound: number; fetchedAt: number } | null {
   const d = data().dfw;
   const info = savedIndexInfo();
-  if (!d || !info || !indexCovers(center)) return null;
-  // Same circle as the live `around:5000` query, then the live parser does the merging and sorting.
+  if (!d || !info || !indexCovers(center, radiusM)) return null;
+  // Same circle as the live `around:<radius>` query, then the live parser does the merging and sorting.
   const elements = d.parks
-    .filter(([, , , lat, lng]) => distanceM(center, { lat, lng }) <= PARK_RADIUS_M)
+    .filter(([, , , lat, lng]) => distanceM(center, { lat, lng }) <= radiusM)
     .map(([id, name, kind, lat, lng]) => {
       const [type, num] = id.split("/");
       return { type, id: Number(num), center: { lat, lon: lng }, tags: { name, leisure: kind } };

@@ -36,7 +36,11 @@ export const NOMINATIM_RECORDINGS: Record<string, string> = {
   "tenney park": "nominatim-tenney-park",
 };
 
-/** Park fallback searches (q=park in a 5 km box), one recording per box, matched by the exact URL. */
+/**
+ * Park fallback searches (q=park in a 5 km box), one recording per box. Search v2: matched by the box CENTRE (the
+ * recordings were made with the old 5 km box; a 3 mi search asks for a slightly smaller box around the same point,
+ * and the parser then keeps only the parks inside the chosen circle).
+ */
 export const NOMINATIM_PARK_RECORDINGS = [
   // R1-B1: around the Allen TX point, recorded 2026-10-06.
   "nominatim-parks-allen-tx",
@@ -55,6 +59,18 @@ export const OVERPASS_RECORDINGS = [
 ];
 
 export type Call = { url: string; init?: RequestInit; query?: string };
+
+/** Two Nominatim `viewbox` searches around the same point (within about 1 m), whatever the box size. */
+export function sameBoxCentre(a: string | undefined, b: string): boolean {
+  if (!a) return false;
+  const centre = (u: string) => {
+    const v = new URL(u).searchParams.get("viewbox")?.split(",").map(Number);
+    return v && v.length === 4 ? { lng: (v[0] + v[2]) / 2, lat: (v[1] + v[3]) / 2 } : null;
+  };
+  const x = centre(a);
+  const y = centre(b);
+  return !!x && !!y && Math.abs(x.lat - y.lat) < 1e-5 && Math.abs(x.lng - y.lng) < 1e-5;
+}
 
 /** The `around:` point in an Overpass query. */
 export function aroundPoint(query: string): { lat: number; lng: number } | null {
@@ -91,7 +107,7 @@ export function osmReplay(
       const q = (u.searchParams.get("q") ?? "").toLowerCase();
       if (q === "park") {
         // Each park fallback was recorded for one box only: any other box is not answered.
-        const park = NOMINATIM_PARK_RECORDINGS.find((n) => (fixture(n)._recording as { url?: string }).url === url);
+        const park = NOMINATIM_PARK_RECORDINGS.find((n) => sameBoxCentre((fixture(n)._recording as { url?: string }).url, url));
         if (!park) throw new Error(`no Nominatim park recording for ${url}`);
         return recordedResponse(park);
       }

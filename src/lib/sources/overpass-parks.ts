@@ -69,8 +69,12 @@ export function parseParks(json: unknown, center: LatLng): { parks: Park[]; tota
   return { parks: kept.slice(0, MAX_PARKS), totalFound: kept.length };
 }
 
-/** Fetch and parse. Throws SourceError from runOverpass, or "bad_output" when the shape is wrong. */
-export async function parksNear(center: LatLng, deps: OverpassDeps): Promise<{ parks: Park[]; totalFound: number }> {
-  const { json } = await runOverpass(parksQuery(center), deps);
+/**
+ * Fetch and parse. Throws SourceError from runOverpass, or "bad_output" when the shape is wrong.
+ * Search v2: `radiusM` is the visitor's chosen circle (1, 3, 5 or 10 mi). Measured 2026-10-10 from Allen TX:
+ * 10 mi = 320 elements, 74 KB, 4.3 s; 3 mi = 51 elements, 10 KB, 2.7 s (inside the 10 s search budget).
+ */
+export async function parksNear(center: LatLng, deps: OverpassDeps, radiusM: number = PARK_RADIUS_M): Promise<{ parks: Park[]; totalFound: number }> {
+  const { json } = await runOverpass(parksQuery(center, radiusM), deps);
   return parseParks(json, center);
 }

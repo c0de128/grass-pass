@@ -28,6 +28,7 @@ export function isValidLatLng(p: LatLng): boolean {
 export function distanceLabel(m: number): string {
   const mi = m / 1609.344;
   const km = m / 1000;
-  const fmt = (n: number) => (n < 10 ? n.toFixed(1) : String(Math.round(n)));
+  // Round first, so 9.99 mi reads "10 mi", not "10.0 mi".
+  const fmt = (n: number) => (Math.round(n * 10) / 10 < 10 ? n.toFixed(1) : String(Math.round(n)));
   return `${fmt(mi)} mi (${fmt(km)} km)`;
 }

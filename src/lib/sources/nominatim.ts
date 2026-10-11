@@ -309,10 +309,10 @@ export function parseNominatimParks(json: unknown, center: LatLng, radiusM: numb
 }
 
 /** Parks near a point from Nominatim (the fallback when Overpass is down). Throws SourceError. */
-export async function nominatimParks(center: LatLng, deps: GeocodeDeps): Promise<{ parks: Park[]; totalFound: number }> {
-  const r = await nominatimGet(nominatimParksUrl(center), "parks", deps);
+export async function nominatimParks(center: LatLng, deps: GeocodeDeps, radiusM: number = PARK_RADIUS_M): Promise<{ parks: Park[]; totalFound: number }> {
+  const r = await nominatimGet(nominatimParksUrl(center, radiusM), "parks", deps);
   try {
-    const out = parseNominatimParks(r.json, center);
+    const out = parseNominatimParks(r.json, center, radiusM);
     log("upstream_call", { source: NOMINATIM_SOURCE, what: "parks", status: r.status, latencyMs: r.latencyMs, outcome: "ok", parks: out.totalFound });
     return out;
   } catch (err) {

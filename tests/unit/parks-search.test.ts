@@ -4,7 +4,7 @@ import { MemoryStore, resetStores } from "@/lib/cache/store";
 import { breakerRetryAfter, quotaUsage, tripBreaker } from "@/lib/limits";
 import { setLogSink } from "@/lib/log";
 import { FIELD_COPY, parseSearchParams, pinFirst, placePark, resetParksSearch, searchParks, type SearchDeps } from "@/lib/parks/search";
-import { PARKS_COPY, ParksResultSchema } from "@/lib/parks/schema";
+import { MAX_PARKS, PARKS_COPY, ParksResultSchema } from "@/lib/parks/schema";
 import { NOMINATIM_SOURCE } from "@/lib/sources/nominatim";
 import { breakerName, OVERPASS_DEFAULT_URLS } from "@/lib/sources/overpass";
 import { aroundPoint, fixture, osmReplay, recordedResponse } from "./support/osm-replay";
@@ -68,14 +68,16 @@ describe("parseSearchParams (field errors)", () => {
 });
 
 describe("searchParks with live recordings", () => {
-  it("Allen TX -> 10 real parks nearest first; the repeat comes from the cache with its real time", async () => {
+  it("Allen TX -> 20 real parks nearest first (MAX_PARKS); the repeat comes from the cache with its real time", async () => {
     const { fetchImpl, calls } = osmReplay();
     const first = await searchParks({ kind: "text", q: "Allen TX" }, deps(fetchImpl));
     expect(first.ok).toBe(true);
     if (!first.ok) return;
     const r = ParksResultSchema.parse(first.result);
     expect(r.query).toEqual({ kind: "text", text: "Allen TX", matched: "Allen, Collin County, Texas, United States" });
-    expect(r.parks).toHaveLength(10);
+    expect(r.parks).toHaveLength(MAX_PARKS);
+    expect(r.radiusMi).toBe(3);
+    expect(r.radiusM).toBe(4828);
     expect(r.parks[0].name).toBe("Heritage Village");
     expect(r.totalFound).toBe(53);
     expect(r.empty).toBeNull();
@@ -111,10 +113,12 @@ describe("searchParks with live recordings", () => {
     expect(calls).toHaveLength(1);
   });
 
-  it("no parks within 5 km -> the exact §5.4 copy (real empty answer)", async () => {
+  it("no parks within the chosen distance -> the exact copy, naming that distance (real empty answer)", async () => {
     const { fetchImpl } = osmReplay();
     const r = await searchParks({ kind: "location", lat: 31, lng: -103 }, deps(fetchImpl));
-    expect(r.ok && r.result.empty).toEqual({ reason: "no_parks", message: "No parks within 5 km in OpenStreetMap." });
+    expect(r.ok && r.result.empty).toEqual({ reason: "no_parks", message: "No parks within 3 mi in OpenStreetMap. Try a longer distance." });
+    const far = await searchParks({ kind: "location", lat: 31, lng: -103, radiusMi: 10 }, deps(fetchImpl));
+    expect(far.ok && far.result.empty).toEqual({ reason: "no_parks", message: "No parks within 10 mi in OpenStreetMap." });
     expect(r.ok && r.result.query).toEqual({ kind: "location" });
   });
 
@@ -128,7 +132,7 @@ describe("searchParks with live recordings", () => {
     const r = await searchParks(parsed.input, deps(fetchImpl));
     expect(r.ok).toBe(true);
     expect(aroundPoint(calls[0].query!)).toEqual({ lat: 33.09, lng: -96.7 });
-    expect(calls[0].query).toContain("around:5000,33.09000,-96.70000");
+    expect(calls[0].query).toContain("around:4828,33.09000,-96.70000");
     expect(calls.some((c) => c.url.includes("nominatim"))).toBe(false);
   });
 });
@@ -275,8 +279,8 @@ describe("R1-B1: park search survives a public Overpass outage", () => {
     expect(r.result.fallback).toEqual({ kind: "saved_index", message: PARKS_COPY.savedIndex });
     expect(r.result.checkedAt).toBe(new Date(info!.fetchedAt).toISOString());
     expect(r.result.cached).toBe(true);
-    expect(r.result.parks).toHaveLength(10);
-    expect(r.result.totalFound).toBeGreaterThan(10);
+    expect(r.result.parks).toHaveLength(MAX_PARKS);
+    expect(r.result.totalFound).toBeGreaterThan(MAX_PARKS);
     for (const p of r.result.parks) expect(p.distanceM).toBeLessThanOrEqual(5_000);
     // Same nearest-first order as a live list.
     expect([...r.result.parks].sort((a, b) => a.distanceM - b.distanceM)).toEqual(r.result.parks);
@@ -323,7 +327,7 @@ describe("R1-B1: park search survives a public Overpass outage", () => {
     expect(r.result.fallback).toEqual({ kind: "nominatim", message: PARKS_COPY.nominatimParks });
     expect(r.result.cached).toBe(false);
     expect(r.result.parks.length).toBeGreaterThan(0);
-    expect(r.result.parks.length).toBeLessThanOrEqual(10);
+    expect(r.result.parks.length).toBeLessThanOrEqual(MAX_PARKS);
     for (const p of r.result.parks) {
       expect(p.distanceM).toBeLessThanOrEqual(5_000);
       expect(["park", "nature_reserve"]).toContain(p.kind);
@@ -341,8 +345,9 @@ describe("R1-B1: park search survives a public Overpass outage", () => {
   it("parses the recorded Nominatim park answer: named leisure=park only, within 5 km, nearest first", () => {
     const rec = fixture("nominatim-parks-allen-tx");
     const meta = rec._recording as unknown as { url: string; center: { lat: number; lng: number } };
-    expect(nominatimParksUrl(meta.center)).toBe(meta.url);
-    const out = parseNominatimParks(rec.body, meta.center);
+    // Recorded with the old 5 km box (search v2 sends the chosen circle; the default is 3 mi).
+    expect(nominatimParksUrl(meta.center, 5_000)).toBe(meta.url);
+    const out = parseNominatimParks(rec.body, meta.center, 5_000);
     expect(out.totalFound).toBeGreaterThan(5);
     expect(out.parks.every((p) => p.name.length > 0 && p.distanceM <= 5_000)).toBe(true);
     expect(new Set(out.parks.map((p) => p.id)).size).toBe(out.parks.length);
@@ -374,24 +379,25 @@ describe("T2 (audit R4): a search by a park's own name lists that park first", (
   it("the recorded Nominatim park fallback around Tenney Park really leaves it out (the judge's bug)", () => {
     const rec = fixture("nominatim-parks-tenney-park-madison-wi");
     const meta = rec._recording as unknown as { url: string; center: { lat: number; lng: number } };
-    expect(nominatimParksUrl(meta.center)).toBe(meta.url);
-    const out = parseNominatimParks(rec.body, meta.center);
-    expect(out.parks.length).toBe(10);
+    expect(nominatimParksUrl(meta.center, 5_000)).toBe(meta.url);
+    const out = parseNominatimParks(rec.body, meta.center, 5_000);
+    expect(out.parks.length).toBe(Math.min(MAX_PARKS, out.totalFound));
     expect(out.parks.some((p) => /Tenney/.test(p.name))).toBe(false);
   });
 
-  it.each(["Tenney Park Madison WI", "Tenney Park"])("Overpass down, Nominatim fallback: %s -> Tenney Park is first, the list stays at 10", async (q) => {
+  it.each(["Tenney Park Madison WI", "Tenney Park"])("Overpass down, Nominatim fallback: %s -> Tenney Park is first, the list stays at most MAX_PARKS", async (q) => {
     const { fetchImpl, calls } = osmReplay({ overpass: busyOverpass });
     const r = await searchParks({ kind: "text", q }, deps(fetchImpl));
     if (!r.ok) throw new Error(`expected parks, got ${r.error.code}`);
     expect(r.result.fallback?.kind).toBe("nominatim");
     expect(r.result.parks[0]).toMatchObject({ id: "way/28768070", name: "Tenney Park", kind: "park", distanceM: 0 });
-    expect(r.result.parks).toHaveLength(10);
-    expect(new Set(r.result.parks.map((p) => p.id)).size).toBe(10);
-    // The rest is the recorded fallback list in its own order (nearest first), minus the last one.
+    // The rest is the recorded fallback list (inside the default 3 mi circle) in its own order, nearest first.
     const rec = fixture("nominatim-parks-tenney-park-madison-wi");
     const fallback = parseNominatimParks(rec.body, (rec._recording as unknown as { center: { lat: number; lng: number } }).center);
-    expect(r.result.parks.slice(1)).toEqual(fallback.parks.slice(0, 9));
+    const n = Math.min(MAX_PARKS, fallback.parks.length + 1);
+    expect(r.result.parks).toHaveLength(n);
+    expect(new Set(r.result.parks.map((p) => p.id)).size).toBe(n);
+    expect(r.result.parks.slice(1)).toEqual(fallback.parks.slice(0, n - 1));
     expect(r.result.totalFound).toBe(fallback.totalFound + 1);
     expect(ParksResultSchema.safeParse(r.result).success).toBe(true);
     expect(calls.map((c) => new URL(c.url).searchParams.get("q")).filter(Boolean)).toEqual([q, "park"]);
@@ -404,7 +410,7 @@ describe("T2 (audit R4): a search by a park's own name lists that park first", (
     const fifth = list.parks[4];
     const outcome = {
       ok: true as const,
-      result: { query: { kind: "text" as const, text: fifth.name, matched: fifth.name }, center, radiusM: 5000, parks: list.parks, totalFound: list.totalFound, empty: null, checkedAt: new Date(0).toISOString(), cached: false, fallback: null },
+      result: { query: { kind: "text" as const, text: fifth.name, matched: fifth.name }, center, radiusMi: 3 as const, radiusM: 4828, parks: list.parks, totalFound: list.totalFound, empty: null, checkedAt: new Date(0).toISOString(), cached: false, fallback: null },
     };
     const pin = { ...fifth, distanceM: 0 };
     const r = pinFirst(outcome, pin);

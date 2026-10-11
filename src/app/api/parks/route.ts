@@ -1,6 +1,7 @@
 /**
  * POST /api/parks  { "q": "<town, ZIP or park name>" }  |  { "lat": "<2 decimals>", "lng": "<2 decimals>" }
- * Named OpenStreetMap parks within 5 km, nearest first (SPEC F1). Guards, limits, caches and
+ *                  plus optional "radiusMi": 1 | 3 | 5 | 10 (search v2; default 3, anything else is a 400)
+ * Named OpenStreetMap parks within the chosen distance, nearest first (SPEC F1). Guards, limits, caches and
  * upstream politeness live in src/lib/parks/search.ts (a route file may only export handlers).
  *
  * POST, not GET (SEC-1-03): what you typed and your rounded location stay out of the address, so
@@ -13,7 +14,7 @@ import { WaiterAbortedError } from "@/lib/cache";
 import { guardJsonPost } from "@/lib/http/guard";
 import { jsonError } from "@/lib/http/respond";
 import { clientIp } from "@/lib/limits";
-import { PlaceQueryLimits } from "@/lib/parks/schema";
+import { PlaceQueryLimits, RadiusMilesSchema } from "@/lib/parks/schema";
 import { parseSearchParams, searchParks } from "@/lib/parks/search";
 
 export const runtime = "nodejs";
@@ -29,6 +30,8 @@ const BodySchema = z
     q: z.string().max(PlaceQueryLimits.max * 4).optional(),
     lat: z.string().max(20).optional(),
     lng: z.string().max(20).optional(),
+    // Search v2: only 1, 3, 5 or 10 (miles). A number, not a string; anything else fails the body check (400).
+    radiusMi: RadiusMilesSchema.optional(),
   })
   .strict();
 
@@ -37,7 +40,10 @@ export async function POST(req: Request): Promise<Response> {
   if (!g.ok) return jsonError(g.failure.status, { code: g.failure.code, message: g.failure.message });
 
   const params = new URLSearchParams();
-  for (const [k, v] of Object.entries(g.data)) if (typeof v === "string") params.set(k, v);
+  for (const k of ["q", "lat", "lng"] as const) {
+    const v = g.data[k];
+    if (typeof v === "string") params.set(k, v);
+  }
   const parsed = parseSearchParams(params);
   if (!parsed.ok) {
     return Response.json(
@@ -47,7 +53,8 @@ export async function POST(req: Request): Promise<Response> {
   }
 
   try {
-    const out = await searchParks(parsed.input, { ip: clientIp(req), signal: req.signal });
+    const input = g.data.radiusMi === undefined ? parsed.input : { ...parsed.input, radiusMi: g.data.radiusMi };
+    const out = await searchParks(input, { ip: clientIp(req), signal: req.signal });
     if (!out.ok) return jsonError(out.status, out.error);
     return Response.json(out.result, { headers: { "Cache-Control": "no-store" } });
   } catch (err) {

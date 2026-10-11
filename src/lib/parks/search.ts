@@ -1,5 +1,6 @@
 /**
- * Park search behind `GET /api/parks` (SPEC F1, §7). Order of work:
+ * Park search behind `POST /api/parks` (SPEC F1, §7). Search v2 (2026-10-10): the visitor picks the circle (1, 3,
+ * 5 or 10 mi, default 3); every cache key and the in-flight de-dup include it. Order of work:
  *   1. input validation (field errors, 400);
  *   2. per-IP rate limit, 10 searches/min (429 + Retry-After);
  *   3. caches: place 30 days, parks near a point 7 days, each with a separate 15-min negative cache;
@@ -30,10 +31,12 @@ import { DUPLICATE_NAME_RADIUS_M, normName, parksNear } from "@/lib/sources/over
 import { distanceM } from "@/lib/geo";
 import { SourceError, type FetchLike } from "@/lib/sources/common";
 import {
+  DEFAULT_RADIUS_MILES,
   LOCATION_DECIMALS,
   MAX_PARKS,
-  PARK_RADIUS_M,
   PARKS_COPY,
+  radiusMeters,
+  type RadiusMiles,
   ParkSchema,
   PlaceQueryLimits,
   type Park,
@@ -49,7 +52,8 @@ export const SEARCH_OVERPASS_BUDGET_MS = 10_000;
 /** Nominatim fallback lists are kept briefly (live Overpass is tried again after this). */
 export const NOMINATIM_PARKS_TTL_SEC = 3600;
 
-export type SearchInput = { kind: "text"; q: string } | { kind: "location"; lat: number; lng: number };
+/** `radiusMi`: the chosen circle (search v2); missing means the default, 3 mi. */
+export type SearchInput = ({ kind: "text"; q: string } | { kind: "location"; lat: number; lng: number }) & { radiusMi?: RadiusMiles };
 
 export type FieldError = { field: "q" | "location"; code: string; message: string };
 
@@ -108,17 +112,29 @@ const placeCache = createCachePair({
   maxEntries: 5_000,
 });
 const parksCache = createCachePair({
-  name: "parks-near",
+  // "-v2" (search v2): keys carry the radius and lists hold up to 20 parks; 5 km lists from before are not reused.
+  name: "parks-near-v2",
   schema: ParksNearSchema,
   negativeSchema: NoneSchema,
   ttlSec: PARKS_TTL_SEC,
   maxEntries: 2_000,
 });
-const nominatimParksCache = createJsonCache({ name: "parks-nominatim", schema: ParksNearSchema, ttlSec: NOMINATIM_PARKS_TTL_SEC, maxEntries: 500 });
+const nominatimParksCache = createJsonCache({ name: "parks-nominatim-v2", schema: ParksNearSchema, ttlSec: NOMINATIM_PARKS_TTL_SEC, maxEntries: 500 });
 
 /** Cache key for a point: 4 decimals (~11 m). Text searches use the geocoded point; locations are already 2 decimals. */
 export function pointKey(p: LatLng): string {
   return `${p.lat.toFixed(4)},${p.lng.toFixed(4)}`;
+}
+
+/** Search v2: the park-list cache key is the point AND the chosen circle ("33.1032,-96.6706|r3mi"). */
+export function parksKey(p: LatLng, radiusMi: RadiusMiles): string {
+  return `${pointKey(p)}|r${radiusMi}mi`;
+}
+
+/** Search v2: the in-flight de-dup key, so a 1 mi and a 10 mi search for the same place never share an answer. */
+export function inflightKey(input: SearchInput): string {
+  const r = `|r${input.radiusMi ?? DEFAULT_RADIUS_MILES}mi`;
+  return input.kind === "text" ? `t:${normalizeKey(input.q)}${r}` : `l:${pointKey(input)}${r}`;
 }
 
 // ---------- the search ----------
@@ -211,7 +227,7 @@ export async function searchParks(input: SearchInput, deps: SearchDeps): Promise
     throw err;
   }
 
-  const key = input.kind === "text" ? `t:${normalizeKey(input.q)}` : `l:${pointKey(input)}`;
+  const key = inflightKey(input);
   try {
     return await inflight().run(key, (signal, _emit, pin) => runSearch(input, { ...deps, store, env, now, signal, pin, cfg }), deps.signal);
   } catch (err) {
@@ -242,6 +258,8 @@ async function runSearch(
     },
 ): Promise<SearchOutcome> {
   const { store, now, cfg } = ctx;
+  const radiusMi = input.radiusMi ?? DEFAULT_RADIUS_MILES;
+  const radiusM = radiusMeters(radiusMi);
   let ticket: QuotaTicket | null = null;
 
   /** Reserve one uncached-search slot (per-IP share + global cap) before the first upstream call. */
@@ -298,13 +316,13 @@ async function runSearch(
         place = hit.value;
       } else {
         const miss = await placeCache.negative.get(pkey, now());
-        if (miss) return noPlace(input.q, miss.storedAt, true);
+        if (miss) return noPlace(input.q, radiusMi, miss.storedAt, true);
         await ensureTicket();
         place = await geocode(input.q, { store, fetchImpl: ctx.fetchImpl, signal: ctx.signal, env: ctx.env, onStart, now });
         placeAt = now();
         if (!place) {
           await placeCache.negative.set(pkey, { none: true }, { now: now() });
-          return noPlace(input.q, placeAt, false);
+          return noPlace(input.q, radiusMi, placeAt, false);
         }
         await placeCache.positive.set(pkey, place, { now: now() });
       }
@@ -316,34 +334,38 @@ async function runSearch(
       query = { kind: "location" };
     }
 
-    const ckey = pointKey(center);
+    const ckey = parksKey(center, radiusMi);
     const parksHit = await parksCache.positive.get(ckey, now());
-    if (parksHit) return pinFirst(found(query, center, parksHit.value, parksHit.storedAt, true), pin);
+    if (parksHit) return pinFirst(found(query, center, radiusMi, parksHit.value, parksHit.storedAt, true), pin);
     const parksMiss = await parksCache.negative.get(ckey, now());
-    if (parksMiss) return pinFirst(found(query, center, { parks: [], totalFound: 0 }, parksMiss.storedAt, true), pin);
+    if (parksMiss) return pinFirst(found(query, center, radiusMi, { parks: [], totalFound: 0 }, parksMiss.storedAt, true), pin);
 
     await ensureTicket();
     let near: { parks: ParksResult["parks"]; totalFound: number };
     try {
-      near = await parksNear(center, {
-        store,
-        fetchImpl: ctx.fetchImpl,
-        signal: ctx.signal,
-        env: ctx.env,
-        onStart,
-        now,
-        totalBudgetMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
-        timeoutMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
-      });
+      near = await parksNear(
+        center,
+        {
+          store,
+          fetchImpl: ctx.fetchImpl,
+          signal: ctx.signal,
+          env: ctx.env,
+          onStart,
+          now,
+          totalBudgetMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
+          timeoutMs: ctx.overpassBudgetMs ?? SEARCH_OVERPASS_BUDGET_MS,
+        },
+        radiusM,
+      );
     } catch (err) {
       if (!(err instanceof SourceError) || err.code === "aborted") throw err;
       log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status, next: "fallback" }, "warn");
-      return pinFirst(await fallbackParks(query, center, err, { ...ctx, onStart }), pin);
+      return pinFirst(await fallbackParks(query, center, radiusMi, err, { ...ctx, onStart }), pin);
     }
     const at = now();
     if (near.parks.length === 0) await parksCache.negative.set(ckey, { none: true }, { now: at });
     else await parksCache.positive.set(ckey, near, { now: at });
-    return pinFirst(found(query, center, near, at, false), pin);
+    return pinFirst(found(query, center, radiusMi, near, at, false), pin);
   } catch (err) {
     if (err instanceof LimitRefusal) return { ok: false, status: err.status, error: err.error };
     if (err instanceof SourceError) {
@@ -359,30 +381,32 @@ async function runSearch(
 
 /**
  * R1-B1: live Overpass didn't answer. (a) The saved Dallas-area park list when it covers the whole
- * 5 km circle (real Overpass answer, its fetch time shown); else (b) Nominatim's park search (cached
+ * chosen circle (real Overpass answer, its fetch time shown); else (b) Nominatim's park search (cached
  * 1 h); else the original error with a link to a ready example pass. Each list is labelled.
  */
 async function fallbackParks(
   query: ParksResult["query"],
   center: LatLng,
+  radiusMi: RadiusMiles,
   overpassErr: SourceError,
   ctx: { store: Store; now: () => number; env: Record<string, string | undefined>; fetchImpl?: FetchLike; signal: AbortSignal; onStart: () => void },
 ): Promise<SearchOutcome> {
   const { now } = ctx;
-  const saved = savedParksNear(center);
+  const radiusM = radiusMeters(radiusMi);
+  const saved = savedParksNear(center, radiusM);
   if (saved) {
-    log("parks_search_fallback", { kind: "saved_index", parks: saved.totalFound });
-    return found(query, center, saved, saved.fetchedAt, true, { kind: "saved_index", message: PARKS_COPY.savedIndex });
+    log("parks_search_fallback", { kind: "saved_index", parks: saved.totalFound, radiusMi });
+    return found(query, center, radiusMi, saved, saved.fetchedAt, true, { kind: "saved_index", message: PARKS_COPY.savedIndex });
   }
-  const key = pointKey(center);
+  const key = parksKey(center, radiusMi);
   const hit = await nominatimParksCache.get(key, now());
-  if (hit) return found(query, center, hit.value, hit.storedAt, true, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
+  if (hit) return found(query, center, radiusMi, hit.value, hit.storedAt, true, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
   try {
-    const near = await nominatimParks(center, { store: ctx.store, fetchImpl: ctx.fetchImpl, signal: ctx.signal, env: ctx.env, onStart: ctx.onStart, now });
+    const near = await nominatimParks(center, { store: ctx.store, fetchImpl: ctx.fetchImpl, signal: ctx.signal, env: ctx.env, onStart: ctx.onStart, now }, radiusM);
     const at = now();
     await nominatimParksCache.set(key, near, { now: at });
-    log("parks_search_fallback", { kind: "nominatim", parks: near.totalFound });
-    return found(query, center, near, at, false, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
+    log("parks_search_fallback", { kind: "nominatim", parks: near.totalFound, radiusMi });
+    return found(query, center, radiusMi, near, at, false, { kind: "nominatim", message: PARKS_COPY.nominatimParks });
   } catch (err) {
     if (!(err instanceof SourceError) || err.code === "aborted") throw err;
     log("parks_search_failed", { source: err.source, code: err.code, started: err.started, upstreamStatus: err.status, next: "none" }, "warn");
@@ -420,13 +444,14 @@ export function pinFirst(outcome: SearchOutcome, pin: Park | null): SearchOutcom
   return { ok: true, result: { ...r, parks, totalFound, empty: null } };
 }
 
-function noPlace(text: string, at: number, cached: boolean): SearchOutcome {
+function noPlace(text: string, radiusMi: RadiusMiles, at: number, cached: boolean): SearchOutcome {
   return {
     ok: true,
     result: {
       query: { kind: "text", text, matched: null },
       center: null,
-      radiusM: PARK_RADIUS_M,
+      radiusMi,
+      radiusM: radiusMeters(radiusMi),
       parks: [],
       totalFound: 0,
       empty: { reason: "no_place", message: PARKS_COPY.noPlace },
@@ -439,6 +464,7 @@ function noPlace(text: string, at: number, cached: boolean): SearchOutcome {
 function found(
   query: ParksResult["query"],
   center: LatLng,
+  radiusMi: RadiusMiles,
   near: { parks: ParksResult["parks"]; totalFound: number },
   at: number,
   cached: boolean,
@@ -449,10 +475,11 @@ function found(
     result: {
       query,
       center,
-      radiusM: PARK_RADIUS_M,
+      radiusMi,
+      radiusM: radiusMeters(radiusMi),
       parks: near.parks,
       totalFound: near.totalFound,
-      empty: near.parks.length === 0 ? { reason: "no_parks", message: PARKS_COPY.noParks } : null,
+      empty: near.parks.length === 0 ? { reason: "no_parks", message: PARKS_COPY.noParks(radiusMi) } : null,
       checkedAt: iso(at),
       cached,
       fallback,

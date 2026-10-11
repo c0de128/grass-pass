@@ -4,15 +4,19 @@
  */
 import "@/lib/zod-config";
 import { z } from "zod";
-import { MAX_PARKS } from "./constants";
+import { MAX_PARKS, RADIUS_MILES, radiusShort, type RadiusMiles } from "./constants";
 // The plain constants live in ./constants (no zod, for the browser's first paint, UX-4-02); re-exported here.
-export { LOCATION_DECIMALS, MAX_PARKS, PARK_RADIUS_M, PlaceQueryLimits } from "./constants";
+export * from "./constants";
+
+/** Search v2: only the four offered distances (1, 3, 5, 10 mi); anything else is refused. */
+export const RadiusMilesSchema = z.literal(RADIUS_MILES);
 
 /** Exact empty / failure copy (SPEC §5.4). */
 export const PARKS_COPY = {
   noPlace: "We couldn't find that place. Try a town name or ZIP.",
   geocoderDown: 'No data available: the map search isn\'t answering. Try "Use my location" or an example park.',
-  noParks: "No parks within 5 km in OpenStreetMap.",
+  noParks: (mi: RadiusMiles) =>
+    `No parks within ${radiusShort(mi)} in OpenStreetMap.${mi < RADIUS_MILES[RADIUS_MILES.length - 1] ? " Try a longer distance." : ""}`,
   // Audit Q-3-06: no fixed "in a minute" (the page shows its own countdown when it retries by itself).
   overpassDown: "No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park.",
   /** Audit Q-3-01: this park's live map query ran into our timeout; it is not asked again for `minutes` more. */
@@ -62,6 +66,8 @@ export const ParksResultSchema = z.object({
   ]),
   /** The point parks are measured from (null when the place was not found). */
   center: z.object({ lat: z.number(), lng: z.number() }).nullable(),
+  /** The chosen search circle (search v2): miles as picked, and the same circle in metres. */
+  radiusMi: RadiusMilesSchema,
   radiusM: z.number(),
   parks: z.array(ParkSchema).max(MAX_PARKS),
   /** Named parks found within the radius before keeping the nearest MAX_PARKS. */

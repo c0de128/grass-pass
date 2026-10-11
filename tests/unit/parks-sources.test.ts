@@ -6,6 +6,7 @@ import { contactUrl, DEFAULT_CONTACT_URL, parseRetryAfter, readTextCapped, Sourc
 import { cleanPlaceQuery, geocode, NOMINATIM_SOURCE, nominatimUrl, PARK_QUERY_RE, parseNominatim, usZipOf } from "@/lib/sources/nominatim";
 import { breakerName, isErrorRemark, isHeavyQueryRemark, overpassEndpoints, OVERPASS_DEFAULT_URLS, runOverpass } from "@/lib/sources/overpass";
 import { parseParks, parksNear, parksQuery } from "@/lib/sources/overpass-parks";
+import { MAX_PARKS, radiusMeters } from "@/lib/parks/constants";
 import { distanceLabel, distanceM, roundCoord } from "@/lib/geo";
 import { fixture, osmReplay, recordedResponse } from "./support/osm-replay";
 
@@ -228,17 +229,20 @@ describe("Overpass parks (live recordings, 2026-10-05)", () => {
   const allen = fixture("overpass-parks-allen-tx");
   const allenCenter = allen._recording.center!;
 
-  it("builds a fixed query from numbers only", () => {
+  it("builds a fixed query from numbers only (default 3 mi; search v2 sends the chosen circle in metres)", () => {
     expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 })).toBe(
-      '[out:json][timeout:25];nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:5000,33.10317,-96.67055);out center tags;',
+      '[out:json][timeout:25];nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:4828,33.10317,-96.67055);out center tags;',
     );
+    expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 }, radiusMeters(1))).toContain("(around:1609,33.10317,-96.67055)");
+    expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 }, radiusMeters(5))).toContain("(around:8047,33.10317,-96.67055)");
+    expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 }, radiusMeters(10))).toContain("(around:16093,33.10317,-96.67055)");
     expect(() => parksQuery({ lat: Number.NaN, lng: 0 })).toThrow();
     expect(() => parksQuery({ lat: 91, lng: 0 })).toThrow();
   });
 
-  it("Allen TX: the 10 nearest named parks, nearest first, real names", () => {
+  it("Allen TX: the nearest named parks (MAX_PARKS, 20 since search v2), nearest first, real names", () => {
     const { parks, totalFound } = parseParks(allen.body, allenCenter);
-    expect(parks).toHaveLength(10);
+    expect(parks).toHaveLength(MAX_PARKS);
     expect(totalFound).toBeGreaterThan(40);
     for (let i = 1; i < parks.length; i++) expect(parks[i].distanceM).toBeGreaterThanOrEqual(parks[i - 1].distanceM);
     expect(parks.slice(0, 3).map((p) => p.name)).toEqual(["Heritage Village", "Allenwood Park", "Allen Station Park"]);
@@ -316,7 +320,7 @@ describe("runOverpass failover and breakers", () => {
       overpass: (c) => (c.url === first ? recordedResponse("overpass-504-too-busy") : undefined),
     });
     const r = await parksNear(center, { store, fetchImpl, env: {}, now: () => T0 });
-    expect(r.parks).toHaveLength(10);
+    expect(r.parks).toHaveLength(MAX_PARKS);
     expect(calls.map((c) => c.url)).toEqual([first, second]);
     expect(await breakerRetryAfter(store, breakerName(first), T0)).toBe(60);
 
@@ -357,7 +361,7 @@ describe("runOverpass failover and breakers", () => {
     // A different search right after still reaches Overpass (nobody else is locked out).
     const next = osmReplay();
     const r = await parksNear(center, { store, fetchImpl: next.fetchImpl, env: {}, now: () => T0 });
-    expect(r.parks).toHaveLength(10);
+    expect(r.parks).toHaveLength(MAX_PARKS);
     expect(next.calls).toHaveLength(1);
   });
 
@@ -407,7 +411,7 @@ describe("runOverpass failover and breakers", () => {
           : undefined,
     });
     const r = await parksNear(center, { store: new MemoryStore(), fetchImpl, env: {}, timeoutMs: 50 });
-    expect(r.parks.length).toBe(10);
+    expect(r.parks.length).toBe(MAX_PARKS);
     expect(calls).toHaveLength(2);
   });
 
@@ -447,7 +451,7 @@ describe("runOverpass failover and breakers", () => {
       overpass: (c) => (c.url === third ? undefined : recordedResponse("overpass-504-too-busy")),
     });
     const r = await parksNear(center, { store: new MemoryStore(), fetchImpl, env: {} });
-    expect(r.parks).toHaveLength(10);
+    expect(r.parks).toHaveLength(MAX_PARKS);
     expect(calls.map((c) => c.url)).toEqual(OVERPASS_DEFAULT_URLS);
   });
 

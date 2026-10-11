@@ -4,6 +4,7 @@
 // No third-party scripts or fonts: fonts are self-hosted by next/font, all data is server-proxied. One exception
 // (search v2, 2026-10-10): the results map fetches its street style, tiles, sprites and map fonts from OpenFreeMap
 // (connect-src + img-src for that one origin). MapLibre's worker is served from our own origin (worker-src 'self').
+// SEC-SV2-03: MapLibre's RTL-text/script loader in the worker uses eval; we use neither, so never add 'unsafe-eval' for the map.
 import { OPENFREEMAP_ORIGIN } from "./parks/map-config";
 
 export type Header = { key: string; value: string };

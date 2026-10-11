@@ -356,7 +356,7 @@ on https). What leaves the device (also on `/about`):
 |---|---|---|
 | Typed place text | our server (in the request body, never the web address), then Nominatim; cached 30 days in Upstash Redis by the text, not by who typed it | find the town or park |
 | "Use my location" | rounded in the browser to 2 decimals (~1 km), then our server, then Overpass | list nearby parks |
-| The map area of your search results | your browser, straight to the OpenFreeMap tile server (tiles.openfreemap.org, served through Cloudflare), so it sees your IP address like any website; no account, no cookies; OpenFreeMap says its logs keep no IP address and are deleted after 7 days | draw the street map of the results |
+| The map area of your search results | your browser, straight to the OpenFreeMap tile server (tiles.openfreemap.org), so it sees your IP address like any website; no account, no cookies. [OpenFreeMap's privacy page](https://openfreemap.org/privacy/) says its normal access logs keep no IP address and are deleted after 7 days; error logs and logs kept after misuse can hold IP addresses, for up to 30 days. Cloudflare delivers the tiles under its own privacy policy | draw the street map of the results |
 | The chosen park (public place + map position) | our server, then Overpass, iNaturalist and SerpApi (name and position only); the pass page, and making a pass, send only the position, rounded to about 1 km, to Open-Meteo and (US parks) api.weather.gov | park map, sightings, monarch counts, review counts, the weather card and trip tips |
 | Age band | our server, then the model on DigitalOcean (in the prompt) | item count and reading level |
 | IP address | our server; in Upstash Redis only as a keyed hash (HMAC), never the address, in rate-limit counters that expire within about a day (IPv6 by its /64 and /48 network) | abuse and cost limits |
@@ -440,7 +440,7 @@ after the submission deadline (Mon Oct 12, 2026, 06:59 UTC) will be listed here.
   data too (ODbL).
 - Results map (search v2): [MapLibre GL JS](https://maplibre.org/) 6.13.0
   ([BSD-3-Clause](https://github.com/maplibre/maplibre-gl-js/blob/v6.13.0/LICENSE.txt); its prebuilt web worker is
-  copied unchanged to `public/vendor/`) draws [OpenFreeMap](https://openfreemap.org/) street tiles (Positron style;
+  copied to `public/vendor/` unchanged except its source-map comment) draws [OpenFreeMap](https://openfreemap.org/) street tiles (Positron style;
   free, no key, no cookies), shown with their attribution under the map: "OpenFreeMap © OpenMapTiles Data from
   OpenStreetMap".
 - Wildlife sightings and monarch counts: [iNaturalist](https://www.inaturalist.org/) observers (research-grade; names

@@ -8,14 +8,21 @@ import "@/lib/zod-config";
 import { z } from "zod";
 import { distanceM, isValidLatLng, type LatLng } from "@/lib/geo";
 import { MAX_PARKS, PARK_RADIUS_M, type Park } from "@/lib/parks/schema";
-import { OVERPASS_QUERY_TIMEOUT_SEC, runOverpass, type OverpassDeps } from "./overpass";
+import { parkQueryHead, runOverpass, type OverpassDeps } from "./overpass";
+
+/**
+ * SEC-SV2-02: the park search gives live Overpass 10 s (SEARCH_OVERPASS_BUDGET_MS in src/lib/parks/search.ts), so the
+ * query asks Overpass to stop at 10 s too, with the same memory cap as the per-park queries. Then a 10 mi search in a
+ * dense city never keeps the free public server busy after we have given up. (Kept equal to the budget by a unit test.)
+ */
+export const SEARCH_QUERY_TIMEOUT_SEC = 10;
 
 export function parksQuery(center: LatLng, radiusM: number = PARK_RADIUS_M): string {
   if (!isValidLatLng(center)) throw new RangeError("bad point");
   const lat = center.lat.toFixed(5);
   const lng = center.lng.toFixed(5);
   const r = Math.round(radiusM);
-  return `[out:json][timeout:${OVERPASS_QUERY_TIMEOUT_SEC}];nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:${r},${lat},${lng});out center tags;`;
+  return `${parkQueryHead(SEARCH_QUERY_TIMEOUT_SEC)}nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:${r},${lat},${lng});out center tags;`;
 }
 
 const Element = z.object({

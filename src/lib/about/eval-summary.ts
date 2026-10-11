@@ -363,3 +363,6 @@ export function evalColumn(model: string): EvalColumn {
   if (!c) throw new Error(`no eval column for ${model}`);
   return c;
 }
+
+/** "98%" / "99.8%": how the site prints a percentage (re-exported by content.ts). */
+export const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;

@@ -61,7 +61,9 @@ export function resultsBounds(center: { lat: number; lng: number }, parks: reado
  * 40 places ranked by importance, so the count is what that search found, not every park in the circle.
  */
 export function resultsSummary(shown: number, totalFound: number, radiusMi: RadiusMiles, placeSearch = false): string {
-  const within = `within ${radiusShort(radiusMi)}`;
+  // Q-SV2-04: "about", because a park counts when any part of it is inside the circle, while card distances are to
+  // its middle (so a big park can read 3.2 mi in a 3 mi list).
+  const within = `within about ${radiusShort(radiusMi)}`;
   const lead = placeSearch ? "The place search found " : "";
   if (shown < totalFound) {
     return `${lead}${totalFound} named parks ${within}. Showing the ${shown} nearest (the list stops at ${MAX_PARKS}).`;

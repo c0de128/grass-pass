@@ -3,8 +3,10 @@
 /**
  * Search v2 (Kevin 2026-10-10: "the loading animation should be better"): while /api/parks works (usually a few
  * seconds, up to about 45 s when OpenStreetMap is slow), a paper-map "radar" sweeps the chosen circle around the
- * searched place. It is decoration drawn in SVG: no tiles, no pins, no park names, no progress bar (we don't know how
- * far along the server is). The words are ParkStep's own status line (the real request); this adds the seconds so far.
+ * searched place. It is decoration drawn in SVG: a plain drafting grid, no roads or water (audit Q-SV2-03: nothing that
+ * could look like the visitor's own streets), no tiles, no pins, no park names, no progress bar (we don't know how far
+ * along the server is). The words are ParkStep's own status line (the real request); this adds the seconds so far
+ * (only while the search request runs; ParkStep remounts it for each request, so it starts at 0 every time).
  * prefers-reduced-motion: no sweep and no ripples, only a slow fade of the circle (globals.css, gp-radar-*).
  * The status text for screen readers stays in ParkStep's aria-live line; this whole block is aria-hidden.
  */
@@ -15,16 +17,13 @@ import { radiusShort, type RadiusMiles } from "@/lib/parks/constants";
 const PAPER = {
   land: "#edf4e2",
   grid: "#d5e3c4",
-  road: "#ffffff",
-  roadEdge: "#cdd8bd",
-  water: "#bfe0f2",
   ring: "#137838",
   ringSoft: "#13783833",
   ink: "#10291a",
   sun: "#ffc72c",
 } as const;
 
-export function SearchRadar({ radiusMi }: { radiusMi: RadiusMiles }) {
+export function SearchRadar({ radiusMi, showSeconds = true }: { radiusMi: RadiusMiles; showSeconds?: boolean }) {
   const [seconds, setSeconds] = useState(0);
   useEffect(() => {
     const t0 = Date.now();
@@ -53,13 +52,8 @@ export function SearchRadar({ radiusMi }: { radiusMi: RadiusMiles }) {
             </clipPath>
           </defs>
 
-          {/* A plain paper sheet with a drafting grid and two soft "roads" (decoration, not a real place). */}
+          {/* A plain paper sheet with a drafting grid only (no made-up streets or water). */}
           <rect width="400" height="240" fill="url(#gp-radar-grid)" />
-          <path d="M-10 170C80 150 140 190 230 160S360 120 410 135" fill="none" stroke={PAPER.roadEdge} strokeWidth="11" strokeLinecap="round" />
-          <path d="M-10 170C80 150 140 190 230 160S360 120 410 135" fill="none" stroke={PAPER.road} strokeWidth="7" strokeLinecap="round" />
-          <path d="M120 -10C130 60 170 110 160 250" fill="none" stroke={PAPER.roadEdge} strokeWidth="9" strokeLinecap="round" />
-          <path d="M120 -10C130 60 170 110 160 250" fill="none" stroke={PAPER.road} strokeWidth="5" strokeLinecap="round" />
-          <path d="M300 -10C280 40 330 70 320 120" fill="none" stroke={PAPER.water} strokeWidth="6" strokeLinecap="round" />
 
           {/* The chosen circle: soft fill, dashed edge, and its label. */}
           <g className="gp-radar-breathe">
@@ -93,9 +87,11 @@ export function SearchRadar({ radiusMi }: { radiusMi: RadiusMiles }) {
             </text>
           </g>
         </svg>
-        <p className="absolute right-2.5 bottom-2.5 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold tabular-nums shadow-sm" style={{ background: "#ffffff", color: PAPER.ink }}>
-          {seconds} s
-        </p>
+        {showSeconds ? (
+          <p className="absolute right-2.5 bottom-2.5 rounded-full px-2.5 py-0.5 font-mono text-xs font-bold tabular-nums shadow-sm" style={{ background: "#ffffff", color: PAPER.ink }}>
+            {seconds} s
+          </p>
+        ) : null}
       </div>
     </div>
   );

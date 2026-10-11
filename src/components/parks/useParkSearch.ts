@@ -71,6 +71,8 @@ export type FieldProblem = { message: string; attempt: number };
 export function useParkSearch() {
   const [phase, setPhase] = useState<ParkSearchPhase>({ kind: "idle" });
   const [radiusMi, setRadiusMi] = useState<RadiusMiles>(DEFAULT_RADIUS_MILES);
+  /** Q-SV2-09: one number per request sent, so the loading picture (and its seconds) restarts for every search. */
+  const [runId, setRunId] = useState(0);
   /** The last search sent (place text or rounded location), so a new distance can run it again. */
   const lastRef = useRef<{ body: SearchBody; from: "q" | "location" } | null>(null);
   const [slow, setSlow] = useState(false);
@@ -111,6 +113,7 @@ export function useParkSearch() {
     const ac = new AbortController();
     abortRef.current = ac;
     lastRef.current = { body, from };
+    setRunId((n) => n + 1);
     const place = "q" in body ? body.q : null;
     setPhase({ kind: "searching", label: place ? searchingLabel(place, mi) : locationSearchingLabel(mi), radiusMi: mi, place });
     stopSlowTimer();
@@ -233,6 +236,7 @@ export function useParkSearch() {
     progress,
     radiusMi,
     chooseRadius,
+    runId,
     fieldError,
     locError,
     search,

@@ -27,7 +27,9 @@ import { WILD_RADIUS_KM, WILD_WINDOW_DAYS } from "@/lib/sources/inat";
 import { WINDOW_MONTHS } from "@/lib/sources/serpapi";
 import { REPORT_COPY } from "@/lib/reports/kinds";
 
-export const pct = (n: number) => `${Number.isInteger(n) ? n : n.toFixed(1)}%`;
+// pct lives in eval-summary.ts (no imports), so the e2e specs can format a quoted number exactly like the page.
+import { pct } from "@/lib/about/eval-summary";
+export { pct };
 export const secs = (n: number | null) => (n === null ? "no model call" : `${n.toFixed(1)} s`);
 export const usd = (n: number) => (n === 0 ? "$0" : `$${n.toFixed(5)}`);
 
@@ -43,7 +45,7 @@ export const EVAL_RUN_ID = EVAL_SUMMARY_FILE.replace(/^evals\/results\//, "").re
  * Unit tests, counted by running `pnpm test` (vitest) on the branch that changed this page. A dated count, not
  * a live one: update it when you re-run the suite for a page change.
  */
-export const UNIT_TESTS = { passed: 2752, files: 98, day: "Oct 10, 2026" } as const;
+export const UNIT_TESTS = { passed: 2754, files: 98, day: "Oct 10, 2026" } as const;
 /** Audit rounds finished (five reviews each; projects/grass-pass/audits/round-N in the factory repo). One place, so pages never disagree. */
 // Round 10 ran on production on Oct 8 (audits/round-10/SUMMARY.md); rounds 11 (full) and 12 (confirm) ran on Oct 9 before the Oct 9 deploy. RULES-8-03: round 7 finished late on Oct 6 and round 8 ran on Oct 7 (audits/round-8/SUMMARY.md). Hand-typed because the
 // audit reports live in the factory repo, not in this one: re-count at ship (a ship gate).
@@ -207,7 +209,7 @@ export function privacyRows(): PrivacyRow[] {
       // Search v2 (2026-10-10): the results map. Checked on openfreemap.org/privacy on 2026-10-10.
       what: "The map area of your search results",
       where:
-        "Your browser asks the OpenFreeMap tile server (tiles.openfreemap.org, served through Cloudflare) for the streets of that area, so like any website it sees your IP address. No account, no cookies. OpenFreeMap says its logs keep no IP address and are deleted after 7 days.",
+        "Your browser asks the OpenFreeMap tile server (tiles.openfreemap.org) for the streets of that area, so like any website it sees your IP address. No account, no cookies. OpenFreeMap says its normal access logs keep no IP address and are deleted after 7 days; error logs and logs kept after misuse can hold IP addresses, for up to 30 days. Cloudflare delivers the tiles under its own privacy policy. Details: openfreemap.org/privacy.",
       why: "To draw the street map behind the park pins.",
     },
     {

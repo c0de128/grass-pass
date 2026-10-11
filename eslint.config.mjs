@@ -12,7 +12,7 @@ const eslintConfig = defineConfig([
     "out/**",
     "build/**",
     "next-env.d.ts",
-    // Search v2: MapLibre's prebuilt web worker, copied as-is from node_modules (not our code).
+    // Search v2: MapLibre's prebuilt web worker, copied from node_modules with only its source-map comment removed (not our code).
     "public/vendor/**",
   ]),
 ]);

@@ -1,5 +1,7 @@
 import AxeBuilder from "@axe-core/playwright";
 import { expect, test, type Page } from "@playwright/test";
+// eval-summary.ts has no imports (content.ts pulls in server-only modules).
+import { evalColumn, pct } from "@/lib/about/eval-summary";
 
 // v3 redesign of /about and /how-it-works (Kevin 2026-10-06: "way too plain, a never-ending blog post"): a visual
 // summary first, the fine print folded in <details>. These pages make no upstream call (static text from the
@@ -48,7 +50,8 @@ test("/about: the stat tiles are visible first, and a disclosure opens and close
   const tiles = page.getByRole("list", { name: "Measured results" }).locator(":scope > li");
   await expect(tiles).toHaveCount(8);
   await expect(tiles.filter({ hasText: "Missed" })).toHaveCount(2);
-  await expect(page.getByText("99.8%", { exact: true })).toBeVisible();
+  // Q-SV2-01: read the number from the committed eval data, so the test cannot go stale when a new run is quoted.
+  await expect(tiles.getByText(pct(evalColumn("gemma-4-31B-it").groundedPct), { exact: true })).toBeVisible();
 
   const privacy = page.locator("details#privacy-table");
   const summary = privacy.locator("summary");

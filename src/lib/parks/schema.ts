@@ -17,6 +17,9 @@ export const PARKS_COPY = {
   geocoderDown: 'No data available: the map search isn\'t answering. Try "Use my location" or an example park.',
   noParks: (mi: RadiusMiles) =>
     `No parks within ${radiusShort(mi)} in OpenStreetMap.${mi < RADIUS_MILES[RADIUS_MILES.length - 1] ? " Try a longer distance." : ""}`,
+  /** Q-SV2-07: the Nominatim fallback answered (at most 40 places by importance), so say only what that search found. */
+  noParksPlaceSearch: (mi: RadiusMiles) =>
+    `The place search found no parks within ${radiusShort(mi)}.${mi < RADIUS_MILES[RADIUS_MILES.length - 1] ? " Try a longer distance." : ""}`,
   // Audit Q-3-06: no fixed "in a minute" (the page shows its own countdown when it retries by itself).
   overpassDown: "No data available: the OpenStreetMap server is busy. Try again shortly or pick an example park.",
   /** Audit Q-3-01: this park's live map query ran into our timeout; it is not asked again for `minutes` more. */

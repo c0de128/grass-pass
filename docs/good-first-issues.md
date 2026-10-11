@@ -6,7 +6,7 @@ opened as GitHub issues). Read [CONTRIBUTING.md](../CONTRIBUTING.md) first.
 ## 1. "Show more parks" after a town search
 **Why:** a town search shows only the 20 nearest named parks within the distance you pick (1, 3, 5 or 10 miles).
 "Allen, TX" at 3 miles finds 46 parks, so a well-known park like Connemara Meadow Preserve is not in the list, and
-people have to search it by name. The page already says "46 named parks within 3 mi. Showing the 20 nearest (the list
+people have to search it by name. The page already says "46 named parks within about 3 mi. Showing the 20 nearest (the list
 stops at 20)." (`src/components/parks/ParkStep.tsx`, `src/lib/parks/results-view.ts`).
 
 **What to do:** add a "Show 20 more parks" button under the list. The server already counts `totalFound`

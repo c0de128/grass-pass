@@ -479,7 +479,10 @@ function found(
       radiusM: radiusMeters(radiusMi),
       parks: near.parks,
       totalFound: near.totalFound,
-      empty: near.parks.length === 0 ? { reason: "no_parks", message: PARKS_COPY.noParks(radiusMi) } : null,
+      empty:
+        near.parks.length === 0
+          ? { reason: "no_parks", message: fallback?.kind === "nominatim" ? PARKS_COPY.noParksPlaceSearch(radiusMi) : PARKS_COPY.noParks(radiusMi) }
+          : null,
       checkedAt: iso(at),
       cached,
       fallback,

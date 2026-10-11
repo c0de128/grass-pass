@@ -231,7 +231,7 @@ describe("Overpass parks (live recordings, 2026-10-05)", () => {
 
   it("builds a fixed query from numbers only (default 3 mi; search v2 sends the chosen circle in metres)", () => {
     expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 })).toBe(
-      '[out:json][timeout:25];nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:4828,33.10317,-96.67055);out center tags;',
+      '[out:json][timeout:10][maxsize:134217728];nwr["leisure"~"^(park|nature_reserve)$"]["name"](around:4828,33.10317,-96.67055);out center tags;',
     );
     expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 }, radiusMeters(1))).toContain("(around:1609,33.10317,-96.67055)");
     expect(parksQuery({ lat: 33.1031744, lng: -96.6705503 }, radiusMeters(5))).toContain("(around:8047,33.10317,-96.67055)");

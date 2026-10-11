@@ -140,7 +140,9 @@ export function ParkStep({
         ) : null}
       </form>
 
-      {busy ? <SearchRadar key={phase.kind === "searching" ? phase.label : "locating"} radiusMi={radiusMi} /> : null}
+      {busy ? (
+        <SearchRadar key={phase.kind === "searching" ? `run-${search.runId}` : "locating"} radiusMi={radiusMi} showSeconds={phase.kind === "searching"} />
+      ) : null}
 
       <p role="status" aria-live="polite" className="-mt-2 text-base font-semibold empty:hidden" data-testid="park-search-status">
         {progress}
@@ -198,7 +200,7 @@ function ParkCards({ result, picked, onPick }: { result: ParksResult; picked: Pa
           </p>
           {center ? (
             <ParkResultsMap
-              key={`${result.checkedAt}|${result.radiusMi}|${center.lat},${center.lng}|${result.parks.length}`}
+              key={`${result.checkedAt}|${result.radiusMi}|${center.lat},${center.lng}|${result.parks.map((p) => p.id).join(",")}`}
               center={center}
               radiusM={result.radiusM}
               parks={mapParks}

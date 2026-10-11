@@ -60,7 +60,7 @@ test("keyboard only: 'Allen TX' lists real parks nearest first", async ({ page }
   const items = list.getByRole("button");
   await expect(items).toHaveCount(20);
   await expect(items.first()).toContainText(/ mi \(\d+(\.\d)? km\) away/);
-  await expect(page.getByTestId("parks-summary")).toContainText(/named parks within 3 mi\. Showing the 20 nearest/);
+  await expect(page.getByTestId("parks-summary")).toContainText(/named parks within about 3 mi\. Showing the 20 nearest/);
   await expect(page.getByRole("link", { name: "© OpenStreetMap contributors" })).toBeVisible();
 
   // The wizard: the list is inside the dialog, which says which step it is.
@@ -159,7 +159,7 @@ test("search v2: a new distance searches the same place again, and the map pins 
   await expect(group.getByRole("radio", { name: /^1 mi/ })).toBeChecked();
   expect((await request).postDataJSON()).toEqual({ q: "75013", radiusMi: 1 });
   await parksOrBusy(page, list);
-  await expect(dialog.getByTestId("parks-summary")).toContainText(/within 1 mi\./);
+  await expect(dialog.getByTestId("parks-summary")).toContainText(/within about 1 mi\./);
 
   // The map is a labelled picture of the list: either drawn with one pin per park, or an honest note.
   const map = dialog.getByRole("region", { name: "Map of the parks in the list" });

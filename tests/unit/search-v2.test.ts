@@ -26,6 +26,8 @@ import { distanceLabel, distanceM } from "@/lib/geo";
 import { disableSavedOsmForTests, resetSavedOsm } from "@/lib/sources/osm-snapshot";
 import { locationSearchingLabel, searchingLabel } from "@/components/parks/useParkSearch";
 import { osmReplay, recordedResponse } from "./support/osm-replay";
+import { SEARCH_OVERPASS_BUDGET_MS } from "@/lib/parks/search";
+import { parksQuery, SEARCH_QUERY_TIMEOUT_SEC } from "@/lib/sources/overpass-parks";
 
 const ROOT = path.resolve(__dirname, "../..");
 const read = (f: string) => readFileSync(path.join(ROOT, f), "utf8");
@@ -63,6 +65,17 @@ describe("distance choices", () => {
     expect(distanceLabel(16_093)).toBe("10 mi (16 km)");
     expect(milesShort(4828)).toBe("3.0 mi");
     expect(milesShort(20_000)).toBe("12 mi");
+  });
+});
+
+describe("SEC-SV2-02: Overpass stops when we stop", () => {
+  it("the search query's [timeout:] equals the 10 s search budget and carries the memory cap", () => {
+    expect(SEARCH_QUERY_TIMEOUT_SEC).toBe(Math.ceil(SEARCH_OVERPASS_BUDGET_MS / 1000));
+    for (const mi of RADIUS_MILES) {
+      const q = parksQuery({ lat: 51.5072, lng: -0.1276 }, radiusMeters(mi));
+      expect(q.startsWith("[out:json][timeout:10][maxsize:134217728];")).toBe(true);
+      expect(q).not.toContain("timeout:25");
+    }
   });
 });
 
@@ -132,17 +145,28 @@ describe("cache and in-flight keys include the distance", () => {
 
 describe("results view", () => {
   it("says how many parks were found within the distance, and when the list was cut", () => {
-    expect(resultsSummary(7, 7, 1)).toBe("7 named parks within 1 mi.");
-    expect(resultsSummary(1, 1, 3)).toBe("1 named park within 3 mi.");
-    expect(resultsSummary(MAX_PARKS, 312, 10)).toBe(`312 named parks within 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
+    expect(resultsSummary(7, 7, 1)).toBe("7 named parks within about 1 mi.");
+    expect(resultsSummary(1, 1, 3)).toBe("1 named park within about 3 mi.");
+    expect(resultsSummary(MAX_PARKS, 312, 10)).toBe(`312 named parks within about 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
     // Nominatim fallback (at most 40 places, by importance): the count is what that search found.
-    expect(resultsSummary(MAX_PARKS, 27, 10, true)).toBe(`The place search found 27 named parks within 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
-    expect(resultsSummary(4, 4, 1, true)).toBe("The place search found 4 named parks within 1 mi.");
+    expect(resultsSummary(MAX_PARKS, 27, 10, true)).toBe(`The place search found 27 named parks within about 10 mi. Showing the ${MAX_PARKS} nearest (the list stops at ${MAX_PARKS}).`);
+    expect(resultsSummary(4, 4, 1, true)).toBe("The place search found 4 named parks within about 1 mi.");
   });
 
   it("the empty copy names the distance and offers a longer one only below 10 mi", () => {
     expect(PARKS_COPY.noParks(1)).toBe("No parks within 1 mi in OpenStreetMap. Try a longer distance.");
     expect(PARKS_COPY.noParks(10)).toBe("No parks within 10 mi in OpenStreetMap.");
+    // Q-SV2-07: when the Nominatim fallback answered, the copy says what that search found, no more.
+    expect(PARKS_COPY.noParksPlaceSearch(1)).toBe("The place search found no parks within 1 mi. Try a longer distance.");
+    expect(PARKS_COPY.noParksPlaceSearch(10)).toBe("The place search found no parks within 10 mi.");
+  });
+
+  it("Q-SV2-03: the loading picture draws no made-up streets or water", () => {
+    const src = read("src/components/parks/SearchRadar.tsx");
+    // The only <path> left is the grid pattern's own cell; no road or water colours.
+    expect(src.match(/<path /g)).toHaveLength(2); // grid cell + the sweep wedge
+    expect(src).not.toMatch(/PAPER\.(road|roadEdge|water)\b|road:|water:/);
+    expect(src).toContain("gp-radar-sweep");
   });
 
   it("the circle ring is closed and every point is the chosen distance from the centre", () => {
@@ -223,6 +247,14 @@ describe("claims sweep: no park-search '5 km' left on user-facing surfaces", () 
   it("README and the about page list the map's privacy row and credits", () => {
     const readme = read("README.md").replace(/\s+/g, " ");
     expect(readme).toContain("| The map area of your search results | your browser, straight to the OpenFreeMap tile server");
+    // SEC-SV2-01: no overstated "keeps no IP" claim; the error/misuse logs and Cloudflare are named, with the source.
+    for (const s of [readme, read("src/lib/about/content.ts")]) {
+      expect(s).toContain("normal access logs keep no IP address");
+      expect(s).toContain("up to 30 days");
+      expect(s).toContain("Cloudflare delivers the tiles under its own privacy policy");
+      expect(s).not.toContain("OpenFreeMap says its logs keep no IP address");
+    }
+    expect(readme).toContain("(https://openfreemap.org/privacy/)");
     expect(readme).toContain("[MapLibre GL JS](https://maplibre.org/) 6.13.0");
     expect(read("src/lib/about/content.ts")).toContain('what: "The map area of your search results"');
     expect(read("src/app/about/page.tsx")).toContain('data-testid="map-credit"');
